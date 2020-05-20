@@ -20,6 +20,7 @@
     "mocha": "^5",
     "nyc": "^14.1.1",
     "prettier": "1.16.4",
+    "shx": "0.2.2",
     "sinon": "^7.3.1",
     "ts-node": "^8.7.0",
     "typescript": "~3.3"
@@ -33,7 +34,7 @@
     "salesforcedx"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc -b",
+    "build": "shx rm -rf lib && tsc -b",
     "format": "prettier --config ../../.prettierrc --write './**/*.{ts,js,json}'",
     "lint": "eslint -c .eslintrc.json --ext .ts ./src ./test",
     "test": "mocha --recursive lib/test/*.test.js lib/test/**/*.test.js --timeout 5000 --full-trace"

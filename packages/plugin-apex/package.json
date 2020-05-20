@@ -61,10 +61,10 @@
   },
   "repository": "forcedotcom/salesforcedx-apex",
   "scripts": {
-    "build": "rm -rf lib && tsc -b && oclif-dev manifest",
+    "build": "shx rm -rf lib && tsc -b && oclif-dev manifest",
     "format": "prettier --config ../../.prettierrc --write './*.{js,json}' './**/*.{ts,json}'",
     "lint": "tslint --project . --config tslint.json --format stylish",
-    "postpack": "rm -f oclif.manifest.json",
+    "postpack": "shx rm -f oclif.manifest.json",
     "test": "mocha --recursive \"./test/**/*.test.ts\" --full-trace",
     "version": "oclif-dev readme && git add README.md"
   }
