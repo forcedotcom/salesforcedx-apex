@@ -61,12 +61,11 @@
   },
   "repository": "forcedotcom/salesforcedx-apex",
   "scripts": {
-    "clean:lib": "node scripts/remove-lib",
+    "build": "rm -rf lib && tsc -b && oclif-dev manifest",
+    "format": "prettier --config ../../.prettierrc --write './*.{js,json}' './**/*.{ts,json}'",
     "lint": "tslint --project . --config tslint.json --format stylish",
     "postpack": "rm -f oclif.manifest.json",
-    "prepack": "yarn run clean:lib && tsc -b && oclif-dev manifest",
-    "reformat": "prettier --config .prettierrc --write './*.{js,json}' './**/*.{ts,json}'",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "mocha --recursive \"./test/**/*.test.ts\" --full-trace",
     "version": "oclif-dev readme && git add README.md"
   }
 }
