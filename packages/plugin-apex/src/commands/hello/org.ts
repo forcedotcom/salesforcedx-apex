@@ -50,11 +50,8 @@ export default class Org extends SfdxCommand {
     try {
       const name = this.flags.name || 'world';
 
-      if (!this.org) {
-        throw new Error('Org is undefined');
-      }
       // this.org is guaranteed because requiresUsername=true, as opposed to supportsUsername
-      const conn = this.org.getConnection();
+      const conn = this.org!.getConnection();
       const query = 'Select Name, TrialExpirationDate from Organization';
 
       // The type we are querying for
@@ -70,7 +67,7 @@ export default class Org extends SfdxCommand {
       // The output and --json will automatically be handled for you.
       if (!result.records || result.records.length <= 0) {
         throw new SfdxError(
-          messages.getMessage('errorNoOrgResults', [this.org.getOrgId()])
+          messages.getMessage('errorNoOrgResults', [this.org!.getOrgId()])
         );
       }
 
@@ -96,7 +93,7 @@ export default class Org extends SfdxCommand {
       }
 
       // Return an object to be displayed with --json
-      return { orgId: this.org.getOrgId(), outputString };
+      return { orgId: this.org!.getOrgId(), outputString };
     } catch (e) {
       return Promise.reject(e);
     }
