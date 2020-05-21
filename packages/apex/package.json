@@ -37,7 +37,7 @@
     "build": "shx rm -rf lib && tsc -b",
     "format": "prettier --config ../../.prettierrc --write './**/*.{ts,js,json}'",
     "lint": "eslint -c .eslintrc.json --ext .ts ./src ./test",
-    "test": "mocha --recursive lib/test/*.test.js lib/test/**/*.test.js --timeout 5000 --full-trace"
+    "test": "mocha --recursive \"./test/**/*.test.ts\" --full-trace"
   },
   "license": "BSD-3-Clause",
   "engines": {
