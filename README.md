@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-Typescript Library and Oclid plugin to support the Salesforce Apex commands.
+Typescript Library and Oclif plugin to support the Salesforce Apex commands.
 
 Note: This library is in beta and has been released early so we can collect feedback. It may contain bugs, undergo major changes, or be discontinued.
 
