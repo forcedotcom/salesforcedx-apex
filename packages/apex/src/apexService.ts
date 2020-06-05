@@ -6,8 +6,9 @@
  */
 
 import { Connection } from '@salesforce/core';
-import { ApexExecute } from './apexExecute';
+import { ApexExecute } from './commands/apexExecute';
 import { ExecuteAnonymousResponse } from './types';
+import { nls } from './i18n';
 
 export class ApexService {
   public readonly connection: Connection;
@@ -19,8 +20,14 @@ export class ApexService {
   public async apexExecute(
     filepath?: string
   ): Promise<ExecuteAnonymousResponse> {
-    const apexExecute = new ApexExecute(this.connection);
-    const result = await apexExecute.execute(filepath);
-    return result;
+    try {
+      const apexExecute = new ApexExecute(this.connection);
+      const result = await apexExecute.execute(filepath);
+      return result;
+    } catch (e) {
+      throw new Error(
+        nls.localize('unexpected_command_error', 'force:apex:execute')
+      );
+    }
   }
 }

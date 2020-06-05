@@ -14,7 +14,7 @@ import {
   soapBody,
   soapHeader
 } from './utils';
-import { ExecuteAnonymousResponse } from './types';
+import { ExecuteAnonymousResponse } from '../types';
 
 export class ApexExecute {
   public readonly connection: Connection;
@@ -24,8 +24,17 @@ export class ApexExecute {
   }
 
   public async execute(filePath: string): Promise<ExecuteAnonymousResponse> {
-    const data = readFileSync(filePath);
+    const data = readFileSync(filePath, 'utf8');
+    const request = this.buildExecRequest(data);
 
+    const result = ((await this.connection.request(
+      request
+    )) as unknown) as SoapResponse;
+    const formattedResult = this.formatResult(result);
+    return formattedResult;
+  }
+
+  private buildExecRequest(data: string) {
     const action = 'executeAnonymous';
     const debugHeader =
       '<apex:DebuggingHeader><apex:debugLevel>DEBUGONLY</apex:debugLevel></apex:DebuggingHeader>';
@@ -51,15 +60,7 @@ export class ApexExecute {
       headers: requestHeaders
     };
 
-    try {
-      const result = ((await this.connection.request(
-        request
-      )) as unknown) as SoapResponse;
-      const formattedResult = this.formatResult(result);
-      return formattedResult;
-    } catch (e) {
-      const message = e.message;
-    }
+    return request;
   }
 
   public formatResult(soapResponse: SoapResponse): ExecuteAnonymousResponse {

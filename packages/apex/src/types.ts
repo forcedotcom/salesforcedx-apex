@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-export interface ExecuteAnonymousResponse {
+export type ExecuteAnonymousResponse = {
   result: {
     column: number;
     compiled: boolean;
@@ -16,4 +16,4 @@ export interface ExecuteAnonymousResponse {
     success: boolean;
     logs?: string;
   };
-}
+};

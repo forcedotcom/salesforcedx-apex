@@ -4,7 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { ExecuteAnonymousResponse } from './types';
+import { ExecuteAnonymousResponse } from '../types';
 
 export const soapTemplate = `<env:Envelope xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"
