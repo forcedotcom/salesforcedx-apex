@@ -26,7 +26,8 @@ export class ApexService {
       return result;
     } catch (e) {
       throw new Error(
-        nls.localize('unexpected_command_error', 'force:apex:execute')
+        nls.localize('unexpected_command_error', 'force:apex:execute. ') +
+          e.message
       );
     }
   }

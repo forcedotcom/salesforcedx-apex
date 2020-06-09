@@ -37,3 +37,10 @@ export interface SoapResponse {
 export interface DebuggingInfo {
   debugLog: string;
 }
+
+export interface RequestData {
+  method: string;
+  url: string;
+  body: string;
+  headers: {};
+}
