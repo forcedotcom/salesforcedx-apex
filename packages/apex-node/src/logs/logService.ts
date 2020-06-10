@@ -1,10 +1,3 @@
-/*
- * Copyright (c) 2020, salesforce.com, inc.
- * All rights reserved.
- * Licensed under the BSD 3-Clause license.
- * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
- */
-
 import { Connection } from '@salesforce/core';
 import { ApexLogGetOptions } from '../types';
 import { QueryResult } from '../types/common';
@@ -14,6 +7,7 @@ const MAX_NUM_LOGS = 25;
 
 export class LogService {
   public readonly connection: Connection;
+
   constructor(connection: Connection) {
     this.connection = connection;
   }
