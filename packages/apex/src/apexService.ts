@@ -6,7 +6,7 @@
  */
 
 import { Connection } from '@salesforce/core';
-import { ApexExecute } from './commands/apexExecute';
+import { ApexExecute } from './commands';
 import { ExecuteAnonymousResponse } from './types';
 import { nls } from './i18n';
 
@@ -18,7 +18,7 @@ export class ApexService {
   }
 
   public async apexExecute(
-    filepath?: string
+    filepath: string
   ): Promise<ExecuteAnonymousResponse> {
     try {
       const apexExecute = new ApexExecute(this.connection);

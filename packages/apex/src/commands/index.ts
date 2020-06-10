@@ -5,5 +5,5 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-export { ExecuteAnonymousResponse } from './types';
-export { ApexService } from './apexService';
+export { encodeBody } from './utils';
+export { ApexExecute } from './apexExecute';

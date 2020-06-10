@@ -5,6 +5,12 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { ExecuteAnonymousResponse } from '../types';
+import * as util from 'util';
+
+export const soapEnv = 'soapenv:Envelope';
+export const soapBody = 'soapenv:Body';
+export const soapHeader = 'soapenv:Header';
+export const action = 'executeAnonymous';
 
 export const soapTemplate = `<env:Envelope xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 xmlns:env="http://schemas.xmlsoap.org/soap/envelope/"
@@ -23,12 +29,8 @@ xmlns:apex="http://soap.sforce.com/2006/08/apex">
     </env:Body>
 </env:Envelope>`;
 
-export const soapEnv = 'soapenv:Envelope';
-export const soapBody = 'soapenv:Body';
-export const soapHeader = 'soapenv:Header';
-
 export interface SoapResponse {
-  [soapEnv]: {
+  [soapEnv]?: {
     [soapHeader]: { DebuggingInfo: DebuggingInfo };
     [soapBody]: { executeAnonymousResponse: ExecuteAnonymousResponse };
   };
@@ -43,4 +45,18 @@ export interface RequestData {
   url: string;
   body: string;
   headers: {};
+}
+
+export function encodeBody(accessToken: string, actionBody: string) {
+  const debugHeader =
+    '<apex:DebuggingHeader><apex:debugLevel>DEBUGONLY</apex:debugLevel></apex:DebuggingHeader>';
+  const body = util.format(
+    soapTemplate,
+    accessToken,
+    debugHeader,
+    action,
+    actionBody,
+    action
+  );
+  return body;
 }

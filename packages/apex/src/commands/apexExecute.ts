@@ -5,15 +5,15 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { readFileSync } from 'fs';
-import * as util from 'util';
 import { Connection } from '@salesforce/core';
 import {
-  soapTemplate,
   SoapResponse,
   soapEnv,
   soapBody,
   soapHeader,
-  RequestData
+  RequestData,
+  encodeBody,
+  action
 } from './utils';
 import { ExecuteAnonymousResponse } from '../types';
 
@@ -34,10 +34,8 @@ export class ApexExecute {
   }
 
   private buildExecRequest(data: string): RequestData {
-    const action = 'executeAnonymous';
-    const debugHeader =
-      '<apex:DebuggingHeader><apex:debugLevel>DEBUGONLY</apex:debugLevel></apex:DebuggingHeader>';
     const actionBody = `<apexcode>${data}</apexcode>`;
+    const body = encodeBody(this.connection.accessToken, actionBody);
     const postEndpoint = `${this.connection.instanceUrl}/services/Soap/s/${
       this.connection.version
     }/${this.connection.accessToken.split('!')[0]}`;
@@ -48,14 +46,7 @@ export class ApexExecute {
     const request = {
       method: 'POST',
       url: postEndpoint,
-      body: util.format(
-        soapTemplate,
-        this.connection.accessToken,
-        debugHeader,
-        action,
-        actionBody,
-        action
-      ),
+      body,
       headers: requestHeaders
     };
 
@@ -82,10 +73,10 @@ export class ApexExecute {
     return formattedResponse;
   }
 
-  public async connectionRequest(requestData: RequestData) {
-    const result = ((await this.connection.request(
-      requestData
-    )) as unknown) as SoapResponse;
+  public async connectionRequest(
+    requestData: RequestData
+  ): Promise<SoapResponse> {
+    const result = (await this.connection.request(requestData)) as SoapResponse;
     return result;
   }
 }
