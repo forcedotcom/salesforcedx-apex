@@ -9,6 +9,7 @@ import { Connection } from '@salesforce/core';
 import { ApexExecute } from './commands';
 import { nls } from './i18n';
 import { ApexExecuteOptions, ExecuteAnonymousResponse } from './types';
+import { ApexLogGet } from './commands/apexLogGet';
 
 export class ApexService {
   public readonly connection: Connection;
@@ -34,5 +35,15 @@ export class ApexService {
   public async refreshAuth(connection: Connection) {
     const requestInfo = { url: connection.baseUrl(), method: 'GET' };
     return await connection.request(requestInfo);
+  }
+
+  public async apexLogGet(x): Promise<any> {
+    try {
+      const apexLogGet = new ApexLogGet(this.connection);
+      const result = await apexLogGet.execute(x);
+      return result;
+    } catch (e) {
+      throw new Error(nls.localize(e.message));
+    }
   }
 }
