@@ -7,7 +7,7 @@
 
 import { Connection } from '@salesforce/core';
 import { ApexExecute } from './commands';
-import { ExecuteAnonymousResponse } from './types';
+import { ExecuteAnonymousResponse, ApexExecuteOptions } from './types';
 import { nls } from './i18n';
 
 export class ApexService {
@@ -18,11 +18,11 @@ export class ApexService {
   }
 
   public async apexExecute(
-    filepath: string
+    options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
     try {
       const apexExecute = new ApexExecute(this.connection);
-      const result = await apexExecute.execute(filepath);
+      const result = await apexExecute.execute(options.apexCodeFile);
       return result;
     } catch (e) {
       throw new Error(

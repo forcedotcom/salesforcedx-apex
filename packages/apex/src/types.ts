@@ -17,3 +17,23 @@ export type ExecuteAnonymousResponse = {
     logs?: string;
   };
 };
+
+enum logLevel {
+  trace = 'trace',
+  debug = 'debug',
+  info = 'info',
+  warn = 'warn',
+  error = 'error',
+  fatal = 'fatal'
+}
+
+type CommonOptions = {
+  json?: boolean;
+  apiVersion?: string;
+  loglevel?: logLevel;
+};
+
+export type ApexExecuteOptions = CommonOptions & {
+  targetUsername?: string;
+  apexCodeFile?: string;
+};
