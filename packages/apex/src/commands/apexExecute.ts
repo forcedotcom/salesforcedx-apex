@@ -36,7 +36,7 @@ export class ApexExecute {
   }
 
   private buildExecRequest(data: string): RequestData {
-    const actionBody = `<apexcode>${data}</apexcode>`;
+    const actionBody = `<apexcode><![CDATA[${data}]]></apexcode>`;
     const body = encodeBody(this.connection.accessToken, actionBody);
     const postEndpoint = `${this.connection.instanceUrl}/services/Soap/s/${
       this.connection.version
@@ -61,9 +61,9 @@ export class ApexExecute {
 
     const formattedResponse: ExecuteAnonymousResponse = {
       result: {
-        compiled: execAnonResponse.result.compiled,
+        compiled: !!execAnonResponse.result.compiled,
         compileProblem: execAnonResponse.result.compileProblem,
-        success: execAnonResponse.result.success,
+        success: !!execAnonResponse.result.success,
         line: execAnonResponse.result.line,
         column: execAnonResponse.result.column,
         exceptionMessage: execAnonResponse.result.exceptionMessage,
