@@ -37,10 +37,10 @@ export class ApexService {
     return await connection.request(requestInfo);
   }
 
-  public async apexLogGet(x): Promise<any> {
+  public async apexLogGet(numberOfLogs: number): Promise<any> {
     try {
       const apexLogGet = new ApexLogGet(this.connection);
-      const result = await apexLogGet.execute(x);
+      const result = await apexLogGet.getMultipleLogs(numberOfLogs);
       return result;
     } catch (e) {
       throw new Error(nls.localize(e.message));
