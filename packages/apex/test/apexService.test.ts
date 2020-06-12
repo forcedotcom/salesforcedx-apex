@@ -51,7 +51,9 @@ describe('Apex Service Tests', () => {
     sandboxStub
       .stub(ApexService.prototype, 'apexExecute')
       .resolves(execAnonResponse);
-    const response = await apexService.apexExecute('filepath/to/anonApex/file');
+    const response = await apexService.apexExecute({
+      apexCodeFile: 'filepath/to/anonApex/file'
+    });
     expect(response).to.eql(execAnonResponse);
   });
 });

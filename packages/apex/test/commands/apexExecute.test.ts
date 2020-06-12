@@ -20,7 +20,6 @@ describe('apexExecute tests', () => {
   const testData = new MockTestOrgData();
   let mockConnection: Connection;
   let sandboxStub: SinonSandbox;
-  const data = 'System.assert(true);';
 
   beforeEach(async () => {
     sandboxStub = createSandbox();
@@ -32,7 +31,7 @@ describe('apexExecute tests', () => {
         username: testData.username
       })
     });
-    const mockFS = sandboxStub.stub(fs, 'readFileSync');
+    sandboxStub.stub(fs, 'readFileSync');
   });
 
   afterEach(() => {
@@ -56,7 +55,9 @@ describe('apexExecute tests', () => {
     sandboxStub
       .stub(ApexService.prototype, 'apexExecute')
       .resolves(execAnonResponse);
-    const response = await apexService.apexExecute('filepath/to/anonApex/file');
+    const response = await apexService.apexExecute({
+      apexCodeFile: 'filepath/to/anonApex/file'
+    });
     expect(response).to.eql(execAnonResponse);
   });
 
@@ -85,7 +86,9 @@ describe('apexExecute tests', () => {
       .stub(ApexExecute.prototype, 'connectionRequest')
       .resolves(soapResponse);
 
-    const response = await apexService.apexExecute('filepath/to/anonApex/file');
+    const response = await apexService.apexExecute({
+      apexCodeFile: 'filepath/to/anonApex/file'
+    });
     execAnonResponse.result.logs = log;
     expect(response).to.eql(execAnonResponse);
   });
@@ -113,7 +116,9 @@ describe('apexExecute tests', () => {
       .stub(ApexExecute.prototype, 'connectionRequest')
       .resolves(soapResponse);
 
-    const response = await apexService.apexExecute('filepath/to/anonApex/file');
+    const response = await apexService.apexExecute({
+      apexCodeFile: 'filepath/to/anonApex/file'
+    });
     execAnonResponse.result.logs = '';
     expect(response).to.eql(execAnonResponse);
   });

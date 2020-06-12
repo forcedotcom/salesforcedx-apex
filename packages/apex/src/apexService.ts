@@ -7,8 +7,8 @@
 
 import { Connection } from '@salesforce/core';
 import { ApexExecute } from './commands';
-import { ExecuteAnonymousResponse, ApexExecuteOptions } from './types';
 import { nls } from './i18n';
+import { ApexExecuteOptions, ExecuteAnonymousResponse } from './types';
 
 export class ApexService {
   public readonly connection: Connection;
@@ -22,7 +22,7 @@ export class ApexService {
   ): Promise<ExecuteAnonymousResponse> {
     try {
       const apexExecute = new ApexExecute(this.connection);
-      const result = await apexExecute.execute(options.apexCodeFile);
+      const result = await apexExecute.execute(options);
       return result;
     } catch (e) {
       throw new Error(

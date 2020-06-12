@@ -4,8 +4,8 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { readFileSync } from 'fs';
 import { Connection } from '@salesforce/core';
+import { readFileSync } from 'fs';
 import {
   SoapResponse,
   soapEnv,
@@ -15,7 +15,7 @@ import {
   encodeBody,
   action
 } from './utils';
-import { ExecuteAnonymousResponse } from '../types';
+import { ExecuteAnonymousResponse, ApexExecuteOptions } from '../types';
 
 export class ApexExecute {
   public readonly connection: Connection;
@@ -24,13 +24,15 @@ export class ApexExecute {
     this.connection = connection;
   }
 
-  public async execute(filePath: string): Promise<ExecuteAnonymousResponse> {
-    const data = readFileSync(filePath, 'utf8');
+  public async execute(
+    options: ApexExecuteOptions
+  ): Promise<ExecuteAnonymousResponse> {
+    const data = readFileSync(options.apexCodeFile, 'utf8');
     const request = this.buildExecRequest(data);
 
     const result = await this.connectionRequest(request);
-    const formattedResult = this.formatResult(result);
-    return formattedResult;
+    const jsonResult = this.jsonFormat(result);
+    return jsonResult;
   }
 
   private buildExecRequest(data: string): RequestData {
@@ -53,7 +55,7 @@ export class ApexExecute {
     return request;
   }
 
-  public formatResult(soapResponse: SoapResponse): ExecuteAnonymousResponse {
+  public jsonFormat(soapResponse: SoapResponse): ExecuteAnonymousResponse {
     const execAnonResponse =
       soapResponse[soapEnv][soapBody].executeAnonymousResponse;
 
