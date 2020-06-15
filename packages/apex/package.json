@@ -5,7 +5,6 @@
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/salesforcedx-apex/issues",
   "dependencies": {
-    "@salesforce/command": "2.2.0",
     "@salesforce/core": "2.4.1"
   },
   "devDependencies": {
