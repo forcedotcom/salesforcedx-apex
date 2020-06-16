@@ -8,19 +8,22 @@ export class ApexLogGet {
     this.connection = connection;
   }
 
-  // return the n most recent log id's
   public async getLogIds(numberOfLogs: number) {
     const restrictLogs = numberOfLogs > 0 ? `+DESC+LIMIT+${numberOfLogs}` : '';
-    const url = util.format(
-      '%s/services/data/v%s/tooling/query/?q=' +
-        'Select+Id,+Application,+DurationMilliseconds,+Location,+LogLength,+LogUser.Name,+Operation,+Request,StartTime,+Status+' +
+    const query = util.format(
+      'Select+Id,+Application,+DurationMilliseconds,+Location,+LogLength,+LogUser.Name,+Operation,+Request,StartTime,+Status+' +
         'From+ApexLog+' +
         'Order+By+StartTime' +
         '%s',
-      this.connection.instanceUrl,
-      this.connection.version,
       restrictLogs
     );
+    const url = util.format(
+      '%s/services/data/v%s/tooling/query/?q=%s',
+      this.connection.instanceUrl,
+      this.connection.version,
+      query
+    );
+
     const response = await this.connection.request(url);
     const records = JSON.stringify(response);
 
@@ -51,12 +54,13 @@ export class ApexLogGet {
     let logRecords: string[] = [];
 
     // Given logId retrieve log
-    for (let i = 0; i < logIdList.length; i++) {
+    for (let id of logIdList) {
+      console.log(id);
       const url = util.format(
         '%s/services/data/v%s/tooling/sobjects/ApexLog/%s/Body',
         this.connection.instanceUrl,
         this.connection.version,
-        logIdList[i]
+        id
       );
       const response = await this.connection.request(url);
       const stringResponse = JSON.stringify(response);
