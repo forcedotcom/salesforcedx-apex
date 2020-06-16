@@ -43,7 +43,10 @@ export class ApexService {
       const result = await apexLogGet.getLogs(numberOfLogs, logId);
       return result;
     } catch (e) {
-      throw new Error(nls.localize(e.message));
+      throw new Error(
+        nls.localize('unexpected_command_error', 'force:apex:log:get. ') +
+          e.message
+      );
     }
   }
 }
