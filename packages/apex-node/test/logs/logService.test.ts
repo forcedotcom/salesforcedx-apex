@@ -7,7 +7,8 @@
 
 import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
-import { expect, assert } from 'chai';
+import { expect } from 'chai';
+import * as fs from 'fs';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { LogService } from '../../src/logs/logService';
 
@@ -28,6 +29,7 @@ describe('Apex Log Service Tests', () => {
         username: testData.username
       })
     });
+    sandboxStub.stub(fs, 'readFileSync');
   });
 
   afterEach(() => {
