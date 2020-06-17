@@ -16,6 +16,7 @@
  * If ommitted, we will assume _message.
  */
 export const messages = {
-  unexpected_command_error: 'Unexpected error while %s.',
+  unexpected_execute_command_error:
+    'Unexpected error while executing anonymous apex. ',
   file_not_found_error: 'File not found at the specified path: %s'
 };
