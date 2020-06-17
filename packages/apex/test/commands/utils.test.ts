@@ -5,14 +5,13 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { encodeBody } from '../../src/commands';
+import { encodeBody } from '../../src/commands/utils';
 import { expect } from 'chai';
-import * as util from 'util';
 
 describe('encodeBody for execute request', () => {
   it('should correctly return encoded body given the parameters', () => {
     const accessToken = '0000000000x189';
-    const actionBody = `<apexcode>System.assert(true);</apexcode>`;
+    const actionBody = `System.assert(true);`;
     const debugHeader =
       '<apex:DebuggingHeader><apex:debugLevel>DEBUGONLY</apex:debugLevel></apex:DebuggingHeader>';
     const action = 'executeAnonymous';
@@ -28,7 +27,7 @@ xmlns:apex="http://soap.sforce.com/2006/08/apex">
     </env:Header>
     <env:Body>
         <${action} xmlns="http://soap.sforce.com/2006/08/apex">
-            ${actionBody}
+            <apexcode><![CDATA[${actionBody}]]></apexcode>
         </${action}>
     </env:Body>
 </env:Envelope>`;

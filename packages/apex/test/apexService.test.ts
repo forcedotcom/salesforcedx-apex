@@ -9,7 +9,9 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox } from 'sinon';
-import { ApexService, ExecuteAnonymousResponse } from '../src';
+import { ApexService } from '../src/apexService';
+import { ExecuteAnonymousResponse } from '../src/types';
+import { ApexExecute } from '../src/commands/apexExecute';
 
 const $$ = testSetup();
 
@@ -37,19 +39,17 @@ describe('Apex Service Tests', () => {
   it('should run apexExecute command', async () => {
     const apexService = new ApexService(mockConnection);
     const execAnonResponse: ExecuteAnonymousResponse = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: true,
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: true,
-        logs: 'logs for successful run'
-      }
+      column: -1,
+      line: -1,
+      compiled: true,
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: true,
+      logs: 'logs for successful run'
     };
     sandboxStub
-      .stub(ApexService.prototype, 'apexExecute')
+      .stub(ApexExecute.prototype, 'execute')
       .resolves(execAnonResponse);
     const response = await apexService.apexExecute({
       apexCodeFile: 'filepath/to/anonApex/file'

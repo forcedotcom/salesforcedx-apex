@@ -5,17 +5,18 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Connection } from '@salesforce/core';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import {
   SoapResponse,
   soapEnv,
   soapBody,
   soapHeader,
   RequestData,
-  encodeBody,
   action
-} from './utils';
+} from '../types/execute';
 import { ExecuteAnonymousResponse, ApexExecuteOptions } from '../types';
+import { nls } from '../i18n';
+import { encodeBody } from './utils';
 
 export class ApexExecute {
   public readonly connection: Connection;
@@ -27,17 +28,49 @@ export class ApexExecute {
   public async execute(
     options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
-    const data = readFileSync(options.apexCodeFile, 'utf8');
-    const request = this.buildExecRequest(data);
-
-    const result = await this.connectionRequest(request);
-    const jsonResult = this.jsonFormat(result);
-    return jsonResult;
+    if (existsSync(options.apexCodeFile)) {
+      const data = readFileSync(options.apexCodeFile, 'utf8');
+      let count = 0;
+      while (count <= 10) {
+        try {
+          const request = this.buildExecRequest(data);
+          const result = await this.connectionRequest(request);
+          const jsonResult = this.jsonFormat(result);
+          return jsonResult;
+        } catch (e) {
+          if (
+            e.name === 'ERROR_HTTP_500' &&
+            e.message &&
+            e.message.includes('INVALID_SESSION_ID')
+          ) {
+            try {
+              await this.refreshAuth(this.connection);
+            } catch (e) {
+              throw new Error(
+                nls.localize(
+                  'unexpected_command_error',
+                  'executing anonymous apex.'
+                ) + e.message
+              );
+            }
+            count += 1;
+          } else {
+            throw new Error(
+              nls.localize('unexpected_command_error', 'force:apex:execute. ') +
+                e.message
+            );
+          }
+        }
+      }
+    } else {
+      throw new Error(nls.localize('file_not_found_error'));
+    }
   }
 
+  // Tooling API execute anonymous apex REST endpoint was not used because
+  // it requires multiple api calls to turn on trace flag, execute anonymous apex, and get the generated debug log
   private buildExecRequest(data: string): RequestData {
-    const actionBody = `<apexcode><![CDATA[${data}]]></apexcode>`;
-    const body = encodeBody(this.connection.accessToken, actionBody);
+    const body = encodeBody(this.connection.accessToken, data);
     const postEndpoint = `${this.connection.instanceUrl}/services/Soap/s/${
       this.connection.version
     }/${this.connection.accessToken.split('!')[0]}`;
@@ -57,19 +90,17 @@ export class ApexExecute {
 
   public jsonFormat(soapResponse: SoapResponse): ExecuteAnonymousResponse {
     const execAnonResponse =
-      soapResponse[soapEnv][soapBody].executeAnonymousResponse;
+      soapResponse[soapEnv][soapBody].result.executeAnonymousResponse;
 
     const formattedResponse: ExecuteAnonymousResponse = {
-      result: {
-        compiled: !!execAnonResponse.result.compiled,
-        compileProblem: execAnonResponse.result.compileProblem,
-        success: !!execAnonResponse.result.success,
-        line: execAnonResponse.result.line,
-        column: execAnonResponse.result.column,
-        exceptionMessage: execAnonResponse.result.exceptionMessage,
-        exceptionStackTrace: execAnonResponse.result.exceptionStackTrace,
-        logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
-      }
+      compiled: !!execAnonResponse.compiled,
+      compileProblem: execAnonResponse.compileProblem,
+      success: !!execAnonResponse.success,
+      line: execAnonResponse.line,
+      column: execAnonResponse.column,
+      exceptionMessage: execAnonResponse.exceptionMessage,
+      exceptionStackTrace: execAnonResponse.exceptionStackTrace,
+      logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
     };
 
     return formattedResponse;
@@ -80,5 +111,10 @@ export class ApexExecute {
   ): Promise<SoapResponse> {
     const result = (await this.connection.request(requestData)) as SoapResponse;
     return result;
+  }
+
+  public async refreshAuth(connection: Connection) {
+    const requestInfo = { url: connection.baseUrl(), method: 'GET' };
+    return await connection.request(requestInfo);
   }
 }

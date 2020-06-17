@@ -16,7 +16,6 @@
  * If ommitted, we will assume _message.
  */
 export const messages = {
-  no_package_directories_found:
-    'Your sfdx-project.json file doesn\'t contain a "packageDirectories" property. Add this property. For details about sfdx-project.json, see: https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm',
-  unexpected_command_error: 'Unexpected error while running command %s.'
+  unexpected_command_error: 'Unexpected error while %s.',
+  file_not_found_error: 'File not found at the specified path: %s'
 };

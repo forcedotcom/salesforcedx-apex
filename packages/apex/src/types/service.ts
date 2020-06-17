@@ -6,16 +6,14 @@
  */
 
 export type ExecuteAnonymousResponse = {
-  result: {
-    column: number;
-    compiled: boolean;
-    compileProblem: string;
-    exceptionMessage: string;
-    exceptionStackTrace: string;
-    line: number;
-    success: boolean;
-    logs?: string;
-  };
+  column: number;
+  compiled: boolean;
+  compileProblem: string;
+  exceptionMessage: string;
+  exceptionStackTrace: string;
+  line: number;
+  success: boolean;
+  logs?: string;
 };
 
 enum logLevel {
@@ -29,11 +27,10 @@ enum logLevel {
 
 type CommonOptions = {
   json?: boolean;
-  apiVersion?: string;
   loglevel?: logLevel;
 };
 
 export type ApexExecuteOptions = CommonOptions & {
   targetUsername?: string;
-  apexCodeFile?: string;
+  apexCodeFile: string;
 };

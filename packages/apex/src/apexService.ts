@@ -31,4 +31,9 @@ export class ApexService {
       );
     }
   }
+
+  public async refreshAuth(connection: Connection) {
+    const requestInfo = { url: connection.baseUrl(), method: 'GET' };
+    return await connection.request(requestInfo);
+  }
 }
