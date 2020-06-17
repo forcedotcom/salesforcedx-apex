@@ -32,7 +32,7 @@ export interface SoapResponse {
   [soapEnv]?: {
     [soapHeader]: { DebuggingInfo: DebuggingInfo };
     [soapBody]: {
-      result: { executeAnonymousResponse: ExecuteAnonymousResponse };
+      executeAnonymousResponse: ExecuteAnonymousResponse;
     };
   };
 }

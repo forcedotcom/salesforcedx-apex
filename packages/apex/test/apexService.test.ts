@@ -39,14 +39,16 @@ describe('Apex Service Tests', () => {
   it('should run apexExecute command', async () => {
     const apexService = new ApexService(mockConnection);
     const execAnonResponse: ExecuteAnonymousResponse = {
-      column: -1,
-      line: -1,
-      compiled: true,
-      compileProblem: '',
-      exceptionMessage: '',
-      exceptionStackTrace: '',
-      success: true,
-      logs: 'logs for successful run'
+      result: {
+        column: -1,
+        line: -1,
+        compiled: true,
+        compileProblem: '',
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: true,
+        logs: 'logs for successful run'
+      }
     };
     sandboxStub
       .stub(ApexExecute.prototype, 'execute')

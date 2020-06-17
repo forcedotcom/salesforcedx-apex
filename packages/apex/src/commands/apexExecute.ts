@@ -31,7 +31,7 @@ export class ApexExecute {
     if (existsSync(options.apexCodeFile)) {
       const data = readFileSync(options.apexCodeFile, 'utf8');
       let count = 0;
-      while (count <= 10) {
+      while (count < 2) {
         try {
           const request = this.buildExecRequest(data);
           const result = await this.connectionRequest(request);
@@ -43,16 +43,7 @@ export class ApexExecute {
             e.message &&
             e.message.includes('INVALID_SESSION_ID')
           ) {
-            try {
-              await this.refreshAuth(this.connection);
-            } catch (e) {
-              throw new Error(
-                nls.localize(
-                  'unexpected_command_error',
-                  'executing anonymous apex.'
-                ) + e.message
-              );
-            }
+            await this.refreshAuth(this.connection);
             count += 1;
           } else {
             throw new Error(
@@ -90,17 +81,19 @@ export class ApexExecute {
 
   public jsonFormat(soapResponse: SoapResponse): ExecuteAnonymousResponse {
     const execAnonResponse =
-      soapResponse[soapEnv][soapBody].result.executeAnonymousResponse;
+      soapResponse[soapEnv][soapBody].executeAnonymousResponse.result;
 
     const formattedResponse: ExecuteAnonymousResponse = {
-      compiled: !!execAnonResponse.compiled,
-      compileProblem: execAnonResponse.compileProblem,
-      success: !!execAnonResponse.success,
-      line: execAnonResponse.line,
-      column: execAnonResponse.column,
-      exceptionMessage: execAnonResponse.exceptionMessage,
-      exceptionStackTrace: execAnonResponse.exceptionStackTrace,
-      logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
+      result: {
+        compiled: !!execAnonResponse.compiled,
+        compileProblem: execAnonResponse.compileProblem,
+        success: !!execAnonResponse.success,
+        line: execAnonResponse.line,
+        column: execAnonResponse.column,
+        exceptionMessage: execAnonResponse.exceptionMessage,
+        exceptionStackTrace: execAnonResponse.exceptionStackTrace,
+        logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
+      }
     };
 
     return formattedResponse;

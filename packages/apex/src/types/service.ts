@@ -6,14 +6,16 @@
  */
 
 export type ExecuteAnonymousResponse = {
-  column: number;
-  compiled: boolean;
-  compileProblem: string;
-  exceptionMessage: string;
-  exceptionStackTrace: string;
-  line: number;
-  success: boolean;
-  logs?: string;
+  result: {
+    column: number;
+    compiled: boolean;
+    compileProblem: string;
+    exceptionMessage: string;
+    exceptionStackTrace: string;
+    line: number;
+    success: boolean;
+    logs?: string;
+  };
 };
 
 enum logLevel {

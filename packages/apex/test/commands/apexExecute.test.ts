@@ -43,21 +43,23 @@ describe('Apex Execute Tests', () => {
     const apexExecute = new ApexExecute(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResponse: ExecuteAnonymousResponse = {
-      column: -1,
-      line: -1,
-      compiled: true,
-      compileProblem: '',
-      exceptionMessage: '',
-      exceptionStackTrace: '',
-      success: true,
-      logs: log
+    const execAnonResult: ExecuteAnonymousResponse = {
+      result: {
+        column: -1,
+        line: -1,
+        compiled: true,
+        compileProblem: '',
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: true,
+        logs: log
+      }
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          result: { executeAnonymousResponse: execAnonResponse }
+          executeAnonymousResponse: execAnonResult
         }
       }
     };
@@ -67,27 +69,29 @@ describe('Apex Execute Tests', () => {
     const response = await apexExecute.execute({
       apexCodeFile: 'filepath/to/anonApex/file'
     });
-    expect(response).to.eql(execAnonResponse);
+    expect(response).to.eql(execAnonResult);
   });
 
   it('should execute and display runtime issue in correct format', async () => {
     const apexExecute = new ApexExecute(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(false);|EXECUTION_FINISHED\n';
-    const execAnonResponse: ExecuteAnonymousResponse = {
-      column: 1,
-      line: 6,
-      compiled: true,
-      compileProblem: '',
-      exceptionMessage: 'System.AssertException: Assertion Failed',
-      exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
-      success: false
+    const execAnonResult: ExecuteAnonymousResponse = {
+      result: {
+        column: 1,
+        line: 6,
+        compiled: true,
+        compileProblem: '',
+        exceptionMessage: 'System.AssertException: Assertion Failed',
+        exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
+        success: false
+      }
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          result: { executeAnonymousResponse: execAnonResponse }
+          executeAnonymousResponse: execAnonResult
         }
       }
     };
@@ -98,26 +102,28 @@ describe('Apex Execute Tests', () => {
     const response = await apexExecute.execute({
       apexCodeFile: 'filepath/to/anonApex/file'
     });
-    execAnonResponse.logs = log;
-    expect(response).to.eql(execAnonResponse);
+    execAnonResult.result.logs = log;
+    expect(response).to.eql(execAnonResult);
   });
 
   it('should execute and display compile issue in correct format', async () => {
     const apexExecute = new ApexExecute(mockConnection);
-    const execAnonResponse: ExecuteAnonymousResponse = {
-      column: 1,
-      line: 6,
-      compiled: false,
-      compileProblem: `Unexpected token '('.`,
-      exceptionMessage: '',
-      exceptionStackTrace: '',
-      success: false
+    const execAnonResult: ExecuteAnonymousResponse = {
+      result: {
+        column: 1,
+        line: 6,
+        compiled: false,
+        compileProblem: `Unexpected token '('.`,
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: false
+      }
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: '' } },
         'soapenv:Body': {
-          result: { executeAnonymousResponse: execAnonResponse }
+          executeAnonymousResponse: execAnonResult
         }
       }
     };
@@ -128,7 +134,50 @@ describe('Apex Execute Tests', () => {
     const response = await apexExecute.execute({
       apexCodeFile: 'filepath/to/anonApex/file'
     });
-    execAnonResponse.logs = '';
-    expect(response).to.eql(execAnonResponse);
+    execAnonResult.result.logs = '';
+    expect(response).to.eql(execAnonResult);
+  });
+
+  it('should handle access token session id error correctly', async () => {
+    const apexExecute = new ApexExecute(mockConnection);
+    const log =
+      '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
+    const execAnonResult: ExecuteAnonymousResponse = {
+      result: {
+        column: -1,
+        line: -1,
+        compiled: true,
+        compileProblem: '',
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: true,
+        logs: log
+      }
+    };
+    const soapResponse: SoapResponse = {
+      'soapenv:Envelope': {
+        'soapenv:Header': { DebuggingInfo: { debugLog: log } },
+        'soapenv:Body': {
+          executeAnonymousResponse: execAnonResult
+        }
+      }
+    };
+
+    const connRequestStub = sandboxStub.stub(
+      ApexExecute.prototype,
+      'connectionRequest'
+    );
+    sandboxStub.stub(ApexExecute.prototype, 'refreshAuth');
+    const error = new Error('INVALID_SESSION_ID');
+    error.name = 'ERROR_HTTP_500';
+    connRequestStub.onFirstCall().throws(error);
+    connRequestStub.onSecondCall().resolves(soapResponse);
+
+    const response = await apexExecute.execute({
+      apexCodeFile: 'filepath/to/anonApex/file'
+    });
+    execAnonResult.result.logs = log;
+    expect(response).to.eql(execAnonResult);
+    expect(connRequestStub.calledTwice);
   });
 });
