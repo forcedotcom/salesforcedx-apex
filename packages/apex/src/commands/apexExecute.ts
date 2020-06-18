@@ -47,7 +47,7 @@ export class ApexExecute {
             count += 1;
           } else {
             throw new Error(
-              nls.localize('unexpected_execute_command_error') + e.message
+              nls.localize('unexpected_execute_command_error', e.message)
             );
           }
         }
