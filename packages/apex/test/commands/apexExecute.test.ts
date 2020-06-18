@@ -11,7 +11,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { ExecuteAnonymousResponse } from '../../src/types';
-import { SoapResponse } from '../../src/types/execute';
+import { SoapResponse, execAnonResult } from '../../src/types/execute';
 import { ApexExecute } from '../../src/commands/apexExecute';
 
 const $$ = testSetup();
@@ -43,7 +43,26 @@ describe('Apex Execute Tests', () => {
     const apexExecute = new ApexExecute(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecuteAnonymousResponse = {
+    const execAnonResult: execAnonResult = {
+      result: {
+        column: -1,
+        line: -1,
+        compiled: 'true',
+        compileProblem: '',
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: 'true'
+      }
+    };
+    const soapResponse: SoapResponse = {
+      'soapenv:Envelope': {
+        'soapenv:Header': { DebuggingInfo: { debugLog: log } },
+        'soapenv:Body': {
+          executeAnonymousResponse: execAnonResult
+        }
+      }
+    };
+    const expectedResult: ExecuteAnonymousResponse = {
       result: {
         column: -1,
         line: -1,
@@ -55,6 +74,31 @@ describe('Apex Execute Tests', () => {
         logs: log
       }
     };
+    sandboxStub
+      .stub(ApexExecute.prototype, 'connectionRequest')
+      .resolves(soapResponse);
+    const response = await apexExecute.execute({
+      apexCodeFile: 'filepath/to/anonApex/file'
+    });
+
+    expect(response).to.eql(expectedResult);
+  });
+
+  it('should execute and display runtime issue in correct format', async () => {
+    const apexExecute = new ApexExecute(mockConnection);
+    const log =
+      '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(false);|EXECUTION_FINISHED\n';
+    const execAnonResult: execAnonResult = {
+      result: {
+        column: 1,
+        line: 6,
+        compiled: 'true',
+        compileProblem: '',
+        exceptionMessage: 'System.AssertException: Assertion Failed',
+        exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
+        success: 'false'
+      }
+    };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
@@ -63,20 +107,7 @@ describe('Apex Execute Tests', () => {
         }
       }
     };
-    sandboxStub
-      .stub(ApexExecute.prototype, 'connectionRequest')
-      .resolves(soapResponse);
-    const response = await apexExecute.execute({
-      apexCodeFile: 'filepath/to/anonApex/file'
-    });
-    expect(response).to.eql(execAnonResult);
-  });
-
-  it('should execute and display runtime issue in correct format', async () => {
-    const apexExecute = new ApexExecute(mockConnection);
-    const log =
-      '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(false);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecuteAnonymousResponse = {
+    const expectedResult: ExecuteAnonymousResponse = {
       result: {
         column: 1,
         line: 6,
@@ -84,15 +115,8 @@ describe('Apex Execute Tests', () => {
         compileProblem: '',
         exceptionMessage: 'System.AssertException: Assertion Failed',
         exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
-        success: false
-      }
-    };
-    const soapResponse: SoapResponse = {
-      'soapenv:Envelope': {
-        'soapenv:Header': { DebuggingInfo: { debugLog: log } },
-        'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
-        }
+        success: false,
+        logs: log
       }
     };
     sandboxStub
@@ -102,21 +126,20 @@ describe('Apex Execute Tests', () => {
     const response = await apexExecute.execute({
       apexCodeFile: 'filepath/to/anonApex/file'
     });
-    execAnonResult.result.logs = log;
-    expect(response).to.eql(execAnonResult);
+    expect(response).to.eql(expectedResult);
   });
 
   it('should execute and display compile issue in correct format', async () => {
     const apexExecute = new ApexExecute(mockConnection);
-    const execAnonResult: ExecuteAnonymousResponse = {
+    const execAnonResult: execAnonResult = {
       result: {
         column: 1,
         line: 6,
-        compiled: false,
+        compiled: 'false',
         compileProblem: `Unexpected token '('.`,
         exceptionMessage: '',
         exceptionStackTrace: '',
-        success: false
+        success: 'false'
       }
     };
     const soapResponse: SoapResponse = {
@@ -127,6 +150,19 @@ describe('Apex Execute Tests', () => {
         }
       }
     };
+
+    const expectedResult: ExecuteAnonymousResponse = {
+      result: {
+        column: 1,
+        line: 6,
+        compiled: false,
+        compileProblem: `Unexpected token '('.`,
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: false,
+        logs: ''
+      }
+    };
     sandboxStub
       .stub(ApexExecute.prototype, 'connectionRequest')
       .resolves(soapResponse);
@@ -134,15 +170,33 @@ describe('Apex Execute Tests', () => {
     const response = await apexExecute.execute({
       apexCodeFile: 'filepath/to/anonApex/file'
     });
-    execAnonResult.result.logs = '';
-    expect(response).to.eql(execAnonResult);
+    expect(response).to.eql(expectedResult);
   });
 
   it('should handle access token session id error correctly', async () => {
     const apexExecute = new ApexExecute(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecuteAnonymousResponse = {
+    const execAnonResult: execAnonResult = {
+      result: {
+        column: -1,
+        line: -1,
+        compiled: 'true',
+        compileProblem: '',
+        exceptionMessage: '',
+        exceptionStackTrace: '',
+        success: 'true'
+      }
+    };
+    const soapResponse: SoapResponse = {
+      'soapenv:Envelope': {
+        'soapenv:Header': { DebuggingInfo: { debugLog: log } },
+        'soapenv:Body': {
+          executeAnonymousResponse: execAnonResult
+        }
+      }
+    };
+    const expectedResult: ExecuteAnonymousResponse = {
       result: {
         column: -1,
         line: -1,
@@ -152,14 +206,6 @@ describe('Apex Execute Tests', () => {
         exceptionStackTrace: '',
         success: true,
         logs: log
-      }
-    };
-    const soapResponse: SoapResponse = {
-      'soapenv:Envelope': {
-        'soapenv:Header': { DebuggingInfo: { debugLog: log } },
-        'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
-        }
       }
     };
 
@@ -176,8 +222,7 @@ describe('Apex Execute Tests', () => {
     const response = await apexExecute.execute({
       apexCodeFile: 'filepath/to/anonApex/file'
     });
-    execAnonResult.result.logs = log;
-    expect(response).to.eql(execAnonResult);
+    expect(response).to.eql(expectedResult);
     expect(connRequestStub.calledTwice);
   });
 });

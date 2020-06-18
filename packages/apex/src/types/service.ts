@@ -14,7 +14,7 @@ export type ExecuteAnonymousResponse = {
     exceptionStackTrace: string;
     line: number;
     success: boolean;
-    logs?: string;
+    logs: string;
   };
 };
 

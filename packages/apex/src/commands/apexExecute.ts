@@ -82,11 +82,11 @@ export class ApexExecute {
     const execAnonResponse =
       soapResponse[soapEnv][soapBody].executeAnonymousResponse.result;
 
-    const formattedResponse: ExecuteAnonymousResponse = {
+    const formattedResponse = {
       result: {
-        compiled: !!execAnonResponse.compiled,
+        compiled: execAnonResponse.compiled === 'true' ? true : false,
         compileProblem: execAnonResponse.compileProblem,
-        success: !!execAnonResponse.success,
+        success: execAnonResponse.success === 'true' ? true : false,
         line: execAnonResponse.line,
         column: execAnonResponse.column,
         exceptionMessage: execAnonResponse.exceptionMessage,
