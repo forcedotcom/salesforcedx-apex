@@ -46,26 +46,30 @@ export class ApexLogGet {
   public async getLogs(numberOfLogs?: number, logId?: string) {
     let logIdList: string[] = [];
     if (numberOfLogs) {
+      numberOfLogs = numberOfLogs > 25 ? 25 : numberOfLogs;
       logIdList = await this.getLogIds(numberOfLogs);
     } else {
       logIdList.push(logId);
     }
 
     let logRecords: string[] = [];
-
     // Given logId retrieve log
     for (let id of logIdList) {
-      console.log(id);
       const url = util.format(
         '%s/services/data/v%s/tooling/sobjects/ApexLog/%s/Body',
         this.connection.instanceUrl,
         this.connection.version,
         id
       );
-      const response = await this.connection.request(url);
+      const response = await this.connectionRequest;
       const stringResponse = JSON.stringify(response);
       logRecords.push(stringResponse);
     }
     return logRecords;
+  }
+
+  public async connectionRequest(url: string) {
+    const result = await this.connection.request(url);
+    return result;
   }
 }
