@@ -1,5 +1,6 @@
 import { Connection } from '@salesforce/core';
 import * as util from 'util';
+import { ApexLogGetOptions } from '../types/service';
 
 export class ApexLogGet {
   public readonly connection: Connection;
@@ -8,15 +9,10 @@ export class ApexLogGet {
     this.connection = connection;
   }
 
-  public async getLogIds(numberOfLogs: number) {
+  public async getLogIds(numberOfLogs: number): Promise<string[]> {
+    numberOfLogs = numberOfLogs > 25 ? 25 : numberOfLogs;
     const restrictLogs = numberOfLogs > 0 ? `+DESC+LIMIT+${numberOfLogs}` : '';
-    const query = util.format(
-      'Select+Id,+Application,+DurationMilliseconds,+Location,+LogLength,+LogUser.Name,+Operation,+Request,StartTime,+Status+' +
-        'From+ApexLog+' +
-        'Order+By+StartTime' +
-        '%s',
-      restrictLogs
-    );
+    const query = `Select+Id,+Application,+DurationMilliseconds,+Location,+LogLength,+LogUser.Name,+Operation,+Request,StartTime,+Status+From+ApexLog+Order+By+StartTime${restrictLogs}`;
     const url = util.format(
       '%s/services/data/v%s/tooling/query/?q=%s',
       this.connection.instanceUrl,
@@ -27,33 +23,24 @@ export class ApexLogGet {
     const response = await this.connection.request(url);
     const records = JSON.stringify(response);
 
-    // To store log id's in an array
-    let logId: string[] = [];
+    let logIds: string[] = [];
     JSON.parse(records, (key, value) => {
       if (key === 'Id') {
-        logId.push(value);
+        logIds.push(value);
       }
     });
-    return logId;
+    return logIds;
   }
 
-  /**
-   * Handle -n and -i flags for force:apex:log:get
-   * Output log bodies of last N number of logs
-   * @param numberOfLogs {number} number of logs to retrieve
-   * @param logId {string} logId - the debug log to retrieve
-   */
-  public async getLogs(numberOfLogs?: number, logId?: string) {
+  public async getLogs(options: ApexLogGetOptions): Promise<string[]> {
     let logIdList: string[] = [];
-    if (numberOfLogs) {
-      numberOfLogs = numberOfLogs > 25 ? 25 : numberOfLogs;
-      logIdList = await this.getLogIds(numberOfLogs);
+    if (options.numberOfLogs) {
+      logIdList = await this.getLogIds(options.numberOfLogs);
     } else {
-      logIdList.push(logId);
+      logIdList.push(options.logId);
     }
 
     let logRecords: string[] = [];
-    // Given logId retrieve log
     for (let id of logIdList) {
       const url = util.format(
         '%s/services/data/v%s/tooling/sobjects/ApexLog/%s/Body',
@@ -61,7 +48,7 @@ export class ApexLogGet {
         this.connection.version,
         id
       );
-      const response = await this.connectionRequest;
+      const response = await this.connectionRequest(url);
       const stringResponse = JSON.stringify(response);
       logRecords.push(stringResponse);
     }

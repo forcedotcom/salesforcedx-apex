@@ -9,12 +9,12 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect, assert } from 'chai';
 import * as fs from 'fs';
-import { createSandbox, SinonSandbox } from 'sinon';
+import { createSandbox, SinonSandbox, sandbox } from 'sinon';
 import { ApexLogGet } from '../../src/commands/apexLogGet';
 
 const $$ = testSetup();
 
-describe('apexLogGet tests', () => {
+describe('Apex Log Get Tests', () => {
   const testData = new MockTestOrgData();
   let mockConnection: Connection;
   let sandboxStub: SinonSandbox;
@@ -36,25 +36,28 @@ describe('apexLogGet tests', () => {
     sandboxStub.restore();
   });
 
-  it('should check the number of logs', async () => {
+  it('should return correct number of logs', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     const logIds = ['07WgsWfsFF', 'FTWrd5lfg'];
-    const logs = ['48jnskd', '67knmdfklDF'];
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
-    sandboxStub.stub(ApexLogGet.prototype, 'connectionRequest').resolves(logs);
-    const response = await apexLogGet.getLogs(2);
+    const response = await apexLogGet.getLogs({ numberOfLogs: 2 });
     expect(response.length).to.eql(2);
   });
 
-  it('should check for log id', async () => {
+  it('should return correct log given log id', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
-    const logs = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..'];
-    sandboxStub.stub(ApexLogGet.prototype, 'getLogs').resolves(logs);
-    const response = await apexLogGet.getLogs(0, '07L5w00005PGdTnEAL');
+    const log = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..'];
+    const logId = ['08YpsWfsUE'];
+    const getLogIdStub = sandboxStub
+      .stub(ApexLogGet.prototype, 'getLogIds')
+      .resolves(logId);
+    sandboxStub.stub(ApexLogGet.prototype, 'getLogs').resolves(log);
+    const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
     expect(response.length).to.eql(1);
+    expect(getLogIdStub.callCount).to.eql(0);
   });
 
-  it('should check the number of log limit', async () => {
+  it('should handle exceeding log limit', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     const logs = [
       '47.0',
@@ -83,22 +86,21 @@ describe('apexLogGet tests', () => {
       'DH',
       'FGFD'
     ];
-    sandboxStub.stub(ApexLogGet.prototype, 'getLogs').resolves(logs);
-    const response = await apexLogGet.getLogs(27);
+    sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logs);
+    const response = await apexLogGet.getLogs({ numberOfLogs: 27 });
     expect(response.length).to.eql(25);
   });
 
-  it('should check for invalid id', async () => {
+  it('should handle invalid id', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     const logs = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..'];
     sandboxStub
       .stub(ApexLogGet.prototype, 'connectionRequest')
       .throws(new Error('invalid id'));
     try {
-      const response = await apexLogGet.getLogs(
-        undefined,
-        '07L5tgg0005PGdTnEAL'
-      );
+      const response = await apexLogGet.getLogs({
+        logId: '07L5tgg0005PGdTnEAL'
+      });
     } catch (e) {
       expect(e.message).to.equal('invalid id');
     }
