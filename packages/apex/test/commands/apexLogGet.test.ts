@@ -105,4 +105,19 @@ describe('Apex Log Get Tests', () => {
       expect(e.message).to.equal('invalid id');
     }
   });
+
+  it('should store logs in the directory', async () => {
+    const apexLogGet = new ApexLogGet(mockConnection);
+    const logIds = ['07WgsWfsFF', 'FTWrd5lfg'];
+    const logs = [
+      '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..',
+      '37.0 APEX logs'
+    ];
+    sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
+    sandboxStub.stub(ApexLogGet.prototype, 'connectionRequest').resolves(logs);
+    await apexLogGet.getLogs({
+      numberOfLogs: 2,
+      outputDir: '/Users/smit.shah/Desktop'
+    });
+  });
 });

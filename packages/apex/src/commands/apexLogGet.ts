@@ -1,6 +1,7 @@
 import { Connection } from '@salesforce/core';
 import * as util from 'util';
 import { ApexLogGetOptions } from '../types/service';
+import * as fs from 'fs';
 
 export class ApexLogGet {
   public readonly connection: Connection;
@@ -52,7 +53,23 @@ export class ApexLogGet {
       const stringResponse = JSON.stringify(response);
       logRecords.push(stringResponse);
     }
-    return logRecords;
+
+    if (options.outputDir) {
+      const rec = await fs.writeFile(
+        `${options.outputDir}/sfdxLogs.txt`,
+        logRecords.join(', '),
+        err => {
+          if (err) throw err;
+          console.log(
+            `Logs were successfully written in the file located: ${
+              options.outputDir
+            }`
+          );
+        }
+      );
+    } else {
+      return logRecords;
+    }
   }
 
   public async connectionRequest(url: string) {
