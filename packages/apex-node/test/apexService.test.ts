@@ -12,6 +12,7 @@ import { ExecuteAnonymousResponse } from '../src/types';
 import { ApexExecute } from '../src/commands/apexExecute';
 import { createSandbox, SinonSandbox, sandbox } from 'sinon';
 import { ApexService } from '../src/apexService';
+import { ApexLogGet } from '../src/commands';
 
 const $$ = testSetup();
 
@@ -62,8 +63,8 @@ describe('Apex Service Tests', () => {
   it('should run apexLogGet command', async () => {
     const apexService = new ApexService(mockConnection);
     const logRecords = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT'];
-    sandboxStub.stub(ApexService.prototype, 'apexLogGet').resolves(logRecords);
-    const response = await apexService.apexLogGet(1);
+    sandboxStub.stub(ApexLogGet.prototype, 'getLogs').resolves(logRecords);
+    const response = await apexService.apexLogGet({ numberOfLogs: 1 });
     expect(response.length).to.eql(1);
   });
 });
