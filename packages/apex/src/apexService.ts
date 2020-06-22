@@ -10,6 +10,7 @@ import { ApexExecute } from './commands';
 import { nls } from './i18n';
 import { ApexExecuteOptions, ExecuteAnonymousResponse } from './types';
 import { ApexLogGet } from './commands/apexLogGet';
+import { ApexLogGetOptions } from './types/service';
 
 export class ApexService {
   public readonly connection: Connection;
@@ -37,15 +38,14 @@ export class ApexService {
     return await connection.request(requestInfo);
   }
 
-  public async apexLogGet(numberOfLogs?: number, logId?: string): Promise<any> {
+  public async apexLogGet(options: ApexLogGetOptions): Promise<any> {
     try {
       const apexLogGet = new ApexLogGet(this.connection);
-      const result = await apexLogGet.getLogs(numberOfLogs, logId);
+      const result = await apexLogGet.getLogs(options);
       return result;
     } catch (e) {
       throw new Error(
-        nls.localize('unexpected_command_error', 'force:apex:log:get. ') +
-          e.message
+        nls.localize('unexpected_log_get_command_error', e.message)
       );
     }
   }
