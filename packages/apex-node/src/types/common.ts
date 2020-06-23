@@ -20,5 +20,5 @@ export type CommonOptions = {
 };
 
 export type QueryResult = {
-  records: { Id?: string; Body: string }[];
+  records: { Id: string }[];
 };
