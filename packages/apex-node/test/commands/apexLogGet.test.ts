@@ -9,7 +9,7 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect, assert } from 'chai';
 import * as fs from 'fs';
-import { createSandbox, SinonSandbox, sandbox } from 'sinon';
+import { createSandbox, SinonSandbox } from 'sinon';
 import { ApexLogGet } from '../../src/commands/apexLogGet';
 
 const $$ = testSetup();
@@ -40,7 +40,12 @@ describe('Apex Log Get Tests', () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     const logIds = ['07WgsWfsFF', 'FTWrd5lfg'];
     const logs = ['48jnskd', '67knmdfklDF'];
-    sandboxStub.stub(ApexLogGet.prototype, 'connectionRequest').resolves(logs);
+    const connRequestStub = sandboxStub.stub(
+      ApexLogGet.prototype,
+      'connectionRequest'
+    );
+    connRequestStub.onFirstCall().resolves(logs[0]);
+    connRequestStub.onSecondCall().resolves(logs[1]);
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
     const response = await apexLogGet.execute({ numberOfLogs: 2 });
     expect(response.length).to.eql(2);
@@ -102,6 +107,17 @@ describe('Apex Log Get Tests', () => {
       await apexLogGet.execute({ logId: '07L5tgg0005PGdTnEAL' });
     } catch (e) {
       expect(e.message).to.equal('invalid id');
+    }
+  });
+
+  it('should throw an error if 0 logs are requested', async () => {
+    const apexLogGet = new ApexLogGet(mockConnection);
+    try {
+      await apexLogGet.getLogIds(0);
+    } catch (e) {
+      expect(e.message).to.equal(
+        'Expected number of logs to be greater than 0.'
+      );
     }
   });
 });
