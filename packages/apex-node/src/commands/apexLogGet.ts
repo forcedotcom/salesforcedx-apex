@@ -2,15 +2,16 @@ import { Connection } from '@salesforce/core';
 import * as util from 'util';
 import { ApexLogGetOptions } from '../types/service';
 
+const MAX_NUM_LOGS = 25;
+
 export class ApexLogGet {
   public readonly connection: Connection;
-
   constructor(connection: Connection) {
     this.connection = connection;
   }
 
   public async getLogIds(numberOfLogs: number): Promise<string[]> {
-    numberOfLogs = numberOfLogs > 25 ? 25 : numberOfLogs;
+    numberOfLogs = numberOfLogs > MAX_NUM_LOGS ? MAX_NUM_LOGS : numberOfLogs;
     const restrictLogs = numberOfLogs > 0 ? `+DESC+LIMIT+${numberOfLogs}` : '';
     const query = `Select+Id,+Application,+DurationMilliseconds,+Location,+LogLength,+LogUser.Name,+Operation,+Request,StartTime,+Status+From+ApexLog+Order+By+StartTime${restrictLogs}`;
     const url = util.format(
@@ -32,7 +33,7 @@ export class ApexLogGet {
     return logIds;
   }
 
-  public async getLogs(options: ApexLogGetOptions): Promise<string[]> {
+  public async execute(options: ApexLogGetOptions): Promise<string[]> {
     let logIdList: string[] = [];
     if (options.numberOfLogs) {
       logIdList = await this.getLogIds(options.numberOfLogs);
