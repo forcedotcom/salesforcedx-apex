@@ -1,6 +1,7 @@
 import { Connection } from '@salesforce/core';
-import * as util from 'util';
 import { ApexLogGetOptions } from '../types/service';
+import { QueryResult } from '../types/common';
+import { nls } from '../i18n';
 
 const MAX_NUM_LOGS = 25;
 
@@ -11,25 +12,20 @@ export class ApexLogGet {
   }
 
   public async getLogIds(numberOfLogs: number): Promise<string[]> {
+    if (numberOfLogs <= 0) {
+      throw new Error(nls.localize('num_logs_error'));
+    }
     numberOfLogs = numberOfLogs > MAX_NUM_LOGS ? MAX_NUM_LOGS : numberOfLogs;
-    const restrictLogs = numberOfLogs > 0 ? `+DESC+LIMIT+${numberOfLogs}` : '';
-    const query = `Select+Id,+Application,+DurationMilliseconds,+Location,+LogLength,+LogUser.Name,+Operation,+Request,StartTime,+Status+From+ApexLog+Order+By+StartTime${restrictLogs}`;
-    const url = util.format(
-      '%s/services/data/v%s/tooling/query/?q=%s',
-      this.connection.instanceUrl,
-      this.connection.version,
+    const query = `Select Id from ApexLog Order By StartTime DESC LIMIT ${numberOfLogs}`;
+
+    const response = (await this.connection.tooling.query(
       query
-    );
+    )) as QueryResult;
+    const logIds: string[] = [];
+    for (let record of response.records) {
+      logIds.push(record.Id);
+    }
 
-    const response = await this.connection.request(url);
-    const records = JSON.stringify(response);
-
-    let logIds: string[] = [];
-    JSON.parse(records, (key, value) => {
-      if (key === 'Id') {
-        logIds.push(value);
-      }
-    });
     return logIds;
   }
 
@@ -43,21 +39,18 @@ export class ApexLogGet {
 
     let logRecords: string[] = [];
     for (let id of logIdList) {
-      const url = util.format(
-        '%s/services/data/v%s/tooling/sobjects/ApexLog/%s/Body',
-        this.connection.instanceUrl,
-        this.connection.version,
-        id
-      );
+      const url = `${this.connection.instanceUrl}/services/data/v${
+        this.connection.version
+      }/tooling/sobjects/ApexLog/${id}/Body`;
+
       const response = await this.connectionRequest(url);
-      const stringResponse = JSON.stringify(response);
-      logRecords.push(stringResponse);
+      logRecords.push(response);
     }
     return logRecords;
   }
 
-  public async connectionRequest(url: string) {
+  public async connectionRequest(url: string): Promise<string> {
     const result = await this.connection.request(url);
-    return result;
+    return JSON.stringify(result);
   }
 }
