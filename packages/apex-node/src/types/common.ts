@@ -6,5 +6,5 @@
  */
 
 export type QueryResult = {
-  records: { Id?: string; Body: string }[];
+  records: { Id: string }[];
 };
