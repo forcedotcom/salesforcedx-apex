@@ -40,4 +40,5 @@ export type ApexExecuteOptions = CommonOptions & {
 export type ApexLogGetOptions = CommonOptions & {
   numberOfLogs?: number;
   logId?: string;
+  outputDir?: string;
 };
