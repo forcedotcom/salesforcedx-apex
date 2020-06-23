@@ -234,13 +234,11 @@ describe('Apex Execute Tests', () => {
     fsStub.restore();
     fsStub.returns(false);
 
-    await apexExecute
-      .execute({ apexCodeFile: apexFile })
-      .then(() => {
-        assert.fail('Expected an error');
-      })
-      .catch(e => {
-        assert.equal(nls.localize('file_not_found_error', apexFile), e.message);
-      });
+    try {
+      await apexExecute.execute({ apexCodeFile: apexFile });
+      assert.fail('Expected an error');
+    } catch (e) {
+      assert.equal(nls.localize('file_not_found_error', apexFile), e.message);
+    }
   });
 });
