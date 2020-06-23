@@ -39,8 +39,10 @@ describe('Apex Log Get Tests', () => {
   it('should return correct number of logs', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     const logIds = ['07WgsWfsFF', 'FTWrd5lfg'];
+    const logs = ['48jnskd', '67knmdfklDF'];
+    sandboxStub.stub(ApexLogGet.prototype, 'connectionRequest').resolves(logs);
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
-    const response = await apexLogGet.getLogs({ numberOfLogs: 2 });
+    const response = await apexLogGet.execute({ numberOfLogs: 2 });
     expect(response.length).to.eql(2);
   });
 
@@ -51,8 +53,8 @@ describe('Apex Log Get Tests', () => {
     const getLogIdStub = sandboxStub
       .stub(ApexLogGet.prototype, 'getLogIds')
       .resolves(logId);
-    sandboxStub.stub(ApexLogGet.prototype, 'getLogs').resolves(log);
-    const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
+    sandboxStub.stub(ApexLogGet.prototype, 'execute').resolves(log);
+    const response = await apexLogGet.execute({ logId: '07L5w00005PGdTnEAL' });
     expect(response.length).to.eql(1);
     expect(getLogIdStub.callCount).to.eql(0);
   });
@@ -87,20 +89,17 @@ describe('Apex Log Get Tests', () => {
       'FGFD'
     ];
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logs);
-    const response = await apexLogGet.getLogs({ numberOfLogs: 27 });
+    const response = await apexLogGet.execute({ numberOfLogs: 27 });
     expect(response.length).to.eql(25);
   });
 
   it('should handle invalid id', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
-    const logs = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..'];
     sandboxStub
       .stub(ApexLogGet.prototype, 'connectionRequest')
       .throws(new Error('invalid id'));
     try {
-      const response = await apexLogGet.getLogs({
-        logId: '07L5tgg0005PGdTnEAL'
-      });
+      await apexLogGet.execute({ logId: '07L5tgg0005PGdTnEAL' });
     } catch (e) {
       expect(e.message).to.equal('invalid id');
     }

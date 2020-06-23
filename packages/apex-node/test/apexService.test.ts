@@ -63,7 +63,7 @@ describe('Apex Service Tests', () => {
   it('should run apexLogGet command', async () => {
     const apexService = new ApexService(mockConnection);
     const logRecords = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT'];
-    sandboxStub.stub(ApexLogGet.prototype, 'getLogs').resolves(logRecords);
+    sandboxStub.stub(ApexLogGet.prototype, 'execute').resolves(logRecords);
     const response = await apexService.apexLogGet({ numberOfLogs: 1 });
     expect(response.length).to.eql(1);
   });

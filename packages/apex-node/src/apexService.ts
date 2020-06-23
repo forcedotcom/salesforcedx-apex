@@ -41,7 +41,7 @@ export class ApexService {
   public async apexLogGet(options: ApexLogGetOptions): Promise<any> {
     try {
       const apexLogGet = new ApexLogGet(this.connection);
-      const result = await apexLogGet.getLogs(options);
+      const result = await apexLogGet.execute(options);
       return result;
     } catch (e) {
       throw new Error(
