@@ -2,6 +2,8 @@ import { Connection } from '@salesforce/core';
 import { ApexLogGetOptions } from '../types/service';
 import { QueryResult } from '../types/common';
 import { nls } from '../i18n';
+import * as fs from 'fs';
+const fsPromises = fs.promises;
 
 const MAX_NUM_LOGS = 25;
 
@@ -45,6 +47,10 @@ export class ApexLogGet {
 
       const response = await this.connectionRequest(url);
       logRecords.push(response);
+
+      if (options.outputDir) {
+        await fsPromises.writeFile(`${options.outputDir}/${id}.txt`, response);
+      }
     }
     return logRecords;
   }

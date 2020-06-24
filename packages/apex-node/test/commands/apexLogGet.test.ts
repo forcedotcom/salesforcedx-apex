@@ -11,6 +11,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { ApexLogGet } from '../../src/commands/apexLogGet';
+const fsPromises = fs.promises;
 
 const $$ = testSetup();
 
@@ -119,5 +120,25 @@ describe('Apex Log Get Tests', () => {
         'Expected number of logs to be greater than 0.'
       );
     }
+  });
+
+  it('should store logs in the directory', async () => {
+    const apexLogGet = new ApexLogGet(mockConnection);
+    const logIds = ['07WgsWfad', '9SiomgS'];
+
+    sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
+    const writeFileStub = sandboxStub.stub(fsPromises, 'writeFile');
+    const logs = ['48jnskd', '57fskjf'];
+    const connRequestStub = sandboxStub
+      .stub(ApexLogGet.prototype, 'connectionRequest')
+      .resolves(logs[0]);
+    connRequestStub.onFirstCall().resolves(logs[0]);
+    connRequestStub.onSecondCall().resolves(logs[1]);
+    const response = await apexLogGet.execute({
+      numberOfLogs: 2,
+      outputDir: '/Users/smit.shah/Desktop/logs'
+    });
+    expect(response.length).to.eql(2);
+    expect(writeFileStub.callCount).to.eql(2);
   });
 });
