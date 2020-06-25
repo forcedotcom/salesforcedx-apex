@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2020, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+
 import { Connection } from '@salesforce/core';
 import { ApexLogGetOptions } from '../types/service';
 import { QueryResult } from '../types/common';
@@ -15,18 +22,12 @@ export class ApexLogGet {
     if (numberOfLogs <= 0) {
       throw new Error(nls.localize('num_logs_error'));
     }
-    numberOfLogs = numberOfLogs > MAX_NUM_LOGS ? MAX_NUM_LOGS : numberOfLogs;
+    numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
     const query = `Select Id from ApexLog Order By StartTime DESC LIMIT ${numberOfLogs}`;
-
     const response = (await this.connection.tooling.query(
       query
     )) as QueryResult;
-    const logIds: string[] = [];
-    for (let record of response.records) {
-      logIds.push(record.Id);
-    }
-
-    return logIds;
+    return response.records.map(record => record.Id);
   }
 
   public async execute(options: ApexLogGetOptions): Promise<string[]> {
@@ -37,20 +38,17 @@ export class ApexLogGet {
       logIdList.push(options.logId);
     }
 
-    let logRecords: string[] = [];
-    for (let id of logIdList) {
+    const connectionRequests = logIdList.map(async id => {
       const url = `${this.connection.instanceUrl}/services/data/v${
         this.connection.version
       }/tooling/sobjects/ApexLog/${id}/Body`;
-
-      const response = await this.connectionRequest(url);
-      logRecords.push(response);
-    }
-    return logRecords;
+      return await this.connectionRequest(url);
+    });
+    return await Promise.all(connectionRequests);
   }
 
   public async connectionRequest(url: string): Promise<string> {
-    const result = await this.connection.request(url);
-    return JSON.stringify(result);
+    const log = await this.connection.request(url);
+    return JSON.stringify(log);
   }
 }

@@ -29,7 +29,6 @@ describe('Apex Log Get Tests', () => {
         username: testData.username
       })
     });
-    sandboxStub.stub(fs, 'readFileSync');
   });
 
   afterEach(() => {
