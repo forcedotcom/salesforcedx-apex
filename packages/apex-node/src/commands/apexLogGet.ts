@@ -38,11 +38,11 @@ export class ApexLogGet {
       logIdList.push(options.logId);
     }
 
-    const connectionRequests = logIdList.map(async id => {
+    const connectionRequests = logIdList.map(id => {
       const url = `${this.connection.instanceUrl}/services/data/v${
         this.connection.version
       }/tooling/sobjects/ApexLog/${id}/Body`;
-      return await this.connectionRequest(url);
+      return this.connectionRequest(url);
     });
     return await Promise.all(connectionRequests);
   }
