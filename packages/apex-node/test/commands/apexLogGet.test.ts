@@ -7,8 +7,7 @@
 
 import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
-import { expect } from 'chai';
-import * as fs from 'fs';
+import { expect, assert } from 'chai';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { ApexLogGet } from '../../src/commands/apexLogGet';
 
@@ -117,6 +116,7 @@ describe('Apex Log Get Tests', () => {
       .throws(new Error('invalid id'));
     try {
       await apexLogGet.execute({ logId: '07L5tgg0005PGdTnEAL' });
+      assert.fail;
     } catch (e) {
       expect(e.message).to.equal('invalid id');
     }
@@ -126,6 +126,7 @@ describe('Apex Log Get Tests', () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     try {
       await apexLogGet.getLogIds(0);
+      assert.fail;
     } catch (e) {
       expect(e.message).to.equal(
         'Expected number of logs to be greater than 0.'
