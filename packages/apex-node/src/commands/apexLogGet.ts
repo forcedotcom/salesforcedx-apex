@@ -1,9 +1,15 @@
+/*
+ * Copyright (c) 2020, salesforce.com, inc.
+ * All rights reserved.
+ * Licensed under the BSD 3-Clause license.
+ * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
 import { Connection } from '@salesforce/core';
 import { ApexLogGetOptions } from '../types/service';
 import { QueryResult } from '../types/common';
 import { nls } from '../i18n';
 import * as fs from 'fs';
-const fsPromises = fs.promises;
+var path = require('path');
 
 const MAX_NUM_LOGS = 25;
 
@@ -17,9 +23,8 @@ export class ApexLogGet {
     if (numberOfLogs <= 0) {
       throw new Error(nls.localize('num_logs_error'));
     }
-    numberOfLogs = numberOfLogs > MAX_NUM_LOGS ? MAX_NUM_LOGS : numberOfLogs;
+    numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
     const query = `Select Id from ApexLog Order By StartTime DESC LIMIT ${numberOfLogs}`;
-
     const response = (await this.connection.tooling.query(
       query
     )) as QueryResult;
@@ -27,7 +32,6 @@ export class ApexLogGet {
     for (let record of response.records) {
       logIds.push(record.Id);
     }
-
     return logIds;
   }
 
@@ -49,14 +53,17 @@ export class ApexLogGet {
       logRecords.push(response);
 
       if (options.outputDir) {
-        await fsPromises.writeFile(`${options.outputDir}/${id}.txt`, response);
+        const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
+        const stream = fs.createWriteStream(filePath);
+        console.log('test');
+        stream.write(response);
       }
     }
     return logRecords;
   }
 
   public async connectionRequest(url: string): Promise<string> {
-    const result = await this.connection.request(url);
-    return JSON.stringify(result);
+    const log = await this.connection.request(url);
+    return JSON.stringify(log);
   }
 }

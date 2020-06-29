@@ -11,7 +11,6 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { ApexLogGet } from '../../src/commands/apexLogGet';
-const fsPromises = fs.promises;
 
 const $$ = testSetup();
 
@@ -30,7 +29,6 @@ describe('Apex Log Get Tests', () => {
         username: testData.username
       })
     });
-    sandboxStub.stub(fs, 'readFileSync');
   });
 
   afterEach(() => {
@@ -39,27 +37,34 @@ describe('Apex Log Get Tests', () => {
 
   it('should return correct number of logs', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
-    const logIds = ['07WgsWfsFF', 'FTWrd5lfg'];
-    const logs = ['48jnskd', '67knmdfklDF'];
+    const logs = ['07WgsWfsFF', 'FTWrd5lfg'];
+    const ids = [{ Id: '48jnskd' }, { Id: '67knmdfklDF' }];
+    const queryRecords = { records: ids };
     const connRequestStub = sandboxStub.stub(
       ApexLogGet.prototype,
       'connectionRequest'
     );
     connRequestStub.onFirstCall().resolves(logs[0]);
     connRequestStub.onSecondCall().resolves(logs[1]);
-    sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
+    const connectionToolingStub = sandboxStub.stub(
+      mockConnection.tooling,
+      'query'
+    );
+    //@ts-ignore
+    connectionToolingStub.onFirstCall().resolves(queryRecords);
     const response = await apexLogGet.execute({ numberOfLogs: 2 });
     expect(response.length).to.eql(2);
   });
 
   it('should return correct log given log id', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
-    const log = ['48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..'];
-    const logId = ['08YpsWfsUE'];
-    const getLogIdStub = sandboxStub
-      .stub(ApexLogGet.prototype, 'getLogIds')
-      .resolves(logId);
-    sandboxStub.stub(ApexLogGet.prototype, 'execute').resolves(log);
+    const log = '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..';
+    const getLogIdStub = sandboxStub.stub(ApexLogGet.prototype, 'getLogIds');
+    const connRequestStub = sandboxStub.stub(
+      ApexLogGet.prototype,
+      'connectionRequest'
+    );
+    connRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.execute({ logId: '07L5w00005PGdTnEAL' });
     expect(response.length).to.eql(1);
     expect(getLogIdStub.callCount).to.eql(0);
@@ -67,34 +72,40 @@ describe('Apex Log Get Tests', () => {
 
   it('should handle exceeding log limit', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
-    const logs = [
-      '47.0',
-      '48.0',
-      'ASDG',
-      'APEX',
-      'CODE',
-      'FINEST',
-      'PROFILING',
-      'INFO',
-      'CALLOUT',
-      'ASDA',
-      'ADAD',
-      'Ajkl',
-      'SADkl',
-      'FSDFS',
-      'DASD',
-      'ASD',
-      'NKJN',
-      'ADA',
-      'GGS',
-      'ADASD',
-      'SDA',
-      'ADA',
-      'JKH',
-      'DH',
-      'FGFD'
+    const ids = [
+      { Id: '48jnskd' },
+      { Id: '67knmdfklDF' },
+      { Id: 'CODE' },
+      { Id: 'FINEST' },
+      { Id: 'PROFILING' },
+      { Id: 'INFO' },
+      { Id: 'CALLOUT' },
+      { Id: 'ASDA' },
+      { Id: 'ADAD' },
+      { Id: 'Ajkl' },
+      { Id: 'SADkl' },
+      { Id: 'FSDFS' },
+      { Id: 'DASD' },
+      { Id: 'ASD' },
+      { Id: 'NKJN' },
+      { Id: 'ADA' },
+      { Id: 'GGS' },
+      { Id: 'ADASD' },
+      { Id: 'SDA' },
+      { Id: 'ADA' },
+      { Id: 'JKH' },
+      { Id: 'DH' },
+      { Id: 'FGFD' },
+      { Id: 'SFSDF' },
+      { Id: 'DSASD' }
     ];
-    sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logs);
+    const queryRecords = { records: ids };
+    const connectionToolingStub = sandboxStub.stub(
+      mockConnection.tooling,
+      'query'
+    );
+    //@ts-ignore
+    connectionToolingStub.onFirstCall().resolves(queryRecords);
     const response = await apexLogGet.execute({ numberOfLogs: 27 });
     expect(response.length).to.eql(25);
   });
@@ -124,10 +135,14 @@ describe('Apex Log Get Tests', () => {
 
   it('should store logs in the directory', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
+    const filePath = '/Users/smit.shah/Desktop/logs';
     const logIds = ['07WgsWfad', '9SiomgS'];
 
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
-    const writeFileStub = sandboxStub.stub(fsPromises, 'writeFile');
+    const writeFileStub = sandboxStub.stub(
+      fs.createWriteStream(filePath),
+      'write'
+    );
     const logs = ['48jnskd', '57fskjf'];
     const connRequestStub = sandboxStub
       .stub(ApexLogGet.prototype, 'connectionRequest')
@@ -136,7 +151,7 @@ describe('Apex Log Get Tests', () => {
     connRequestStub.onSecondCall().resolves(logs[1]);
     const response = await apexLogGet.execute({
       numberOfLogs: 2,
-      outputDir: '/Users/smit.shah/Desktop/logs'
+      outputDir: filePath
     });
     expect(response.length).to.eql(2);
     expect(writeFileStub.callCount).to.eql(2);
