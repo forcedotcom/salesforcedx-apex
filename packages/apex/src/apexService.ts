@@ -38,7 +38,7 @@ export class ApexService {
     return await connection.request(requestInfo);
   }
 
-  public async apexLogGet(options: ApexLogGetOptions): Promise<any> {
+  public async apexLogGet(options: ApexLogGetOptions): Promise<string[]> {
     try {
       const apexLogGet = new ApexLogGet(this.connection);
       const result = await apexLogGet.execute(options);
