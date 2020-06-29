@@ -39,9 +39,7 @@ export class ApexLogGet {
     }
 
     const connectionRequests = logIdList.map(id => {
-      const url = `${this.connection.instanceUrl}/services/data/v${
-        this.connection.version
-      }/tooling/sobjects/ApexLog/${id}/Body`;
+      const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       return this.connectionRequest(url);
     });
     return await Promise.all(connectionRequests);

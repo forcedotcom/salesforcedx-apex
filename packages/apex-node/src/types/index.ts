@@ -6,3 +6,4 @@
  */
 
 export { ExecuteAnonymousResponse, ApexExecuteOptions } from './service';
+export { ApexLogGetOptions } from './service';
