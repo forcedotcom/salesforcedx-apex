@@ -9,8 +9,8 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
-import { SyncTestConfiguration, TestService } from '../../src/testService';
-import { SyncTestResult } from '../../src/testService/types';
+import { SyncTestConfiguration, TestService } from '../../src/tests';
+import { SyncTestResult } from '../../src/tests/types';
 
 const $$ = testSetup();
 
