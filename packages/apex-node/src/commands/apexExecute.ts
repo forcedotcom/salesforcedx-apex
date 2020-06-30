@@ -28,41 +28,46 @@ export class ApexExecute {
   public async execute(
     options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
-    if (existsSync(options.apexCodeFile)) {
-      const data = readFileSync(options.apexCodeFile, 'utf8');
-      let count = 0;
-      while (count < 2) {
-        try {
-          const request = this.buildExecRequest(data);
-          const result = await this.connectionRequest(request);
-          const jsonResult = this.jsonFormat(result);
-          return jsonResult;
-        } catch (e) {
-          if (
-            e.name === 'ERROR_HTTP_500' &&
-            e.message &&
-            e.message.includes('INVALID_SESSION_ID')
-          ) {
-            await this.refreshAuth(this.connection);
-            count += 1;
-          } else {
-            throw new Error(
-              nls.localize('unexpected_execute_command_error', e.message)
-            );
-          }
+    let data: Buffer;
+
+    if (options.apexCodeFile) {
+      if (!existsSync(options.apexCodeFile))
+        throw new Error(
+          nls.localize('file_not_found_error', options.apexCodeFile)
+        );
+      data = readFileSync(options.apexCodeFile);
+    } else {
+      data = options.bufferInput;
+    }
+
+    let count = 0;
+    while (count < 2) {
+      try {
+        const request = this.buildExecRequest(data);
+        const result = await this.connectionRequest(request);
+        const jsonResult = this.jsonFormat(result);
+        return jsonResult;
+      } catch (e) {
+        if (
+          e.name === 'ERROR_HTTP_500' &&
+          e.message &&
+          e.message.includes('INVALID_SESSION_ID')
+        ) {
+          await this.refreshAuth(this.connection);
+          count += 1;
+        } else {
+          throw new Error(
+            nls.localize('unexpected_execute_command_error', e.message)
+          );
         }
       }
-    } else {
-      throw new Error(
-        nls.localize('file_not_found_error', options.apexCodeFile)
-      );
     }
   }
 
   // Tooling API execute anonymous apex REST endpoint was not used because
   // it requires multiple api calls to turn on trace flag, execute anonymous apex, and get the generated debug log
-  private buildExecRequest(data: string): RequestData {
-    const body = encodeBody(this.connection.accessToken, data);
+  private buildExecRequest(data: Buffer): RequestData {
+    const body = encodeBody(this.connection.accessToken, data.toString());
     const postEndpoint = `${this.connection.instanceUrl}/services/Soap/s/${
       this.connection.version
     }/${this.connection.accessToken.split('!')[0]}`;
