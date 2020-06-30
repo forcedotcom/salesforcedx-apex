@@ -9,7 +9,7 @@ import { ApexLogGetOptions } from '../types/service';
 import { QueryResult } from '../types/common';
 import { nls } from '../i18n';
 import * as fs from 'fs';
-var path = require('path');
+import * as path from 'path';
 
 const MAX_NUM_LOGS = 25;
 
@@ -45,18 +45,16 @@ export class ApexLogGet {
 
     let logRecords: string[] = [];
     for (let id of logIdList) {
-      const url = `${this.connection.instanceUrl}/services/data/v${
-        this.connection.version
-      }/tooling/sobjects/ApexLog/${id}/Body`;
+      const url = `${this.connection.instanceUrl}/services/data/v${this.connection.version}/tooling/sobjects/ApexLog/${id}/Body`;
 
       const response = await this.connectionRequest(url);
-      logRecords.push(response);
 
       if (options.outputDir) {
         const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
         const stream = fs.createWriteStream(filePath);
-        console.log('test');
         stream.write(response);
+      } else {
+        logRecords.push(response);
       }
     }
     return logRecords;

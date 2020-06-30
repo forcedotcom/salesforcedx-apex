@@ -137,12 +137,8 @@ describe('Apex Log Get Tests', () => {
     const apexLogGet = new ApexLogGet(mockConnection);
     const filePath = '/Users/smit.shah/Desktop/logs';
     const logIds = ['07WgsWfad', '9SiomgS'];
-
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
-    const writeFileStub = sandboxStub.stub(
-      fs.createWriteStream(filePath),
-      'write'
-    );
+    const writeFileStub = sandboxStub.stub(fs.WriteStream.prototype, 'write');
     const logs = ['48jnskd', '57fskjf'];
     const connRequestStub = sandboxStub
       .stub(ApexLogGet.prototype, 'connectionRequest')
@@ -153,7 +149,7 @@ describe('Apex Log Get Tests', () => {
       numberOfLogs: 2,
       outputDir: filePath
     });
-    expect(response.length).to.eql(2);
+    expect(response.length).to.eql(0);
     expect(writeFileStub.callCount).to.eql(2);
   });
 });
