@@ -12,4 +12,4 @@ export {
 } from './types';
 export { ExecuteService } from './execute';
 export { LogService } from './logs';
-export { TestService } from './testService';
+export { TestService } from './tests';
