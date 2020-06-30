@@ -45,8 +45,7 @@ export class ApexExecute {
       try {
         const request = this.buildExecRequest(data);
         const result = await this.connectionRequest(request);
-        const jsonResult = this.jsonFormat(result);
-        return jsonResult;
+        return this.jsonFormat(result);
       } catch (e) {
         if (
           e.name === 'ERROR_HTTP_500' &&
@@ -108,8 +107,7 @@ export class ApexExecute {
   public async connectionRequest(
     requestData: RequestData
   ): Promise<SoapResponse> {
-    const result = (await this.connection.request(requestData)) as SoapResponse;
-    return result;
+    return (await this.connection.request(requestData)) as SoapResponse;
   }
 
   public async refreshAuth(connection: Connection) {
