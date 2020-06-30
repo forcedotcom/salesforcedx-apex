@@ -5,7 +5,11 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Connection } from '@salesforce/core';
-import { SyncTestConfiguration, TestItem } from './types';
+import {
+  SyncTestConfiguration,
+  SyncTestResult,
+  SyncTestErrorResult
+} from './types';
 
 export class TestService {
   public readonly connection: Connection;
@@ -14,13 +18,10 @@ export class TestService {
     this.connection = connection;
   }
 
-  public async runTestSynchronous(options: SyncTestConfiguration) {
+  public async runTestSynchronous(
+    options: SyncTestConfiguration
+  ): Promise<SyncTestResult | SyncTestErrorResult[]> {
     const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
-
-    const testData: SyncTestConfiguration = {
-      tests: [{ className: 'waaa' }, { className: 'two' }]
-    };
-
     const request = {
       method: 'POST',
       url,
@@ -29,6 +30,6 @@ export class TestService {
     };
 
     const testRun = await this.connection.tooling.request(request);
-    return testRun;
+    return testRun as SyncTestResult | SyncTestErrorResult[];
   }
 }

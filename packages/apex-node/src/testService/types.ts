@@ -83,13 +83,6 @@ export type TestItem = {
   testMethods?: string[];
 };
 
-export type MaxFailedTest = {
-  /**
-   * Limits the test run from executing new tests after a given number of tests fail.
-   * Valid value ranges from 0 to 1,000,000. A value of 0 causes the test run to stop if any failure occurs.
-   */
-  maxFailedTests: number;
-};
 export type AsyncTestArrayConfiguration = {
   tests: [
     TestItem[],
@@ -110,5 +103,49 @@ export type AsyncTestArrayConfiguration = {
 };
 
 export type SyncTestConfiguration = {
-  tests: [TestItem | MaxFailedTest];
+  tests: [TestItem];
+  /**
+   * Specifies which tests to run. The only valid value is RunSpecifiedTests.
+   */
+  testLevel?: string;
+  /**
+   * Limits the test run from executing new tests after a given number of tests fail.
+   * Valid value ranges from 0 to 1,000,000. A value of 0 causes the test run to stop if any failure occurs.
+   */
+  maxFailedTests?: number;
+};
+
+export type SyncTestSuccess = {
+  id: string;
+  methodName: string;
+  name: string;
+  namespace: string | null;
+  seeAllData: boolean;
+  time: number;
+};
+
+export type SyncTestFailure = {
+  id: string;
+  message: string;
+  methodName: string;
+  name: string;
+  namespace: string | null;
+  seeAllData: boolean;
+  stackTrace: string;
+  time: number;
+  type: string; // might change it to an enum
+};
+
+export type SyncTestResult = {
+  apexLogId: string;
+  failures: SyncTestFailure[];
+  numFailures: number;
+  numTestsRun: number;
+  successes: SyncTestSuccess[];
+  totalTime: number;
+};
+
+export type SyncTestErrorResult = {
+  message: string;
+  errorCode: string; // might change it to an enum
 };
