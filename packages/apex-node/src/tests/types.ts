@@ -6,7 +6,7 @@
  */
 
 // NOTE: half of these values are declared by loglevel enum
-export enum TestLogLevel {
+export const enum TestLogLevel {
   trace = 'trace',
   debug = 'debug',
   info = 'info',
