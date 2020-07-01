@@ -80,7 +80,7 @@ describe('Apex Execute Tests', () => {
       .stub(ApexExecute.prototype, 'connectionRequest')
       .resolves(soapResponse);
     const response = await apexExecute.execute({
-      apexCodeFile: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file'
     });
 
     expect(response).to.eql(expectedResult);
@@ -126,7 +126,7 @@ describe('Apex Execute Tests', () => {
       .resolves(soapResponse);
 
     const response = await apexExecute.execute({
-      apexCodeFile: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file'
     });
     expect(response).to.eql(expectedResult);
   });
@@ -170,7 +170,7 @@ describe('Apex Execute Tests', () => {
       .resolves(soapResponse);
 
     const response = await apexExecute.execute({
-      apexCodeFile: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file'
     });
     expect(response).to.eql(expectedResult);
   });
@@ -222,7 +222,7 @@ describe('Apex Execute Tests', () => {
     connRequestStub.onSecondCall().resolves(soapResponse);
 
     const response = await apexExecute.execute({
-      apexCodeFile: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file'
     });
     expect(response).to.eql(expectedResult);
     expect(connRequestStub.calledTwice);
@@ -235,7 +235,7 @@ describe('Apex Execute Tests', () => {
     fsStub.returns(false);
 
     try {
-      await apexExecute.execute({ apexCodeFile: apexFile });
+      await apexExecute.execute({ apexFilePath: apexFile });
       assert.fail('Expected an error');
     } catch (e) {
       assert.equal(nls.localize('file_not_found_error', apexFile), e.message);

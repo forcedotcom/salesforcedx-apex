@@ -30,12 +30,12 @@ export class ApexExecute {
   ): Promise<ExecuteAnonymousResponse> {
     let data: string;
 
-    if (options.apexCodeFile) {
-      if (!existsSync(options.apexCodeFile))
+    if (options.apexFilePath) {
+      if (!existsSync(options.apexFilePath))
         throw new Error(
-          nls.localize('file_not_found_error', options.apexCodeFile)
+          nls.localize('file_not_found_error', options.apexFilePath)
         );
-      data = readFileSync(options.apexCodeFile, 'utf8');
+      data = readFileSync(options.apexFilePath, 'utf8');
     } else {
       data = String(options.apexCode);
     }
