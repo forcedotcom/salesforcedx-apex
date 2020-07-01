@@ -35,7 +35,7 @@ type CommonOptions = {
 export type ApexExecuteOptions = CommonOptions & {
   targetUsername?: string;
   apexCodeFile?: string;
-  bufferInput?: Buffer;
+  apexCode?: string | Buffer;
 };
 
 export type ApexLogGetOptions = CommonOptions & {

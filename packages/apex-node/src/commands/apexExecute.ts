@@ -28,16 +28,16 @@ export class ApexExecute {
   public async execute(
     options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
-    let data: Buffer;
+    let data: string;
 
     if (options.apexCodeFile) {
       if (!existsSync(options.apexCodeFile))
         throw new Error(
           nls.localize('file_not_found_error', options.apexCodeFile)
         );
-      data = readFileSync(options.apexCodeFile);
+      data = readFileSync(options.apexCodeFile, 'utf8');
     } else {
-      data = options.bufferInput;
+      data = String(options.apexCode);
     }
 
     let count = 0;
@@ -65,8 +65,8 @@ export class ApexExecute {
 
   // Tooling API execute anonymous apex REST endpoint was not used because
   // it requires multiple api calls to turn on trace flag, execute anonymous apex, and get the generated debug log
-  private buildExecRequest(data: Buffer): RequestData {
-    const body = encodeBody(this.connection.accessToken, data.toString());
+  private buildExecRequest(data: string): RequestData {
+    const body = encodeBody(this.connection.accessToken, data);
     const postEndpoint = `${this.connection.instanceUrl}/services/Soap/s/${
       this.connection.version
     }/${this.connection.accessToken.split('!')[0]}`;

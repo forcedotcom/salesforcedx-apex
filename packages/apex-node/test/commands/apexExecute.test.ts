@@ -282,7 +282,7 @@ describe('Apex Execute Tests', () => {
       .stub(ApexExecute.prototype, 'connectionRequest')
       .resolves(soapResponse);
     const response = await apexExecute.execute({
-      bufferInput
+      apexCode: bufferInput
     });
 
     expect(response).to.eql(expectedResult);
