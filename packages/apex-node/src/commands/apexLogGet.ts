@@ -35,6 +35,7 @@ export class ApexLogGet {
     return logIds;
   }
 
+  // readableStream cannot be used until updates are made in jsforce and sfdx-core
   public async execute(options: ApexLogGetOptions): Promise<string[]> {
     let logIdList: string[] = [];
     if (options.numberOfLogs) {
@@ -45,7 +46,9 @@ export class ApexLogGet {
 
     let logRecords: string[] = [];
     for (let id of logIdList) {
-      const url = `${this.connection.instanceUrl}/services/data/v${this.connection.version}/tooling/sobjects/ApexLog/${id}/Body`;
+      const url = `${this.connection.instanceUrl}/services/data/v${
+        this.connection.version
+      }/tooling/sobjects/ApexLog/${id}/Body`;
 
       const response = await this.connectionRequest(url);
 
