@@ -28,11 +28,7 @@ export class ApexLogGet {
     const response = (await this.connection.tooling.query(
       query
     )) as QueryResult;
-    const logIds: string[] = [];
-    for (let record of response.records) {
-      logIds.push(record.Id);
-    }
-    return logIds;
+    return response.records.map(record => record.Id);
   }
 
   // readableStream cannot be used until updates are made in jsforce and sfdx-core
@@ -44,23 +40,19 @@ export class ApexLogGet {
       logIdList.push(options.logId);
     }
 
-    let logRecords: string[] = [];
-    for (let id of logIdList) {
-      const url = `${this.connection.instanceUrl}/services/data/v${
-        this.connection.version
-      }/tooling/sobjects/ApexLog/${id}/Body`;
-
-      const response = await this.connectionRequest(url);
-
+    const connectionRequests = logIdList.map(id => {
+      const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
+      const logRecord = this.connectionRequest(url);
       if (options.outputDir) {
         const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
         const stream = fs.createWriteStream(filePath);
-        stream.write(response);
-      } else {
-        logRecords.push(response);
+        stream.write(logRecord);
       }
-    }
-    return logRecords;
+      return logRecord;
+    });
+    console.log(connectionRequests);
+    const result = await Promise.all(connectionRequests);
+    return options.outputDir ? [] : result;
   }
 
   public async connectionRequest(url: string): Promise<string> {
