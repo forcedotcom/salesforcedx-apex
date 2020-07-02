@@ -243,7 +243,7 @@ describe('Apex Execute Tests', () => {
   });
 
   it('should handle Buffer input correctly', async () => {
-    const apexExecute = new ApexExecute(mockConnection);
+    const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
     const bufferInput = new Buffer('System.assert(true);');
@@ -279,9 +279,9 @@ describe('Apex Execute Tests', () => {
       }
     };
     sandboxStub
-      .stub(ApexExecute.prototype, 'connectionRequest')
+      .stub(ExecuteService.prototype, 'connectionRequest')
       .resolves(soapResponse);
-    const response = await apexExecute.execute({
+    const response = await apexExecute.executeAnonymous({
       apexCode: bufferInput
     });
 

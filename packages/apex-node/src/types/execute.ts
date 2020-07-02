@@ -8,7 +8,8 @@ import { CommonOptions } from './common';
 
 export type ApexExecuteOptions = CommonOptions & {
   targetUsername?: string;
-  apexCodeFile: string;
+  apexFilePath?: string;
+  apexCode?: string | Buffer;
 };
 
 export const soapEnv = 'soapenv:Envelope';
