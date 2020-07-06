@@ -11,6 +11,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { LogService } from '../../src/logs/logService';
+import * as path from 'path';
 
 const $$ = testSetup();
 
@@ -29,7 +30,6 @@ describe('Apex Log Service Tests', () => {
         username: testData.username
       })
     });
-    sandboxStub.stub(fs, 'readFileSync');
   });
 
   afterEach(() => {
@@ -118,7 +118,6 @@ describe('Apex Log Service Tests', () => {
       .throws(new Error('invalid id'));
     try {
       await apexLogGet.getLogs({ logId: '07L5tgg0005PGdTnEAL' });
-      assert.fail;
     } catch (e) {
       expect(e.message).to.equal('invalid id');
     }
@@ -128,11 +127,33 @@ describe('Apex Log Service Tests', () => {
     const apexLogGet = new LogService(mockConnection);
     try {
       await apexLogGet.getLogIds(0);
-      assert.fail;
     } catch (e) {
       expect(e.message).to.equal(
         'Expected number of logs to be greater than 0.'
       );
     }
+  });
+
+  it('should store logs in the directory', async () => {
+    const apexLogGet = new LogService(mockConnection);
+    const filePath = path.join(`file`, `path`, `logs`);
+    const logIds = ['07WgsWfad', '9SiomgS'];
+    sandboxStub.stub(LogService.prototype, 'getLogIds').resolves(logIds);
+    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
+      //@ts-ignore
+      write: () => {}
+    });
+    const logs = ['48jnskd', '57fskjf'];
+    const connRequestStub = sandboxStub
+      .stub(LogService.prototype, 'connectionRequest')
+      .resolves(logs[0]);
+    connRequestStub.onFirstCall().resolves(logs[0]);
+    connRequestStub.onSecondCall().resolves(logs[1]);
+    const response = await apexLogGet.getLogs({
+      numberOfLogs: 2,
+      outputDir: filePath
+    });
+    expect(response.length).to.eql(0);
+    expect(createStreamStub.callCount).to.eql(2);
   });
 });
