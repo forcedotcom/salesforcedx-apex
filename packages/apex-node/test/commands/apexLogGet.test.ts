@@ -11,6 +11,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import { createSandbox, SinonSandbox } from 'sinon';
 import { ApexLogGet } from '../../src/commands/apexLogGet';
+import * as path from 'path';
 
 const $$ = testSetup();
 
@@ -135,10 +136,13 @@ describe('Apex Log Get Tests', () => {
 
   it('should store logs in the directory', async () => {
     const apexLogGet = new ApexLogGet(mockConnection);
-    const filePath = '/Users/smit.shah/Desktop/logs';
+    const filePath = path.join(`file`, `path`, `logs`);
     const logIds = ['07WgsWfad', '9SiomgS'];
     sandboxStub.stub(ApexLogGet.prototype, 'getLogIds').resolves(logIds);
-    const writeFileStub = sandboxStub.stub(fs.WriteStream.prototype, 'write');
+    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
+      //@ts-ignore
+      write: () => {}
+    });
     const logs = ['48jnskd', '57fskjf'];
     const connRequestStub = sandboxStub
       .stub(ApexLogGet.prototype, 'connectionRequest')
@@ -150,6 +154,6 @@ describe('Apex Log Get Tests', () => {
       outputDir: filePath
     });
     expect(response.length).to.eql(0);
-    expect(writeFileStub.callCount).to.eql(2);
+    expect(createStreamStub.callCount).to.eql(2);
   });
 });
