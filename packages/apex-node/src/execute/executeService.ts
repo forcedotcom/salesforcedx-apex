@@ -18,6 +18,7 @@ import {
 import { ExecuteAnonymousResponse, ApexExecuteOptions } from '../types';
 import { nls } from '../i18n';
 import { encodeBody } from './utils';
+import * as readline from 'readline';
 
 export class ExecuteService {
   public readonly connection: Connection;
@@ -63,6 +64,35 @@ export class ExecuteService {
         }
       }
     }
+  }
+
+  public getApex(options: ApexExecuteOptions): string {
+    let data: string;
+
+    if (options.apexFilePath) {
+      if (!existsSync(options.apexFilePath))
+        throw new Error(
+          nls.localize('file_not_found_error', options.apexFilePath)
+        );
+      data = readFileSync(options.apexFilePath, 'utf8');
+    } else {
+      data = String(options.apexCode);
+    }
+
+    const readLine = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    readLine.on('line', () => {
+      process.stdout.write(
+        'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.'
+      );
+      data = String(process.stdin.read());
+    });
+    readLine.on('close', () => {
+      return data;
+    });
+    return data;
   }
 
   // Tooling API execute anonymous apex REST endpoint was not used because
