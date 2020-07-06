@@ -40,9 +40,9 @@ export class ApexLogGet {
       logIdList.push(options.logId);
     }
 
-    const connectionRequests = logIdList.map(id => {
+    const connectionRequests = logIdList.map(async id => {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
-      const logRecord = this.connectionRequest(url);
+      const logRecord = await this.connectionRequest(url);
       if (options.outputDir) {
         const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
         const stream = fs.createWriteStream(filePath);
@@ -50,7 +50,6 @@ export class ApexLogGet {
       }
       return logRecord;
     });
-    console.log(connectionRequests);
     const result = await Promise.all(connectionRequests);
     return options.outputDir ? [] : result;
   }
