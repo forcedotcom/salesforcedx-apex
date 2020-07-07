@@ -67,9 +67,8 @@ describe('Run Apex tests synchronously', () => {
       ],
       totalTime: 270
     };
-    // @ts-ignore
+
     toolingRequestStub.withArgs(testRequest).returns(requestResult);
-    // @ts-ignore
     const testSrv = new TestService(mockConnection);
     const testResult = await testSrv.runTestSynchronous(requestOptions);
     expect(testResult).to.be.a('object');
@@ -85,9 +84,8 @@ describe('Run Apex tests synchronously', () => {
         errorCode: 'INVALID_INPUT'
       }
     ];
-    // @ts-ignore
+
     toolingRequestStub.withArgs(testRequest).returns(requestResult);
-    // @ts-ignore
     const testSrv = new TestService(mockConnection);
     const testResult = await testSrv.runTestSynchronous(requestOptions);
     expect(testResult).to.be.a('array');

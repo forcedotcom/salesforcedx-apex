@@ -8,6 +8,7 @@
 import { Connection } from '@salesforce/core';
 import { RequestData } from './execute';
 import { nls } from '../i18n';
+import { JsonCollection } from '@salesforce/ts-types';
 
 enum logLevel {
   trace = 'trace',
@@ -34,7 +35,10 @@ export abstract class ApiRequest {
     this.connection = connection;
   }
 
-  public async runRequest(request: RequestData, isTooling = false) {
+  public async runRequest(
+    request: RequestData,
+    isTooling = false
+  ): Promise<JsonCollection | Object> {
     let count = 0;
     while (count < 2) {
       try {
@@ -60,7 +64,7 @@ export abstract class ApiRequest {
     }
   }
 
-  public async refreshAuth(connection: Connection) {
+  public async refreshAuth(connection: Connection): Promise<JsonCollection> {
     const requestInfo = { url: connection.baseUrl(), method: 'GET' };
     return await connection.request(requestInfo);
   }

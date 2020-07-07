@@ -29,10 +29,11 @@ export class ExecuteService extends ApiRequest {
     let data: string;
 
     if (options.apexFilePath) {
-      if (!existsSync(options.apexFilePath))
+      if (!existsSync(options.apexFilePath)) {
         throw new Error(
           nls.localize('file_not_found_error', options.apexFilePath)
         );
+      }
       data = readFileSync(options.apexFilePath, 'utf8');
     } else {
       data = String(options.apexCode);

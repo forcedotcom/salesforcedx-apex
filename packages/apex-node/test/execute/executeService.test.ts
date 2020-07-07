@@ -13,7 +13,7 @@ import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
 import { ExecuteAnonymousResponse } from '../../src/types';
-import { execAnonResult, SoapResponse } from '../../src/types/execute';
+import { ExecAnonResult } from '../../src/types/execute';
 
 const $$ = testSetup();
 
@@ -45,7 +45,7 @@ describe('Apex Execute Tests', () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResult: execAnonResult = {
+    const execAnonResult: ExecAnonResult = {
       result: {
         column: -1,
         line: -1,
@@ -78,7 +78,6 @@ describe('Apex Execute Tests', () => {
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'runRequest')
-      // @ts-ignore
       .resolves(soapResponse);
     const response = await apexExecute.executeAnonymous({
       apexFilePath: 'filepath/to/anonApex/file'
@@ -91,7 +90,7 @@ describe('Apex Execute Tests', () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(false);|EXECUTION_FINISHED\n';
-    const execAnonResult: execAnonResult = {
+    const execAnonResult: ExecAnonResult = {
       result: {
         column: 1,
         line: 6,
@@ -124,7 +123,6 @@ describe('Apex Execute Tests', () => {
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'runRequest')
-      // @ts-ignore
       .resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
@@ -135,7 +133,7 @@ describe('Apex Execute Tests', () => {
 
   it('should execute and display compile issue in correct format', async () => {
     const apexExecute = new ExecuteService(mockConnection);
-    const execAnonResult: execAnonResult = {
+    const execAnonResult: ExecAnonResult = {
       result: {
         column: 1,
         line: 6,
@@ -169,7 +167,6 @@ describe('Apex Execute Tests', () => {
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'runRequest')
-      // @ts-ignore
       .resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
@@ -182,7 +179,7 @@ describe('Apex Execute Tests', () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResult: execAnonResult = {
+    const execAnonResult: ExecAnonResult = {
       result: {
         column: -1,
         line: -1,
@@ -256,8 +253,8 @@ describe('Apex Execute Tests', () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const bufferInput = new Buffer('System.assert(true);');
-    const execAnonResult: execAnonResult = {
+    const bufferInput = Buffer.from('System.assert(true);');
+    const execAnonResult: ExecAnonResult = {
       result: {
         column: -1,
         line: -1,
@@ -290,7 +287,6 @@ describe('Apex Execute Tests', () => {
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'runRequest')
-      // @ts-ignore
       .resolves(soapResponse);
     const response = await apexExecute.executeAnonymous({
       apexCode: bufferInput
