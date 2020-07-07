@@ -56,7 +56,7 @@ describe('Apex Execute Tests', () => {
         success: 'true'
       }
     };
-    const soapResponse: SoapResponse = {
+    const soapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
@@ -77,7 +77,8 @@ describe('Apex Execute Tests', () => {
       }
     };
     sandboxStub
-      .stub(ExecuteService.prototype, 'connectionRequest')
+      .stub(ExecuteService.prototype, 'runRequest')
+      // @ts-ignore
       .resolves(soapResponse);
     const response = await apexExecute.executeAnonymous({
       apexFilePath: 'filepath/to/anonApex/file'
@@ -101,7 +102,7 @@ describe('Apex Execute Tests', () => {
         success: 'false'
       }
     };
-    const soapResponse: SoapResponse = {
+    const soapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
@@ -122,7 +123,8 @@ describe('Apex Execute Tests', () => {
       }
     };
     sandboxStub
-      .stub(ExecuteService.prototype, 'connectionRequest')
+      .stub(ExecuteService.prototype, 'runRequest')
+      // @ts-ignore
       .resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
@@ -144,7 +146,7 @@ describe('Apex Execute Tests', () => {
         success: 'false'
       }
     };
-    const soapResponse: SoapResponse = {
+    const soapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: '' } },
         'soapenv:Body': {
@@ -166,7 +168,8 @@ describe('Apex Execute Tests', () => {
       }
     };
     sandboxStub
-      .stub(ExecuteService.prototype, 'connectionRequest')
+      .stub(ExecuteService.prototype, 'runRequest')
+      // @ts-ignore
       .resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
@@ -190,7 +193,7 @@ describe('Apex Execute Tests', () => {
         success: 'true'
       }
     };
-    const soapResponse: SoapResponse = {
+    const soapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
@@ -211,21 +214,28 @@ describe('Apex Execute Tests', () => {
       }
     };
 
-    const connRequestStub = sandboxStub.stub(
-      ExecuteService.prototype,
-      'connectionRequest'
-    );
-    sandboxStub.stub(ExecuteService.prototype, 'refreshAuth');
-    const error = new Error('INVALID_SESSION_ID');
-    error.name = 'ERROR_HTTP_500';
-    connRequestStub.onFirstCall().throws(error);
-    connRequestStub.onSecondCall().resolves(soapResponse);
-
+    let count = 0;
+    // @ts-ignore
+    $$.fakeConnectionRequest = request => {
+      if (count === 0) {
+        const error = new Error('INVALID_SESSION_ID');
+        error.name = 'ERROR_HTTP_500';
+        count += 1;
+        return Promise.reject(error);
+      } else if (count === 1 || count === 2) {
+        count += 1;
+        return Promise.resolve(soapResponse);
+      } else {
+        return Promise.reject(
+          new Error(`count => ${count}, Unexpected request on mock ${request}`)
+        );
+      }
+    };
     const response = await apexExecute.executeAnonymous({
       apexFilePath: 'filepath/to/anonApex/file'
     });
     expect(response).to.eql(expectedResult);
-    expect(connRequestStub.calledTwice);
+    expect(count).to.equal(3);
   });
 
   it('should raise an error when the source file is not found', async () => {
@@ -258,7 +268,7 @@ describe('Apex Execute Tests', () => {
         success: 'true'
       }
     };
-    const soapResponse: SoapResponse = {
+    const soapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
@@ -279,7 +289,8 @@ describe('Apex Execute Tests', () => {
       }
     };
     sandboxStub
-      .stub(ExecuteService.prototype, 'connectionRequest')
+      .stub(ExecuteService.prototype, 'runRequest')
+      // @ts-ignore
       .resolves(soapResponse);
     const response = await apexExecute.executeAnonymous({
       apexCode: bufferInput

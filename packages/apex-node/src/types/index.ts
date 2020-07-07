@@ -7,3 +7,4 @@
 
 export { ExecuteAnonymousResponse, ApexExecuteOptions } from './execute';
 export { ApexLogGetOptions } from './logs';
+export { ApiRequest } from './common';

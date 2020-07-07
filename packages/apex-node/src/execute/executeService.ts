@@ -4,7 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { Connection } from '@salesforce/core';
+
 import { existsSync, readFileSync } from 'fs';
 import {
   SoapResponse,
@@ -14,17 +14,15 @@ import {
   RequestData,
   action
 } from '../types/execute';
-import { ExecuteAnonymousResponse, ApexExecuteOptions } from '../types';
+import {
+  ExecuteAnonymousResponse,
+  ApexExecuteOptions,
+  ApiRequest
+} from '../types';
 import { nls } from '../i18n';
 import { encodeBody } from './utils';
 
-export class ExecuteService {
-  public readonly connection: Connection;
-
-  constructor(connection: Connection) {
-    this.connection = connection;
-  }
-
+export class ExecuteService extends ApiRequest {
   public async executeAnonymous(
     options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
@@ -39,28 +37,9 @@ export class ExecuteService {
     } else {
       data = String(options.apexCode);
     }
-
-    let count = 0;
-    while (count < 2) {
-      try {
-        const request = this.buildExecRequest(data);
-        const result = await this.connectionRequest(request);
-        return this.jsonFormat(result);
-      } catch (e) {
-        if (
-          e.name === 'ERROR_HTTP_500' &&
-          e.message &&
-          e.message.includes('INVALID_SESSION_ID')
-        ) {
-          await this.refreshAuth(this.connection);
-          count += 1;
-        } else {
-          throw new Error(
-            nls.localize('unexpected_execute_command_error', e.message)
-          );
-        }
-      }
-    }
+    const request = this.buildExecRequest(data);
+    const result = (await this.runRequest(request)) as SoapResponse;
+    return this.jsonFormat(result);
   }
 
   // Tooling API execute anonymous apex REST endpoint was not used because
@@ -102,16 +81,5 @@ export class ExecuteService {
     };
 
     return formattedResponse;
-  }
-
-  public async connectionRequest(
-    requestData: RequestData
-  ): Promise<SoapResponse> {
-    return (await this.connection.request(requestData)) as SoapResponse;
-  }
-
-  public async refreshAuth(connection: Connection) {
-    const requestInfo = { url: connection.baseUrl(), method: 'GET' };
-    return await connection.request(requestInfo);
   }
 }
