@@ -11,6 +11,9 @@ import { nls } from '../i18n';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// tslint:disable-next-line:no-var-requires
+const fsPromise = require('fs').promises;
+
 const MAX_NUM_LOGS = 25;
 
 export class LogService {
@@ -33,6 +36,9 @@ export class LogService {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       const logRecord = await this.toolingRequest(url);
       if (options.outputDir) {
+        if (!fs.existsSync(options.outputDir)) {
+          fsPromise.mkdir(options.outputDir, { recursive: true });
+        }
         const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
         const stream = fs.createWriteStream(filePath);
         stream.write(logRecord);
