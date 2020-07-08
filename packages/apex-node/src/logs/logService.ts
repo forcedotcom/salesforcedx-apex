@@ -31,7 +31,7 @@ export class LogService {
 
     const connectionRequests = logIdList.map(async id => {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
-      const logRecord = await this.connectionRequest(url);
+      const logRecord = await this.toolingRequest(url);
       if (options.outputDir) {
         const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
         const stream = fs.createWriteStream(filePath);
@@ -55,8 +55,8 @@ export class LogService {
     return response.records.map(record => record.Id);
   }
 
-  public async connectionRequest(url: string): Promise<string> {
-    const log = await this.connection.request(url);
+  public async toolingRequest(url: string): Promise<string> {
+    const log = await this.connection.tooling.request(url);
     return JSON.stringify(log);
   }
 }

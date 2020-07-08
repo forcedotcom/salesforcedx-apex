@@ -43,7 +43,7 @@ describe('Apex Log Service Tests', () => {
     const queryRecords = { records: ids };
     const connRequestStub = sandboxStub.stub(
       LogService.prototype,
-      'connectionRequest'
+      'toolingRequest'
     );
     connRequestStub.onFirstCall().resolves(logs[0]);
     connRequestStub.onSecondCall().resolves(logs[1]);
@@ -63,7 +63,7 @@ describe('Apex Log Service Tests', () => {
     const getLogIdStub = sandboxStub.stub(LogService.prototype, 'getLogIds');
     const connRequestStub = sandboxStub.stub(
       LogService.prototype,
-      'connectionRequest'
+      'toolingRequest'
     );
     connRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
@@ -114,7 +114,7 @@ describe('Apex Log Service Tests', () => {
   it('should handle invalid id', async () => {
     const apexLogGet = new LogService(mockConnection);
     sandboxStub
-      .stub(LogService.prototype, 'connectionRequest')
+      .stub(LogService.prototype, 'toolingRequest')
       .throws(new Error('invalid id'));
     try {
       await apexLogGet.getLogs({ logId: '07L5tgg0005PGdTnEAL' });
@@ -147,7 +147,7 @@ describe('Apex Log Service Tests', () => {
     });
     const logs = ['48jnskd', '57fskjf'];
     const connRequestStub = sandboxStub
-      .stub(LogService.prototype, 'connectionRequest')
+      .stub(LogService.prototype, 'toolingRequest')
       .resolves(logs[0]);
     connRequestStub.onFirstCall().resolves(logs[0]);
     connRequestStub.onSecondCall().resolves(logs[1]);
