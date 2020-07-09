@@ -41,12 +41,12 @@ describe('Apex Log Service Tests', () => {
     const logs = ['07WgsWfsFF', 'FTWrd5lfg'];
     const ids = [{ Id: '48jnskd' }, { Id: '67knmdfklDF' }];
     const queryRecords = { records: ids };
-    const connRequestStub = sandboxStub.stub(
+    const toolingRequestStub = sandboxStub.stub(
       LogService.prototype,
       'toolingRequest'
     );
-    connRequestStub.onFirstCall().resolves(logs[0]);
-    connRequestStub.onSecondCall().resolves(logs[1]);
+    toolingRequestStub.onFirstCall().resolves(logs[0]);
+    toolingRequestStub.onSecondCall().resolves(logs[1]);
     const connectionToolingStub = sandboxStub.stub(
       mockConnection.tooling,
       'query'
@@ -61,11 +61,11 @@ describe('Apex Log Service Tests', () => {
     const apexLogGet = new LogService(mockConnection);
     const log = '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..';
     const getLogIdStub = sandboxStub.stub(LogService.prototype, 'getLogIds');
-    const connRequestStub = sandboxStub.stub(
+    const toolingRequestStub = sandboxStub.stub(
       LogService.prototype,
       'toolingRequest'
     );
-    connRequestStub.onFirstCall().resolves(log);
+    toolingRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
     expect(response.length).to.eql(1);
     expect(getLogIdStub.callCount).to.eql(0);
@@ -138,7 +138,7 @@ describe('Apex Log Service Tests', () => {
 
   it('should store logs in the directory', async () => {
     const apexLogGet = new LogService(mockConnection);
-    const filePath = path.join(`file`, `path`, `logs`);
+    const filePath = path.join('file', 'path', 'logs');
     const logIds = ['07WgsWfad', '9SiomgS'];
     sandboxStub.stub(LogService.prototype, 'getLogIds').resolves(logIds);
     const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
@@ -146,16 +146,47 @@ describe('Apex Log Service Tests', () => {
       write: () => {}
     });
     const logs = ['48jnskd', '57fskjf'];
-    const connRequestStub = sandboxStub
-      .stub(LogService.prototype, 'toolingRequest')
-      .resolves(logs[0]);
-    connRequestStub.onFirstCall().resolves(logs[0]);
-    connRequestStub.onSecondCall().resolves(logs[1]);
+    const toolingRequestStub = sandboxStub.stub(
+      LogService.prototype,
+      'toolingRequest'
+    );
+    toolingRequestStub.onFirstCall().resolves(logs[0]);
+    toolingRequestStub.onSecondCall().resolves(logs[1]);
     const response = await apexLogGet.getLogs({
       numberOfLogs: 2,
       outputDir: filePath
     });
     expect(response.length).to.eql(0);
     expect(createStreamStub.callCount).to.eql(2);
+  });
+
+  it('should create directory if it does not exist', async () => {
+    const apexLogGet = new LogService(mockConnection);
+    const filePath = path.join('Users', 'smit.shah', 'Desktop', 'mod');
+    const logIds = ['07WgsWfad', '9SiomgS'];
+    const logs = ['48jnskd', '57fskjf'];
+    sandboxStub.stub(LogService.prototype, 'getLogIds').resolves(logIds);
+    const existsStub = sandboxStub.stub(fs, 'existsSync');
+    existsStub.onFirstCall().returns(false);
+    existsStub.onSecondCall().returns(true);
+    const mkdirStub = sandboxStub.stub(fs, 'mkdirSync');
+    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
+      //@ts-ignore
+      write: () => {}
+    });
+    const toolingRequestStub = sandboxStub.stub(
+      LogService.prototype,
+      'toolingRequest'
+    );
+    toolingRequestStub.onFirstCall().resolves(logs[0]);
+    toolingRequestStub.onSecondCall().resolves(logs[1]);
+    const response = await apexLogGet.getLogs({
+      numberOfLogs: 2,
+      outputDir: filePath
+    });
+    expect(response.length).to.eql(0);
+    expect(createStreamStub.callCount).to.eql(2);
+    expect(existsStub.callCount).to.eql(2);
+    expect(mkdirStub.callCount).to.eql(1);
   });
 });
