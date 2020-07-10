@@ -9,7 +9,7 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect, assert } from 'chai';
 import * as fs from 'fs';
-import { createSandbox, SinonSandbox } from 'sinon';
+import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { LogService } from '../../src/logs/logService';
 import * as path from 'path';
 
@@ -19,6 +19,8 @@ describe('Apex Log Service Tests', () => {
   const testData = new MockTestOrgData();
   let mockConnection: Connection;
   let sandboxStub: SinonSandbox;
+  let mkdirStub: SinonStub;
+  let toolingRequestStub: SinonStub;
 
   beforeEach(async () => {
     sandboxStub = createSandbox();
@@ -30,6 +32,11 @@ describe('Apex Log Service Tests', () => {
         username: testData.username
       })
     });
+    mkdirStub = sandboxStub.stub(fs, 'mkdirSync');
+    toolingRequestStub = sandboxStub.stub(
+      LogService.prototype,
+      'toolingRequest'
+    );
   });
 
   afterEach(() => {
@@ -41,18 +48,11 @@ describe('Apex Log Service Tests', () => {
     const logs = ['07WgsWfsFF', 'FTWrd5lfg'];
     const ids = [{ Id: '48jnskd' }, { Id: '67knmdfklDF' }];
     const queryRecords = { records: ids };
-    const toolingRequestStub = sandboxStub.stub(
-      LogService.prototype,
-      'toolingRequest'
-    );
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
-    const connectionToolingStub = sandboxStub.stub(
-      mockConnection.tooling,
-      'query'
-    );
+    const toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
     //@ts-ignore
-    connectionToolingStub.onFirstCall().resolves(queryRecords);
+    toolingQueryStub.onFirstCall().resolves(queryRecords);
     const response = await apexLogGet.getLogs({ numberOfLogs: 2 });
     expect(response.length).to.eql(2);
   });
@@ -61,10 +61,6 @@ describe('Apex Log Service Tests', () => {
     const apexLogGet = new LogService(mockConnection);
     const log = '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..';
     const getLogIdStub = sandboxStub.stub(LogService.prototype, 'getLogIds');
-    const toolingRequestStub = sandboxStub.stub(
-      LogService.prototype,
-      'toolingRequest'
-    );
     toolingRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
     expect(response.length).to.eql(1);
@@ -101,24 +97,19 @@ describe('Apex Log Service Tests', () => {
       { Id: 'DSASD' }
     ];
     const queryRecords = { records: ids };
-    const connectionToolingStub = sandboxStub.stub(
-      mockConnection.tooling,
-      'query'
-    );
+    const toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
     //@ts-ignore
-    connectionToolingStub.onFirstCall().resolves(queryRecords);
+    toolingQueryStub.onFirstCall().resolves(queryRecords);
     const response = await apexLogGet.getLogs({ numberOfLogs: 27 });
     expect(response.length).to.eql(25);
   });
 
   it('should handle invalid id', async () => {
     const apexLogGet = new LogService(mockConnection);
-    sandboxStub
-      .stub(LogService.prototype, 'toolingRequest')
-      .throws(new Error('invalid id'));
+    toolingRequestStub.throws(new Error('invalid id'));
     try {
       await apexLogGet.getLogs({ logId: '07L5tgg0005PGdTnEAL' });
-      assert.fail;
+      assert.fail();
     } catch (e) {
       expect(e.message).to.equal('invalid id');
     }
@@ -127,8 +118,8 @@ describe('Apex Log Service Tests', () => {
   it('should throw an error if 0 logs are requested', async () => {
     const apexLogGet = new LogService(mockConnection);
     try {
-      await apexLogGet.getLogIds(0);
-      assert.fail;
+      await apexLogGet.getLogs({ numberOfLogs: 0 });
+      assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
         'Expected number of logs to be greater than 0.'
@@ -146,17 +137,13 @@ describe('Apex Log Service Tests', () => {
       write: () => {}
     });
     const logs = ['48jnskd', '57fskjf'];
-    const toolingRequestStub = sandboxStub.stub(
-      LogService.prototype,
-      'toolingRequest'
-    );
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
     const response = await apexLogGet.getLogs({
       numberOfLogs: 2,
       outputDir: filePath
     });
-    expect(response.length).to.eql(0);
+    expect(response.length).to.eql(2);
     expect(createStreamStub.callCount).to.eql(2);
   });
 
@@ -169,22 +156,17 @@ describe('Apex Log Service Tests', () => {
     const existsStub = sandboxStub.stub(fs, 'existsSync');
     existsStub.onFirstCall().returns(false);
     existsStub.onSecondCall().returns(true);
-    const mkdirStub = sandboxStub.stub(fs, 'mkdirSync');
     const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
       //@ts-ignore
       write: () => {}
     });
-    const toolingRequestStub = sandboxStub.stub(
-      LogService.prototype,
-      'toolingRequest'
-    );
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
     const response = await apexLogGet.getLogs({
       numberOfLogs: 2,
       outputDir: filePath
     });
-    expect(response.length).to.eql(0);
+    expect(response.length).to.eql(2);
     expect(createStreamStub.callCount).to.eql(2);
     expect(existsStub.callCount).to.eql(2);
     expect(mkdirStub.callCount).to.eql(1);

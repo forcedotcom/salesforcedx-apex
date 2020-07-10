@@ -23,7 +23,7 @@ export class LogService {
   // readableStream cannot be used until updates are made in jsforce and sfdx-core
   public async getLogs(options: ApexLogGetOptions): Promise<string[]> {
     let logIdList: string[] = [];
-    if (options.numberOfLogs) {
+    if (typeof options.numberOfLogs === 'number') {
       logIdList = await this.getLogIds(options.numberOfLogs);
     } else {
       logIdList.push(options.logId);
@@ -33,17 +33,25 @@ export class LogService {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       const logRecord = await this.toolingRequest(url);
       if (options.outputDir) {
-        if (!fs.existsSync(options.outputDir)) {
-          fs.mkdirSync(options.outputDir, { recursive: true });
-        }
-        const filePath = path.join(`${options.outputDir}`, `${id}.txt`);
-        const stream = fs.createWriteStream(filePath);
-        stream.write(logRecord);
+        this.writeLog(options.outputDir, logRecord, id);
       }
       return logRecord;
     });
     const result = await Promise.all(connectionRequests);
-    return options.outputDir ? [] : result;
+    return result;
+  }
+
+  public async writeLog(
+    outputDir: string,
+    logRecord: string,
+    id: string
+  ): Promise<void> {
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    const filePath = path.join(`${outputDir}`, `${id}.txt`);
+    const stream = fs.createWriteStream(filePath);
+    stream.write(logRecord);
   }
 
   public async getLogIds(numberOfLogs: number): Promise<string[]> {
