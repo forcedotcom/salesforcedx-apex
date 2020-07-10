@@ -7,6 +7,12 @@
 import { soapTemplate, action, xmlCharMap } from '../types/execute';
 import * as util from 'util';
 
+function escapeXml(data: string): string {
+  return data.replace(/[<>&'"]/g, char => {
+    return xmlCharMap[char];
+  });
+}
+
 export function encodeBody(accessToken: string, data: string): string {
   const escapedData = escapeXml(data);
   const actionBody = `<apexcode>${escapedData}</apexcode>`;
@@ -23,8 +29,3 @@ export function encodeBody(accessToken: string, data: string): string {
   return body;
 }
 
-function escapeXml(data: string): string {
-  return data.replace(/[<>&'"]/g, char => {
-    return xmlCharMap[char];
-  });
-}
