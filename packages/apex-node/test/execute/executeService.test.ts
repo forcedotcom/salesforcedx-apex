@@ -9,6 +9,7 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { assert, expect } from 'chai';
 import * as fs from 'fs';
+import * as readline from 'readline';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
@@ -287,4 +288,18 @@ describe('Apex Execute Tests', () => {
 
     expect(response).to.eql(expectedResult);
   });
+
+  it('should throw an error if no option is specified', async () => {
+    try {
+      const executeService = new ExecuteService(mockConnection);
+      await executeService.executeAnonymous({});
+      assert.fail();
+    } catch (e) {
+      assert.equal(nls.localize('option_exec_anon_error'), e.message);
+    }
+  });
+
+  it('should process user input correctly', () => {});
+
+  it('should throw an error if user input fails', () => {});
 });
