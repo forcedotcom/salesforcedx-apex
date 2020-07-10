@@ -66,33 +66,47 @@ export class ExecuteService {
     }
   }
 
-  public getApex(options: ApexExecuteOptions): string {
-    let data: string;
-
-    if (options.apexFilePath) {
+  public async getApexCode(options: ApexExecuteOptions): Promise<string> {
+    if (options.apexCode) {
+      return String(options.apexCode);
+    } else if (options.apexFilePath) {
       if (!existsSync(options.apexFilePath))
         throw new Error(
           nls.localize('file_not_found_error', options.apexFilePath)
         );
-      data = readFileSync(options.apexFilePath, 'utf8');
+      return readFileSync(options.apexFilePath, 'utf8');
+    } else if (options.userInput) {
+      return await this.getUserInput();
     } else {
-      data = String(options.apexCode);
+      throw new Error(nls.localize('option_exec_anon_error'));
     }
+  }
 
-    const readLine = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    readLine.on('line', () => {
-      process.stdout.write(
-        'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.'
+  public async getUserInput(): Promise<string> {
+    process.stdout.write(
+      'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.\n'
+    );
+    return new Promise<string>((resolve, reject) => {
+      let readInterface = readline.createInterface(
+        process.stdin,
+        process.stdout
       );
-      data = String(process.stdin.read());
+      let apexCode = '';
+      readInterface
+        .on('line', (input: string) => {
+          apexCode = apexCode + input + '\n';
+        })
+        .on('close', () => {
+          resolve(apexCode);
+        })
+        .on('error', (err: Error) => {
+          reject(
+            new Error(
+              nls.localize('unexpected_exec_anon_input_error', err.message)
+            )
+          );
+        });
     });
-    readLine.on('close', () => {
-      return data;
-    });
-    return data;
   }
 
   // Tooling API execute anonymous apex REST endpoint was not used because
@@ -136,6 +150,7 @@ export class ExecuteService {
     return formattedResponse;
   }
 
+  // TODO: make these general utils accessible to other classes
   public async connectionRequest(
     requestData: RequestData
   ): Promise<SoapResponse> {
