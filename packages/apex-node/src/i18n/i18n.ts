@@ -23,5 +23,7 @@ export const messages = {
   num_logs_error: 'Expected number of logs to be greater than 0.',
   option_exec_anon_error: 'Please specify an option to execute anonymous Apex.',
   unexpected_exec_anon_input_error:
-    'Unexpected error while reading user input. %s'
+    'Unexpected error while reading user input. %s',
+  exec_anon_input_prompt:
+    'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.\n'
 };

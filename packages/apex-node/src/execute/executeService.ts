@@ -83,9 +83,7 @@ export class ExecuteService {
   }
 
   public async getUserInput(): Promise<string> {
-    process.stdout.write(
-      'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.\n'
-    );
+    process.stdout.write(nls.localize('exec_anon_input_prompt'));
     return new Promise<string>((resolve, reject) => {
       let readInterface = readline.createInterface(
         process.stdin,
