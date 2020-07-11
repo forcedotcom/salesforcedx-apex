@@ -52,6 +52,7 @@ export class LogService {
     const filePath = path.join(`${outputDir}`, `${id}.txt`);
     const stream = fs.createWriteStream(filePath);
     stream.write(logRecord);
+    stream.end();
   }
 
   public async getLogIds(numberOfLogs: number): Promise<string[]> {
