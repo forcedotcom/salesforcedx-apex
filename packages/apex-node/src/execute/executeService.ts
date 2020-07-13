@@ -85,25 +85,24 @@ export class ExecuteService {
   public async getUserInput(): Promise<string> {
     process.stdout.write(nls.localize('exec_anon_input_prompt'));
     return new Promise<string>((resolve, reject) => {
-      let readInterface = readline.createInterface(
+      const readInterface = readline.createInterface(
         process.stdin,
         process.stdout
       );
       let apexCode = '';
-      readInterface
-        .on('line', (input: string) => {
-          apexCode = apexCode + input + '\n';
-        })
-        .on('close', () => {
-          resolve(apexCode);
-        })
-        .on('error', (err: Error) => {
-          reject(
-            new Error(
-              nls.localize('unexpected_exec_anon_input_error', err.message)
-            )
-          );
-        });
+      readInterface.on('line', (input: string) => {
+        apexCode = apexCode + input + '\n';
+      });
+      readInterface.on('close', () => {
+        resolve(apexCode);
+      });
+      readInterface.on('error', (err: Error) => {
+        reject(
+          new Error(
+            nls.localize('unexpected_exec_anon_input_error', err.message)
+          )
+        );
+      });
     });
   }
 

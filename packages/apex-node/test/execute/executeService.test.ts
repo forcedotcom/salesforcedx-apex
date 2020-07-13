@@ -299,7 +299,46 @@ describe('Apex Execute Tests', () => {
     }
   });
 
-  it('should process user input correctly', () => {});
+  it('should throw an error if user input fails', async () => {
+    const errorText = 'This is the error';
+    const on = (event: string, listener: (err?: Error) => {}) => {
+      try {
+        if (event === 'error') {
+          listener(new Error(errorText));
+        }
+        listener();
+      } catch (e) {
+        throw e;
+      }
+    };
+    sandboxStub
+      .stub(readline, 'createInterface')
+      //@ts-ignore
+      .returns({ on });
 
-  it('should throw an error if user input fails', () => {});
+    try {
+      const executeService = new ExecuteService(mockConnection);
+      await executeService.getUserInput();
+    } catch (e) {
+      assert.equal(
+        nls.localize('unexpected_exec_anon_input_error', errorText),
+        e.message
+      );
+    }
+  });
+
+  it('should process user input correctly', async () => {
+    const inputText = 'This should be the only text';
+    const on = (event: string, listener: (input: string) => {}) => {
+      listener(inputText);
+    };
+    sandboxStub
+      .stub(readline, 'createInterface')
+      //@ts-ignore
+      .returns({ on });
+
+    const executeService = new ExecuteService(mockConnection);
+    const text = await executeService.getUserInput();
+    expect(text).to.equal(`${inputText}\n`);
+  });
 });
