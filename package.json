@@ -19,7 +19,7 @@
     "format": "lerna run format",
     "lint": "lerna run lint",
     "postinstall": "lerna bootstrap --no-ci",
-    "test": "lerna run test --if-present"
+    "test": "lerna run test"
   },
   "publishConfig": {
     "access": "public"
