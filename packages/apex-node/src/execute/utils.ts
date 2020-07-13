@@ -28,4 +28,3 @@ export function encodeBody(accessToken: string, data: string): string {
   );
   return body;
 }
-
