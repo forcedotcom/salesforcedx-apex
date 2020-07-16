@@ -30,18 +30,7 @@ export class ExecuteService {
   public async executeAnonymous(
     options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
-    let data: string;
-
-    if (options.apexFilePath) {
-      if (!existsSync(options.apexFilePath)) {
-        throw new Error(
-          nls.localize('file_not_found_error', options.apexFilePath)
-        );
-      }
-      data = readFileSync(options.apexFilePath, 'utf8');
-    } else {
-      data = String(options.apexCode);
-    }
+    const data = await this.getApexCode(options);
 
     let count = 0;
     while (count < 2) {
@@ -70,10 +59,11 @@ export class ExecuteService {
     if (options.apexCode) {
       return String(options.apexCode);
     } else if (options.apexFilePath) {
-      if (!existsSync(options.apexFilePath))
+      if (!existsSync(options.apexFilePath)) {
         throw new Error(
           nls.localize('file_not_found_error', options.apexFilePath)
         );
+      }
       return readFileSync(options.apexFilePath, 'utf8');
     } else if (options.userInput) {
       return await this.getUserInput();
@@ -85,15 +75,15 @@ export class ExecuteService {
   public async getUserInput(): Promise<string> {
     process.stdout.write(nls.localize('exec_anon_input_prompt'));
     return new Promise<string>((resolve, reject) => {
+      const readInterface = readline.createInterface(
+        process.stdin,
+        process.stdout
+      );
       const timeout = setTimeout(() => {
         reject(new Error(nls.localize('exec_anon_input_timeout')));
         readInterface.close();
       }, 10000);
 
-      const readInterface = readline.createInterface(
-        process.stdin,
-        process.stdout
-      );
       let apexCode = '';
       readInterface.on('line', (input: string) => {
         timeout.refresh();
