@@ -18,7 +18,7 @@ import { ExecAnonResult, SoapResponse } from '../../src/types/execute';
 
 const $$ = testSetup();
 
-describe('Apex Execute Tests', () => {
+describe('Apex Execute Tests', async () => {
   const testData = new MockTestOrgData();
   let mockConnection: Connection;
   let sandboxStub: SinonSandbox;
@@ -341,4 +341,21 @@ describe('Apex Execute Tests', () => {
     const text = await executeService.getUserInput();
     expect(text).to.equal(`${inputText}\n`);
   });
+
+  it('should throw error if user is idle', async () => {
+    const on = (event: string, listener: () => {}) => {
+      listener();
+    };
+    sandboxStub
+      .stub(readline, 'createInterface')
+      //@ts-ignore
+      .returns({ on });
+  });
+
+  try {
+    const executeService = new ExecuteService(mockConnection);
+    await executeService.getUserInput();
+  } catch (e) {
+    assert.equal(nls.localize('exec_anon_input_timeout'), e.message);
+  }
 });

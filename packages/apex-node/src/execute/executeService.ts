@@ -85,12 +85,18 @@ export class ExecuteService {
   public async getUserInput(): Promise<string> {
     process.stdout.write(nls.localize('exec_anon_input_prompt'));
     return new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error(nls.localize('exec_anon_input_timeout')));
+        readInterface.close();
+      }, 10000);
+
       const readInterface = readline.createInterface(
         process.stdin,
         process.stdout
       );
       let apexCode = '';
       readInterface.on('line', (input: string) => {
+        timeout.refresh();
         apexCode = apexCode + input + '\n';
       });
       readInterface.on('close', () => {

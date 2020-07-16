@@ -25,5 +25,6 @@ export const messages = {
   unexpected_exec_anon_input_error:
     'Unexpected error while reading user input. %s',
   exec_anon_input_prompt:
-    'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.\n'
+    'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.\n',
+  exec_anon_input_timeout: 'Timed out while waiting for user input.'
 };
