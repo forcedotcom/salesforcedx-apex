@@ -10,7 +10,12 @@ import {
   SyncTestResult,
   SyncTestErrorResult,
   AsyncTestConfiguration,
-  AsyncTestArrayConfiguration
+  AsyncTestArrayConfiguration,
+  ApexTestRunResult,
+  ApexTestResult,
+  ApexTestQueueItem,
+  ApexTestQueueItemStatus,
+  AsyncTestResult
 } from './types';
 import * as util from 'util';
 
@@ -38,7 +43,7 @@ export class TestService {
 
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration
-  ): Promise<any> {
+  ): Promise<AsyncTestResult> {
     const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
     const request = {
       method: 'POST',
@@ -47,63 +52,102 @@ export class TestService {
       headers: { 'content-type': 'application/json' }
     };
 
-    const testRunId = await this.connection.tooling.request(request);
-    // write testrunid to file
-
-    // query/poll for test run status
-    //@ts-ignore
+    const testRunId = await this.connection.tooling.request(request) as string;
     const testQueueResult = await this.testRunQueueStatusPoll(testRunId);
-    console.log(testQueueResult);
-    // query for test results
 
-    // get individual test results
-    const queryApexTestResult = `SELECT Id, QueueItemId, StackTrace, Message, AsyncApexJobId, MethodName, Outcome, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix, RunTime
-        FROM ApexTestResult WHERE QueueItemId IN (%s)`;
+    return this.getTestResultData(testQueueResult, testRunId, false);
+  }
 
-    // @ts-ignore
+  public async getTestResultData(testQueueResult: ApexTestQueueItem, testRunId: string, codeCoverage: boolean): Promise<AsyncTestResult> {
+    let testRunSummaryQuery = 'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
+    testRunSummaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    testRunSummaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    const testRunSummaryResults = await this.connection.tooling.query(testRunSummaryQuery) as ApexTestRunResult;
+
+    let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
+    apexTestResultQuery += 'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+    apexTestResultQuery += 'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix, ApexClass.FullName ';
+    apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
+
+    // TODO: this needs to iterate and create a comma separated string of ids
+    // and check for query length
     const apexResultId = testQueueResult.records[0].Id;
-    const ATRResults = await this.connection.tooling.query(
-      util.format(queryApexTestResult, `'${apexResultId}'`)
-    );
+    const apexTestResults = await this.connection.tooling.query(
+      util.format(apexTestResultQuery, `'${apexResultId}'`)
+    ) as ApexTestResult;
 
-    // TODO: retrieve summary info
-    /* const query = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId
-        FROM ApexTestRunResult
-        WHERE AsyncApexJobId = '${testRunId}'`;
+    // Iterate over test results, format and add them as results.tests
+    const testResults = apexTestResults.records.map(item => {
+      return {
+        Id: item.Id,
+        QueueItemId: item.QueueItemId,
+        StackTrace: item.StackTrace,
+        Message: item.Message,
+        AsyncApexJobId: item.AsyncApexJobId,
+        MethodName: item.MethodName,
+        Outcome: item.Outcome,
+        ApexLogId: item.ApexLogId,
+        ApexClass: {
+          Id: item.ApexClass.Id,
+          Name: item.ApexClass.Name,
+          NamespacePrefix: item.ApexClass.NamespacePrefix,
+          FullName: item.ApexClass.FullName
+        },
+        Runtime: item.Runtime,
+        TestTimestamp: item.TestTimestamp, // TODO: convert timestamp
+        FullName: `${item.ApexClass.FullName}.${item.MethodName}`
+      }
+    });
 
-        */
-    // query for code coverage info if needed
-    // mix ATRResults with summary info and code coverage
-    return ATRResults;
+    const summaryRecord = testRunSummaryResults.records[0];
+    
+    // TODO: add code coverage
+    const result: AsyncTestResult = {
+      summary: {
+        outcome: summaryRecord.Status,
+        testStartTime: summaryRecord.StartTime,
+        testExecutionTime: summaryRecord.TestTime,
+        testRunId,
+        userId: summaryRecord.UserId
+      },
+      tests: testResults
+    }
+    return result;
   }
 
   public async testRunQueueStatusPoll(
     testRunId: string,
     timeout = 10000,
     interval = 100
-  ): Promise<any> {
+  ): Promise<ApexTestQueueItem> {
     const endTime = Date.now() + timeout;
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultID FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
-    // @ts-ignore
+    //@ts-ignore
     const checkTestRun = async (resolve, reject): Promise<any> => {
       const result = await this.connection.tooling.query(
         queryApexTestQueueItem
-      );
+      ) as ApexTestQueueItem;
 
       if (result.records.length === 0) {
-        throw new Error('no results');
+        throw new Error('No test run results');
       }
-      //@ts-ignore
+
       switch (result.records[0].Status) {
-        case 'Completed':
+        case ApexTestQueueItemStatus.Completed:
           resolve(result);
           break;
-        case 'Failed':
-          const deployError = new Error('Test failure');
-          reject(deployError);
+        case ApexTestQueueItemStatus.Failed:
+          const testRunError = new Error('Test run failed');
+          reject(testRunError);
           break;
-        case 'Processing':
-        case '':
+        case ApexTestQueueItemStatus.Aborted:
+          const testRunCancelledError = new Error('Test run was cancelled');
+          reject(testRunCancelledError);
+          break;
+        case ApexTestQueueItemStatus.Holding:
+        case ApexTestQueueItemStatus.Preparing:
+        case ApexTestQueueItemStatus.Processing:
+        case ApexTestQueueItemStatus.Queued:
         default:
           if (Date.now() < endTime) {
             setTimeout(checkTestRun, interval, resolve, reject);

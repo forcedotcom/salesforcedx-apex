@@ -21,7 +21,7 @@ export const enum TestLogLevel {
   FATAL = 'FATAL'
 }
 
-export enum TestLevel {
+export const enum TestLevel {
   /**
    * All tests in your org are run, except the ones that originate from installed managed packages
    */
@@ -143,4 +143,144 @@ export type SyncTestResult = {
 export type SyncTestErrorResult = {
   message: string;
   errorCode: string; // might change it to an enum
+};
+
+export const enum ApexTestResultOutcome {
+  Pass = 'Pass',
+  Fail = 'Fail',
+  CompileFail = 'CompileFail',
+  Skip = 'Skip'
+}
+
+export type ApexTestResultRecord = {
+  Id: string;
+  /**
+   * Points to the ApexTestQueueItem which is the class that this test method is part of
+   */
+  QueueItemId: string;
+  /**
+   * The Apex stack trace if the test failed; otherwise, null.
+   */
+  StackTrace: string | null;
+  /**
+   * The exception error message if a test failure occurs; otherwise, null.
+   */
+  Message: string | null;
+  /**
+   * Points to the AsyncApexJob that represents the entire test run
+   */
+  AsyncApexJobId: string;
+  /**
+   * The name of the test method.
+   */
+  MethodName: string;
+  /**
+   * The result of the test
+   */
+  Outcome: ApexTestResultOutcome;
+  /**
+   * Points to the ApexLog for this test method execution if debug logging is enabled; otherwise, null.
+   */
+  ApexLogId: string | null;
+  ApexClass: {
+    Id: string;
+    /**
+     * Name of the class (up to 255 characters)
+     */
+    Name: string;
+    /**
+     * The namespace prefix associated with this ApexClass
+     */
+    NamespacePrefix: string;
+    /**
+     * The full name of the associated ApexClass
+     */
+    FullName: string;
+  },
+  /**
+   * The time it took the test method to run, in seconds.
+   */
+  Runtime: number;
+  /**
+   * The start time of the test method.
+   */
+  TestTimestamp: number;
+}
+
+export type ApexTestResult = {
+  records: ApexTestResultRecord[]
+}
+
+export const enum ApexTestRunResultStatus {
+  Queued = 'Queued',
+  Processing = 'Processing',
+  Aborted = 'Aborted',
+  Completed = 'Completed',
+  Failed = 'Failed'
+}
+
+export type ApexTestRunResultRecord = {
+  /**
+   * The parent Apex job ID for the result
+   */
+  AsyncApexJobId: string;
+  /**
+   * The status of the test run
+   */
+  Status: ApexTestRunResultStatus;
+  /** 
+   * The time at which the test run started.
+   */
+  StartTime: string;
+  /**
+   * The time it took the test to run, in seconds.
+   */
+  TestTime: string;
+  /**
+   * The user who ran the test run
+   */
+  UserId: string;
+}
+
+export type ApexTestRunResult = {
+  records: ApexTestRunResultRecord[]
+}
+
+export const enum ApexTestQueueItemStatus {
+  Holding = 'Holding',
+  Queued = 'Queued',
+  Preparing = 'Preparing',
+  Processing = 'Processing',
+  Aborted = 'Aborted',
+  Completed = 'Completed',
+  Failed = 'Failed'
+}
+
+export type ApexTestQueueItemRecord = {
+  Id: string;
+  /**
+   * The status of the job
+   */
+  Status: ApexTestQueueItemStatus;
+  ApexClassId: string;
+  /**
+   * The ID of the associated ApexTestRunResult object
+   */
+  TestRunResultID: string;
+}
+
+export type ApexTestQueueItem = {
+  records: ApexTestQueueItemRecord[]
+}
+
+export type AsyncTestResult = {
+  summary: {
+    outcome: string;
+    testStartTime: string;
+    testExecutionTime: string;
+    testRunId: string;
+    userId: string;
+  }
+  tests: ApexTestResultRecord[],
+  codecoverage?: []
 };
