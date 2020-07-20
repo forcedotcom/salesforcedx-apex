@@ -52,29 +52,43 @@ export class TestService {
       headers: { 'content-type': 'application/json' }
     };
 
-    const testRunId = await this.connection.tooling.request(request) as string;
+    const testRunId = (await this.connection.tooling.request(
+      request
+    )) as string;
+    // NOTE: we need to replace polling with a streaming api subscription.
+    // we will poll for 10-20 seconds, if the tests are still running then we'll use
+    // streaming api to get the results.
     const testQueueResult = await this.testRunQueueStatusPoll(testRunId);
 
-    return this.getTestResultData(testQueueResult, testRunId, false);
+    return await this.getTestResultData(testQueueResult, testRunId);
   }
 
-  public async getTestResultData(testQueueResult: ApexTestQueueItem, testRunId: string, codeCoverage: boolean): Promise<AsyncTestResult> {
-    let testRunSummaryQuery = 'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    testRunSummaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+  public async getTestResultData(
+    testQueueResult: ApexTestQueueItem,
+    testRunId: string
+  ): Promise<AsyncTestResult> {
+    let testRunSummaryQuery =
+      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
+    testRunSummaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
     testRunSummaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
-    const testRunSummaryResults = await this.connection.tooling.query(testRunSummaryQuery) as ApexTestRunResult;
+    const testRunSummaryResults = (await this.connection.tooling.query(
+      testRunSummaryQuery
+    )) as ApexTestRunResult;
 
     let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
-    apexTestResultQuery += 'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
-    apexTestResultQuery += 'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix, ApexClass.FullName ';
+    apexTestResultQuery +=
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+    apexTestResultQuery +=
+      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix, ApexClass.FullName ';
     apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
 
     // TODO: this needs to iterate and create a comma separated string of ids
     // and check for query length
     const apexResultId = testQueueResult.records[0].Id;
-    const apexTestResults = await this.connection.tooling.query(
+    const apexTestResults = (await this.connection.tooling.query(
       util.format(apexTestResultQuery, `'${apexResultId}'`)
-    ) as ApexTestResult;
+    )) as ApexTestResult;
 
     // Iterate over test results, format and add them as results.tests
     const testResults = apexTestResults.records.map(item => {
@@ -93,14 +107,14 @@ export class TestService {
           NamespacePrefix: item.ApexClass.NamespacePrefix,
           FullName: item.ApexClass.FullName
         },
-        Runtime: item.Runtime,
+        RunTime: item.RunTime,
         TestTimestamp: item.TestTimestamp, // TODO: convert timestamp
         FullName: `${item.ApexClass.FullName}.${item.MethodName}`
-      }
+      };
     });
 
     const summaryRecord = testRunSummaryResults.records[0];
-    
+
     // TODO: add code coverage
     const result: AsyncTestResult = {
       summary: {
@@ -111,22 +125,22 @@ export class TestService {
         userId: summaryRecord.UserId
       },
       tests: testResults
-    }
+    };
     return result;
   }
 
   public async testRunQueueStatusPoll(
     testRunId: string,
-    timeout = 10000,
-    interval = 100
+    timeout = 15000,
+    interval = 500
   ): Promise<ApexTestQueueItem> {
     const endTime = Date.now() + timeout;
-    const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultID FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
+    const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
     //@ts-ignore
     const checkTestRun = async (resolve, reject): Promise<any> => {
-      const result = await this.connection.tooling.query(
+      const result = (await this.connection.tooling.query(
         queryApexTestQueueItem
-      ) as ApexTestQueueItem;
+      )) as ApexTestQueueItem;
 
       if (result.records.length === 0) {
         throw new Error('No test run results');
@@ -152,7 +166,7 @@ export class TestService {
           if (Date.now() < endTime) {
             setTimeout(checkTestRun, interval, resolve, reject);
           } else {
-            reject(new Error('Timed out'));
+            reject(new Error('Test run timed out'));
           }
       }
     };

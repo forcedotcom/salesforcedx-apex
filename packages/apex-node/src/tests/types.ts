@@ -196,20 +196,26 @@ export type ApexTestResultRecord = {
      * The full name of the associated ApexClass
      */
     FullName: string;
-  },
+  };
   /**
    * The time it took the test method to run, in seconds.
    */
-  Runtime: number;
+  RunTime: number;
   /**
    * The start time of the test method.
    */
   TestTimestamp: number;
-}
+  /**
+   * The full name of the associated ApexClass method
+   */
+  FullName?: string;
+};
 
 export type ApexTestResult = {
-  records: ApexTestResultRecord[]
-}
+  done: boolean;
+  totalSize: number;
+  records: ApexTestResultRecord[];
+};
 
 export const enum ApexTestRunResultStatus {
   Queued = 'Queued',
@@ -228,23 +234,25 @@ export type ApexTestRunResultRecord = {
    * The status of the test run
    */
   Status: ApexTestRunResultStatus;
-  /** 
+  /**
    * The time at which the test run started.
    */
   StartTime: string;
   /**
    * The time it took the test to run, in seconds.
    */
-  TestTime: string;
+  TestTime: number;
   /**
    * The user who ran the test run
    */
   UserId: string;
-}
+};
 
 export type ApexTestRunResult = {
-  records: ApexTestRunResultRecord[]
-}
+  done: boolean;
+  totalSize: number;
+  records: ApexTestRunResultRecord[];
+};
 
 export const enum ApexTestQueueItemStatus {
   Holding = 'Holding',
@@ -266,21 +274,23 @@ export type ApexTestQueueItemRecord = {
   /**
    * The ID of the associated ApexTestRunResult object
    */
-  TestRunResultID: string;
-}
+  TestRunResultId: string;
+};
 
 export type ApexTestQueueItem = {
-  records: ApexTestQueueItemRecord[]
-}
+  done: boolean;
+  totalSize: number;
+  records: ApexTestQueueItemRecord[];
+};
 
 export type AsyncTestResult = {
   summary: {
     outcome: string;
     testStartTime: string;
-    testExecutionTime: string;
+    testExecutionTime: number;
     testRunId: string;
     userId: string;
-  }
-  tests: ApexTestResultRecord[],
-  codecoverage?: []
+  };
+  tests: ApexTestResultRecord[];
+  codecoverage?: [];
 };
