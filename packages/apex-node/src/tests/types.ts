@@ -38,19 +38,19 @@ export const enum TestLevel {
 
 export type AsyncTestConfiguration = {
   /**
-   * comma-separated list of class names
+   * Comma-separated list of class names
    */
   classNames?: string;
   /**
-   * comma-separated list of class IDs
+   * Comma-separated list of class IDs
    */
   classids?: string;
   /**
-   * comma-separated list of test suite names
+   * Comma-separated list of test suite names
    */
   suiteNames?: string;
   /**
-   * comma-separated list of test suite IDs
+   * Comma-separated list of test suite IDs
    */
   suiteids?: string;
   /**
