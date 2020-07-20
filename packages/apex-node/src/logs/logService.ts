@@ -49,7 +49,7 @@ export class LogService {
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
-    const filePath = path.join(`${outputDir}`, `${id}.txt`);
+    const filePath = path.join(`${outputDir}`, `${id}.log`);
     const stream = fs.createWriteStream(filePath);
     stream.write(logRecord);
     stream.end();
