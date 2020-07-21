@@ -19,9 +19,16 @@ import {
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
+import {
+  StreamingClientInfoBuilder,
+  StreamingService,
+  RequestService
+} from '../streaming';
 
 export class TestService {
   public readonly connection: Connection;
+  protected myStreamingService = StreamingService.getInstance();
+  protected myRequestService = new RequestService();
 
   constructor(connection: Connection) {
     this.connection = connection;
@@ -60,6 +67,9 @@ export class TestService {
     // we will poll for 10-20 seconds, if the tests are still running then we'll use
     // streaming api to get the results.
     const testQueueResult = await this.testRunQueueStatusPoll(testRunId);
+
+    const isStreamingConnected = await this.connectStreaming();
+    console.log(`streaming ==> ${isStreamingConnected}`);
 
     return await this.getTestResultData(testQueueResult, testRunId);
   }
@@ -132,6 +142,38 @@ export class TestService {
       tests: testResults
     };
     return result;
+  }
+
+  public async connectStreaming(): Promise<boolean> {
+    const channel = StreamingService.TEST_RESULT_CHANNEL;
+
+    const clientInfo = new StreamingClientInfoBuilder()
+      .forChannel(channel)
+      .withConnectedHandler(() => {
+        console.log(`connection handler ===> ${channel}`);
+      })
+      .withDisconnectedHandler(() => {
+        console.log(`${channel} disconnected`);
+      })
+      .withErrorHandler((reason: string) => {
+        // this.errorToDebugConsole(reason);
+        console.log('error handler ==> ', reason);
+      })
+      .withMsgHandler((message: any) => {
+        console.log('message handles ===> ', message);
+        /*const data = message as DebuggerMessage;
+          if (data && data.sobject && data.event) {
+            this.handleEvent(data);
+          }*/
+      })
+      .build();
+
+    this.myRequestService.instanceUrl =
+      'ohttps://connect-dream-4210-dev-ed.cs10.my.salesforce.com';
+    this.myRequestService.accessToken =
+      '00DJ0000003Xevq!ARUAQKtk3u8GMKTZaKyYV_X29m9NCAQGO3_yyu0QpRk64eJINsiC3cb6wqnd4YTWVKUqnAnibywKPefe4ZLWFbpPiY5tGky4';
+
+    return this.myStreamingService.subscribe(this.myRequestService, clientInfo);
   }
 
   public async testRunQueueStatusPoll(
