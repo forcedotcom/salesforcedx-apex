@@ -165,4 +165,21 @@ describe('Apex Log Service Tests', () => {
     expect(existsStub.callCount).to.eql(2);
     expect(mkdirStub.callCount).to.eql(1);
   });
-});
+
+  it('should successfully create a .log file', async () => {
+    const apexLogGet = new LogService(mockConnection);
+    const filePath = path.join('Users', 'smit.shah', 'Desktop', 'mod');
+    const logIds = ['07WgsWfad', '9SiomgS'];
+    const logs = ['48jnskd', '57fskjf'];
+    const logsPath = path.join(filePath, `${logIds[0]}.log`)
+    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
+      //@ts-ignore
+      write: () => {},
+      end: () => {}
+    });
+    toolingRequestStub.onFirstCall().resolves(logs[0]);
+    toolingRequestStub.onSecondCall().resolves(logs[1]);
+    await apexLogGet.writeLog(filePath,logs[0],logIds[0]);
+    expect(createStreamStub.calledWith(logsPath)).to.be.ok;
+  });
+ });
