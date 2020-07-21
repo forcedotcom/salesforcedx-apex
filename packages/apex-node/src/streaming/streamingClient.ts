@@ -115,11 +115,11 @@ export class StreamingClient {
   ) {
     this.clientInfo = clientInfo;
     this.client = new FayeClient(url, {
-      timeout: this.clientInfo.timeout,
+      timeout: this.clientInfo.timeout/*,
       proxy: {
         origin: requestService.proxyUrl,
         auth: requestService.proxyAuthorization
-      }
+      }*/
     });
     this.client.setHeader(
       'Authorization',

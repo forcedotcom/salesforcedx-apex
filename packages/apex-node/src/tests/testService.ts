@@ -169,7 +169,7 @@ export class TestService {
       .build();
 
     this.myRequestService.instanceUrl =
-      'ohttps://connect-dream-4210-dev-ed.cs10.my.salesforce.com';
+      'https://connect-dream-4210-dev-ed.cs10.my.salesforce.com';
     this.myRequestService.accessToken =
       '00DJ0000003Xevq!ARUAQKtk3u8GMKTZaKyYV_X29m9NCAQGO3_yyu0QpRk64eJINsiC3cb6wqnd4YTWVKUqnAnibywKPefe4ZLWFbpPiY5tGky4';
 
