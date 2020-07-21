@@ -180,6 +180,6 @@ describe('Apex Log Service Tests', () => {
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
     await apexLogGet.writeLog(filePath,logs[0],logIds[0]);
-    expect(createStreamStub.calledWith(logsPath)).to.be.ok;
+    expect(createStreamStub.calledWith(logsPath)).to.be.true;
   });
  });
