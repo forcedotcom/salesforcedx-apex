@@ -14,7 +14,6 @@
   },
   "license": "BSD-3-Clause",
   "scripts": {
-    "prepack": "lerna run prepack",
     "build": "lerna run build",
     "format": "lerna run format",
     "lint": "lerna run lint",
