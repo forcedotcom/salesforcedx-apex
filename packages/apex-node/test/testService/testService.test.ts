@@ -346,7 +346,7 @@ describe('Run Apex tests testRunQueueStatusPoll', () => {
     );
   });
 
-  it('should return a failed error', async () => {
+  it('should return a failed result', async () => {
     const queryResponse = {
       records: [
         {
@@ -360,47 +360,32 @@ describe('Run Apex tests testRunQueueStatusPoll', () => {
 
     toolingQueryStub.resolves(queryResponse);
     const testSrv = new TestService(mockConnection);
-    try {
-      await testSrv.testRunQueueStatusPoll(testRunId, 100, 50);
-      fail('request should have thrown an error');
-    } catch (err) {
-      expect(err.message).contains('Test run failed');
-      expect(toolingQueryStub.callCount).to.equal(1);
-    }
+    const testQueueResult = await testSrv.testRunQueueStatusPoll(
+      testRunId,
+      100,
+      50
+    );
+    expect(testQueueResult).to.deep.equal(queryResponse);
   });
 
-  it('should return a cancelled error', async () => {
+  it('should return current status when timing out', async () => {
     const queryResponse = {
       records: [
         {
           Id: '709xx000000Vt94QAC',
-          Status: 'Aborted',
+          Status: 'Queued',
           ApexClassId: '01pxx00000O6tXZQAZ',
           TestRunResultId: '05mxx000000TgYuQAK'
         }
       ]
     };
-
     toolingQueryStub.resolves(queryResponse);
     const testSrv = new TestService(mockConnection);
-    try {
-      await testSrv.testRunQueueStatusPoll(testRunId, 100, 50);
-      fail('request should have thrown an error');
-    } catch (err) {
-      expect(err.message).contains('Test run was cancelled');
-      expect(toolingQueryStub.callCount).to.equal(1);
-    }
-  });
-
-  it('should return a timeout error', async () => {
-    toolingQueryStub.resolves({ records: [{ Status: 'Queued' }] });
-    const testSrv = new TestService(mockConnection);
-    try {
-      await testSrv.testRunQueueStatusPoll(testRunId, 10, 5);
-      fail('request should have timed out');
-    } catch (err) {
-      expect(err.message).contains('Test run timed out');
-      expect(toolingQueryStub.callCount).to.be.above(1);
-    }
+    const testQueueResult = await testSrv.testRunQueueStatusPoll(
+      testRunId,
+      1,
+      5
+    );
+    expect(testQueueResult).to.deep.equal(queryResponse);
   });
 });

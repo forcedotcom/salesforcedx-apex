@@ -18,6 +18,7 @@ import {
   AsyncTestResult
 } from './types';
 import * as util from 'util';
+import { nls } from '../i18n';
 
 export class TestService {
   public readonly connection: Connection;
@@ -113,6 +114,10 @@ export class TestService {
       };
     });
 
+    if (testRunSummaryResults.records.length === 0) {
+      throw new Error(nls.localize('no_test_result_summary', testRunId));
+    }
+
     const summaryRecord = testRunSummaryResults.records[0];
 
     // TODO: add code coverage
@@ -134,43 +139,43 @@ export class TestService {
     timeout = 15000,
     interval = 500
   ): Promise<ApexTestQueueItem> {
-    const endTime = Date.now() + timeout;
+    let result:ApexTestQueueItem;
+    let triedOnce = false;
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
-    //@ts-ignore
-    const checkTestRun = async (resolve, reject): Promise<any> => {
-      const result = (await this.connection.tooling.query(
-        queryApexTestQueueItem
-      )) as ApexTestQueueItem;
+    const endTime = Date.now() + timeout;
+    const wait = (interval: number): Promise<void> => {
+      return new Promise(resolve => {
+        setTimeout(resolve, interval);
+      });
+    };
+    
+    do {
+      if (triedOnce) {
+        await wait(interval);
+      }
+
+      try {
+        result = (await this.connection.tooling.query(
+          queryApexTestQueueItem
+        )) as ApexTestQueueItem;
+      } catch (e) {
+        throw new Error(e.message);
+      }
 
       if (result.records.length === 0) {
-        throw new Error('No test run results');
+        throw new Error(nls.localize('no_test_queue_results', testRunId));
       }
 
       switch (result.records[0].Status) {
         case ApexTestQueueItemStatus.Completed:
-          resolve(result);
-          break;
         case ApexTestQueueItemStatus.Failed:
-          const testRunError = new Error('Test run failed');
-          reject(testRunError);
-          break;
         case ApexTestQueueItemStatus.Aborted:
-          const testRunCancelledError = new Error('Test run was cancelled');
-          reject(testRunCancelledError);
-          break;
-        case ApexTestQueueItemStatus.Holding:
-        case ApexTestQueueItemStatus.Preparing:
-        case ApexTestQueueItemStatus.Processing:
-        case ApexTestQueueItemStatus.Queued:
-        default:
-          if (Date.now() < endTime) {
-            setTimeout(checkTestRun, interval, resolve, reject);
-          } else {
-            reject(new Error('Test run timed out'));
-          }
+          return result;
       }
-    };
 
-    return new Promise(checkTestRun);
+      triedOnce = true;
+    } while (Date.now() < endTime);
+
+    return result;
   }
 }
