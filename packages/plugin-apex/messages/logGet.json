@@ -1,0 +1,11 @@
+{
+      "commandDescription": "Fetch debug logs from your org by specifying a specific log ID or a number of logs to return",
+      "jsonFlagDescription" : "Format output as JSON",
+      "logLevelFlagDescription" : "The logging level for this command invocation. Logs are stored in $HOME/.sfdx/sfdx.log.",
+      "targetUsernameFlagDescription": "A username or alias for the target org. Overrides the default target org.",
+      "apiVersioFlagDescription": "Override the API version used for API requests made by this command.",
+      "colorFlagDescription": "Apply default colors to noteworthy log lines",
+      "logIDFlagDescription": "ID of the log to display.",
+      "numberFlagDescription": "Number of most recent logs to display.",
+      "outputDirFlagDescription": "Folder for saving the log files"
+}
