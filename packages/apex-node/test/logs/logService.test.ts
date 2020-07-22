@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { LogService } from '../../src/logs/logService';
 import * as path from 'path';
+import * as stream from 'stream';
 
 const $$ = testSetup();
 
@@ -19,7 +20,6 @@ describe('Apex Log Service Tests', () => {
   const testData = new MockTestOrgData();
   let mockConnection: Connection;
   let sandboxStub: SinonSandbox;
-  let mkdirStub: SinonStub;
   let toolingRequestStub: SinonStub;
 
   beforeEach(async () => {
@@ -32,7 +32,6 @@ describe('Apex Log Service Tests', () => {
         username: testData.username
       })
     });
-    mkdirStub = sandboxStub.stub(fs, 'mkdirSync');
     toolingRequestStub = sandboxStub.stub(
       LogService.prototype,
       'toolingRequest'
@@ -132,28 +131,16 @@ describe('Apex Log Service Tests', () => {
     const filePath = path.join('file', 'path', 'logs');
     const logIds = ['07WgsWfad', '9SiomgS'];
     sandboxStub.stub(LogService.prototype, 'getLogIds').resolves(logIds);
-    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
-    const logs = ['48jnskd', '57fskjf'];
-    toolingRequestStub.onFirstCall().resolves(logs[0]);
-    toolingRequestStub.onSecondCall().resolves(logs[1]);
-    const response = await apexLogGet.getLogs({
-      numberOfLogs: 2,
-      outputDir: filePath
-    });
-    expect(response.length).to.eql(2);
-    expect(createStreamStub.callCount).to.eql(2);
-  });
 
-  it('should create directory if it does not exist', async () => {
-    const apexLogGet = new LogService(mockConnection);
-    const filePath = path.join('Users', 'smit.shah', 'Desktop', 'mod');
-    const logIds = ['07WgsWfad', '9SiomgS'];
-    const logs = ['48jnskd', '57fskjf'];
-    sandboxStub.stub(LogService.prototype, 'getLogIds').resolves(logIds);
-    const existsStub = sandboxStub.stub(fs, 'existsSync');
-    existsStub.onFirstCall().returns(false);
-    existsStub.onSecondCall().returns(true);
     const createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createStreamStub.onCall(0).returns(new stream.PassThrough() as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createStreamStub.onCall(1).returns(new stream.PassThrough() as any);
+    sandboxStub.stub(fs, 'closeSync');
+    sandboxStub.stub(fs, 'openSync');
+
+    const logs = ['48jnskd', '57fskjf'];
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
     const response = await apexLogGet.getLogs({
@@ -162,24 +149,28 @@ describe('Apex Log Service Tests', () => {
     });
     expect(response.length).to.eql(2);
     expect(createStreamStub.callCount).to.eql(2);
-    expect(existsStub.callCount).to.eql(2);
-    expect(mkdirStub.callCount).to.eql(1);
   });
 
   it('should successfully create a .log file', async () => {
     const apexLogGet = new LogService(mockConnection);
-    const filePath = path.join('Users', 'smit.shah', 'Desktop', 'mod');
-    const logIds = ['07WgsWfad', '9SiomgS'];
-    const logs = ['48jnskd', '57fskjf'];
-    const logsPath = path.join(filePath, `${logIds[0]}.log`)
-    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream').returns({
-      //@ts-ignore
-      write: () => {},
-      end: () => {}
-    });
+    const filePath = path.join('path', 'to', 'logs');
+    const logIds = ['07WgsWfad'];
+    const logs = ['log content'];
+    const logsPath = path.join(filePath, `${logIds[0]}.log`);
+    sandboxStub.stub(fs, 'existsSync').returns(true);
+    const createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createStreamStub.onCall(0).returns(new stream.PassThrough() as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createStreamStub.onCall(1).returns(new stream.PassThrough() as any);
+    sandboxStub.stub(fs, 'closeSync');
+    sandboxStub.stub(fs, 'openSync');
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
-    await apexLogGet.writeLog(filePath,logs[0],logIds[0]);
+    await apexLogGet.getLogs({
+      logId: '07WgsWfad',
+      outputDir: filePath
+    });
     expect(createStreamStub.calledWith(logsPath)).to.be.true;
   });
- });
+});
