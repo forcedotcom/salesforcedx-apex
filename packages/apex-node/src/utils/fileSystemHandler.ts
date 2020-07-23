@@ -22,16 +22,14 @@ export function ensureFileExists(filePath: string): void {
 }
 
 /**
- * Method to save multiple files on disk.
+ * Method to save a file on disk.
  *
- * @param fileMap key = filePath, value = file contents
+ * @param filePath path where to 
+ * @param fileContent file contents
  */
-export function createFiles(fileMap: Map<string, string>): void {
-  for (const filePath of fileMap.keys()) {
+export function createFile(filePath: string, fileContent: string): void {
     ensureFileExists(filePath);
 
     const writeStream = fs.createWriteStream(filePath);
-    writeStream.write(fileMap.get(filePath));
-    writeStream.end();
-  }
+    writeStream.write(fileContent);
 }

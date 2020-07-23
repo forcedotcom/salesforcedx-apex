@@ -9,7 +9,7 @@ import { ApexLogGetOptions } from '../types';
 import { QueryResult } from '../types/common';
 import { nls } from '../i18n';
 import * as path from 'path';
-import { createFiles } from '../utils';
+import { createFile } from '../utils';
 
 const MAX_NUM_LOGS = 25;
 
@@ -29,19 +29,16 @@ export class LogService {
       logIdList.push(options.logId);
     }
 
-    const saveLogsMap = new Map();
-
     const connectionRequests = logIdList.map(async id => {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       const logRecord = await this.toolingRequest(url);
       if (options.outputDir) {
-        saveLogsMap.set(path.join(options.outputDir, `${id}.log`), logRecord);
+        createFile(path.join(options.outputDir, `${id}.log`), logRecord);
       }
       return logRecord;
     });
 
     const result = await Promise.all(connectionRequests);
-    createFiles(saveLogsMap);
 
     return result;
   }
