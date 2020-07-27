@@ -1,0 +1,7 @@
+{  
+    "commandDescription": "Executes one or more lines of anonymous Apex code entered on the command line, or executes the code in a local file.",
+    "apexCodeFileDescription": "Path to a local file that contains Apex code.",
+    "targetUsernameDescription": "A username or alias for the target org. Overrides the default target org.",
+    "logLevelDescription": "logging level for this command invocation.",
+    "logLevelLongDescription": "Permissible values are: trace, debug, info, warn, error, fatal, TRACE, DEBUG, INFO, WARN, ERROR, FATAL"
+}
