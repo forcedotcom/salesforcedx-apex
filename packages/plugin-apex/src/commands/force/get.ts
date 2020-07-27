@@ -17,13 +17,15 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'logGet');
 
 export default class LogGet extends SfdxCommand {
-  public static description = messages.getMessage('commandDescription');
-
+  public static description = messages.getMessage('apexLogGetDescription');
+  public static help = messages.getMessage('apexLogGetHelp');
   public static examples = [
     `$ sfdx force:apex:log:get -i <log id>
-     $ sfdx force:apex:log:get -i <log id> -u me@my.org
-     $ sfdx force:apex:log:get -n 2 -c
-     `
+    `,
+    `$ sfdx force:apex:log:get -i <log id> -u me@my.org
+    `,
+    `$ sfdx force:apex:log:get -n 2 -c
+    `
   ];
 
   protected static flagsConfig = {
@@ -63,7 +65,8 @@ export default class LogGet extends SfdxCommand {
     }),
     outputdir: flags.string({
       char: 'd',
-      description: messages.getMessage('outputDirFlagDescription')
+      description: messages.getMessage('outputDirFlagDescription'),
+      default: '.'
     })
   };
 
@@ -72,17 +75,25 @@ export default class LogGet extends SfdxCommand {
 
   public async run(): Promise<void> {
     if (!this.org) {
-      throw new Error('Username needed.');
+      throw new Error('Must pass a username and/or OAuth options when creating an AuthInfo instance.');
     }
 
     const conn = this.org.getConnection();
     const logService = new LogService(conn);
     const logs = await logService.getLogs({
-      logId: this.flags.logID,
+      logId: this.flags.logid,
       numberOfLogs: this.flags.number,
-      outputDir: this.flags.outputDir
+      outputDir: this.flags.outputdir
     });
 
-    this.ux.log(logs[0]);
+    if (logs.length === 0) {
+      this.ux.log('No results found');
+    }
+    // tslint:disable-next-line:only-arrow-functions
+    logs.forEach(log => {
+      this.ux.log(JSON.parse(log));
+    });
+
+    // this.ux.log(logs[0]);
   }
 }
