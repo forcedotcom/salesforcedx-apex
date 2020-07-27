@@ -122,8 +122,10 @@ jobs:
             git push --tags
 
 workflows:
-  version: 2
-  'salesforcedx-apex':
+  version: 2.1
+  
+  commit-workflow:
+    unless: << pipeline.parameters.publish >>
     jobs:
       - node-latest
       - node-12
@@ -134,6 +136,14 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+      - run-win-tests
+  
+  publish-workflow:
+    when: << pipeline.parameters.publish >>
+    jobs:
+      - node-latest
+      - node-12
+      - node-10
       - run-win-tests
       - publish:
           filters:
