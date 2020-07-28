@@ -117,7 +117,7 @@ describe('Apex Log Service Tests', () => {
   it('should throw an error if 0 logs are requested', async () => {
     const apexLogGet = new LogService(mockConnection);
     try {
-      await apexLogGet.getLogs({ numberOfLogs: 0 });
+      await apexLogGet.getLogs({ numberOfLogs: -1 });
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
@@ -172,5 +172,18 @@ describe('Apex Log Service Tests', () => {
       outputDir: filePath
     });
     expect(createStreamStub.calledWith(logsPath)).to.be.true;
+  });
+  
+  it('should throw an error if numberOfLogs or logId are not given', async () => {
+    const apexLogGet = new LogService(mockConnection);
+    const filePath = path.join('path', 'to', 'logs');
+    try {
+      await apexLogGet.getLogs({ outputDir: filePath});
+      assert.fail();
+    } catch (e) {
+      expect(e.message).to.equal(
+        'Must specify either number of logs or log id to be retrieved.'
+      );
+    }
   });
 });
