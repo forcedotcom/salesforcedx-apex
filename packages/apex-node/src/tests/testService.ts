@@ -159,6 +159,7 @@ export class TestService {
         // this.errorToDebugConsole(reason);
         console.log('error handler ==> ', reason);
       })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withMsgHandler((message: any) => {
         console.log('message handles ===> ', message);
         /*const data = message as DebuggerMessage;

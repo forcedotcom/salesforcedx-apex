@@ -7,7 +7,7 @@
 
 import { Client as FayeClient } from 'faye';
 import os = require('os');
-import { RequestService } from './requestService'
+import { RequestService } from './requestService';
 import { nls } from '../i18n';
 import { DEFAULT_STREAMING_TIMEOUT_MS } from './constants';
 
@@ -39,6 +39,7 @@ export class StreamingClientInfo {
   public readonly errorHandler: (reason: string) => void;
   public readonly connectedHandler: () => void;
   public readonly disconnectedHandler: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public readonly messageHandler: (message: any) => void;
 
   public constructor(builder: StreamingClientInfoBuilder) {
@@ -54,9 +55,13 @@ export class StreamingClientInfo {
 export class StreamingClientInfoBuilder {
   public channel!: string;
   public timeout: number = DEFAULT_STREAMING_TIMEOUT_MS;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public errorHandler: (reason: string) => void = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public connectedHandler: () => void = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public disconnectedHandler: () => void = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-explicit-any
   public messageHandler: (message: any) => void = () => {};
 
   public forChannel(channel: string): StreamingClientInfoBuilder {
@@ -115,7 +120,8 @@ export class StreamingClient {
   ) {
     this.clientInfo = clientInfo;
     this.client = new FayeClient(url, {
-      timeout: this.clientInfo.timeout/*,
+      timeout: this.clientInfo
+        .timeout /*,
       proxy: {
         origin: requestService.proxyUrl,
         auth: requestService.proxyAuthorization
@@ -147,6 +153,7 @@ export class StreamingClient {
       }
     });
     this.client.addExtension({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       incoming: (message: any, callback: (message: any) => void) => {
         if (message.channel === '/meta/handshake') {
           if (message.successful === true) {
@@ -181,11 +188,13 @@ export class StreamingClient {
         }
         callback(message);
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       outgoing: (message: any, callback: (message: any) => void) => {
         if (message.channel === '/meta/subscribe' && this.isReplaySupported) {
           if (!message.ext) {
             message.ext = {};
           }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const replayFrom: any = {};
           replayFrom[this.clientInfo.channel] = this.replayId;
           message.ext['replay'] = replayFrom;
@@ -214,7 +223,7 @@ export class StreamingClient {
     return this.replayId;
   }
 
-  public setReplayId(replayId: number) {
+  public setReplayId(replayId: number): void {
     this.replayId = replayId;
   }
 
