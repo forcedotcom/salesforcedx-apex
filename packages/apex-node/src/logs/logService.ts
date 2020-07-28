@@ -21,12 +21,11 @@ export class LogService {
     this.connection = connection;
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   public verifyInputParams(numberOfLogs: number, logId: string) {
     if (!logId && !numberOfLogs) {
-      throw new Error(
-        nls.localize('missing_info_log_error')
-      );
-    }  
+      throw new Error(nls.localize('missing_info_log_error'));
+    }
   }
 
   // readableStream cannot be used until updates are made in jsforce and sfdx-core

@@ -173,12 +173,12 @@ describe('Apex Log Service Tests', () => {
     });
     expect(createStreamStub.calledWith(logsPath)).to.be.true;
   });
-  
+
   it('should throw an error if numberOfLogs or logId are not given', async () => {
     const apexLogGet = new LogService(mockConnection);
     const filePath = path.join('path', 'to', 'logs');
     try {
-      await apexLogGet.getLogs({ outputDir: filePath});
+      await apexLogGet.getLogs({ outputDir: filePath });
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
