@@ -23,6 +23,13 @@ export class LogService {
 
   // readableStream cannot be used until updates are made in jsforce and sfdx-core
   public async getLogs(options: ApexLogGetOptions): Promise<string[]> {
+    if (options.outputDir) {
+      if (options.logId == undefined && options.numberOfLogs == undefined) {
+        throw new Error(
+          nls.localize('outputdir_error', options.outputDir)
+        );
+      }  
+    }
     let logIdList: string[] = [];
     if (typeof options.numberOfLogs === 'number') {
       logIdList = await this.getLogIds(options.numberOfLogs);
