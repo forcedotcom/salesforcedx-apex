@@ -7,7 +7,7 @@
 import { LogService } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
-// import { AnyJson } from '@salesforce/ts-types';
+import { AnyJson } from '@salesforce/ts-types';
 
 // Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
@@ -73,27 +73,43 @@ export default class LogGet extends SfdxCommand {
   protected static supportsUsername = true;
   protected static requiresProject = false;
 
-  public async run(): Promise<void> {
+  public async run(): Promise<AnyJson> {
     if (!this.org) {
       throw new Error('Must pass a username and/or OAuth options when creating an AuthInfo instance.');
     }
 
     const conn = this.org.getConnection();
     const logService = new LogService(conn);
+    // When no flag is given it will print out the most recent log
+    if (!this.flags.logid && !this.flags.number && this.flags.outputdir === '.') {
+      this.flags.number = 1;
+    }
     const logs = await logService.getLogs({
       logId: this.flags.logid,
       numberOfLogs: this.flags.number,
       outputDir: this.flags.outputdir
     });
 
+    // If no logs are available
     if (logs.length === 0) {
       this.ux.log('No results found');
     }
-    // tslint:disable-next-line:only-arrow-functions
-    logs.forEach(log => {
-      this.ux.log(JSON.parse(log));
-    });
 
-    // this.ux.log(logs[0]);
+    // Holds for printing out logs using --json
+    if (this.flags.json) {
+      const logResult = [];
+      for (let i = 0; i < logs.length; i++) {
+        logResult[i] = {
+          log : JSON.parse(logs[i])
+        };
+      }
+      return logResult;
+    } else {
+      // tslint:disable-next-line:only-arrow-functions
+      logs.forEach(log => {
+        this.ux.log(JSON.parse(log));
+      });
+      return {logResult : 'ers'};
+    }
   }
 }
