@@ -9,13 +9,13 @@ import { RequestService } from './requestService';
 import { StreamingClient, StreamingClientInfo } from './streamingClient';
 
 export class StreamingService {
-  public static TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
+  public static TEST_RESULT_CHANNEL = '/systemTopic/ApexDebuggerEvent'; // '/systemTopic/TestResult';
   public static DEFAULT_TIMEOUT = 14400;
   private static instance: StreamingService;
   private readonly apiVersion = '41.0';
   private testRunEventClient!: StreamingClient;
 
-  public static getInstance() {
+  public static getInstance(): StreamingService {
     if (!StreamingService.instance) {
       StreamingService.instance = new StreamingService();
     }
@@ -61,7 +61,7 @@ export class StreamingService {
     return Promise.resolve(this.isReady());
   }
 
-  private removeTrailingSlashURL(instanceUrl?: string) {
+  private removeTrailingSlashURL(instanceUrl?: string): string {
     return instanceUrl ? instanceUrl.replace(/\/+$/, '') : '';
   }
 

@@ -65,6 +65,7 @@ export class StreamingClientInfoBuilder {
   public messageHandler: (message: any) => void = () => {};
 
   public forChannel(channel: string): StreamingClientInfoBuilder {
+    console.log('forChannel ====> ');
     this.channel = channel;
     return this;
   }
@@ -82,6 +83,7 @@ export class StreamingClientInfoBuilder {
   }
 
   public withConnectedHandler(handler: () => void): StreamingClientInfoBuilder {
+    console.log('with Connected Handler ====> ');
     this.connectedHandler = handler;
     return this;
   }
@@ -94,8 +96,10 @@ export class StreamingClientInfoBuilder {
   }
 
   public withMsgHandler(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     handler: (message: any) => void
   ): StreamingClientInfoBuilder {
+    console.log('with Message Handler ====> ');
     this.messageHandler = handler;
     return this;
   }

@@ -51,27 +51,17 @@ export class TestService {
 
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration
-  ): Promise<AsyncTestResult> {
-    const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
-    const request = {
-      method: 'POST',
-      url,
-      body: JSON.stringify(options),
-      headers: { 'content-type': 'application/json' }
-    };
+  ): Promise<void> {
+    // Promise<AsyncTestResult> {
+    const isStreamingConnected = await this.connectStreaming(options);
+    console.log(`streaming ==> ${isStreamingConnected}`);
 
-    const testRunId = (await this.connection.tooling.request(
-      request
-    )) as string;
     // NOTE: we need to replace polling with a streaming api subscription.
     // we will poll for 10-20 seconds, if the tests are still running then we'll use
     // streaming api to get the results.
-    const testQueueResult = await this.testRunQueueStatusPoll(testRunId);
-
-    const isStreamingConnected = await this.connectStreaming();
-    console.log(`streaming ==> ${isStreamingConnected}`);
-
-    return await this.getTestResultData(testQueueResult, testRunId);
+    // const testQueueResult = ''; // await this.testRunQueueStatusPoll(testRunId);
+    // @ts-ignore
+    // return await this.getTestResultData(testQueueResult, testRunId);
   }
 
   public async getTestResultData(
@@ -144,13 +134,27 @@ export class TestService {
     return result;
   }
 
-  public async connectStreaming(): Promise<boolean> {
+  public async connectStreaming(
+    options: AsyncTestConfiguration | AsyncTestArrayConfiguration
+  ): Promise<boolean> {
     const channel = StreamingService.TEST_RESULT_CHANNEL;
 
     const clientInfo = new StreamingClientInfoBuilder()
       .forChannel(channel)
-      .withConnectedHandler(() => {
+      .withConnectedHandler(async () => {
         console.log(`connection handler ===> ${channel}`);
+        const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
+        const request = {
+          method: 'POST',
+          url,
+          body: JSON.stringify(options),
+          headers: { 'content-type': 'application/json' }
+        };
+
+        const testRunId = (await this.connection.tooling.request(
+          request
+        )) as string;
+        console.log(`testRunId ==== > ${testRunId}`);
       })
       .withDisconnectedHandler(() => {
         console.log(`${channel} disconnected`);
@@ -161,20 +165,24 @@ export class TestService {
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withMsgHandler((message: any) => {
-        console.log('message handles ===> ', message);
-        /*const data = message as DebuggerMessage;
-          if (data && data.sobject && data.event) {
-            this.handleEvent(data);
-          }*/
+        // console.log('message handles ===> ', message);
+        // const data = message as DebuggerMessage;
+        if (message) {
+          this.handleEvent(message);
+        }
       })
       .build();
 
-    this.myRequestService.instanceUrl =
-      'https://connect-dream-4210-dev-ed.cs10.my.salesforce.com';
+    this.myRequestService.instanceUrl = 'https://na96.salesforce.com';
     this.myRequestService.accessToken =
-      '00DJ0000003Xevq!ARUAQKtk3u8GMKTZaKyYV_X29m9NCAQGO3_yyu0QpRk64eJINsiC3cb6wqnd4YTWVKUqnAnibywKPefe4ZLWFbpPiY5tGky4';
+      '00D41000000FH4I!AQ8AQFkaxZONAcvIKlmmnbLZRvXZtlAaJ3PzqGhbMUyqlp2kdqegjfpt6J3SzEAMaLhS_sPhB8a5nKwfneecyvnGCkHfLld_';
 
     return this.myStreamingService.subscribe(this.myRequestService, clientInfo);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public handleEvent(data: any): void {
+    console.log(`handleEvent ====> ${data}`);
   }
 
   public async testRunQueueStatusPoll(
