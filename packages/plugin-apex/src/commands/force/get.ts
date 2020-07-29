@@ -74,42 +74,46 @@ export default class LogGet extends SfdxCommand {
   protected static requiresProject = false;
 
   public async run(): Promise<AnyJson> {
-    if (!this.org) {
-      throw new Error('Must pass a username and/or OAuth options when creating an AuthInfo instance.');
-    }
-
-    const conn = this.org.getConnection();
-    const logService = new LogService(conn);
-    // When no flag is given it will print out the most recent log
-    if (!this.flags.logid && !this.flags.number && this.flags.outputdir === '.') {
-      this.flags.number = 1;
-    }
-    const logs = await logService.getLogs({
-      logId: this.flags.logid,
-      numberOfLogs: this.flags.number,
-      outputDir: this.flags.outputdir
-    });
-
-    // If no logs are available
-    if (logs.length === 0) {
-      this.ux.log('No results found');
-    }
-
-    // Holds for printing out logs using --json
-    if (this.flags.json) {
-      const logResult = [];
-      for (let i = 0; i < logs.length; i++) {
-        logResult[i] = {
-          log : JSON.parse(logs[i])
-        };
+    try {
+      if (!this.org) {
+        throw new Error('Must pass a username and/or OAuth options when creating an AuthInfo instance.');
       }
-      return logResult;
-    } else {
-      // tslint:disable-next-line:only-arrow-functions
-      logs.forEach(log => {
-        this.ux.log(JSON.parse(log));
+
+      const conn = this.org.getConnection();
+      const logService = new LogService(conn);
+      // When no flag is given it will print out the most recent log
+      if (!this.flags.logid && !this.flags.number && this.flags.outputdir === '.') {
+        this.flags.number = 1;
+      }
+      const logs = await logService.getLogs({
+        logId: this.flags.logid,
+        numberOfLogs: this.flags.number,
+        outputDir: this.flags.outputdir
       });
-      return {logResult : 'ers'};
+
+      // If no logs are available
+      if (logs.length === 0) {
+        this.ux.log('No results found');
+      }
+
+      // Holds for printing out logs using --json
+      if (this.flags.json) {
+        const logResult: AnyJson = [];
+        logs.forEach(log => {
+          logResult.push({
+            log: JSON.parse(log)
+          });
+        })
+        return logResult;
+      } else {
+        // tslint:disable-next-line:only-arrow-functions
+        logs.forEach(log => {
+          this.ux.log(JSON.parse(log));
+        });
+        return {};
+      }
+    } catch(e) {
+      return Promise.reject(e);
     }
-  }
+  } 
 }
