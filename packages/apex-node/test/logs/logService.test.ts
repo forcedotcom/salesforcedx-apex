@@ -182,7 +182,7 @@ describe('Apex Log Service Tests', () => {
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
-        'Must specify either number of logs or log id for logs to be retrieved.'
+        'To retrieve logs, specify the log ID or the number of logs.'
       );
     }
   });
