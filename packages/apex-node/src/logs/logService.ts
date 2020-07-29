@@ -22,7 +22,7 @@ export class LogService {
   }
 
   public async getIdList(options: ApexLogGetOptions): Promise<string[]> {
-    if (!options.logId && !options.numberOfLogs) {
+    if (!(options.logId || options.numberOfLogs)) {
       throw new Error(nls.localize('missing_info_log_error'));
     }
     let logIdList: string[] = [];
@@ -34,7 +34,7 @@ export class LogService {
     return logIdList;
   }
 
-  // readableStream cannot be used until updates are made in jsforce and sfdx-core
+  // TODO: readableStream cannot be used until updates are made in jsforce and sfdx-core
   public async getLogs(options: ApexLogGetOptions): Promise<string[]> {
     const logIdList = await this.getIdList(options);
     const connectionRequests = logIdList.map(async id => {
