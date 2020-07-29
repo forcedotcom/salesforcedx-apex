@@ -1,10 +1,11 @@
 {
-      "commandDescription": "fetch the last debug log. \nFetch debug logs from your org by specifying a specific log ID or the number of logs to return. \nExecuting this command fetches the specified log or given number of most recent logs from your default scratch org. \nTo get the IDs for your debug logs, run \"sfdx force:apex:log:list\". \nUse the --logid parameter to return a specific log. \nUse the --number parameter to return the specified number of recent logs. \nExecuting this command without parameters returns the most recent log.",
-      "longDescription": "Executing this command fetches the specified log or given number of most recent logs from your default scratch org. To get the IDs for your debug logs, run \"sfdx force:apex:log:list\". Use the --logid parameter to return a specific log. Use the --number parameter to return the specified number of recent logs. Executing this command without parameters returns the most recent log.",
+      "commandDescription": "fetch debug logs. \nFetch debug logs from your org by specifying a specific log ID or the number of logs to return. \nExecuting this command fetches the specified log or given number of most recent logs from your default scratch org. \nTo get the IDs for your debug logs, run \"sfdx force:apex:log:list\". \nUse the --logid parameter to return a specific log. \nUse the --number parameter to return the specified number of recent logs. \nExecuting this command without parameters returns the most recent log.",
+      "longDescription": "Fetch debug logs from your org by specifying a specific log ID or the number of logs to return. Executing this command fetches the specified log or given number of most recent logs from your default scratch org. To get the IDs for your debug logs, run \"sfdx force:apex:log:list\". Use the --logid parameter to return a specific log. Use the --number parameter to return the specified number of recent logs. Executing this command without parameters returns the most recent log.",
       "jsonFlagDescription" : "Format output as JSON",
       "logLevelFlagDescription" : "The logging level for this command invocation. Logs are stored in $HOME/.sfdx/sfdx.log.",
       "colorFlagDescription": "Apply default colors to noteworthy log lines",
       "logIDFlagDescription": "ID of the log to display.",
       "numberFlagDescription": "Number of most recent logs to display.",
-      "outputDirFlagDescription": "Folder for saving the log files"
+      "outputDirFlagDescription": "Folder for saving the log files",
+      "outputDirFlagLongDescription" : "The location can be an absolute path or relative to the current working directory. The default is the current directory."
 }

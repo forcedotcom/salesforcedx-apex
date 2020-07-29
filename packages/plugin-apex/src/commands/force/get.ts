@@ -63,6 +63,7 @@ export default class LogGet extends SfdxCommand {
     outputdir: flags.string({
       char: 'd',
       description: messages.getMessage('outputDirFlagDescription'),
+      longDescription: messages.getMessage('outputDirFlagLongDescription'),
       default: '.'
     })
   };
@@ -75,7 +76,7 @@ export default class LogGet extends SfdxCommand {
 
       const conn = this.org.getConnection();
       const logService = new LogService(conn);
-      if (!this.flags.logid && !this.flags.number && this.flags.outputdir === '.') {
+      if (!this.flags.logid && !this.flags.number) {
         this.flags.number = 1;
       }
       const logs = await logService.getLogs({
