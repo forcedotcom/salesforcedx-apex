@@ -11,6 +11,7 @@
     "@salesforce/apex-node": "0.0.4",
     "@salesforce/command": "^2",
     "@salesforce/core": "2.5.1",
+    "chalk": "^4.1.0",
     "tslib": "^1"
   },
   "devDependencies": {

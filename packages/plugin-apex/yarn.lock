@@ -236,10 +236,10 @@
   dependencies:
     fancy-test "^1.4.3"
 
-"@salesforce/apex-node@0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@salesforce/apex-node/-/apex-node-0.0.3.tgz#a368fb8c8aabd28a68c070c0869fd18219771f76"
-  integrity sha512-XUXR6yCkqIXE3tHZrMAnlB2X1lmeFdyc4zVaEX6Yt4lVssDwq+CdsdG8MzKO1cuWHIcHuMyakzyB2L6bXLzu9g==
+"@salesforce/apex-node@0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@salesforce/apex-node/-/apex-node-0.0.4.tgz#9fe106b41a52cf4a8fdd454339b2e1a9a31a15dc"
+  integrity sha512-8VtSQ3NwSLvHKvDejxz+P4ckWruNFk2Q0+hOM6wGo4YTEgnvocpOsTgsEOraAewNeEEtcRo/Vkt/QUZpvrQ1ww==
   dependencies:
     "@salesforce/core" "2.5.1"
 
@@ -802,6 +802,14 @@ chalk@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-3.0.0.tgz#3f73c2bf526591f574cc492c51e2456349f844e4"
   integrity sha512-4D3B6Wf41KOYRFdszmDqMCGq5VV/uMAB273JILmO+3jAlh8X4qDtdtgCR3fxtbLEMzSx22QdhnDcJvu2u1fVwg==
+  dependencies:
+    ansi-styles "^4.1.0"
+    supports-color "^7.1.0"
+
+chalk@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.0.tgz#4e14870a618d9e2edd97dd8345fd9d9dc315646a"
+  integrity sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
