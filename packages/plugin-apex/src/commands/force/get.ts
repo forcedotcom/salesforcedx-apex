@@ -9,24 +9,19 @@ import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 
-// Initialize Messages with the current plugin directory
 Messages.importMessagesDirectory(__dirname);
-
-// Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
-// or any library that is using the messages framework can also be loaded this way.
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'logGet');
 
 export default class LogGet extends SfdxCommand {
-  public static description = messages.getMessage('apexLogGetDescription');
-  public static help = messages.getMessage('apexLogGetHelp');
+  public static description = messages.getMessage('commandDescription');
+  public static longDescription = messages.getMessage('longDescription');
   public static examples = [
-    `$ sfdx force:apex:log:get -i <log id>
-    `,
-    `$ sfdx force:apex:log:get -i <log id> -u me@my.org
-    `,
-    `$ sfdx force:apex:log:get -n 2 -c
-    `
+    `$ sfdx force:apex:log:get -i <log id>`,
+    `$ sfdx force:apex:log:get -i <log id> -u me@my.org`,
+    `$ sfdx force:apex:log:get -n 2 -c`
   ];
+  protected static supportsUsername = true;
+  protected static requiresProject = false;
 
   protected static flagsConfig = {
     json: flags.boolean({
@@ -61,6 +56,8 @@ export default class LogGet extends SfdxCommand {
     }),
     number: flags.number({
       char: 'n',
+      min: 1,
+      max: 25,
       description: messages.getMessage('numberFlagDescription')
     }),
     outputdir: flags.string({
@@ -70,9 +67,6 @@ export default class LogGet extends SfdxCommand {
     })
   };
 
-  protected static supportsUsername = true;
-  protected static requiresProject = false;
-
   public async run(): Promise<AnyJson> {
     try {
       if (!this.org) {
@@ -81,7 +75,6 @@ export default class LogGet extends SfdxCommand {
 
       const conn = this.org.getConnection();
       const logService = new LogService(conn);
-      // When no flag is given it will print out the most recent log
       if (!this.flags.logid && !this.flags.number && this.flags.outputdir === '.') {
         this.flags.number = 1;
       }
@@ -91,12 +84,10 @@ export default class LogGet extends SfdxCommand {
         outputDir: this.flags.outputdir
       });
 
-      // If no logs are available
       if (logs.length === 0) {
         this.ux.log('No results found');
       }
 
-      // Holds for printing out logs using --json
       if (this.flags.json) {
         const logResult: AnyJson = [];
         logs.forEach(log => {
