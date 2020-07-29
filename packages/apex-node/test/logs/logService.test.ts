@@ -117,7 +117,7 @@ describe('Apex Log Service Tests', () => {
   it('should throw an error if 0 logs are requested', async () => {
     const apexLogGet = new LogService(mockConnection);
     try {
-      await apexLogGet.getLogs({ numberOfLogs: -1 });
+      await apexLogGet.getLogs({ numberOfLogs: 0 });
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
@@ -182,7 +182,7 @@ describe('Apex Log Service Tests', () => {
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
-        'Must specify either number of logs or log id to be retrieved.'
+        'Must specify either number of logs or log id for logs to be retrieved.'
       );
     }
   });

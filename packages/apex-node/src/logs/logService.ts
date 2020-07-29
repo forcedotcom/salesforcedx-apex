@@ -22,7 +22,7 @@ export class LogService {
   }
 
   public async getIdList(options: ApexLogGetOptions): Promise<string[]> {
-    if (!(options.logId || options.numberOfLogs)) {
+    if (!(typeof options.logId === 'string' || typeof options.numberOfLogs === 'number')) {
       throw new Error(nls.localize('missing_info_log_error'));
     }
     let logIdList: string[] = [];
