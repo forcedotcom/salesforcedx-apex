@@ -131,12 +131,12 @@ export class ExecuteService {
       soapResponse[soapEnv][soapBody].executeAnonymousResponse.result;
 
     const formattedResponse = {
-      compiled: execAnonResponse.compiled === 'true' ? true : false,
+      compiled: execAnonResponse.compiled === 'true',
       compileProblem:
         typeof execAnonResponse.compileProblem === 'object'
           ? ''
           : execAnonResponse.compileProblem,
-      success: execAnonResponse.success === 'true' ? true : false,
+      success: execAnonResponse.success === 'true',
       line: execAnonResponse.line,
       column: execAnonResponse.column,
       exceptionMessage:
