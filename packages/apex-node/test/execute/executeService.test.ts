@@ -13,8 +13,10 @@ import * as readline from 'readline';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
-import { ExecuteAnonymousResponse } from '../../src/types';
-import { SoapResponse } from '../../src/types/execute';
+import {
+  ExecuteAnonymousResponse,
+  SoapResponse
+} from '../../src/execute/types';
 
 const $$ = testSetup();
 

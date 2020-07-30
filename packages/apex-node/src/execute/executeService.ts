@@ -8,14 +8,15 @@ import { Connection } from '@salesforce/core';
 import { JsonCollection } from '@salesforce/ts-types';
 import { existsSync, readFileSync } from 'fs';
 import {
+  ExecuteAnonymousResponse,
+  ApexExecuteOptions,
   SoapResponse,
   soapEnv,
   soapBody,
   soapHeader,
   RequestData,
   action
-} from '../types/execute';
-import { ExecuteAnonymousResponse, ApexExecuteOptions } from '../types';
+} from './types';
 import { nls } from '../i18n';
 import { encodeBody } from './utils';
 import * as readline from 'readline';
