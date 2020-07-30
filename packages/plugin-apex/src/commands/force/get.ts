@@ -8,13 +8,15 @@ import { LogService } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
+import { buildDescription, logLevels } from '../../utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'logGet');
 
 export default class LogGet extends SfdxCommand {
-  public static description = messages.getMessage('commandDescription');
+  public static description = buildDescription(messages.getMessage('commandDescription'), messages.getMessage('longDescription'));
   public static longDescription = messages.getMessage('longDescription');
+  
   public static examples = [
     `$ sfdx force:apex:log:get -i <log id>`,
     `$ sfdx force:apex:log:get -i <log id> -u me@my.org`,
@@ -25,45 +27,33 @@ export default class LogGet extends SfdxCommand {
 
   protected static flagsConfig = {
     json: flags.boolean({
-      description: messages.getMessage('jsonFlagDescription')
+      description: messages.getMessage('jsonDescription')
     }),
     loglevel: flags.enum({
-      description: messages.getMessage('logLevelFlagDescription'),
-      options: [
-        'trace',
-        'debug',
-        'info',
-        'warn',
-        'error',
-        'fatal',
-        'TRACE',
-        'DEBUG',
-        'INFO',
-        'WARN',
-        'ERROR',
-        'FATAL'
-      ],
-      default: 'warn'
+      description: messages.getMessage('logLevelDescription'),
+      longDescription: messages.getMessage('logLevelLongDescription'),
+      default: 'warn',
+      options: logLevels
     }),
     apiversion: flags.builtin(),
     color: flags.boolean({
       char: 'c',
-      description: messages.getMessage('colorFlagDescription')
+      description: messages.getMessage('colorDescription')
     }),
     logid: flags.id({
       char: 'i',
-      description: messages.getMessage('logIDFlagDescription')
+      description: messages.getMessage('logIDDescription')
     }),
     number: flags.number({
       char: 'n',
       min: 1,
       max: 25,
-      description: messages.getMessage('numberFlagDescription')
+      description: messages.getMessage('numberDescription')
     }),
     outputdir: flags.string({
       char: 'd',
-      description: messages.getMessage('outputDirFlagDescription'),
-      longDescription: messages.getMessage('outputDirFlagLongDescription'),
+      description: messages.getMessage('outputDirDescription'),
+      longDescription: messages.getMessage('outputDirLongDescription'),
       default: '.'
     })
   };
@@ -71,10 +61,12 @@ export default class LogGet extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     try {
       if (!this.org) {
-        throw new Error('Must pass a username and/or OAuth options when creating an AuthInfo instance.');
+        return Promise.reject (
+          new Error(messages.getMessage('missing_auth_error'))
+        );
       }
-
       const conn = this.org.getConnection();
+      
       const logService = new LogService(conn);
       if (!this.flags.logid && !this.flags.number) {
         this.flags.number = 1;
