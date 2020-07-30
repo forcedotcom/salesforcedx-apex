@@ -4,23 +4,33 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { ApexExecuteOptions, ExecuteService } from '@salesforce/apex-node';
+import {
+  ApexExecuteOptions,
+  ExecuteService,
+  ExecuteAnonymousResponse
+} from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import * as chalk from 'chalk';
+import {
+  buildDescription,
+  colorSuccess,
+  colorError,
+  logLevels
+} from '../../utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'execute');
 
-const success = chalk.bold.green;
-const error = chalk.bold.red;
-
 export default class Execute extends SfdxCommand {
-  public static description = messages.getMessage('commandDescription');
+  public static description = buildDescription(
+    messages.getMessage('commandDescription'),
+    messages.getMessage('longDescription')
+  );
   public static longDescription = messages.getMessage('longDescription');
 
   public static examples = [
+    `$ sfdx force:apex:execute -u testusername@salesforce.org -f ~/test.apex`,
     `$ sfdx force:apex:execute -f ~/test.apex`,
     `$ sfdx force:apex:execute \nStart typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.`
   ];
@@ -35,20 +45,7 @@ export default class Execute extends SfdxCommand {
       description: messages.getMessage('logLevelDescription'),
       longDescription: messages.getMessage('logLevelLongDescription'),
       default: 'warn',
-      options: [
-        'trace',
-        'debug',
-        'info',
-        'warn',
-        'error',
-        'fatal',
-        'TRACE',
-        'DEBUG',
-        'INFO',
-        'WARN',
-        'ERROR',
-        'FATAL'
-      ]
+      options: logLevels
     }),
     apiversion: flags.builtin()
   };
@@ -60,8 +57,7 @@ export default class Execute extends SfdxCommand {
           new Error(messages.getMessage('missing_auth_error'))
         );
       }
-      const conn = this.org?.getConnection();
-      // @ts-ignore
+      const conn = this.org.getConnection();
       const exec = new ExecuteService(conn);
 
       const execAnonOptions: ApexExecuteOptions = {
@@ -78,26 +74,26 @@ export default class Execute extends SfdxCommand {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private formatResult(response: any): string {
+  private formatResult(response: ExecuteAnonymousResponse): string {
     let outputText = '';
     if (response.compiled === true) {
-      outputText += `${success(
+      outputText += `${colorSuccess(
         messages.getMessage('execute_compile_success')
       )}\n`;
       if (response.success === true) {
-        outputText += `${success(
+        outputText += `${colorSuccess(
           messages.getMessage('execute_runtime_success')
         )}\n`;
       } else {
-        outputText += error(`Error: ${response.exceptionMessage}\n`);
-        outputText += error(`Error: ${response.exceptionStackTrace}\n`);
+        outputText += colorError(`Error: ${response.exceptionMessage}\n`);
+        outputText += colorError(`Error: ${response.exceptionStackTrace}\n`);
       }
       outputText += `\n${response.logs}`;
     } else {
-      outputText += error(
+      outputText += colorError(
         `Error: Line: ${response.line}, Column: ${response.column}\n`
       );
-      outputText += error(`Error: ${response.compileProblem}\n`);
+      outputText += colorError(`Error: ${response.compileProblem}\n`);
     }
     return outputText;
   }

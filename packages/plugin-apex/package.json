@@ -9,7 +9,7 @@
     "@oclif/config": "^1",
     "@oclif/errors": "^1",
     "@salesforce/apex-node": "0.0.4",
-    "@salesforce/command": "^2",
+    "@salesforce/command": "2.2.0",
     "@salesforce/core": "2.5.1",
     "chalk": "^4.1.0",
     "tslib": "^1"
@@ -54,6 +54,20 @@
   "license": "BSD-3-Clause",
   "oclif": {
     "commands": "./lib/commands",
+    "topics": {
+      "apex": {
+        "description": "work with Apex code",
+        "longDescription": "Use the apex commands to create Apex classes, execute anonymous blocks, view your logs, run Apex tests, and view Apex test results.",
+        "subtopics": {
+          "log": {
+            "description": "generate and retrieve Apex logs"
+          },
+          "test": {
+            "description": "run Apex tests and retrieve test reports"
+          }
+        }
+      }
+    },
     "bin": "sfdx",
     "devPlugins": [
       "@oclif/plugin-help"
@@ -66,7 +80,9 @@
     "lint": "eslint -c .eslintrc.json --ext .ts ./src ./test",
     "postpack": "shx rm -f oclif.manifest.json",
     "test": "mocha --recursive \"./test/**/*.test.ts\" --full-trace",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "test:deprecation-policy": "./bin/run snapshot:compare",
+    "test:command-reference": "./bin/run commandreference:generate -p salesforcedx-templates --erroronwarnings"
   },
   "husky": {
     "hooks": {
