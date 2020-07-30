@@ -58,6 +58,7 @@ export default class Execute extends SfdxCommand {
         );
       }
       const conn = this.org.getConnection();
+      //@ts-ignore
       const exec = new ExecuteService(conn);
 
       const execAnonOptions: ApexExecuteOptions = {
@@ -73,7 +74,6 @@ export default class Execute extends SfdxCommand {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatResult(response: ExecuteAnonymousResponse): string {
     let outputText = '';
     if (response.compiled === true) {
