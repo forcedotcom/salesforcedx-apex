@@ -6,3 +6,4 @@
  */
 
 export { createFile } from './fileSystemHandler';
+export { CommonOptions, QueryResult } from './types';
