@@ -5,5 +5,6 @@
     "logLevelDescription": "logging level for this command invocation",
     "logLevelLongDescription": "Permissible values are: trace, debug, info, warn, error, fatal, TRACE, DEBUG, INFO, WARN, ERROR, FATAL",
     "execute_compile_success": "Compiled successfully.",
-    "execute_runtime_success": "Executed successfully."
+    "execute_runtime_success": "Executed successfully.",
+    "missing_auth_error": "Must pass a username and/or OAuth options when creating an AuthInfo instance."
 }

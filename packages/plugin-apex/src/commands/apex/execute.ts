@@ -4,11 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import {
-  ApexExecuteOptions,
-  ExecuteAnonymousResponse,
-  ExecuteService
-} from '@salesforce/apex-node';
+import { ApexExecuteOptions, ExecuteService } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
@@ -58,48 +54,50 @@ export default class Execute extends SfdxCommand {
   };
 
   public async run(): Promise<AnyJson> {
-    if (!this.org) {
-      throw new Error(
-        'Must pass a username and/or OAuth options when creating an AuthInfo instance.'
-      );
-    }
-    const conn = this.org?.getConnection();
-    // @ts-ignore
-    const exec = new ExecuteService(conn);
+    try {
+      if (!this.org) {
+        return Promise.reject(
+          new Error(messages.getMessage('missing_auth_error'))
+        );
+      }
+      const conn = this.org?.getConnection();
+      // @ts-ignore
+      const exec = new ExecuteService(conn);
 
-    const execAnonOptions: ApexExecuteOptions = {
-      ...(this.flags.apexcodefile
-        ? { apexFilePath: this.flags.apexcodefile }
-        : { userInput: true })
-    };
-    const result = await exec.executeAnonymous(execAnonOptions);
-    if (this.flags.json) {
-      return result.result;
+      const execAnonOptions: ApexExecuteOptions = {
+        ...(this.flags.apexcodefile
+          ? { apexFilePath: this.flags.apexcodefile }
+          : { userInput: true })
+      };
+      const result = await exec.executeAnonymous(execAnonOptions);
+      this.ux.log(this.formatResult(result));
+      return result;
+    } catch (e) {
+      return Promise.reject(e);
     }
-    this.ux.log(this.formatResult(result));
-    return this.formatResult(result);
   }
 
-  private formatResult(response: ExecuteAnonymousResponse): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private formatResult(response: any): string {
     let outputText = '';
-    if (response.result.compiled === true) {
+    if (response.compiled === true) {
       outputText += `${success(
         messages.getMessage('execute_compile_success')
       )}\n`;
-      if (response.result.success === true) {
+      if (response.success === true) {
         outputText += `${success(
           messages.getMessage('execute_runtime_success')
         )}\n`;
       } else {
-        outputText += error(`Error: ${response.result.exceptionMessage}\n`);
-        outputText += error(`Error: ${response.result.exceptionStackTrace}\n`);
+        outputText += error(`Error: ${response.exceptionMessage}\n`);
+        outputText += error(`Error: ${response.exceptionStackTrace}\n`);
       }
-      outputText += `\n${response.result.logs}`;
+      outputText += `\n${response.logs}`;
     } else {
       outputText += error(
-        `Error: Line: ${response.result.line}, Column: ${response.result.column}\n`
+        `Error: Line: ${response.line}, Column: ${response.column}\n`
       );
-      outputText += error(`Error: ${response.result.compileProblem}\n`);
+      outputText += error(`Error: ${response.compileProblem}\n`);
     }
     return outputText;
   }
