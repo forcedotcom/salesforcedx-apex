@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Connection } from '@salesforce/core';
-import { ApexLogGetOptions } from '../types';
+import { ApexLogGetOptions } from './types';
 import { QueryResult } from '../types/common';
 import { nls } from '../i18n';
 import * as path from 'path';

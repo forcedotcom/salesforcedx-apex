@@ -5,11 +5,10 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-export { ApexLogGetOptions } from './types';
 export {
   ExecuteService,
   ExecuteAnonymousResponse,
   ApexExecuteOptions
 } from './execute';
-export { LogService } from './logs';
+export { LogService, ApexLogGetOptions } from './logs';
 export { TestService } from './tests';
