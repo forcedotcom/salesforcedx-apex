@@ -14,9 +14,11 @@ Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'logGet');
 
 export default class LogGet extends SfdxCommand {
-  public static description = buildDescription(messages.getMessage('commandDescription'), messages.getMessage('longDescription'));
+  public static description = buildDescription(
+    messages.getMessage('commandDescription'),
+    messages.getMessage('longDescription')
+  );
   public static longDescription = messages.getMessage('longDescription');
-  
   public static examples = [
     `$ sfdx force:apex:log:get -i <log id>`,
     `$ sfdx force:apex:log:get -i <log id> -u me@my.org`,
@@ -61,12 +63,12 @@ export default class LogGet extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     try {
       if (!this.org) {
-        return Promise.reject (
+        return Promise.reject(
           new Error(messages.getMessage('missing_auth_error'))
         );
       }
       const conn = this.org.getConnection();
-      
+
       const logService = new LogService(conn);
       if (!this.flags.logid && !this.flags.number) {
         this.flags.number = 1;
@@ -80,24 +82,10 @@ export default class LogGet extends SfdxCommand {
       if (logs.length === 0) {
         this.ux.log('No results found');
       }
-
-      if (this.flags.json) {
-        const logResult: AnyJson = [];
-        logs.forEach(log => {
-          logResult.push({
-            log: JSON.parse(log)
-          });
-        })
-        return logResult;
-      } else {
-        // tslint:disable-next-line:only-arrow-functions
-        logs.forEach(log => {
-          this.ux.log(JSON.parse(log));
-        });
-        return {};
-      }
-    } catch(e) {
+      logs.forEach(log => this.ux.log(log));
+      return logs;
+    } catch (e) {
       return Promise.reject(e);
     }
-  } 
+  }
 }
