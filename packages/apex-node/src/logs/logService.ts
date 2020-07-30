@@ -9,7 +9,7 @@ import { ApexLogGetOptions } from './types';
 import { QueryResult } from '../types/common';
 import { nls } from '../i18n';
 import * as path from 'path';
-import { createFile } from '../utils';
+import { createFile } from '../common';
 import { AnyJson } from '@salesforce/ts-types';
 
 const MAX_NUM_LOGS = 25;
