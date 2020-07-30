@@ -14,7 +14,7 @@ import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
 import { ExecuteAnonymousResponse } from '../../src/types';
-import { ExecAnonResult, SoapResponse } from '../../src/types/execute';
+import { SoapResponse } from '../../src/types/execute';
 
 const $$ = testSetup();
 
@@ -46,36 +46,32 @@ describe('Apex Execute Tests', async () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecAnonResult = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: 'true',
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: 'true'
-      }
+    const execAnonResult = {
+      column: -1,
+      line: -1,
+      compiled: 'true',
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: 'true'
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
+          executeAnonymousResponse: { result: execAnonResult }
         }
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: true,
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: true,
-        logs: log
-      }
+      column: -1,
+      line: -1,
+      compiled: true,
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: true,
+      logs: log
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -91,36 +87,32 @@ describe('Apex Execute Tests', async () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(false);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecAnonResult = {
-      result: {
-        column: 1,
-        line: 6,
-        compiled: 'true',
-        compileProblem: '',
-        exceptionMessage: 'System.AssertException: Assertion Failed',
-        exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
-        success: 'false'
-      }
+    const execAnonResult: ExecuteAnonymousResponse = {
+      column: 1,
+      line: 6,
+      compiled: 'true',
+      compileProblem: '',
+      exceptionMessage: 'System.AssertException: Assertion Failed',
+      exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
+      success: 'false'
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
+          executeAnonymousResponse: { result: execAnonResult }
         }
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      result: {
-        column: 1,
-        line: 6,
-        compiled: true,
-        compileProblem: '',
-        exceptionMessage: 'System.AssertException: Assertion Failed',
-        exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
-        success: false,
-        logs: log
-      }
+      column: 1,
+      line: 6,
+      compiled: true,
+      compileProblem: '',
+      exceptionMessage: 'System.AssertException: Assertion Failed',
+      exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
+      success: false,
+      logs: log
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -134,37 +126,33 @@ describe('Apex Execute Tests', async () => {
 
   it('should execute and display compile issue in correct format', async () => {
     const apexExecute = new ExecuteService(mockConnection);
-    const execAnonResult: ExecAnonResult = {
-      result: {
-        column: 1,
-        line: 6,
-        compiled: 'false',
-        compileProblem: `Unexpected token '('.`,
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: 'false'
-      }
+    const execAnonResult = {
+      column: 1,
+      line: 6,
+      compiled: 'false',
+      compileProblem: `Unexpected token '('.`,
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: 'false'
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: '' } },
         'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
+          executeAnonymousResponse: { result: execAnonResult }
         }
       }
     };
 
     const expectedResult: ExecuteAnonymousResponse = {
-      result: {
-        column: 1,
-        line: 6,
-        compiled: false,
-        compileProblem: `Unexpected token '('.`,
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: false,
-        logs: ''
-      }
+      column: 1,
+      line: 6,
+      compiled: false,
+      compileProblem: `Unexpected token '('.`,
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: false,
+      logs: ''
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -180,36 +168,32 @@ describe('Apex Execute Tests', async () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecAnonResult = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: 'true',
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: 'true'
-      }
+    const execAnonResult = {
+      column: -1,
+      line: -1,
+      compiled: 'true',
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: 'true'
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
+          executeAnonymousResponse: { result: execAnonResult }
         }
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: true,
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: true,
-        logs: log
-      }
+      column: -1,
+      line: -1,
+      compiled: true,
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: true,
+      logs: log
     };
 
     const connRequestStub = sandboxStub.stub(
@@ -248,36 +232,32 @@ describe('Apex Execute Tests', async () => {
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(true);|EXECUTION_FINISHED\n';
     const bufferInput = Buffer.from('System.assert(true);');
-    const execAnonResult: ExecAnonResult = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: 'true',
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: 'true'
-      }
+    const execAnonResult = {
+      column: -1,
+      line: -1,
+      compiled: 'true',
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: 'true'
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: execAnonResult
+          executeAnonymousResponse: { result: execAnonResult }
         }
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      result: {
-        column: -1,
-        line: -1,
-        compiled: true,
-        compileProblem: '',
-        exceptionMessage: '',
-        exceptionStackTrace: '',
-        success: true,
-        logs: log
-      }
+      column: -1,
+      line: -1,
+      compiled: true,
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: true,
+      logs: log
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')

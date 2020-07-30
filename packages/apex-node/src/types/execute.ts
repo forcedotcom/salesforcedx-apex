@@ -47,20 +47,8 @@ export interface SoapResponse {
   [soapEnv]?: {
     [soapHeader]: { DebuggingInfo: DebuggingInfo };
     [soapBody]: {
-      executeAnonymousResponse: ExecAnonResult;
+      executeAnonymousResponse: { result: ExecuteAnonymousResponse };
     };
-  };
-}
-
-export interface ExecAnonResult {
-  result: {
-    column: number;
-    compiled: string;
-    compileProblem: string;
-    exceptionMessage: string;
-    exceptionStackTrace: string;
-    line: number;
-    success: string;
   };
 }
 
@@ -76,14 +64,12 @@ export interface RequestData {
 }
 
 export type ExecuteAnonymousResponse = {
-  result: {
-    column: number;
-    compiled: boolean;
-    compileProblem: string;
-    exceptionMessage: string;
-    exceptionStackTrace: string;
-    line: number;
-    success: boolean;
-    logs: string;
-  };
+  column: number;
+  compiled: boolean | string;
+  compileProblem: string;
+  exceptionMessage: string;
+  exceptionStackTrace: string;
+  line: number;
+  success: boolean | string;
+  logs?: string;
 };

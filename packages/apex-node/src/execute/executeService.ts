@@ -130,16 +130,23 @@ export class ExecuteService {
       soapResponse[soapEnv][soapBody].executeAnonymousResponse.result;
 
     const formattedResponse = {
-      result: {
-        compiled: execAnonResponse.compiled === 'true' ? true : false,
-        compileProblem: execAnonResponse.compileProblem,
-        success: execAnonResponse.success === 'true' ? true : false,
-        line: execAnonResponse.line,
-        column: execAnonResponse.column,
-        exceptionMessage: execAnonResponse.exceptionMessage,
-        exceptionStackTrace: execAnonResponse.exceptionStackTrace,
-        logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
-      }
+      compiled: execAnonResponse.compiled === 'true' ? true : false,
+      compileProblem:
+        typeof execAnonResponse.compileProblem === 'object'
+          ? ''
+          : execAnonResponse.compileProblem,
+      success: execAnonResponse.success === 'true' ? true : false,
+      line: execAnonResponse.line,
+      column: execAnonResponse.column,
+      exceptionMessage:
+        typeof execAnonResponse.exceptionMessage === 'object'
+          ? ''
+          : execAnonResponse.exceptionMessage,
+      exceptionStackTrace:
+        typeof execAnonResponse.exceptionStackTrace === 'object'
+          ? ''
+          : execAnonResponse.exceptionStackTrace,
+      logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
     };
 
     return formattedResponse;
