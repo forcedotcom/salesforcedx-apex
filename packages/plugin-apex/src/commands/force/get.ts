@@ -20,9 +20,12 @@ export default class LogGet extends SfdxCommand {
   );
   public static longDescription = messages.getMessage('longDescription');
   public static examples = [
-    `$ sfdx force:apex:log:get -i <log id>`,
-    `$ sfdx force:apex:log:get -i <log id> -u me@my.org`,
-    `$ sfdx force:apex:log:get -n 2 -c`
+    `$ sfdx force:apex:log:get -i <log id>
+    `,
+    `$ sfdx force:apex:log:get -i <log id> -u me@my.org
+    `,
+    `$ sfdx force:apex:log:get -n 2 -c
+    `
   ];
   protected static supportsUsername = true;
   protected static requiresProject = false;
@@ -63,6 +66,11 @@ export default class LogGet extends SfdxCommand {
   public async run(): Promise<AnyJson> {
     try {
       if (!this.org) {
+        if (this.flags.targetusername) {
+          return Promise.reject(
+            new Error(messages.getMessage('incorrect_username', [this.flags.targetusername]))
+          );
+        }
         return Promise.reject(
           new Error(messages.getMessage('missing_auth_error'))
         );
@@ -82,7 +90,17 @@ export default class LogGet extends SfdxCommand {
       if (logs.length === 0) {
         this.ux.log('No results found');
       }
-      logs.forEach(log => this.ux.log(log));
+
+      if (this.flags.json) {
+        const logResult: AnyJson = [];
+        logs.forEach(log => {
+          logResult.push({
+            log: JSON.parse(log)
+          });
+        });
+        return logResult;
+      }
+      logs.forEach(log => this.ux.log(JSON.parse(log)));
       return logs;
     } catch (e) {
       return Promise.reject(e);

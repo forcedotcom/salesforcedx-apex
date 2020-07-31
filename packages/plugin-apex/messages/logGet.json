@@ -9,5 +9,6 @@
       "numberDescription": "Number of most recent logs to display.",
       "outputDirDescription": "Folder for saving the log files.",
       "outputDirLongDescription" : "The location can be an absolute path or relative to the current working directory. The default is the current directory.",
-      "missing_auth_error" : "Must pass a username and/or OAuth options when creating an AuthInfo instance."
+      "missing_auth_error" : "Must pass a username and/or OAuth options when creating an AuthInfo instance.",
+      "incorrect_username": "No org configuration found for name %s"
 }
