@@ -76,31 +76,23 @@ export default class Execute extends SfdxCommand {
 
   private formatResult(response: ExecuteAnonymousResponse): string {
     let outputText = '';
-    // @ts-ignore
     if (response.compiled === true) {
       outputText += `${colorSuccess(
         messages.getMessage('execute_compile_success')
       )}\n`;
-      // @ts-ignore
       if (response.success === true) {
         outputText += `${colorSuccess(
           messages.getMessage('execute_runtime_success')
         )}\n`;
       } else {
-        // @ts-ignore
         outputText += colorError(`Error: ${response.exceptionMessage}\n`);
-        // @ts-ignore
         outputText += colorError(`Error: ${response.exceptionStackTrace}\n`);
       }
-      // @ts-ignore
       outputText += `\n${response.logs}`;
     } else {
       outputText += colorError(
-        // @ts-ignore
-
         `Error: Line: ${response.line}, Column: ${response.column}\n`
       );
-      // @ts-ignore
 
       outputText += colorError(`Error: ${response.compileProblem}\n`);
     }
