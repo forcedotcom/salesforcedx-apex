@@ -17,7 +17,7 @@ import {
   colorSuccess,
   colorError,
   logLevels
-} from '../../utils';
+} from '../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'execute');
