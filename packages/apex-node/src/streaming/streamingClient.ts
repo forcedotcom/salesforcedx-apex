@@ -35,7 +35,7 @@ export class StreamingClient {
   private client: FayeClient;
   private conn: Connection;
   private successfulHandshake = false;
-  public readonly DEFAULT_HANDSHAKE_TIMEOUT = 30000;
+  // public readonly DEFAULT_HANDSHAKE_TIMEOUT = 30000;
   private apiVersion = '36.0';
 
   private removeTrailingSlashURL(instanceUrl?: string): string {
@@ -63,7 +63,9 @@ export class StreamingClient {
     });
 
     this.client.on('transport:down', () => {
-      console.log('transport:down  =====>');
+      console.log(
+        'Faye generated a transport:down event. Faye will try and recover.'
+      );
     });
 
     this.client.addExtension({
@@ -95,7 +97,7 @@ export class StreamingClient {
       throw new Error('No access token');
     }
   }
-
+  /*
   public async handshake(): Promise<boolean> {
     let triedOnce = false;
     const endTime = Date.now() + this.DEFAULT_HANDSHAKE_TIMEOUT;
@@ -118,7 +120,7 @@ export class StreamingClient {
     } while (Date.now() < endTime);
 
     return this.successfulHandshake;
-  }
+  } */
 
   public async subscribe(): Promise<ApexTestQueueItem> {
     return new Promise((subscriptionResolve, subscriptionReject) => {
@@ -146,7 +148,7 @@ export class StreamingClient {
     const testRunId = message.sobject.Id;
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
     let result;
-    let recStatusCompleted = true;
+    let completedRecordProcess = true;
     try {
       result = (await this.conn.tooling.query(
         queryApexTestQueueItem
@@ -155,22 +157,24 @@ export class StreamingClient {
       if (result.records === undefined) {
         throw new Error('can not find any records');
       }
-      // change this to a for loop so we can stop iterating on the first record that's not completely processed.
-      result.records.forEach(item => {
+
+      for (let i = 0; i < result.records.length - 1; i++) {
+        const item = result.records[i];
         if (
           item.Status === ApexTestQueueItemStatus.Queued ||
           item.Status === ApexTestQueueItemStatus.Holding ||
           item.Status === ApexTestQueueItemStatus.Preparing ||
           item.Status === ApexTestQueueItemStatus.Processing
         ) {
-          recStatusCompleted = false;
+          completedRecordProcess = false;
+          break;
         }
-      });
+      }
     } catch (e) {
       throw new Error(e.message);
     }
 
-    if (recStatusCompleted) {
+    if (completedRecordProcess) {
       return result;
     } else {
       console.log(`Processing test run ${testRunId}`);
