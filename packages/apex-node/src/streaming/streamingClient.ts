@@ -6,36 +6,17 @@
  */
 
 import { Client as FayeClient } from 'faye';
-import { DEFAULT_STREAMING_TIMEOUT_MS } from './constants';
 import { Connection, Org } from '@salesforce/core';
 import { ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
+import { StreamMessage, TestResultMessage } from './types';
 
-export interface StreamingEvent {
-  createdDate: string;
-  replayId?: number;
-  type: string;
-}
-export interface TestResultMessage {
-  event: StreamingEvent;
-  sobject: {
-    Id: string;
-  };
-}
-
-export interface StreamMessage {
-  channel: string;
-  clientId: string;
-  successful?: boolean;
-  id?: string;
-  data?: TestResultMessage;
-}
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
+const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
 
 export class StreamingClient {
   private client: FayeClient;
   private conn: Connection;
   private successfulHandshake = false;
-  // public readonly DEFAULT_HANDSHAKE_TIMEOUT = 30000;
   private apiVersion = '36.0';
 
   private removeTrailingSlashURL(instanceUrl?: string): string {
@@ -73,12 +54,13 @@ export class StreamingClient {
         message: StreamMessage,
         callback: (message: StreamMessage) => void
       ) => {
-        if (
-          message &&
-          message.channel === '/meta/handshake' &&
-          message.successful === true
-        ) {
-          this.successfulHandshake = true;
+        if (message && message.channel === '/meta/handshake') {
+          if (message.successful === true) {
+            this.successfulHandshake = true;
+          } else if (message.error) {
+            this.successfulHandshake = false;
+            throw new Error(`Test run handshake failed: ${message.error}`);
+          }
         }
         callback(message);
       }
@@ -97,30 +79,6 @@ export class StreamingClient {
       throw new Error('No access token');
     }
   }
-  /*
-  public async handshake(): Promise<boolean> {
-    let triedOnce = false;
-    const endTime = Date.now() + this.DEFAULT_HANDSHAKE_TIMEOUT;
-    const wait = (interval: number): Promise<void> => {
-      return new Promise(resolve => {
-        setTimeout(resolve, interval);
-      });
-    };
-
-    do {
-      if (triedOnce) {
-        await wait(200);
-      }
-
-      if (this.successfulHandshake) {
-        return true;
-      }
-
-      triedOnce = true;
-    } while (Date.now() < endTime);
-
-    return this.successfulHandshake;
-  } */
 
   public async subscribe(): Promise<ApexTestQueueItem> {
     return new Promise((subscriptionResolve, subscriptionReject) => {
