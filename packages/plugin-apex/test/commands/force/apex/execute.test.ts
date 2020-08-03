@@ -138,7 +138,12 @@ describe('apex:execute', () => {
       'fakeData';
     })
     .stdout()
-    .command(['apex:execute', '--targetusername', 'test@org.com', '--json'])
+    .command([
+      'force:apex:execute',
+      '--targetusername',
+      'test@org.com',
+      '--json'
+    ])
     .it('runs default command with json flag and successful result', ctx => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
@@ -159,7 +164,12 @@ describe('apex:execute', () => {
       'fakeData';
     })
     .stdout()
-    .command(['apex:execute', '--targetusername', 'test@org.com', '--json'])
+    .command([
+      'force:apex:execute',
+      '--targetusername',
+      'test@org.com',
+      '--json'
+    ])
     .it('runs default command with json flag and compile problem', ctx => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
@@ -178,7 +188,7 @@ describe('apex:execute', () => {
       'fakeData';
     })
     .stdout()
-    .command(['apex:execute', '--targetusername', 'test@org.com'])
+    .command(['force:apex:execute', '--targetusername', 'test@org.com'])
     .it('runs default command successfully with human readable output', ctx => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
@@ -195,7 +205,7 @@ describe('apex:execute', () => {
       'fakeData';
     })
     .stdout()
-    .command(['apex:execute', '--targetusername', 'test@org.com'])
+    .command(['force:apex:execute', '--targetusername', 'test@org.com'])
     .it(
       'runs default command with compile issue in human readable output',
       ctx => {
@@ -215,7 +225,7 @@ describe('apex:execute', () => {
       'fakeData';
     })
     .stdout()
-    .command(['apex:execute', '--targetusername', 'test@org.com'])
+    .command(['force:apex:execute', '--targetusername', 'test@org.com'])
     .it(
       'runs default command with runtime issue in human readable output',
       ctx => {
