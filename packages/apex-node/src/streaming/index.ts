@@ -5,5 +5,5 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 export { StreamingService } from './streamingService';
-export { StreamingClientInfoBuilder } from './streamingClient';
+export { StreamingClient } from './streamingClient';
 export { RequestService } from './requestService';

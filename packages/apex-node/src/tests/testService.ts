@@ -19,11 +19,8 @@ import {
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
-import {
-  StreamingClientInfoBuilder,
-  StreamingService,
-  RequestService
-} from '../streaming';
+import { StreamingService, RequestService } from '../streaming';
+import { StreamingClient } from '../streaming/streamingClient';
 
 export class TestService {
   public readonly connection: Connection;
@@ -51,17 +48,25 @@ export class TestService {
 
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration
-  ): Promise<void> {
-    // Promise<AsyncTestResult> {
-    const isStreamingConnected = await this.connectStreaming(options);
-    console.log(`streaming ==> ${isStreamingConnected}`);
+  ): Promise<AsyncTestResult> {
+    const sClient = new StreamingClient(this.connection);
+    await sClient.init();
+    const handShakeStatus = await sClient.handshake();
+    console.log(`handShakeStatus ===> ${handShakeStatus}`);
+    const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
+    const request = {
+      method: 'POST',
+      url,
+      body: JSON.stringify(options),
+      headers: { 'content-type': 'application/json' }
+    };
 
-    // NOTE: we need to replace polling with a streaming api subscription.
-    // we will poll for 10-20 seconds, if the tests are still running then we'll use
-    // streaming api to get the results.
-    // const testQueueResult = ''; // await this.testRunQueueStatusPoll(testRunId);
-    // @ts-ignore
-    // return await this.getTestResultData(testQueueResult, testRunId);
+    const testRunId = (await this.connection.tooling.request(
+      request
+    )) as string;
+
+    const testQueueResult = await sClient.subscribe();
+    return await this.getTestResultData(testQueueResult, testRunId);
   }
 
   public async getTestResultData(
@@ -134,27 +139,66 @@ export class TestService {
     return result;
   }
 
-  public async connectStreaming(
-    options: AsyncTestConfiguration | AsyncTestArrayConfiguration
-  ): Promise<boolean> {
-    const channel = StreamingService.TEST_RESULT_CHANNEL;
+  /*
+  public async coreStreaming(conn: Connection): Promise<any> {
+    function streamProcessor(message: any): StatusResult {
+      console.log('streamProcessor ====>', message);
+      const testRunId = message.sobject.Id;
+      const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
+      let result;
+      let recStatusCompleted = true;
+      try {
+        result = (conn.tooling.query(
+          queryApexTestQueueItem
+        ) as unknown) as ApexTestQueueItem;
 
+        result.records.forEach(item => {
+          if (item.Status === 'Queued' || item.Status === 'Processing') {
+            recStatusCompleted = false;
+          }
+        });
+      } catch (e) {
+        throw new Error(e.message);
+      }
+      console.log(`result =====> `, result);
+
+      return { completed: recStatusCompleted };
+    }
+
+    async function startStream(username: string): Promise<void> {
+      const org = await Org.create({ aliasOrUsername: username });
+      const options: StreamingClient.Options = new StreamingClient.DefaultOptions(
+        org,
+        '/systemTopic/TestResult',
+        streamProcessor
+      );
+
+      const asyncStatusClient = await StreamingClient.create(options);
+
+      const handshake = await asyncStatusClient.handshake();
+      console.log('Handshaked!', handshake);
+      const subscription = await asyncStatusClient.subscribe(async () => {
+        console.log('Subscribed!');
+      });
+
+      console.log('subscription status ===>', subscription);
+    }
+    const username = this.connection.getUsername();
+    await startStream(username);
+  }
+  */
+  /*
+  public async connectStreaming(startTime: [number, number]): Promise<boolean> {
+    const channel = StreamingService.TEST_RESULT_CHANNEL;
     const clientInfo = new StreamingClientInfoBuilder()
       .forChannel(channel)
-      .withConnectedHandler(async () => {
+      .withConnectedHandler(() => {
         console.log(`connection handler ===> ${channel}`);
-        const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
-        const request = {
-          method: 'POST',
-          url,
-          body: JSON.stringify(options),
-          headers: { 'content-type': 'application/json' }
-        };
-
-        const testRunId = (await this.connection.tooling.request(
-          request
-        )) as string;
-        console.log(`testRunId ==== > ${testRunId}`);
+        const hrend = process.hrtime(startTime);
+        const timestamp = Number(
+          util.format('%d%d', hrend[0], hrend[1] / 1000000)
+        );
+        console.log(`connection handler timestamp => ${timestamp}`);
       })
       .withDisconnectedHandler(() => {
         console.log(`${channel} disconnected`);
@@ -173,16 +217,56 @@ export class TestService {
       })
       .build();
 
-    this.myRequestService.instanceUrl = 'https://na96.salesforce.com';
-    this.myRequestService.accessToken =
-      '00D41000000FH4I!AQ8AQFkaxZONAcvIKlmmnbLZRvXZtlAaJ3PzqGhbMUyqlp2kdqegjfpt6J3SzEAMaLhS_sPhB8a5nKwfneecyvnGCkHfLld_';
-
-    return this.myStreamingService.subscribe(this.myRequestService, clientInfo);
+    this.myRequestService.instanceUrl = this.connection.instanceUrl;
+    this.myRequestService.accessToken = this.connection.accessToken;
+    console.log('myRequestService ==> ', this.myRequestService);
+    this.myStreamingService.handshake();
+    return await this.myStreamingService.subscribe(
+      this.myRequestService,
+      clientInfo
+    );
   }
-
+*/
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public handleEvent(data: any): void {
-    console.log(`handleEvent ====> ${data}`);
+  public async handleEvent(data: any): Promise<void> {
+    console.log(`handleEvent ====> ${data}`, data);
+    /*
+     {
+        event: { 
+          type: 'updated',
+          createdDate: '2020-07-30T03:50:08.000+0000' 
+        },
+        sobject: { Id: '7072M0000AM9jRTQQZ' }
+      }
+     */
+    // every event will return a test run id, we need to query for it's status and decide if we need to keep waiting
+    // or we can continue to get the test run results
+    const testRunId = data.sobject.Id;
+    const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
+    let result;
+    let recStatusCompleted = true;
+    try {
+      result = (await this.connection.tooling.query(
+        queryApexTestQueueItem
+      )) as ApexTestQueueItem;
+
+      if (result.records === undefined) {
+        throw new Error('can not find any records');
+      }
+      result.records.forEach(item => {
+        if (item.Status === 'Queued' || item.Status === 'Processing') {
+          recStatusCompleted = false;
+        }
+      });
+    } catch (e) {
+      throw new Error(e.message);
+    }
+    console.log(`result =====> `, result.records.length);
+    console.log(`recStatusCompleted ====>`, recStatusCompleted);
+    if (recStatusCompleted) {
+      // this.myStreamingService.disconnect();
+      await this.getTestResultData(result, testRunId);
+    }
   }
 
   public async testRunQueueStatusPoll(

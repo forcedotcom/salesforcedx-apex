@@ -6,239 +6,175 @@
  */
 
 import { Client as FayeClient } from 'faye';
-import os = require('os');
-import { RequestService } from './requestService';
-import { nls } from '../i18n';
 import { DEFAULT_STREAMING_TIMEOUT_MS } from './constants';
+import { Connection, Org } from '@salesforce/core';
+import { ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
 
 export interface StreamingEvent {
   createdDate: string;
-  replayId: number;
+  replayId?: number;
   type: string;
 }
-
-export interface ApexDebuggerEvent {
-  SessionId: string;
-  RequestId?: string;
-  BreakpointId?: string;
-  Type: string;
-  Description?: string;
-  FileName?: string;
-  Line?: number;
-  Stacktrace?: string;
-}
-
-export interface DebuggerMessage {
+export interface TestResultMessage {
   event: StreamingEvent;
-  sobject: ApexDebuggerEvent;
+  sobject: {
+    Id: string;
+  };
 }
 
-export class StreamingClientInfo {
-  public readonly channel: string;
-  public readonly timeout: number;
-  public readonly errorHandler: (reason: string) => void;
-  public readonly connectedHandler: () => void;
-  public readonly disconnectedHandler: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly messageHandler: (message: any) => void;
-
-  public constructor(builder: StreamingClientInfoBuilder) {
-    this.channel = builder.channel;
-    this.timeout = builder.timeout;
-    this.errorHandler = builder.errorHandler;
-    this.connectedHandler = builder.connectedHandler;
-    this.disconnectedHandler = builder.disconnectedHandler;
-    this.messageHandler = builder.messageHandler;
-  }
+export interface StreamMessage {
+  channel: string;
+  clientId: string;
+  successful?: boolean;
+  id?: string;
+  data?: TestResultMessage;
 }
-
-export class StreamingClientInfoBuilder {
-  public channel!: string;
-  public timeout: number = DEFAULT_STREAMING_TIMEOUT_MS;
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public errorHandler: (reason: string) => void = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public connectedHandler: () => void = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public disconnectedHandler: () => void = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-explicit-any
-  public messageHandler: (message: any) => void = () => {};
-
-  public forChannel(channel: string): StreamingClientInfoBuilder {
-    console.log('forChannel ====> ');
-    this.channel = channel;
-    return this;
-  }
-
-  public withTimeout(durationInSeconds: number): StreamingClientInfoBuilder {
-    this.timeout = durationInSeconds || DEFAULT_STREAMING_TIMEOUT_MS;
-    return this;
-  }
-
-  public withErrorHandler(
-    handler: (reason: string) => void
-  ): StreamingClientInfoBuilder {
-    this.errorHandler = handler;
-    return this;
-  }
-
-  public withConnectedHandler(handler: () => void): StreamingClientInfoBuilder {
-    console.log('with Connected Handler ====> ');
-    this.connectedHandler = handler;
-    return this;
-  }
-
-  public withDisconnectedHandler(
-    handler: () => void
-  ): StreamingClientInfoBuilder {
-    this.disconnectedHandler = handler;
-    return this;
-  }
-
-  public withMsgHandler(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    handler: (message: any) => void
-  ): StreamingClientInfoBuilder {
-    console.log('with Message Handler ====> ');
-    this.messageHandler = handler;
-    return this;
-  }
-
-  public build(): StreamingClientInfo {
-    return new StreamingClientInfo(this);
-  }
-}
+const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 
 export class StreamingClient {
   private client: FayeClient;
-  private connected = false;
-  private shouldDisconnect = false;
-  private isReplaySupported = false;
-  private replayId = -1;
-  private clientInfo: StreamingClientInfo;
+  private conn: Connection;
+  private successfulHandshake = false;
+  public readonly DEFAULT_HANDSHAKE_TIMEOUT = 30000;
+  private apiVersion = '36.0';
 
-  public constructor(
-    url: string,
-    requestService: RequestService,
-    clientInfo: StreamingClientInfo
-  ) {
-    this.clientInfo = clientInfo;
-    this.client = new FayeClient(url, {
-      timeout: this.clientInfo
-        .timeout /*,
-      proxy: {
-        origin: requestService.proxyUrl,
-        auth: requestService.proxyAuthorization
-      }*/
-    });
-    this.client.setHeader(
-      'Authorization',
-      `OAuth ${requestService.accessToken}`
-    );
-    this.client.setHeader('Content-Type', 'application/json');
+  private removeTrailingSlashURL(instanceUrl?: string): string {
+    return instanceUrl ? instanceUrl.replace(/\/+$/, '') : '';
   }
 
-  public async subscribe(): Promise<void> {
-    let subscribeAccept: () => void;
-    let subscribeReject: () => void;
-    const returnPromise = new Promise<void>(
-      (resolve: () => void, reject: () => void) => {
-        subscribeAccept = resolve;
-        subscribeReject = reject;
-      }
-    );
+  public getStreamURL(instanceUrl: string): string {
+    const urlElements = [
+      this.removeTrailingSlashURL(instanceUrl),
+      'cometd',
+      this.apiVersion
+    ];
+    return urlElements.join('/');
+  }
 
-    this.client.on('transport:down', async () => {
-      if (!this.connected) {
-        this.clientInfo.errorHandler(
-          nls.localize('streaming_handshake_timeout_text')
-        );
-        subscribeReject();
-      }
+  public constructor(connection: Connection) {
+    this.conn = connection;
+    const streamUrl = this.getStreamURL(this.conn.instanceUrl);
+    this.client = new FayeClient(streamUrl, {
+      timeout: DEFAULT_STREAMING_TIMEOUT_MS
     });
+
+    this.client.on('transport:up', () => {
+      console.log('Listening for streaming state changes....');
+    });
+
+    this.client.on('transport:down', () => {
+      console.log('transport:down  =====>');
+    });
+
     this.client.addExtension({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      incoming: (message: any, callback: (message: any) => void) => {
-        if (message.channel === '/meta/handshake') {
-          if (message.successful === true) {
-            if (message.ext && message.ext['replay'] === true) {
-              this.isReplaySupported = true;
-            }
-            this.shouldDisconnect = false;
-          } else {
-            this.connected = false;
-            this.clientInfo.errorHandler(
-              `${nls.localize('streaming_handshake_error_text')}:${
-                os.EOL
-              }${JSON.stringify(message)}${os.EOL}`
-            );
-            subscribeReject();
-          }
-        } else if (
-          message.channel === '/meta/connect' &&
-          !this.shouldDisconnect
+      incoming: (
+        message: StreamMessage,
+        callback: (message: StreamMessage) => void
+      ) => {
+        if (
+          message &&
+          message.channel === '/meta/handshake' &&
+          message.successful === true
         ) {
-          const wasConnected = this.connected;
-          this.connected = message.successful;
-          if (!wasConnected && this.connected) {
-            this.clientInfo.connectedHandler();
-            subscribeAccept();
-          } else if (wasConnected && !this.connected) {
-            this.clientInfo.disconnectedHandler();
-            this.sendSubscribeRequest();
-          }
-        } else if (message.channel === '/meta/disconnect') {
-          this.shouldDisconnect = true;
-        }
-        callback(message);
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      outgoing: (message: any, callback: (message: any) => void) => {
-        if (message.channel === '/meta/subscribe' && this.isReplaySupported) {
-          if (!message.ext) {
-            message.ext = {};
-          }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const replayFrom: any = {};
-          replayFrom[this.clientInfo.channel] = this.replayId;
-          message.ext['replay'] = replayFrom;
+          this.successfulHandshake = true;
         }
         callback(message);
       }
     });
-    this.sendSubscribeRequest();
-    return returnPromise;
   }
 
-  public disconnect(): void {
-    this.shouldDisconnect = true;
-    if (this.client && this.connected) {
-      this.client.disconnect();
-      this.clientInfo.disconnectedHandler();
+  public async init(): Promise<void> {
+    const username = this.conn.getUsername();
+    const org = await Org.create({ aliasOrUsername: username });
+    await org.refreshAuth();
+
+    const accessToken = this.conn.getConnectionOptions().accessToken;
+    if (accessToken) {
+      this.client.setHeader('Authorization', `OAuth ${accessToken}`);
+    } else {
+      throw new Error('No access token');
     }
-    this.connected = false;
   }
 
-  public isConnected(): boolean {
-    return this.connected;
+  public async handshake(): Promise<boolean> {
+    let triedOnce = false;
+    const endTime = Date.now() + this.DEFAULT_HANDSHAKE_TIMEOUT;
+    const wait = (interval: number): Promise<void> => {
+      return new Promise(resolve => {
+        setTimeout(resolve, interval);
+      });
+    };
+
+    do {
+      if (triedOnce) {
+        await wait(200);
+      }
+
+      if (this.successfulHandshake) {
+        return true;
+      }
+
+      triedOnce = true;
+    } while (Date.now() < endTime);
+
+    return this.successfulHandshake;
   }
 
-  public getReplayId(): number {
-    return this.replayId;
+  public async subscribe(): Promise<ApexTestQueueItem> {
+    return new Promise((subscriptionResolve, subscriptionReject) => {
+      try {
+        this.client.subscribe(
+          TEST_RESULT_CHANNEL,
+          async (message: TestResultMessage) => {
+            const result = await this.handler(message);
+
+            if (result) {
+              this.client.disconnect();
+              subscriptionResolve(result);
+            }
+          }
+        );
+      } catch (e) {
+        this.client.disconnect();
+        subscriptionReject(e);
+      }
+    });
   }
 
-  public setReplayId(replayId: number): void {
-    this.replayId = replayId;
-  }
+  // TODO: should make sure to filter out the test runs from other sources
+  public async handler(message: TestResultMessage): Promise<ApexTestQueueItem> {
+    const testRunId = message.sobject.Id;
+    const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
+    let result;
+    let recStatusCompleted = true;
+    try {
+      result = (await this.conn.tooling.query(
+        queryApexTestQueueItem
+      )) as ApexTestQueueItem;
 
-  public getClientInfo(): StreamingClientInfo {
-    return this.clientInfo;
-  }
+      if (result.records === undefined) {
+        throw new Error('can not find any records');
+      }
+      // change this to a for loop so we can stop iterating on the first record that's not completely processed.
+      result.records.forEach(item => {
+        if (
+          item.Status === ApexTestQueueItemStatus.Queued ||
+          item.Status === ApexTestQueueItemStatus.Holding ||
+          item.Status === ApexTestQueueItemStatus.Preparing ||
+          item.Status === ApexTestQueueItemStatus.Processing
+        ) {
+          recStatusCompleted = false;
+        }
+      });
+    } catch (e) {
+      throw new Error(e.message);
+    }
 
-  private sendSubscribeRequest(): void {
-    this.client.subscribe(
-      this.clientInfo.channel,
-      this.clientInfo.messageHandler
-    );
+    if (recStatusCompleted) {
+      return result;
+    } else {
+      console.log(`Processing test run ${testRunId}`);
+    }
+    return null;
   }
 }
