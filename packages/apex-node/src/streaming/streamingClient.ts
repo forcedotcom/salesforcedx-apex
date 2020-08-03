@@ -158,7 +158,7 @@ export class StreamingClient {
         throw new Error('can not find any records');
       }
 
-      for (let i = 0; i < result.records.length - 1; i++) {
+      for (let i = 0; i < result.records.length; i++) {
         const item = result.records[i];
         if (
           item.Status === ApexTestQueueItemStatus.Queued ||
