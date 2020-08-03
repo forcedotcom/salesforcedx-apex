@@ -58,8 +58,7 @@ export default class LogGet extends SfdxCommand {
     outputdir: flags.string({
       char: 'd',
       description: messages.getMessage('outputDirDescription'),
-      longDescription: messages.getMessage('outputDirLongDescription'),
-      default: '.'
+      longDescription: messages.getMessage('outputDirLongDescription')
     })
   };
 
