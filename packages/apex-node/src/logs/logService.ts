@@ -31,6 +31,7 @@ export class LogService {
       throw new Error(nls.localize('missing_info_log_error'));
     }
     let logIdList: string[] = [];
+    let filenames: string[] = [];
     if (typeof options.numberOfLogs === 'number') {
       logIdList = await this.getLogIds(options.numberOfLogs);
     } else {
@@ -46,6 +47,7 @@ export class LogService {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       const logRecord = await this.toolingRequest(url);
       if (options.outputDir) {
+        filenames.push(`${id}.log`);
         createFile(path.join(options.outputDir, `${id}.log`), logRecord);
       }
       return JSON.stringify(logRecord);
@@ -53,7 +55,7 @@ export class LogService {
 
     const result = await Promise.all(connectionRequests);
     if (options.outputDir) {
-      return [`Logs written to ${options.outputDir}`];
+      return filenames;
     }
     return result;
   }
