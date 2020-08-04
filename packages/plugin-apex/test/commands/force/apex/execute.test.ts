@@ -4,8 +4,8 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-// import * as fs from 'fs';
-// import * as path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import { test } from '@salesforce/command/lib/test';
 import { expect } from 'chai';
 import { ExecuteService } from '@salesforce/apex-node';
@@ -92,7 +92,7 @@ describe('apex:execute', () => {
     'Error: Line: 11, Column: 1\nError: problem compiling\n\n';
   const runtimeResponse = `Compiled successfully.\nError: problem at runtime\nError: Issue in mock file\n\n${log}\n`;
 
-  /*const SFDX_PROJECT_PATH = 'test-sfdx-project';
+  const SFDX_PROJECT_PATH = 'test-sfdx-project';
   const projectPath = path.resolve(SFDX_PROJECT_PATH);
 
   test
@@ -105,14 +105,13 @@ describe('apex:execute', () => {
     })
     .stub(process, 'cwd', () => projectPath)
     .stub(fs, 'existsSync', () => true)
-    .stub(fs, 'readFileSync', () => `System.assert(true);`)
+    .stub(fs, 'readFileSync', () => 'System.assert(true);')
     .stdout()
     .command([
-      'apex:execute',
-      '--targetusername',
-      'test@org.com',
-      '-f',
-      'Users/a.jha/path/to/file'
+      'force:apex:execute',
+      '--apexcodefile',
+      path.join('Users', 'test', 'path', 'to', 'file'),
+      '--json'
     ])
     .it('runs command with filepath flag and successful result', ctx => {
       const result = ctx.stdout;
@@ -122,7 +121,7 @@ describe('apex:execute', () => {
       expect(resultJSON.status).to.equal(0);
       expect(resultJSON).to.ownProperty('result');
       expect(resultJSON.result).to.deep.include(expectedSuccessResult);
-    });*/
+    });
 
   test
     .withOrg({ username: 'test@org.com' }, true)
