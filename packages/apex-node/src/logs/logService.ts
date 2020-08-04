@@ -31,7 +31,7 @@ export class LogService {
       throw new Error(nls.localize('missing_info_log_error'));
     }
     let logIdList: string[] = [];
-    let filenames: string[] = [];
+    const filenames: string[] = [];
     if (typeof options.numberOfLogs === 'number') {
       logIdList = await this.getLogIds(options.numberOfLogs);
     } else {
