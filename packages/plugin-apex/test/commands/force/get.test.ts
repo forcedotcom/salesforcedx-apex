@@ -58,7 +58,7 @@ describe('force:get', () => {
       if (!String(request).includes('ApexLog')) {
         return Promise.resolve({ records: [{ Id: 'idnumber5' }] });
       }
-      return Promise.resolve('Logs written to /Users/smit.shah/Desktop' as {});
+      return Promise.resolve('idnumber5.log' as {});
     })
     .stdout()
     .stub(fs, 'openSync', () => 13)
@@ -69,7 +69,7 @@ describe('force:get', () => {
     .it(
       'should return log with outputdir parameter specified',
       ctx => {
-        expect(ctx.stdout).to.contain('Logs written to /Users/smit.shah/Desktop');
+        expect(ctx.stdout).to.contain('idnumber5.log');
       }
     );
 

@@ -94,8 +94,9 @@ export default class LogGet extends SfdxCommand {
         });
         return logResult;
       } else if (this.flags.outputdir) {
-        this.ux.log(JSON.parse(JSON.stringify(logs[0])));
-        return logs[0];
+        this.ux.log(JSON.parse(JSON.stringify(`Logs written to ${this.flags.outputdir}`)));
+        logs.forEach(log => this.ux.log(JSON.parse(JSON.stringify(log))));
+        return logs;
       }
       logs.forEach(log => this.ux.log(JSON.parse(log)));
       return logs;
