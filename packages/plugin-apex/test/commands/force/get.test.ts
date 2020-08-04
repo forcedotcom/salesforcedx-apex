@@ -58,7 +58,7 @@ describe('force:get', () => {
       if (!String(request).includes('ApexLog')) {
         return Promise.resolve({ records: [{ Id: 'idnumber5' }] });
       }
-      return Promise.resolve('48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG' as {});
+      return Promise.resolve('Logs written to /Users/smit.shah/Desktop' as {});
     })
     .stdout()
     .stub(fs, 'openSync', () => 13)
