@@ -147,7 +147,7 @@ describe('Apex Log Service Tests', () => {
       numberOfLogs: 2,
       outputDir: filePath
     });
-    expect(response.length).to.eql(2);
+    expect(response[0]).to.eql(`Logs written to ${filePath}`);
     expect(createStreamStub.callCount).to.eql(2);
   });
 

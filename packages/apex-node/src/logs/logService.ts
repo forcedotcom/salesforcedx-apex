@@ -52,7 +52,9 @@ export class LogService {
     });
 
     const result = await Promise.all(connectionRequests);
-
+    if (options.outputDir) {
+      return [`Logs written to ${options.outputDir}`];
+    }
     return result;
   }
 
