@@ -85,7 +85,6 @@ export default class LogGet extends SfdxCommand {
       if (logs.length === 0) {
         this.ux.log('No results found');
       }
-
       if (this.flags.json) {
         const logResult: AnyJson = [];
         logs.forEach(log => {
@@ -94,6 +93,9 @@ export default class LogGet extends SfdxCommand {
           });
         });
         return logResult;
+      } else if (this.flags.outputdir) {
+        this.ux.log(JSON.parse(JSON.stringify(logs[0])));
+        return logs[0];
       }
       logs.forEach(log => this.ux.log(JSON.parse(log)));
       return logs;

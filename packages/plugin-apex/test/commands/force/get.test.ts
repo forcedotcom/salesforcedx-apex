@@ -69,7 +69,7 @@ describe('force:get', () => {
     .it(
       'should return log with outputdir parameter specified',
       ctx => {
-        expect(ctx.stdout).to.contain('48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG');
+        expect(ctx.stdout).to.contain('Logs written to /Users/smit.shah/Desktop');
       }
     );
 
