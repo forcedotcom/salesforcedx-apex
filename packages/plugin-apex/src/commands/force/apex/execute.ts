@@ -68,7 +68,7 @@ export default class Execute extends SfdxCommand {
       };
       const result = await exec.executeAnonymous(execAnonOptions);
       this.ux.log(this.formatResult(result));
-      return result;
+      return result.result;
     } catch (e) {
       return Promise.reject(e);
     }

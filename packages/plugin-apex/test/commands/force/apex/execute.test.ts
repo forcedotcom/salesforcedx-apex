@@ -4,7 +4,6 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import * as fs from 'fs';
 import * as path from 'path';
 import { test } from '@salesforce/command/lib/test';
 import { expect } from 'chai';
@@ -34,9 +33,9 @@ describe('apex:execute', () => {
     column: -1,
     line: -1,
     compiled: true,
-    compileProblem: '',
-    exceptionMessage: '',
-    exceptionStackTrace: '',
+    compileProblem: {},
+    exceptionMessage: {},
+    exceptionStackTrace: {},
     success: true,
     logs: log
   };
@@ -63,8 +62,8 @@ describe('apex:execute', () => {
     line: 11,
     compiled: false,
     compileProblem: 'problem compiling',
-    exceptionMessage: '',
-    exceptionStackTrace: '',
+    exceptionMessage: {},
+    exceptionStackTrace: {},
     success: false,
     logs: log
   };
@@ -92,20 +91,19 @@ describe('apex:execute', () => {
     'Error: Line: 11, Column: 1\nError: problem compiling\n\n';
   const runtimeResponse = `Compiled successfully.\nError: problem at runtime\nError: Issue in mock file\n\n${log}\n`;
 
-  const SFDX_PROJECT_PATH = 'test-sfdx-project';
-  const projectPath = path.resolve(SFDX_PROJECT_PATH);
-
   test
     .withOrg({ username: 'test@org.com' }, true)
     .withConnectionRequest(() => {
       return Promise.resolve(soapResponse);
     })
-    .loadConfig({
-      root: __dirname
+    .stub(
+      ExecuteService.prototype,
+      'readApexFile',
+      () => 'System.assert(true);'
+    )
+    .stub(ExecuteService.prototype, 'buildExecRequest', () => {
+      'fakeData';
     })
-    .stub(process, 'cwd', () => projectPath)
-    .stub(fs, 'existsSync', () => true)
-    .stub(fs, 'readFileSync', () => 'System.assert(true);')
     .stdout()
     .command([
       'force:apex:execute',
@@ -117,6 +115,7 @@ describe('apex:execute', () => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
       const resultJSON = JSON.parse(result);
+      console.log(resultJSON + 'hello');
       expect(resultJSON).to.ownProperty('status');
       expect(resultJSON.status).to.equal(0);
       expect(resultJSON).to.ownProperty('result');
