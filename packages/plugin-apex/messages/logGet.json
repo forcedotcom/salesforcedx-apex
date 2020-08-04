@@ -4,7 +4,6 @@
       "jsonDescription" : "Format output as JSON.",
       "logLevelDescription" : "The logging level for this command invocation. Logs are stored in $HOME/.sfdx/sfdx.log.",
       "logLevelLongDescription": "Permissible values are: trace, debug, info, warn, error, fatal, TRACE, DEBUG, INFO, WARN, ERROR, FATAL.",
-      "colorDescription": "Apply default colors to noteworthy log lines.",
       "logIDDescription": "ID of the log to display.",
       "numberDescription": "Number of most recent logs to display.",
       "outputDirDescription": "Folder for saving the log files.",

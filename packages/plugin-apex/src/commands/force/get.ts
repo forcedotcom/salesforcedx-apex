@@ -41,10 +41,6 @@ export default class LogGet extends SfdxCommand {
       options: logLevels
     }),
     apiversion: flags.builtin(),
-    color: flags.boolean({
-      char: 'c',
-      description: messages.getMessage('colorDescription')
-    }),
     logid: flags.id({
       char: 'i',
       description: messages.getMessage('logIDDescription')
