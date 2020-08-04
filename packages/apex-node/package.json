@@ -4,7 +4,7 @@
   "version": "0.0.4",
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/salesforcedx-apex/issues",
-  "main": "lib/index.js",
+  "main": "lib/src/index.js",
   "dependencies": {
     "@salesforce/core": "2.6.0"
   },
