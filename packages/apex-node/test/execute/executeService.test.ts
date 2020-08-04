@@ -114,7 +114,12 @@ describe('Apex Execute Tests', async () => {
       exceptionMessage: 'System.AssertException: Assertion Failed',
       exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
       success: false,
-      logs: log
+      logs: log,
+      diagnostic: {
+        columnNumber: 1,
+        lineNumber: 6,
+        message: 'System.AssertException: Assertion Failed'
+      }
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -154,7 +159,12 @@ describe('Apex Execute Tests', async () => {
       exceptionMessage: '',
       exceptionStackTrace: '',
       success: false,
-      logs: ''
+      logs: '',
+      diagnostic: {
+        columnNumber: 1,
+        lineNumber: 6,
+        message: `Unexpected token '('.`
+      }
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')

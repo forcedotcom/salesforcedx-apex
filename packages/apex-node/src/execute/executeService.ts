@@ -130,7 +130,7 @@ export class ExecuteService {
     const execAnonResponse =
       soapResponse[soapEnv][soapBody].executeAnonymousResponse.result;
 
-    const formattedResponse = {
+    const formattedResponse: ExecuteAnonymousResponse = {
       compiled: execAnonResponse.compiled === 'true',
       compileProblem:
         typeof execAnonResponse.compileProblem === 'object'
@@ -149,6 +149,17 @@ export class ExecuteService {
           : execAnonResponse.exceptionStackTrace,
       logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
     };
+
+    if (!formattedResponse.success) {
+      formattedResponse.diagnostic = {
+        lineNumber: formattedResponse.line,
+        columnNumber: formattedResponse.column,
+        message:
+          formattedResponse.compileProblem.length !== 0
+            ? formattedResponse.compileProblem
+            : formattedResponse.exceptionMessage
+      };
+    }
 
     return formattedResponse;
   }
