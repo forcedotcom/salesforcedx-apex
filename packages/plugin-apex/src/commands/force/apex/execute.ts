@@ -68,7 +68,7 @@ export default class Execute extends SfdxCommand {
       };
       const result = await exec.executeAnonymous(execAnonOptions);
       this.ux.log(this.formatResult(result));
-      return result.result;
+      return result;
     } catch (e) {
       return Promise.reject(e);
     }
@@ -76,29 +76,25 @@ export default class Execute extends SfdxCommand {
 
   private formatResult(response: ExecuteAnonymousResponse): string {
     let outputText = '';
-    if (response.result.compiled === true) {
+    if (response.compiled === true) {
       outputText += `${colorSuccess(
         messages.getMessage('execute_compile_success')
       )}\n`;
-      if (response.result.success === true) {
+      if (response.success === true) {
         outputText += `${colorSuccess(
           messages.getMessage('execute_runtime_success')
         )}\n`;
       } else {
-        outputText += colorError(
-          `Error: ${response.result.exceptionMessage}\n`
-        );
-        outputText += colorError(
-          `Error: ${response.result.exceptionStackTrace}\n`
-        );
+        outputText += colorError(`Error: ${response.exceptionMessage}\n`);
+        outputText += colorError(`Error: ${response.exceptionStackTrace}\n`);
       }
-      outputText += `\n${response.result.logs}`;
+      outputText += `\n${response.logs}`;
     } else {
       outputText += colorError(
-        `Error: Line: ${response.result.line}, Column: ${response.result.column}\n`
+        `Error: Line: ${response.line}, Column: ${response.column}\n`
       );
 
-      outputText += colorError(`Error: ${response.result.compileProblem}\n`);
+      outputText += colorError(`Error: ${response.compileProblem}\n`);
     }
     return outputText;
   }
