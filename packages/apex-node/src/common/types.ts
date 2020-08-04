@@ -24,7 +24,7 @@ export type QueryResult = {
 };
 
 export type ApexDiagnostic = {
-  lineNumber?: number;
-  columnNumber?: number;
-  message?: string;
+  lineNumber: number;
+  columnNumber: number;
+  message: string;
 };
