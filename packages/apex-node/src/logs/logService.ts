@@ -54,11 +54,11 @@ export class LogService {
       return JSON.stringify(logRecord);
     });
 
-    const result = await Promise.all(connectionRequests);
-    if (options.outputDir) {
+    const logs = await Promise.all(connectionRequests);
+    if (logPaths.length > 0) {
       return logPaths;
     }
-    return result;
+    return logs;
   }
 
   public async getLogIds(numberOfLogs: number): Promise<string[]> {
