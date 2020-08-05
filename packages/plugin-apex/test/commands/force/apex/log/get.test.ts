@@ -86,7 +86,9 @@ describe('force:apex:log:get', () => {
     })
     .stdout()
     .stub(fs, 'openSync', () => 13)
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     .stub(fs, 'closeSync', () => {})
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     .stub(fs, 'mkdirSync', () => {})
     .stub(fs, 'createWriteStream', () => new stream.PassThrough())
     .command([
