@@ -31,7 +31,6 @@ export class LogService {
       throw new Error(nls.localize('missing_info_log_error'));
     }
     let logIdList: string[] = [];
-    const filenames: string[] = [];
     if (typeof options.numberOfLogs === 'number') {
       logIdList = await this.getLogIds(options.numberOfLogs);
     } else {
@@ -43,6 +42,7 @@ export class LogService {
   // TODO: readableStream cannot be used until updates are made in jsforce and sfdx-core
   public async getLogs(options: ApexLogGetOptions): Promise<string[]> {
     const logIdList = await this.getIdList(options);
+    const filenames: string[] = [];
     const connectionRequests = logIdList.map(async id => {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       const logRecord = await this.toolingRequest(url);
