@@ -57,7 +57,7 @@ export default class Get extends SfdxCommand {
     })
   };
 
-  public async run(): Promise<AnyJson[]> {
+  public async run(): Promise<AnyJson> {
     try {
       if (!this.org) {
         return Promise.reject(
@@ -91,7 +91,7 @@ export default class Get extends SfdxCommand {
       const parsedLogs = logs.map(log => {
         const parsed = JSON.parse(log);
         this.ux.log(parsed);
-        return parsed;
+        return { log: parsed };
       });
 
       return parsedLogs;
