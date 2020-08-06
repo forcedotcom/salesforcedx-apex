@@ -15,7 +15,8 @@ import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
 import {
   ExecuteAnonymousResponse,
-  SoapResponse
+  SoapResponse,
+  ExecAnonApiResponse
 } from '../../src/execute/types';
 
 const $$ = testSetup();
@@ -66,12 +67,7 @@ describe('Apex Execute Tests', async () => {
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      column: -1,
-      line: -1,
       compiled: true,
-      compileProblem: '',
-      exceptionMessage: '',
-      exceptionStackTrace: '',
       success: true,
       logs: log
     };
@@ -89,7 +85,7 @@ describe('Apex Execute Tests', async () => {
     const apexExecute = new ExecuteService(mockConnection);
     const log =
       '47.0 APEX_CODE,DEBUG;APEX_PROFILING,INFO\nExecute Anonymous: System.assert(false);|EXECUTION_FINISHED\n';
-    const execAnonResult: ExecuteAnonymousResponse = {
+    const execAnonResult: ExecAnonApiResponse = {
       column: 1,
       line: 6,
       compiled: 'true',
@@ -107,19 +103,18 @@ describe('Apex Execute Tests', async () => {
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      column: 1,
-      line: 6,
       compiled: true,
-      compileProblem: '',
-      exceptionMessage: 'System.AssertException: Assertion Failed',
-      exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
       success: false,
       logs: log,
-      diagnostic: {
-        columnNumber: 1,
-        lineNumber: 6,
-        message: 'System.AssertException: Assertion Failed'
-      }
+      diagnostic: [
+        {
+          exceptionMessage: 'System.AssertException: Assertion Failed',
+          exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
+          compileProblem: '',
+          columnNumber: 1,
+          lineNumber: 6
+        }
+      ]
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -152,19 +147,18 @@ describe('Apex Execute Tests', async () => {
     };
 
     const expectedResult: ExecuteAnonymousResponse = {
-      column: 1,
-      line: 6,
       compiled: false,
-      compileProblem: `Unexpected token '('.`,
-      exceptionMessage: '',
-      exceptionStackTrace: '',
       success: false,
       logs: '',
-      diagnostic: {
-        columnNumber: 1,
-        lineNumber: 6,
-        message: `Unexpected token '('.`
-      }
+      diagnostic: [
+        {
+          columnNumber: 1,
+          lineNumber: 6,
+          compileProblem: `Unexpected token '('.`,
+          exceptionMessage: '',
+          exceptionStackTrace: ''
+        }
+      ]
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -198,12 +192,7 @@ describe('Apex Execute Tests', async () => {
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      column: -1,
-      line: -1,
       compiled: true,
-      compileProblem: '',
-      exceptionMessage: '',
-      exceptionStackTrace: '',
       success: true,
       logs: log
     };
@@ -262,12 +251,7 @@ describe('Apex Execute Tests', async () => {
       }
     };
     const expectedResult: ExecuteAnonymousResponse = {
-      column: -1,
-      line: -1,
       compiled: true,
-      compileProblem: '',
-      exceptionMessage: '',
-      exceptionStackTrace: '',
       success: true,
       logs: log
     };

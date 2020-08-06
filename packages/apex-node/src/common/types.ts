@@ -22,9 +22,3 @@ export type CommonOptions = {
 export type QueryResult = {
   records: { Id: string }[];
 };
-
-export type ApexDiagnostic = {
-  lineNumber: number;
-  columnNumber: number;
-  message: string;
-};

@@ -6,4 +6,4 @@
  */
 
 export { createFile } from './fileSystemHandler';
-export { CommonOptions, QueryResult, ApexDiagnostic } from './types';
+export { CommonOptions, QueryResult } from './types';

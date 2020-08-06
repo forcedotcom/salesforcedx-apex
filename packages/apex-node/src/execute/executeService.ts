@@ -132,33 +132,29 @@ export class ExecuteService {
 
     const formattedResponse: ExecuteAnonymousResponse = {
       compiled: execAnonResponse.compiled === 'true',
-      compileProblem:
-        typeof execAnonResponse.compileProblem === 'object'
-          ? ''
-          : execAnonResponse.compileProblem,
       success: execAnonResponse.success === 'true',
-      line: execAnonResponse.line,
-      column: execAnonResponse.column,
-      exceptionMessage:
-        typeof execAnonResponse.exceptionMessage === 'object'
-          ? ''
-          : execAnonResponse.exceptionMessage,
-      exceptionStackTrace:
-        typeof execAnonResponse.exceptionStackTrace === 'object'
-          ? ''
-          : execAnonResponse.exceptionStackTrace,
       logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
     };
 
     if (!formattedResponse.success) {
-      formattedResponse.diagnostic = {
-        lineNumber: formattedResponse.line,
-        columnNumber: formattedResponse.column,
-        message:
-          formattedResponse.compileProblem.length !== 0
-            ? formattedResponse.compileProblem
-            : formattedResponse.exceptionMessage
-      };
+      formattedResponse.diagnostic = [
+        {
+          lineNumber: execAnonResponse.line,
+          columnNumber: execAnonResponse.column,
+          compileProblem:
+            typeof execAnonResponse.compileProblem === 'object'
+              ? ''
+              : execAnonResponse.compileProblem,
+          exceptionMessage:
+            typeof execAnonResponse.exceptionMessage === 'object'
+              ? ''
+              : execAnonResponse.exceptionMessage,
+          exceptionStackTrace:
+            typeof execAnonResponse.exceptionStackTrace === 'object'
+              ? ''
+              : execAnonResponse.exceptionStackTrace
+        }
+      ];
     }
 
     return formattedResponse;

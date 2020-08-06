@@ -5,7 +5,6 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { CommonOptions } from '../common';
-import { ApexDiagnostic } from '../common/types';
 
 export type ApexExecuteOptions = CommonOptions & {
   targetUsername?: string;
@@ -48,7 +47,7 @@ export interface SoapResponse {
   [soapEnv]?: {
     [soapHeader]: { DebuggingInfo: DebuggingInfo };
     [soapBody]: {
-      executeAnonymousResponse: { result: ExecuteAnonymousResponse };
+      executeAnonymousResponse: { result: ExecAnonApiResponse };
     };
   };
 }
@@ -65,13 +64,26 @@ export interface RequestData {
 }
 
 export type ExecuteAnonymousResponse = {
+  compiled: boolean;
+  success: boolean;
+  logs?: string;
+  diagnostic?: ApexDiagnostic[];
+};
+
+export type ExecAnonApiResponse = {
   column: number;
-  compiled: boolean | string;
+  compiled: string;
   compileProblem: string;
   exceptionMessage: string;
   exceptionStackTrace: string;
   line: number;
-  success: boolean | string;
-  logs?: string;
-  diagnostic?: ApexDiagnostic;
+  success: string;
+};
+
+export type ApexDiagnostic = {
+  lineNumber: number;
+  columnNumber: number;
+  exceptionMessage: string;
+  compileProblem: string;
+  exceptionStackTrace: string;
 };
