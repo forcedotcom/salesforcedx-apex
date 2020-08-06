@@ -95,7 +95,7 @@ describe('Streaming API Client', () => {
     const stubDisconnect = sandboxStub.stub(FayeClient.prototype, 'disconnect');
     const streamClient = new StreamingClient(mockConnection);
     try {
-      await streamClient.subscribe();
+      await streamClient.subscribe('707xx0000AGQ3jbQQD');
       fail('Test should have thrown an error');
     } catch (e) {
       expect(stubSubscribe.calledOnce).to.equal(true);
@@ -113,6 +113,7 @@ describe('Streaming API Client', () => {
     });
     const streamClient = new StreamingClient(mockConnection);
     try {
+      streamClient.subscribedTestRunId = '707xx0000AGQ3jbQQD';
       await streamClient.handler(testResultMsg);
       fail('Test should have thrown an error');
     } catch (e) {
@@ -124,6 +125,15 @@ describe('Streaming API Client', () => {
         nls.localize('no_test_queue_results', testResultMsg.sobject.Id)
       );
     }
+  });
+
+  it('should not run a query if the subscribed test run id does not match the message test run id', async () => {
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    const streamClient = new StreamingClient(mockConnection);
+    streamClient.subscribedTestRunId = '707xx0000gtQ3jx3x5';
+    const streamHandlerResult = await streamClient.handler(testResultMsg);
+    expect(mockToolingQuery.calledOnce).to.equal(false);
+    expect(streamHandlerResult).to.equal(null);
   });
 
   it('should return ApexTestQueueItem records from handler function', async () => {
@@ -142,6 +152,7 @@ describe('Streaming API Client', () => {
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.resolves(queryResponse);
     const streamClient = new StreamingClient(mockConnection);
+    streamClient.subscribedTestRunId = '707xx0000AGQ3jbQQD';
     const results = await streamClient.handler(testResultMsg);
     expect(mockToolingQuery.calledOnce).to.equal(true);
     expect(results).to.deep.equal(queryResponse);
@@ -166,9 +177,11 @@ describe('Streaming API Client', () => {
         }
       ]
     };
+
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.resolves(queryResponse);
     const streamClient = new StreamingClient(mockConnection);
+    streamClient.subscribedTestRunId = '707xx0000AGQ3jbQQD';
     const results = await streamClient.handler(testResultMsg);
     expect(mockToolingQuery.calledOnce).to.equal(true);
     expect(results).to.equal(null);

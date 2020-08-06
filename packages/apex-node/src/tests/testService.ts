@@ -59,7 +59,7 @@ export class TestService {
       request
     )) as string;
 
-    const testQueueResult = await sClient.subscribe();
+    const testQueueResult = await sClient.subscribe(testRunId);
     return await this.getTestResultData(testQueueResult, testRunId);
   }
 

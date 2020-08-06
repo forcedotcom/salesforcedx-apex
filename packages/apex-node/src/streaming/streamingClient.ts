@@ -18,6 +18,7 @@ export class StreamingClient {
   private client: FayeClient;
   private conn: Connection;
   private apiVersion = '36.0';
+  public subscribedTestRunId: string;
 
   private removeTrailingSlashURL(instanceUrl?: string): string {
     return instanceUrl ? instanceUrl.replace(/\/+$/, '') : '';
@@ -53,7 +54,7 @@ export class StreamingClient {
         callback: (message: StreamMessage) => void
       ) => {
         if (message && message.channel === '/meta/handshake') {
-          if (message.successful === true) {
+          if (message.successful) {
           } else if (message.error) {
             throw new Error(
               nls.localize('streaming_handshake_fail', message.error)
@@ -78,7 +79,8 @@ export class StreamingClient {
     }
   }
 
-  public async subscribe(): Promise<ApexTestQueueItem> {
+  public async subscribe(testRunId: string): Promise<ApexTestQueueItem> {
+    this.subscribedTestRunId = testRunId;
     return new Promise((subscriptionResolve, subscriptionReject) => {
       try {
         this.client.subscribe(
@@ -99,35 +101,43 @@ export class StreamingClient {
     });
   }
 
-  // TODO: should make sure to filter out the test runs from other sources
+  private isValidTestRunID(testRunId: string): boolean {
+    if (testRunId.length !== 15 && testRunId.length !== 18) {
+      return false;
+    }
+
+    const testRunId15char = testRunId.substring(0, 14);
+    const subscribedTestRunId15char = this.subscribedTestRunId.substring(0, 14);
+    return subscribedTestRunId15char === testRunId15char;
+  }
+
   public async handler(message: TestResultMessage): Promise<ApexTestQueueItem> {
     const testRunId = message.sobject.Id;
+    if (!this.isValidTestRunID(testRunId)) {
+      return null;
+    }
+
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
-    let result;
     let completedRecordProcess = true;
-    try {
-      result = (await this.conn.tooling.query(
-        queryApexTestQueueItem
-      )) as ApexTestQueueItem;
+    const result = (await this.conn.tooling.query(
+      queryApexTestQueueItem
+    )) as ApexTestQueueItem;
 
-      if (result.records.length === 0) {
-        throw new Error(nls.localize('no_test_queue_results', testRunId));
-      }
+    if (result.records.length === 0) {
+      throw new Error(nls.localize('no_test_queue_results', testRunId));
+    }
 
-      for (let i = 0; i < result.records.length; i++) {
-        const item = result.records[i];
-        if (
-          item.Status === ApexTestQueueItemStatus.Queued ||
-          item.Status === ApexTestQueueItemStatus.Holding ||
-          item.Status === ApexTestQueueItemStatus.Preparing ||
-          item.Status === ApexTestQueueItemStatus.Processing
-        ) {
-          completedRecordProcess = false;
-          break;
-        }
+    for (let i = 0; i < result.records.length; i++) {
+      const item = result.records[i];
+      if (
+        item.Status === ApexTestQueueItemStatus.Queued ||
+        item.Status === ApexTestQueueItemStatus.Holding ||
+        item.Status === ApexTestQueueItemStatus.Preparing ||
+        item.Status === ApexTestQueueItemStatus.Processing
+      ) {
+        completedRecordProcess = false;
+        break;
       }
-    } catch (e) {
-      throw new Error(e.message);
     }
 
     if (completedRecordProcess) {
