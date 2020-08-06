@@ -9,6 +9,7 @@ import { Client as FayeClient } from 'faye';
 import { Connection, Org } from '@salesforce/core';
 import { ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
 import { StreamMessage, TestResultMessage } from './types';
+import { nls } from '../i18n';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
@@ -16,7 +17,6 @@ const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
 export class StreamingClient {
   private client: FayeClient;
   private conn: Connection;
-  private successfulHandshake = false;
   private apiVersion = '36.0';
 
   private removeTrailingSlashURL(instanceUrl?: string): string {
@@ -40,13 +40,11 @@ export class StreamingClient {
     });
 
     this.client.on('transport:up', () => {
-      console.log('Listening for streaming state changes....');
+      console.log(nls.localize('streaming_transport_up'));
     });
 
     this.client.on('transport:down', () => {
-      console.log(
-        'Faye generated a transport:down event. Faye will try and recover.'
-      );
+      console.log(nls.localize('streaming_transport_down'));
     });
 
     this.client.addExtension({
@@ -56,10 +54,10 @@ export class StreamingClient {
       ) => {
         if (message && message.channel === '/meta/handshake') {
           if (message.successful === true) {
-            this.successfulHandshake = true;
           } else if (message.error) {
-            this.successfulHandshake = false;
-            throw new Error(`Test run handshake failed: ${message.error}`);
+            throw new Error(
+              nls.localize('streaming_handshake_fail', message.error)
+            );
           }
         }
         callback(message);
@@ -76,7 +74,7 @@ export class StreamingClient {
     if (accessToken) {
       this.client.setHeader('Authorization', `OAuth ${accessToken}`);
     } else {
-      throw new Error('No access token');
+      throw new Error(nls.localize('no_access_token_found'));
     }
   }
 
@@ -112,8 +110,8 @@ export class StreamingClient {
         queryApexTestQueueItem
       )) as ApexTestQueueItem;
 
-      if (result.records === undefined) {
-        throw new Error('can not find any records');
+      if (result.records.length === 0) {
+        throw new Error(nls.localize('no_test_queue_results', testRunId));
       }
 
       for (let i = 0; i < result.records.length; i++) {
@@ -135,7 +133,7 @@ export class StreamingClient {
     if (completedRecordProcess) {
       return result;
     } else {
-      console.log(`Processing test run ${testRunId}`);
+      console.log(nls.localize('streaming_processing_test_run', testRunId));
     }
     return null;
   }
