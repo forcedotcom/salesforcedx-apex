@@ -73,9 +73,9 @@ export type ExecuteAnonymousResponse = {
 export type ExecAnonApiResponse = {
   column: number;
   compiled: string;
-  compileProblem: string;
-  exceptionMessage: string;
-  exceptionStackTrace: string;
+  compileProblem: string | object;
+  exceptionMessage: string | object;
+  exceptionStackTrace: string | object;
   line: number;
   success: string;
 };
