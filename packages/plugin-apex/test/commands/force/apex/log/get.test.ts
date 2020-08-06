@@ -127,8 +127,9 @@ describe('force:apex:log:get', () => {
       expect(resultJSON).to.ownProperty('status');
       expect(resultJSON.status).to.equal(0);
       expect(resultJSON).to.ownProperty('result');
-      expect(resultJSON.result[0]).to.deep.include(
-        '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG'
-      );
+      expect(resultJSON.result[0]).to.deep.include({
+        log:
+          '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG'
+      });
     });
 });

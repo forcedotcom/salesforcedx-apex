@@ -65,7 +65,6 @@ export default class Get extends SfdxCommand {
         );
       }
       const conn = this.org.getConnection();
-      //@ts-ignore
       const logService = new LogService(conn);
 
       if (!this.flags.logid && !this.flags.number) {
@@ -84,10 +83,8 @@ export default class Get extends SfdxCommand {
 
       if (this.flags.outputdir) {
         this.ux.log(`Log files written to ${this.flags.outputdir}`);
-        // assuming we just return log file names
         return logs;
       }
-      // @ts-ignore
       const parsedLogs = logs.map(log => {
         const parsed = JSON.parse(log);
         this.ux.log(parsed);
