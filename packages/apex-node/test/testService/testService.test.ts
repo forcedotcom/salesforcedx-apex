@@ -22,6 +22,9 @@ import {
   ApexTestRunResult,
   ApexTestResult
 } from '../../src/tests/types';
+import { StreamingClient } from '../../src/streaming';
+import { fail } from 'assert';
+import { nls } from '../../src/i18n';
 
 const $$ = testSetup();
 let mockConnection: Connection;
@@ -154,35 +157,19 @@ describe('Run Apex tests asynchronously', () => {
     $$.setConfigStubContents('AuthInfoConfig', {
       contents: await testData.getConfig()
     });
-    /*
-    const _id: string = $$.uniqid();
-    $$.configStubs.AuthInfoConfig = {
-      contents: {
-        orgId: _id,
-        username: testData.username,
-        instanceUrl: 'http://www.example.com',
-        accessToken: `${_id}00000000sddasdsadadasadsasdasd`
-      }
-    };*/
-
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
         username: testData.username
       })
     });
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
-
-    // sandboxStub.stub(exports, 'FayeClient');
-    /*sandboxStub.stub(FayeClient.prototype, 'setHeader');
-    sandboxStub.stub(FayeClient.prototype, 'disconnect');
-    sandboxStub.stub(FayeClient.prototype, 'on');*/
   });
 
   afterEach(() => {
     sandboxStub.restore();
   });
 
-  xit('should run a successful test', async () => {
+  it('should run a successful test', async () => {
     const requestOptions: AsyncTestConfiguration = {
       classNames: 'TestSample',
       testLevel: TestLevel.RunSpecifiedTests
@@ -196,16 +183,9 @@ describe('Run Apex tests asynchronously', () => {
     };
 
     toolingRequestStub.withArgs(testAsyncRequest).returns(testRunId);
-    // sandboxStub.mock(StreamingClient);
-
-    /* const wa = sandboxStub.createStubInstance(StreamingClient); // new StreamingClient(mockConnection);
-    wa.subscribe.callsFake(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      return new Promise((resolve, reject) => resolve(pollResponse));
-    });*/
-
-    // const testStreamingClient = new StreamingClient(mockConnection);
-    // sandboxStub.stub(testStreamingClient, 'subscribe').resolves(pollResponse);
+    sandboxStub
+      .stub(StreamingClient.prototype, 'subscribe')
+      .resolves(pollResponse);
     const testSrv = new TestService(mockConnection);
     const mockTestResultData = sandboxStub
       .stub(testSrv, 'getTestResultData')
@@ -213,11 +193,28 @@ describe('Run Apex tests asynchronously', () => {
     const testResult = await testSrv.runTestAsynchronous(requestOptions);
     expect(testResult).to.be.a('object');
     expect(toolingRequestStub.calledOnce).to.equal(true);
-    // expect(mockPolling.calledOnceWith(testRunId)).to.equal(true);
     expect(mockTestResultData.calledOnce).to.equal(true);
     expect(mockTestResultData.getCall(0).args[0]).to.equal(pollResponse);
     expect(mockTestResultData.getCall(0).args[1]).to.equal(testRunId);
     expect(testResult).to.equal(testResultData);
+  });
+
+  it('should throw an error on refresh token issue', async () => {
+    const requestOptions: AsyncTestConfiguration = {
+      classNames: 'TestSample',
+      testLevel: TestLevel.RunSpecifiedTests
+    };
+
+    sandboxStub
+      .stub(StreamingClient.prototype, 'init')
+      .throwsException('No access token');
+    const testSrv = new TestService(mockConnection);
+    try {
+      await testSrv.runTestAsynchronous(requestOptions);
+      fail('Test should have thrown an error');
+    } catch (e) {
+      expect(e.name).to.equal('No access token');
+    }
   });
 
   it('should return formatted test results', async () => {
@@ -281,5 +278,24 @@ describe('Run Apex tests asynchronously', () => {
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
     expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(testResultData);
+  });
+
+  it('should return an error if no test results are found', async () => {
+    const testSrv = new TestService(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 0,
+      records: []
+    } as ApexTestRunResult);
+
+    try {
+      await testSrv.getTestResultData(pollResponse, testRunId);
+      fail('Test should have thrown an error');
+    } catch (e) {
+      expect(e.message).to.equal(
+        nls.localize('no_test_result_summary', testRunId)
+      );
+    }
   });
 });

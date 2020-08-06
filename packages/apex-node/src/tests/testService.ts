@@ -76,6 +76,12 @@ export class TestService {
       testRunSummaryQuery
     )) as ApexTestRunResult;
 
+    if (testRunSummaryResults.records.length === 0) {
+      throw new Error(nls.localize('no_test_result_summary', testRunId));
+    }
+
+    const summaryRecord = testRunSummaryResults.records[0];
+
     let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     apexTestResultQuery +=
       'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
@@ -112,12 +118,6 @@ export class TestService {
         FullName: `${item.ApexClass.FullName}.${item.MethodName}`
       };
     });
-
-    if (testRunSummaryResults.records.length === 0) {
-      throw new Error(nls.localize('no_test_result_summary', testRunId));
-    }
-
-    const summaryRecord = testRunSummaryResults.records[0];
 
     // TODO: add code coverage
     const result: AsyncTestResult = {
