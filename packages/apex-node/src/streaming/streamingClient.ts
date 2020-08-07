@@ -53,13 +53,10 @@ export class StreamingClient {
         message: StreamMessage,
         callback: (message: StreamMessage) => void
       ) => {
-        if (message && message.channel === '/meta/handshake') {
-          if (message.successful) {
-          } else if (message.error) {
-            throw new Error(
-              nls.localize('streaming_handshake_fail', message.error)
-            );
-          }
+        if (message && message.channel === '/meta/handshake' && message.error) {
+          throw new Error(
+            nls.localize('streaming_handshake_fail', message.error)
+          );
         }
         callback(message);
       }
