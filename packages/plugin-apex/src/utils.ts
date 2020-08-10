@@ -54,20 +54,9 @@ function replace(regex: RegExp, word: string): string {
   return result;
 }
 
-function colorize(word: string): string {
-  for (const c of colorMap.keys()) {
-    word = replace(c, word);
-  }
-  return word;
-}
-
 export async function colorLogs(log: string): Promise<string> {
-  const words = log.split(' ');
-  const colorWordsPromise = words.map(async word => {
-    const colored = colorize(word);
-    return colored;
-  });
-
-  const coloredWords = await Promise.all(colorWordsPromise);
-  return coloredWords.join(' ');
+  for (const c of colorMap.keys()) {
+    log = replace(c, log);
+  }
+  return log;
 }
