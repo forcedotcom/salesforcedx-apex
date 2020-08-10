@@ -54,7 +54,7 @@ function replace(regex: RegExp, word: string): string {
   return result;
 }
 
-export async function colorLogs(log: string): Promise<string> {
+export function colorLogs(log: string): string {
   for (const c of colorMap.keys()) {
     log = replace(c, log);
   }

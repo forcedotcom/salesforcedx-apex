@@ -86,13 +86,13 @@ export default class Get extends SfdxCommand {
         this.ux.log(`Log files written to ${this.flags.outputdir}`);
         return logs;
       }
-      const parsedLogs = logs.map(async log => {
-        const colored = await colorLogs(log);
+      const parsedLogs = logs.map(log => {
+        const colored = colorLogs(log);
         this.ux.log(colored);
         return { log };
       });
 
-      return await Promise.all(parsedLogs);
+      return parsedLogs;
     } catch (e) {
       return Promise.reject(e);
     }
