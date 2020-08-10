@@ -4,7 +4,6 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import * as chalk from 'chalk';
 
@@ -45,7 +44,10 @@ const colorMap = new Map([
 ]);
 
 function replace(regex: RegExp, word: string): string {
-  const color = colorMap.get(regex)!;
+  const color = colorMap.get(regex);
+  if (!color) {
+    throw new Error('Error retrieving colors');
+  }
   const result = word.replace(regex, match => {
     return `${color(match)}`;
   });
@@ -62,7 +64,7 @@ function colorize(word: string): string {
 export async function colorLogs(log: string): Promise<string> {
   const logLines = log.split(/\r?\n/);
 
-  const coloredLinePromise = logLines.map(async line => {
+  const colorLinePromise = logLines.map(async line => {
     const text = line.split(' ');
 
     const colorTextPromise = text.map(async word => {
@@ -72,6 +74,6 @@ export async function colorLogs(log: string): Promise<string> {
     const coloredText = await Promise.all(colorTextPromise);
     return coloredText.join(' ');
   });
-  const coloredLines = await Promise.all(coloredLinePromise);
+  const coloredLines = await Promise.all(colorLinePromise);
   return coloredLines.join('\n');
 }
