@@ -9,7 +9,7 @@ import { LogService } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import { buildDescription, logLevels } from '../../../../utils';
+import { buildDescription, colorLogs, logLevels } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'get');
@@ -86,13 +86,13 @@ export default class Get extends SfdxCommand {
         this.ux.log(`Log files written to ${this.flags.outputdir}`);
         return logs;
       }
-      const parsedLogs = logs.map(log => {
-        const parsed = JSON.parse(log);
-        this.ux.log(parsed);
-        return { log: parsed };
+      const parsedLogs = logs.map(async log => {
+        const colored = await colorLogs(log);
+        this.ux.log(colored);
+        return { log };
       });
 
-      return parsedLogs;
+      return await Promise.all(parsedLogs);
     } catch (e) {
       return Promise.reject(e);
     }
