@@ -62,18 +62,12 @@ function colorize(word: string): string {
 }
 
 export async function colorLogs(log: string): Promise<string> {
-  const logLines = log.split(/\r?\n/);
-
-  const colorLinePromise = logLines.map(async line => {
-    const text = line.split(' ');
-
-    const colorTextPromise = text.map(async word => {
-      const colored = colorize(word);
-      return colored;
-    });
-    const coloredText = await Promise.all(colorTextPromise);
-    return coloredText.join(' ');
+  const words = log.split(' ');
+  const colorWordsPromise = words.map(async word => {
+    const colored = colorize(word);
+    return colored;
   });
-  const coloredLines = await Promise.all(colorLinePromise);
-  return coloredLines.join('\n');
+
+  const coloredWords = await Promise.all(colorWordsPromise);
+  return coloredWords.join(' ');
 }
