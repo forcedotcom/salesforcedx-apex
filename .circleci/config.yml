@@ -52,7 +52,7 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/cli
+    working_directory: ~/project/packages/plugin-apex
     steps:
       - checkout
       - restore_cache: *restore_cache
