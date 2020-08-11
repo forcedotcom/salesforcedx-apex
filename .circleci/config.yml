@@ -8,7 +8,7 @@ orbs:
 
 _refs:
   defaults: &defaults
-    working_directory: ~/project/packages/plugin-apex
+    working_directory: ~/cli
     docker:
       - image: node:12
   ssh-config: &ssh-config
@@ -40,6 +40,21 @@ _refs:
     name: Run tests
     command: yarn test
 
+commands:
+  setup-publish:
+    steps:
+      - add_ssh_keys: *ssh-config
+      - checkout
+      - restore_cache: *restore_cache
+      - run: *gh-config
+      - run: *install
+      - run: *build
+  
+  set-npmrc:
+    steps:
+      - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+
+
 parameters:
   publish:
     type: boolean
@@ -52,7 +67,7 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/project/packages/plugin-apex
+    working_directory: ~/cli
     steps:
       - checkout
       - restore_cache: *restore_cache
@@ -98,9 +113,11 @@ jobs:
       - run: *lint
       - run: *build
       - run: *test
-  publish:
+
+  publish-apex-node:
     <<: *defaults
     steps:
+<<<<<<< HEAD
       - slack/notify:
           channel: 'pdt_releases'
           color: '#FFDEAD'
@@ -111,6 +128,9 @@ jobs:
       - run: *gh-config
       - run: *install
       - run: *build
+=======
+      - run: *setup-publish
+>>>>>>> revamp config
       - run:
           name: Bump package version
           command: |
@@ -140,19 +160,43 @@ jobs:
             git add .
             export RELEASE_TAG="$(node -pe "require('./packages/plugin-apex/package.json').version")"
             git commit -m "Updated version $RELEASE_TAG"
-      - run:
-          name: Set .npmrc
-          command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-      - npm-release-management/sign
-      - npm-release-management/publish:
-          use_tarfile: true
-      - npm-release-management/verify-signed-package     
+      - run: *set-npmrc     
       - run: yarn publish-apex
       - run: git push origin main
       - run:
           name: Tag the release and push to repo
           command: |
+            export RELEASE_TAG="$(node -pe "require('./packages/apex-node/package.json').version")"
+            git tag v${RELEASE_TAG}
+            git push --tags
+
+  publish-plugin-apex:
+    <<: *defaults
+    working_directory: ~/project/packages/plugin/apex
+    steps:
+      - run: *setup-publish
+      - run:
+          name: Bump package version
+          command: |
+            yarn bump-versions patch
+            git add .
+            export RELEASE_TAG="$(node -pe "require('./packages/plugin-apex/package.json').version")"
+            git commit -m "Updated version $RELEASE_TAG"
+      - run: *set-npmrc
+      - npm-release-management/sign
+      - npm-release-management/publish:
+          use_tarfile: true
+      - npm-release-management/verify-signed-package     
+      - run: git push origin main
+      - run:
+          name: Tag the release and push to repo
+          command: |
+<<<<<<< HEAD
             git tag v${RELEASE_VERSION}
+=======
+            export RELEASE_TAG="$(node -pe "require('./packages/plugin-apex/package.json').version")"
+            git tag v${RELEASE_TAG}
+>>>>>>> revamp config
             git push --tags
       - slack/notify:
           channel: 'pdt_releases'
@@ -190,9 +234,23 @@ workflows:
       - node-12
       - node-10
       - run-win-tests
+<<<<<<< HEAD
       - hold: # Requires manual approval in Circle Ci
           type: approval
       - publish:
+=======
+      - publish-apex-node:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+              - run-win-tests
+              - node-latest
+              - node-12
+              - node-10
+      - publish-plugin-apex:
+>>>>>>> revamp config
           filters:
             branches:
               only:
