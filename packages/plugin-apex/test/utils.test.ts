@@ -9,16 +9,21 @@ import { expect } from 'chai';
 import * as chalk from 'chalk';
 
 describe('Colorize Logs', async () => {
+  process.env.FORCE_COLOR = `1`;
+
   it('should color time/date format correctly', async () => {
     const testData = '12:47:29.584';
-    const expectedData = testData
+    /*const expectedData = testData
       .replace(new RegExp(/\b([\w]+\.)+(\w)+\b/g), `${chalk.blueBright('$&')}`)
       .replace(
         new RegExp(/\b([0-9]+|true|false|null)\b/g),
         `${chalk.blueBright('$&')}`
-      );
+      );*/
+
     const coloredData = colorLogs(testData);
-    expect(coloredData).to.eql(expectedData);
+    expect(coloredData).to.eql(
+      '\u001b[94m12\u001b[39m:\u001b[94m47\u001b[39m:\u001b[94m29.\u001b[94m584\u001b[39m\u001b[39m'
+    );
   });
 
   it('should color exception message correctly', async () => {
