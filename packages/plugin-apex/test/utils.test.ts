@@ -8,7 +8,7 @@ import { colorLogs } from '../src/utils';
 import { expect } from 'chai';
 import * as chalk from 'chalk';
 
-describe('Colorize Tests', async () => {
+describe('Colorize Logs', async () => {
   it('should color time/date format correctly', async () => {
     const testData = '12:47:29.584';
     let expectedData = testData.replace(
