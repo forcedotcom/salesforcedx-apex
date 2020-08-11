@@ -124,7 +124,7 @@ jobs:
           name: Set .npmrc
           command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
       - npm-release-management/sign
-      - npm-release-management/publish
+      - npm-release-management/publish:
           use_tarfile: true
       - npm-release-management/verify-signed-package     
       - run: yarn publish-apex
