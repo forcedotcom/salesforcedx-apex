@@ -37,8 +37,7 @@ _refs:
     command: yarn build
   test: &test
     name: Run tests
-    command: |
-      yarn test
+    command: yarn test
 
 commands:
   setup-publish:
@@ -49,9 +48,6 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
-  test:
-    steps: 
-      - yarn test
   
   set-npmrc:
     steps:
