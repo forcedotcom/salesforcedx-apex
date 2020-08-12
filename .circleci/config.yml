@@ -48,13 +48,13 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
-  testCommands:
+  test-commands:
     steps: 
-        - yarn test
+        - run: yarn test
   testing:
     steps:
       - run: cd packages/plugin-apex 
-      - testCommands
+      - test-commands
   
   set-npmrc:
     steps:
