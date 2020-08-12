@@ -62,16 +62,20 @@ parameters:
 
 executors:
   my-executor:
+    working_directory: ~/project/packages/apex-node
     docker:
       - image: node:latest
-    working_directory: ~/salesforcedx-apex/packages/apex-node
 
 jobs:
   node-latest: &node-test
-    executor: my-executor
+    docker:
+      - image: node:latest
     steps:
       - checkout
       - restore_cache: *restore_cache
+      - run: 
+        - name: navigate to apex plugin
+        - command: cd packages/plugin-apex
       - run: *install
       - run: *lint
       - run: *build
