@@ -51,6 +51,7 @@ commands:
       - run: *build
   release-management-commands:
     steps:
+      - run: cd packages/plugin-apex
       - npm-release-management/sign
       - npm-release-management/publish:
           use_tarfile: true
