@@ -53,6 +53,12 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
+      - run:
+          working_directory: ./packages/apex-node
+          run: npm pack
+      - run:
+          working_directory: ./packages/plugin-apex
+          run: npm pack
   release-management-commands:
     steps:
       - npm-release-management/sign
@@ -138,6 +144,7 @@ jobs:
             git commit -m "Updated version $RELEASE_TAG"
   publish-apex-node:
     <<: *defaults
+    working_directory: ~/salesforcedx-apex/packages/apex-node
     steps:    
       - npm-release-management/publish:
           use_tarfile: true
