@@ -66,8 +66,10 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
+    working_directory: ~/salesforcedx-apex/packages/plugin-apex
     steps:
       - checkout
+          path: ~/salesforcedx-apex
       - restore_cache: *restore_cache
       - run: *install
       - run: *lint
@@ -76,7 +78,7 @@ jobs:
       - run: 
           working_directory: ./packages/plugin-apex
           name: run script in correct package
-          command: *testing
+          command: testing
   node-12:
     <<: *node-test
     docker:
