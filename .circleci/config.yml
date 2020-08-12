@@ -48,6 +48,9 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
+  testing:
+    steps:
+      - yarn test
   
   set-npmrc:
     steps:
@@ -69,10 +72,11 @@ jobs:
       - run: *install
       - run: *lint
       - run: *build
+      - run: *test
       - run: 
           working_directory: ./packages/plugin-apex
           name: run script in correct package
-          command: yarn test
+          command: testing
   node-12:
     <<: *node-test
     docker:
