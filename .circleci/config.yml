@@ -72,6 +72,7 @@ jobs:
       - run: *lint
       - run: *build
       - run: 
+          name: set name
           working_directory: ~/salesforcedx-apex/packages/plugin-apex
           command: *test
   node-12:
