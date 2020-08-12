@@ -70,9 +70,9 @@ jobs:
       - run: *lint
       - run: *build
       - run: 
-          working_directory: ./packages/plugin-apex
+          working_directory: ~/packages/plugin-apex
           name: run script in correct package
-          command: *test
+          command: yarn test
   node-12:
     <<: *node-test
     docker:
