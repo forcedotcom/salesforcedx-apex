@@ -55,10 +55,10 @@ commands:
       - run: *build
       - run:
           working_directory: ./packages/apex-node
-          run: npm pack
+          command: npm pack
       - run:
           working_directory: ./packages/plugin-apex
-          run: npm pack
+          command: npm pack
   release-management-commands:
     steps:
       - npm-release-management/sign
