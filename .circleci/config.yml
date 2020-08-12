@@ -7,7 +7,7 @@ orbs:
 
 _refs:
   defaults: &defaults
-    working_directory: ~/project/packages/apex-node
+    working_directory: ~/cli
     docker:
       - image: node:12
   ssh-config: &ssh-config
@@ -38,7 +38,6 @@ _refs:
   test: &test
     name: Run tests
     command: |
-      cd packages/apex-node
       yarn test
 
 commands:
