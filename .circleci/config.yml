@@ -64,13 +64,11 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/project/packages/apex-node
+    working_directory: ~/salesforcedx-apex/packages/apex-node
     steps:
       - checkout
       - restore_cache: *restore_cache
       - run: *install
-      - run:
-          command: cd packages/apex-node
       - run: *lint
       - run: *build
       - run: *test
