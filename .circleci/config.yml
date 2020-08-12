@@ -49,7 +49,13 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
-  
+  release-management-commands:
+    steps:
+      - npm-release-management/sign
+      - npm-release-management/publish:
+          use_tarfile: true
+      - npm-release-management/verify-signed-package
+      - npm-release-management/create-git-tag
   set-npmrc:
     steps:
       - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
@@ -165,10 +171,8 @@ jobs:
             export RELEASE_TAG="$(node -pe "require('./packages/apex-node/package.json').version")"
             git tag v${RELEASE_TAG}
             git push --tags
-
   publish-plugin-apex:
     <<: *defaults
-    working_directory: ~/project/packages/plugin/apex
     steps:
       - run: *setup-publish
       - run:
@@ -198,6 +202,10 @@ jobs:
       - slack/status:
           channel: 'pdt_releases'
           fail_only: true
+            export RELEASE_TAG=“$(node -pe “require(‘./packages/plugin-apex/package.json’).version”)”
+            git commit -m “Updated version $RELEASE_TAG”
+      - release-management-commands     
+      - run: git push origin main
 
 workflows:
   version: 2.1
