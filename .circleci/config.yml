@@ -68,7 +68,7 @@ jobs:
       - image: node:latest
     working_directory: ~/salesforcedx-apex/packages/plugin-apex
     steps:
-      - checkout
+      - checkout:
           path: ~/salesforcedx-apex
       - restore_cache: *restore_cache
       - run: *install
