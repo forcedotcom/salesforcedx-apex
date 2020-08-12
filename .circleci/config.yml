@@ -7,7 +7,7 @@ orbs:
 
 _refs:
   defaults: &defaults
-    working_directory: ~/cli
+    working_directory: ~/project/packages/apex-node
     docker:
       - image: node:12
   ssh-config: &ssh-config
@@ -65,7 +65,7 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/cli
+    working_directory: ~/project/packages/apex-node
     steps:
       - checkout
       - restore_cache: *restore_cache
