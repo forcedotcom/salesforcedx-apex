@@ -38,8 +38,8 @@ _refs:
   test: &test
     name: Run tests
     command: |
-    cd packages/apex-node
-    yarn test
+      cd packages/apex-node
+      yarn test
 
 commands:
   setup-publish:
