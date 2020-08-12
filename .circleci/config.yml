@@ -68,8 +68,7 @@ jobs:
     docker:
       - image: node:latest
     steps:
-      - checkout:
-          path: ~/salesforcedx-apex
+      - checkout
       - restore_cache: *restore_cache
       - run: *install
       - run: *lint
