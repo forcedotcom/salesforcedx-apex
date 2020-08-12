@@ -60,11 +60,15 @@ parameters:
     type: boolean
     default: false
 
-jobs:
-  node-latest: &node-test
+executors:
+  my-executor:
     docker:
       - image: node:latest
     working_directory: ~/salesforcedx-apex/packages/apex-node
+
+jobs:
+  node-latest: &node-test
+    executor: my-executor
     steps:
       - checkout
       - restore_cache: *restore_cache
