@@ -71,10 +71,7 @@ jobs:
       - run: *install
       - run: *lint
       - run: *build
-      - run: 
-          name: set name
-          working_directory: ~/salesforcedx-apex/packages/plugin-apex
-          command: *test
+      - run: cd packages/plugin-apex && *test
   node-12:
     <<: *node-test
     docker:
