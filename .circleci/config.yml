@@ -76,7 +76,7 @@ jobs:
       - run: 
           working_directory: ./packages/plugin-apex
           name: run script in correct package
-          command: testing
+          command: *testing
   node-12:
     <<: *node-test
     docker:
