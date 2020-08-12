@@ -15,8 +15,8 @@ _refs:
       - 'b1:50:d4:d9:01:2c:7c:8b:a0:e3:3c:c1:f8:a4:41:f0'
   restore_cache: &restore_cache
     keys:
-      - v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
-      - v1-npm-{{checksum ".circleci/config.yml"}}
+      - v1-npm-{{checksum "../../.circleci/config.yml"}}-{{checksum "yarn.lock"}}
+      - v1-npm-{{checksum "../../.circleci/config.yml"}}
   lint: &lint
     name: Lint source files
     command: yarn lint
