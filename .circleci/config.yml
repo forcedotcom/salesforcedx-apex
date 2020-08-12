@@ -76,6 +76,8 @@ jobs:
     <<: *node-test
     docker:
       - image: node:12
+    steps:
+      - - run: cd packages/plugin-apex
   node-10:
     <<: *node-test
     docker:
