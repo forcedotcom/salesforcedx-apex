@@ -60,12 +60,6 @@ parameters:
     type: boolean
     default: false
 
-executors:
-  my-executor:
-    working_directory: ~/project/packages/apex-node
-    docker:
-      - image: node:latest
-
 jobs:
   node-latest: &node-test
     docker:
