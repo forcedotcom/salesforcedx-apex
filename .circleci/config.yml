@@ -68,7 +68,7 @@ jobs:
     working_directory: ~/salesforcedx-apex/packages/plugin-apex
     steps:
       - checkout
-        path: ~/salesforcedx-apex
+          path: ~/salesforcedx-apex
       - restore_cache: *restore_cache
       - run: *install
       - run: *lint
