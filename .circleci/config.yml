@@ -70,7 +70,7 @@ jobs:
       - run: *lint
       - run: *build
       - run: 
-          working_directory: ~/salesforcedx-apex/packages/plugin-apex
+          working_directory: ./packages/plugin-apex
           name: run script in correct package
           command: yarn test
   node-12:
