@@ -64,7 +64,8 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/salesforcedx-apex/packages/apex-node
+    executor:
+      working_directory: ~/project/packages/apex-node
     steps:
       - checkout
       - restore_cache: *restore_cache
