@@ -44,8 +44,7 @@ commands:
   setup-publish:
     steps:
       - add_ssh_keys: *ssh-config
-      - checkout:
-          path: ~/salesforcedx-apex
+      - checkout
       - restore_cache: *restore_cache
       - run: *gh-config
       - run: *install
@@ -65,7 +64,6 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/salesforcedx-apex/packages/plugin-apex
     steps:
       - checkout:
           path: ~/salesforcedx-apex
@@ -73,7 +71,9 @@ jobs:
       - run: *install
       - run: *lint
       - run: *build
-      - run: *test
+      - run: 
+        working_directory: ~/packages/plugin-apex
+        command: *test
   node-12:
     <<: *node-test
     docker:
