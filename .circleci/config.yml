@@ -67,9 +67,7 @@ jobs:
     steps:
       - checkout
       - restore_cache: *restore_cache
-      - run: 
-        - name: navigate to apex plugin
-        - command: cd packages/plugin-apex
+      - run: cd packages/plugin-apex
       - run: *install
       - run: *lint
       - run: *build
