@@ -15,8 +15,8 @@ _refs:
       - 'b1:50:d4:d9:01:2c:7c:8b:a0:e3:3c:c1:f8:a4:41:f0'
   restore_cache: &restore_cache
     keys:
-      - v1-npm-{{checksum "../../.circleci/config.yml"}}-{{checksum "yarn.lock"}}
-      - v1-npm-{{checksum "../../.circleci/config.yml"}}
+      - v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+      - v1-npm-{{checksum ".circleci/config.yml"}}
   lint: &lint
     name: Lint source files
     command: yarn lint
@@ -48,9 +48,13 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
+  testCommands:
+    steps: 
+        - yarn test
   testing:
+    working_directory: ./packages/plugin-apex
     steps:
-      - yarn test
+      - testCommands
   
   set-npmrc:
     steps:
@@ -66,15 +70,13 @@ jobs:
   node-latest: &node-test
     docker:
       - image: node:latest
-    working_directory: ~/salesforcedx-apex/packages/plugin-apex
     steps:
-      - checkout:
-          path: ~/salesforcedx-apex
+      - checkout
       - restore_cache: *restore_cache
       - run: *install
       - run: *lint
       - run: *build
-      - run: *test
+      - run: *test 
       - run: 
           working_directory: ./packages/plugin-apex
           name: run script in correct package
