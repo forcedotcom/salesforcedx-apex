@@ -3,6 +3,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@2.2.0
+  npm-release-management: salesforce/npm-release-management@2.0.0
 
 _refs:
   defaults: &defaults
@@ -36,7 +37,24 @@ _refs:
     command: yarn build
   test: &test
     name: Run tests
-    command: yarn test
+    command: |
+    cd packages/apex-node
+    yarn test
+
+commands:
+  setup-publish:
+    steps:
+      - add_ssh_keys: *ssh-config
+      - checkout
+      - restore_cache: *restore_cache
+      - run: *gh-config
+      - run: *install
+      - run: *build
+  
+  set-npmrc:
+    steps:
+      - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+
 
 parameters:
   publish:
@@ -93,15 +111,11 @@ jobs:
       - run: *lint
       - run: *build
       - run: *test
-  publish:
+
+  publish-apex-node:
     <<: *defaults
     steps:
-      - add_ssh_keys: *ssh-config
-      - checkout
-      - restore_cache: *restore_cache
-      - run: *gh-config
-      - run: *install
-      - run: *build
+      - setup-publish
       - run:
           name: Bump package version
           command: |
@@ -109,15 +123,37 @@ jobs:
             git add .
             export RELEASE_TAG="$(node -pe "require('./packages/apex-node/package.json').version")"
             git commit -m "Updated version $RELEASE_TAG"
-      - run:
-          name: Set .npmrc
-          command: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+      - set-npmrc     
       - run: yarn publish-apex
       - run: git push origin main
       - run:
           name: Tag the release and push to repo
           command: |
             export RELEASE_TAG="$(node -pe "require('./packages/apex-node/package.json').version")"
+            git tag v${RELEASE_TAG}
+            git push --tags
+
+  publish-plugin-apex:
+    <<: *defaults
+    working_directory: ~/project/packages/plugin/apex
+    steps:
+      - setup-publish
+      - run:
+          name: Bump package version
+          command: |
+            yarn bump-versions patch
+            git add .
+            export RELEASE_TAG="$(node -pe "require('./packages/plugin-apex/package.json').version")"
+            git commit -m "Updated version $RELEASE_TAG"
+      - npm-release-management/sign
+      - npm-release-management/publish:
+          use_tarfile: true
+      - npm-release-management/verify-signed-package     
+      - run: git push origin main
+      - run:
+          name: Tag the release and push to repo
+          command: |
+            export RELEASE_TAG="$(node -pe "require('./packages/plugin-apex/package.json').version")"
             git tag v${RELEASE_TAG}
             git push --tags
 
@@ -145,7 +181,17 @@ workflows:
       - node-12
       - node-10
       - run-win-tests
-      - publish:
+      - publish-apex-node:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+              - run-win-tests
+              - node-latest
+              - node-12
+              - node-10
+      - publish-plugin-apex:
           filters:
             branches:
               only:
