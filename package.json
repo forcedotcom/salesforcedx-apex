@@ -1,5 +1,6 @@
 {
   "name": "salesforcedx-apex",
+  "version": "0.0.0",
   "dependencies": {
     "node": "12.4.0",
     "npm": "^6.9.0"
