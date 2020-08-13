@@ -138,7 +138,7 @@ jobs:
           root: .
           paths:
               - .git
-              - ./packages/apex-node/salesforce-apex-node-0.0.5.tgz
+              - ./packages/apex-node/salesforce-apex-node-$RELEASE_TAG.tgz
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
