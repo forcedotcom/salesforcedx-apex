@@ -139,7 +139,7 @@ jobs:
           paths:
               - .git
               - ./packages/apex-node/salesforce-apex-node-$RELEASE_TAG.tgz
-              - ./packages/apex-node/salesforce-plugin-apex-$RELEASE_TAG.tgz
+              - ./packages/plugin-apex/salesforce-plugin-apex-$RELEASE_TAG.tgz
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
