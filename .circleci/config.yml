@@ -142,15 +142,7 @@ jobs:
               - .git
               - node_modules
               - yarn.lock
-              - ./packages/apex-node/package.json
-              - ./packages/apex-node/lib
-              - ./packages/apex-node/node_modules
-              - ./packages/apex-node/yarn.lock
-              - ./packages/plugin-apex/package.json
-              - ./packages/plugin-apex/bin
-              - ./packages/plugin-apex/lib
-              - ./packages/plugin-apex/node_modules
-              - ./packages/plugin-apex/yarn.lock
+              - ./packages/apex-node/salesforce-apex-node-$RELEASE_TAG.tgz
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
