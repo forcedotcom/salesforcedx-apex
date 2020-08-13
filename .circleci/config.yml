@@ -55,7 +55,7 @@ commands:
       - run: *build
       - run:
           working_directory: ./packages/plugin-apex
-          command: yarn prepack
+          command: yarn manifest:generate
       - run: yarn package
   release-management-commands:
     steps:
