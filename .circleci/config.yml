@@ -233,3 +233,4 @@ workflows:
               - node-10
               - hold
               - prepublish
+              - publish-apex-node
