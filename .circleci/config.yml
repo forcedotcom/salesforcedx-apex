@@ -53,6 +53,9 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
+      - run:
+          working_directory: ./packages/plugin-apex
+          command: yarn prepack
       - run: yarn package
   release-management-commands:
     steps:
@@ -139,7 +142,10 @@ jobs:
           paths:
               - .git
               - ./packages/apex-node/salesforce-apex-node-$RELEASE_TAG.tgz
-              - ./packages/plugin-apex/salesforce-plugin-apex-$RELEASE_TAG.tgz
+              - ./packages/plugin-apex/package.json
+              - ./packages/plugin-apex/bin
+              - ./packages/plugin-apex/lib
+              - ./packages/plugin-apex/oclif.manifest.json
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
