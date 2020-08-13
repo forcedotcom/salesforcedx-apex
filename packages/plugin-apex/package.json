@@ -42,7 +42,8 @@
     "/lib",
     "/messages",
     "/npm-shrinkwrap.json",
-    "/oclif.manifest.json"
+    "/oclif.manifest.json",
+    "yarn.lock"
   ],
   "homepage": "https://github.com/forcedotcom/salesforcedx-apex",
   "keywords": [
