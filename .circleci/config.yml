@@ -53,7 +53,7 @@ commands:
       - run: *gh-config
       - run: *install
       - run: *build
-      - run: npm pack
+      - run: yarn package
   release-management-commands:
     steps:
       - npm-release-management/sign
@@ -138,7 +138,7 @@ jobs:
           root: .
           paths:
               - .git
-              - salesforcedx-apex-0.0.0.tgz
+              - ./packages/apex-node/salesforce-apex-node-0.0.5.tgz
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
