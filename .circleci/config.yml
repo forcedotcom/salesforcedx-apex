@@ -136,6 +136,21 @@ jobs:
             echo "export RELEASE_VERSION=$RELEASE_TAG" >> $BASH_ENV
             source $BASH_ENV
             git commit -m "Updated version $RELEASE_TAG"
+      - persist_to_workspace:
+          root: .
+          paths:
+              - .git
+              - node_modules
+              - yarn.lock
+              - ./apex-node/package.json
+              - ./apex-node/lib
+              - ./apex-node/node_modules
+              - ./apex-node/yarn.lock
+              - ./plugin-apex/package.json
+              - ./plugin-apex/bin
+              - ./plugin-apex/lib
+              - ./plugin-apex/node_modules
+              - ./plugin-apex/yarn.lock
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
