@@ -146,6 +146,9 @@ jobs:
               - ./packages/plugin-apex/bin
               - ./packages/plugin-apex/lib
               - ./packages/plugin-apex/oclif.manifest.json
+              - ./packages/plugin-apex/messages
+              - ./packages/plugin-apex/README.md
+              - ./packages/plugin-apex/yarn.lock
   publish-apex-node:
     <<: *defaults
     working_directory: ~/salesforcedx-apex/packages/apex-node
