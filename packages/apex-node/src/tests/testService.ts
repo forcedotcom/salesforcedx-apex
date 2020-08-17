@@ -48,7 +48,8 @@ export class TestService {
   }
 
   public async runTestAsynchronous(
-    options: AsyncTestConfiguration | AsyncTestArrayConfiguration
+    options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
+    codeCoverage = false
   ): Promise<AsyncTestResult> {
     const sClient = new StreamingClient(this.connection);
     await sClient.init();
@@ -65,8 +66,12 @@ export class TestService {
     )) as string;
 
     const testQueueResult = await sClient.subscribe(testRunId);
-    // const codeCov = options === AsyncTestConfiguration options.skipCodeCoverage;
-    return await this.getTestResultData(testQueueResult, testRunId, true);
+
+    return await this.getTestResultData(
+      testQueueResult,
+      testRunId,
+      codeCoverage
+    );
   }
 
   private calculatePercentage(dividend: number, divisor: number): string {
