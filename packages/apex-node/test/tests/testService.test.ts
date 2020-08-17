@@ -124,31 +124,37 @@ describe('Run Apex tests asynchronously', () => {
   };
   const testResultData: AsyncTestResult = {
     summary: {
+      failRate: '0%',
+      numTestsRan: 1,
+      orgId: '00Dxx0000000123',
       outcome: 'Completed',
+      passRate: '100%',
+      skipRate: '0%',
       testStartTime: '2020-07-12T02:54:47.000+0000',
       testExecutionTime: 1765,
       testRunId,
-      userId: '005xx000000abcDAAU'
+      userId: '005xx000000abcDAAU',
+      username: 'test@example.com'
     },
     tests: [
       {
-        Id: '07Mxx00000F2Xx6UAF',
-        QueueItemId: '7092M000000Vt94QAC',
-        StackTrace: null,
-        Message: null,
-        AsyncApexJobId: testRunId,
-        MethodName: 'testLoggerLog',
-        Outcome: ApexTestResultOutcome.Pass,
-        ApexLogId: null,
-        ApexClass: {
-          Id: '01pxx00000O6tXZQAZ',
-          Name: 'TestLogger',
-          NamespacePrefix: 't3st',
-          FullName: 't3st__TestLogger'
+        id: '07Mxx00000F2Xx6UAF',
+        queueItemId: '7092M000000Vt94QAC',
+        stackTrace: null,
+        message: null,
+        asyncApexJobId: testRunId,
+        methodName: 'testLoggerLog',
+        outcome: ApexTestResultOutcome.Pass,
+        apexLogId: null,
+        apexClass: {
+          id: '01pxx00000O6tXZQAZ',
+          name: 'TestLogger',
+          namespacePrefix: 't3st',
+          fullName: 't3st__TestLogger'
         },
-        RunTime: 8,
-        TestTimestamp: 3,
-        FullName: 't3st__TestLogger.testLoggerLog'
+        runTime: 8,
+        testTimestamp: 3,
+        fullName: 't3st__TestLogger.testLoggerLog'
       }
     ]
   };
