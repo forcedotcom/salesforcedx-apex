@@ -126,7 +126,7 @@ describe('Run Apex tests asynchronously', () => {
     summary: {
       failRate: '0%',
       numTestsRan: 1,
-      orgId: '00Dxx0000000123',
+      orgId: mockConnection.getAuthInfoFields().orgId,
       outcome: 'Completed',
       passRate: '100%',
       skipRate: '0%',
@@ -134,7 +134,7 @@ describe('Run Apex tests asynchronously', () => {
       testExecutionTime: 1765,
       testRunId,
       userId: '005xx000000abcDAAU',
-      username: 'test@example.com'
+      username: mockConnection.getUsername()
     },
     tests: [
       {
