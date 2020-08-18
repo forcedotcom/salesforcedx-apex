@@ -204,7 +204,7 @@ export type ApexTestResultRecord = {
   /**
    * The start time of the test method.
    */
-  TestTimestamp: number;
+  TestTimestamp: string;
 };
 
 export type ApexTestResult = {
@@ -331,7 +331,7 @@ export type ApexTestResultData = {
   /**
    * The start time of the test method.
    */
-  testTimestamp: number;
+  testTimestamp: string;
   /**
    * The full name of the associated ApexClass method
    */

@@ -77,7 +77,7 @@ export class TestService {
   private calculatePercentage(dividend: number, divisor: number): string {
     let percentage = '0%';
     if (dividend > 0) {
-      const calcPct = Math.round((dividend / divisor) * 100);
+      const calcPct = ((dividend / divisor) * 100).toFixed();
       percentage = `${calcPct}%`;
     }
     return percentage;
@@ -121,42 +121,41 @@ export class TestService {
     let globalTestFailed = 0;
     let globalTestSkipped = 0;
     // Iterate over test results, format and add them as results.tests
-    const testResults: ApexTestResultData[] = apexTestResults.records.map(
-      item => {
-        switch (item.Outcome) {
-          case ApexTestResultOutcome.Pass:
-            globalTestPassed++;
-            break;
-          case ApexTestResultOutcome.Fail:
-          case ApexTestResultOutcome.CompileFail:
-            globalTestFailed++;
-            break;
-          case ApexTestResultOutcome.Skip:
-            globalTestSkipped++;
-            break;
-        }
-
-        return {
-          id: item.Id,
-          queueItemId: item.QueueItemId,
-          stackTrace: item.StackTrace,
-          message: item.Message,
-          asyncApexJobId: item.AsyncApexJobId,
-          methodName: item.MethodName,
-          outcome: item.Outcome,
-          apexLogId: item.ApexLogId,
-          apexClass: {
-            id: item.ApexClass.Id,
-            name: item.ApexClass.Name,
-            namespacePrefix: item.ApexClass.NamespacePrefix,
-            fullName: item.ApexClass.FullName
-          },
-          runTime: item.RunTime,
-          testTimestamp: item.TestTimestamp, // TODO: convert timestamp
-          fullName: `${item.ApexClass.FullName}.${item.MethodName}`
-        };
+    const testResults: ApexTestResultData[] = [];
+    apexTestResults.records.forEach(item => {
+      switch (item.Outcome) {
+        case ApexTestResultOutcome.Pass:
+          globalTestPassed++;
+          break;
+        case ApexTestResultOutcome.Fail:
+        case ApexTestResultOutcome.CompileFail:
+          globalTestFailed++;
+          break;
+        case ApexTestResultOutcome.Skip:
+          globalTestSkipped++;
+          break;
       }
-    );
+
+      testResults.push({
+        id: item.Id,
+        queueItemId: item.QueueItemId,
+        stackTrace: item.StackTrace,
+        message: item.Message,
+        asyncApexJobId: item.AsyncApexJobId,
+        methodName: item.MethodName,
+        outcome: item.Outcome,
+        apexLogId: item.ApexLogId,
+        apexClass: {
+          id: item.ApexClass.Id,
+          name: item.ApexClass.Name,
+          namespacePrefix: item.ApexClass.NamespacePrefix,
+          fullName: item.ApexClass.FullName
+        },
+        runTime: item.RunTime,
+        testTimestamp: item.TestTimestamp, // TODO: convert timestamp
+        fullName: `${item.ApexClass.FullName}.${item.MethodName}`
+      });
+    });
 
     const result: AsyncTestResult = {
       summary: {
@@ -194,7 +193,7 @@ export class TestService {
 
   public async getOrgWideCoverage(): Promise<string> {
     const orgWideCoverageResult = (await this.connection.tooling.query(
-      'Select PercentCovered from ApexOrgWideCoverage'
+      'SELECT PercentCovered FROM ApexOrgWideCoverage'
     )) as ApexOrgWideCoverage;
 
     if (orgWideCoverageResult.records.length === 0) {

@@ -20,11 +20,14 @@ import {
   ApexTestQueueItem,
   ApexTestRunResultStatus,
   ApexTestRunResult,
-  ApexTestResult
+  ApexTestResult,
+  ApexOrgWideCoverage,
+  ApexCodeCoverageAggregate
 } from '../../src/tests/types';
 import { StreamingClient } from '../../src/streaming';
 import { fail } from 'assert';
 import { nls } from '../../src/i18n';
+import { codeCoverageQueryResult, mixedTestResults } from './testData';
 
 const $$ = testSetup();
 let mockConnection: Connection;
@@ -152,7 +155,7 @@ describe('Run Apex tests asynchronously', () => {
           fullName: 't3st__TestLogger'
         },
         runTime: 8,
-        testTimestamp: 3,
+        testTimestamp: '3',
         fullName: 't3st__TestLogger.testLoggerLog'
       }
     ]
@@ -261,7 +264,7 @@ describe('Run Apex tests asynchronously', () => {
             FullName: 't3st__TestLogger'
           },
           RunTime: 8,
-          TestTimestamp: 3
+          TestTimestamp: '3'
         }
       ]
     } as ApexTestResult);
@@ -304,5 +307,67 @@ describe('Run Apex tests asynchronously', () => {
         nls.localize('no_test_result_summary', testRunId)
       );
     }
+  });
+
+  it('should return formatted test results with code coverage', async () => {
+    const testSrv = new TestService(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Completed,
+          StartTime: '2020-07-12T02:54:47.000+0000',
+          TestTime: 1765,
+          UserId: '005xx000000abcDAAU'
+        }
+      ]
+    } as ApexTestRunResult);
+
+    mockToolingQuery.onCall(1).resolves({
+      done: true,
+      totalSize: 6,
+      records: mixedTestResults
+    } as ApexTestResult);
+
+    mockToolingQuery.onCall(2).resolves({
+      done: true,
+      totalSize: 3,
+      records: codeCoverageQueryResult
+    } as ApexCodeCoverageAggregate);
+
+    mockToolingQuery.onCall(3).resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          PercentCovered: '57'
+        }
+      ]
+    } as ApexOrgWideCoverage);
+
+    const getTestResultData = await testSrv.getTestResultData(
+      pollResponse,
+      testRunId,
+      true
+    );
+
+    // verify summary data
+    expect(getTestResultData.summary.failRate).to.equal('33%');
+    expect(getTestResultData.summary.numTestsRan).to.equal(6);
+    expect(getTestResultData.summary.orgId).to.equal(
+      mockConnection.getAuthInfoFields().orgId
+    );
+    expect(getTestResultData.summary.outcome).to.equal('Completed');
+    expect(getTestResultData.summary.passRate).to.equal('50%');
+    expect(getTestResultData.summary.skipRate).to.equal('17%');
+    expect(getTestResultData.summary.username).to.equal(
+      mockConnection.getUsername()
+    );
+    expect(getTestResultData.summary.orgWideCoverage).to.equal('57%');
+    expect(getTestResultData.tests.length).to.equal(6);
+    expect(getTestResultData.codecoverage.length).to.equal(3);
   });
 });

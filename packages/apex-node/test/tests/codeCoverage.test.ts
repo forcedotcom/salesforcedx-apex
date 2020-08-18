@@ -14,6 +14,7 @@ import {
   ApexCodeCoverageAggregate,
   ApexOrgWideCoverage
 } from '../../src/tests/types';
+import { codeCoverageQueryResult } from './testData';
 
 const $$ = testSetup();
 let mockConnection: Connection;
@@ -65,75 +66,24 @@ describe('Run Apex tests code coverage', () => {
 
     const orgWideCoverageResult = await testSrv.getOrgWideCoverage();
     expect(orgWideCoverageResult).to.equal('0%');
+    expect(toolingQueryStub.getCall(0).args[0]).to.equal(
+      'SELECT PercentCovered FROM ApexOrgWideCoverage'
+    );
   });
 
   it('should return test code coverage result', async () => {
     toolingQueryStub.resolves({
       done: true,
-      totalSize: 2,
-      records: [
-        {
-          ApexClassOrTrigger: {
-            Id: '01pxx00000avcNeAAL',
-            Name: 'ApexClassExample'
-          },
-          NumLinesCovered: 0,
-          NumLinesUncovered: 9,
-          Coverage: {
-            coveredLines: [],
-            uncoveredLines: [3, 8, 10, 13, 16, 21, 22, 24, 28]
-          }
-        },
-        {
-          ApexClassOrTrigger: {
-            Id: '01pxx00000avc00AAL',
-            Name: 'ApexSampleV2'
-          },
-          NumLinesCovered: 19,
-          NumLinesUncovered: 1,
-          Coverage: {
-            coveredLines: [
-              3,
-              4,
-              6,
-              7,
-              8,
-              9,
-              15,
-              18,
-              19,
-              22,
-              23,
-              24,
-              27,
-              28,
-              29,
-              30,
-              31,
-              33,
-              34
-            ],
-            uncoveredLines: [35]
-          }
-        },
-        {
-          ApexClassOrTrigger: {
-            Id: '01qxp00000av340AAL',
-            Name: 'MyTestTrigger'
-          },
-          NumLinesCovered: 0,
-          NumLinesUncovered: 0,
-          Coverage: {
-            coveredLines: [],
-            uncoveredLines: []
-          }
-        }
-      ]
+      totalSize: 3,
+      records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
     const testSrv = new TestService(mockConnection);
 
     const testCodeCoverageResult = await testSrv.getTestCodeCoverage();
     expect(testCodeCoverageResult.length).to.equal(3);
+    expect(toolingQueryStub.getCall(0).args[0]).to.equal(
+      'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate'
+    );
     expect(testCodeCoverageResult[0].apexId).to.equal('01pxx00000avcNeAAL');
     expect(testCodeCoverageResult[0].name).to.equal('ApexClassExample');
     expect(testCodeCoverageResult[0].type).to.equal('ApexClass');
