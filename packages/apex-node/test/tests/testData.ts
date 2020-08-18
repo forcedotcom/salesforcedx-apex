@@ -8,9 +8,46 @@
 import {
   ApexCodeCoverageAggregateRecord,
   ApexTestResultOutcome,
-  ApexTestResultRecord
+  ApexTestResultRecord,
+  AsyncTestResult
 } from '../../src/tests/types';
 
+export const testRunId = '707xx0000AGQ3jbQQD';
+export const testResultData: AsyncTestResult = {
+  // @ts-ignore
+  summary: {
+    failRate: '0%',
+    numTestsRan: 1,
+    outcome: 'Completed',
+    passRate: '100%',
+    skipRate: '0%',
+    testStartTime: '2020-07-12T02:54:47.000+0000',
+    testExecutionTime: 1765,
+    testRunId,
+    userId: '005xx000000abcDAAU'
+  },
+  tests: [
+    {
+      id: '07Mxx00000F2Xx6UAF',
+      queueItemId: '7092M000000Vt94QAC',
+      stackTrace: null,
+      message: null,
+      asyncApexJobId: testRunId,
+      methodName: 'testLoggerLog',
+      outcome: ApexTestResultOutcome.Pass,
+      apexLogId: null,
+      apexClass: {
+        id: '01pxx00000O6tXZQAZ',
+        name: 'TestLogger',
+        namespacePrefix: 't3st',
+        fullName: 't3st__TestLogger'
+      },
+      runTime: 8,
+      testTimestamp: '3',
+      fullName: 't3st__TestLogger.testLoggerLog'
+    }
+  ]
+};
 export const codeCoverageQueryResult: ApexCodeCoverageAggregateRecord[] = [
   {
     ApexClassOrTrigger: {
