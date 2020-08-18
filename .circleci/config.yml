@@ -153,7 +153,7 @@ jobs:
               - packages/plugin-apex/.gitignore
   publish-apex-node:
     <<: *defaults
-    working_directory: ~/salesforcedx-apex/packages/apex-node
+    working_directory: ~/cli/packages/apex-node
     steps:
       - attach_workspace:
           at: ~/cli    
@@ -168,7 +168,7 @@ jobs:
             git push --tags
   publish-plugin-apex:
     <<: *defaults
-    working_directory: ~/salesforcedx-apex/packages/plugin-apex
+    working_directory: ~/cli/packages/plugin-apex
     steps:
       - attach_workspace:
           at: ~/cli
