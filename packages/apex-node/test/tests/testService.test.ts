@@ -123,18 +123,17 @@ describe('Run Apex tests asynchronously', () => {
     ]
   };
   const testResultData: AsyncTestResult = {
+    // @ts-ignore
     summary: {
       failRate: '0%',
       numTestsRan: 1,
-      orgId: mockConnection.getAuthInfoFields().orgId,
       outcome: 'Completed',
       passRate: '100%',
       skipRate: '0%',
       testStartTime: '2020-07-12T02:54:47.000+0000',
       testExecutionTime: 1765,
       testRunId,
-      userId: '005xx000000abcDAAU',
-      username: mockConnection.getUsername()
+      userId: '005xx000000abcDAAU'
     },
     tests: [
       {
@@ -168,6 +167,8 @@ describe('Run Apex tests asynchronously', () => {
         username: testData.username
       })
     });
+    testResultData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
+    testResultData.summary.username = mockConnection.getUsername();
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
   });
 
