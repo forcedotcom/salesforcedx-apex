@@ -5,6 +5,10 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { TestService } from '@salesforce/apex-node';
+import {
+  AsyncTestConfiguration,
+  AsyncTestArrayConfiguration
+} from '@salesforce/apex-node/lib/src/tests/types';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
@@ -13,6 +17,13 @@ import { buildDescription, logLevels } from '../../../../utils';
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'run');
 
+export const TestLevel = [
+  'RunLocalTests',
+  'RunAllTestsInOrg',
+  'RunSpecifiedTests'
+];
+
+export const resultFormat = ['human', 'tap', 'junit', 'json'];
 export default class Run extends SfdxCommand {
   public static description = buildDescription(
     messages.getMessage('commandDescription'),
@@ -41,7 +52,7 @@ export default class Run extends SfdxCommand {
       options: logLevels
     }),
     apiversion: flags.builtin(),
-    codecoverage: flags.id({
+    codecoverage: flags.boolean({
       char: 'c',
       description: messages.getMessage('codeCoverageDescription')
     }),
@@ -49,19 +60,19 @@ export default class Run extends SfdxCommand {
       char: 'd',
       description: messages.getMessage('outputDirectoryDescription')
     }),
-    testlevel: flags.string({
+    testlevel: flags.enum({
       char: 'l',
-      description: messages.getMessage('testLevelDescription')
-      // options: TestLevel
+      description: messages.getMessage('testLevelDescription'),
+      options: TestLevel
     }),
     classnames: flags.string({
       char: 'n',
       description: messages.getMessage('classNamesDescription')
     }),
-    resultformat: flags.string({
+    resultformat: flags.enum({
       char: 'r',
-      description: messages.getMessage('resultFormatLongDescription')
-      // options: TestLevel
+      description: messages.getMessage('resultFormatLongDescription'),
+      options: resultFormat
     }),
     suitenames: flags.string({
       char: 's',
@@ -75,7 +86,7 @@ export default class Run extends SfdxCommand {
       char: 'w',
       description: messages.getMessage('waitDescription')
     }),
-    synchronous: flags.string({
+    synchronous: flags.boolean({
       char: 'y',
       description: messages.getMessage('synchronousDescription')
     }) /*,
@@ -93,12 +104,25 @@ export default class Run extends SfdxCommand {
       }
       const conn = this.org.getConnection();
       const testService = new TestService(conn);
-      const payload = {
-        classNames: this.flags.classnames,
-        suiteNames: this.flags.suitenames,
-        testLevel: this.flags.testlevel
-      };
-      const res = testService.runTestAsynchronous(
+      let payload: AsyncTestConfiguration | AsyncTestArrayConfiguration;
+      if (this.flags.tests) {
+        payload = {
+          tests: [
+            {
+              className: this.flags.tests
+            }
+          ],
+          testLevel: this.flags.testlevel
+        };
+      } else {
+        payload = {
+          classNames: this.flags.classnames,
+          suiteNames: this.flags.suitenames,
+          testLevel: this.flags.testlevel
+        };
+      }
+
+      const res = await testService.runTestAsynchronous(
         payload,
         this.flags.codecoverage
       );
