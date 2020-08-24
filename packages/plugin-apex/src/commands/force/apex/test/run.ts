@@ -7,7 +7,9 @@
 import { TestService } from '@salesforce/apex-node';
 import {
   AsyncTestConfiguration,
-  AsyncTestArrayConfiguration
+  AsyncTestArrayConfiguration,
+  SyncTestConfiguration,
+  TestItem
 } from '@salesforce/apex-node/lib/src/tests/types';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
@@ -24,6 +26,23 @@ export const TestLevel = [
 ];
 
 export const resultFormat = ['human', 'tap', 'junit', 'json'];
+
+function buildTestItem(testNames: string): TestItem[] {
+  const testNameArray = testNames.split(',');
+  const tItems = testNameArray.map(item => {
+    if (item.indexOf('.') > 0) {
+      const splitItemData = item.split('.');
+      return {
+        className: splitItemData[0],
+        testMethods: [splitItemData[1]]
+      } as TestItem;
+    }
+
+    return { className: item } as TestItem;
+  });
+  return tItems;
+}
+
 export default class Run extends SfdxCommand {
   public static description = buildDescription(
     messages.getMessage('commandDescription'),
@@ -104,21 +123,31 @@ export default class Run extends SfdxCommand {
       }
       const conn = this.org.getConnection();
       const testService = new TestService(conn);
+
+      if (this.flags.synchronous) {
+        const testOptions: SyncTestConfiguration = {
+          tests: buildTestItem(this.flags.tests),
+          testLevel: 'RunSpecifiedTests'
+        };
+        const ress = await testService.runTestSynchronous(testOptions);
+        return ress;
+      }
+
       let payload: AsyncTestConfiguration | AsyncTestArrayConfiguration;
+      const testLevel = this.flags.testlevel
+        ? this.flags.testlevel
+        : 'RunSpecifiedTests';
+
       if (this.flags.tests) {
         payload = {
-          tests: [
-            {
-              className: this.flags.tests
-            }
-          ],
-          testLevel: this.flags.testlevel
+          tests: buildTestItem(this.flags.tests),
+          testLevel
         };
       } else {
         payload = {
           classNames: this.flags.classnames,
           suiteNames: this.flags.suitenames,
-          testLevel: this.flags.testlevel
+          testLevel
         };
       }
 

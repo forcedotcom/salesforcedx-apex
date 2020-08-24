@@ -84,7 +84,7 @@ export type TestItem = {
 };
 
 export type AsyncTestArrayConfiguration = {
-  tests: [TestItem];
+  tests: TestItem[];
   /**
    * Limits the test run from executing new tests after a given number of tests fail.
    * Valid value ranges from 0 to 1,000,000. A value of 0 causes the test run to stop if any failure occurs.
@@ -98,7 +98,7 @@ export type AsyncTestArrayConfiguration = {
 };
 
 export type SyncTestConfiguration = {
-  tests: [TestItem];
+  tests: TestItem[];
   /**
    * Specifies which tests to run. The only valid value is RunSpecifiedTests.
    */
