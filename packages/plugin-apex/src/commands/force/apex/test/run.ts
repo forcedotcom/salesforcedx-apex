@@ -27,7 +27,7 @@ export const TestLevel = [
 
 export const resultFormat = ['human', 'tap', 'junit', 'json'];
 
-function buildTestItem(testNames: string): TestItem[] {
+export function buildTestItem(testNames: string): TestItem[] {
   const testNameArray = testNames.split(',');
   const tItems = testNameArray.map(item => {
     if (item.indexOf('.') > 0) {
@@ -108,10 +108,10 @@ export default class Run extends SfdxCommand {
     synchronous: flags.boolean({
       char: 'y',
       description: messages.getMessage('synchronousDescription')
-    }) /*,
-    verbose: flags.string({
+    }),
+    verbose: flags.builtin({
       description: messages.getMessage('verboseDescription')
-    }) **/
+    })
   };
 
   public async run(): Promise<AnyJson> {
