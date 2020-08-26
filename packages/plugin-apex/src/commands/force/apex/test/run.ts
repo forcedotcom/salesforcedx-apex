@@ -6,11 +6,13 @@
  */
 import { TestService } from '@salesforce/apex-node';
 import {
+  AsyncTestResult,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
   SyncTestConfiguration,
   TestItem
 } from '@salesforce/apex-node/lib/src/tests/types';
+import { Row, Table } from '@salesforce/apex-node/lib/src/common';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
@@ -133,8 +135,11 @@ export default class Run extends SfdxCommand {
           tests: buildTestItem(this.flags.tests),
           testLevel: 'RunSpecifiedTests'
         };
-        const ress = await testService.runTestSynchronous(testOptions);
-        return ress;
+        const resSync = await testService.runTestSynchronous(testOptions);
+        if (this.flags.resultformat === 'human') {
+          this.ux.log(this.formatHuman(resSync));
+        }
+        return resSync;
       }
 
       let payload: AsyncTestConfiguration | AsyncTestArrayConfiguration;
@@ -155,13 +160,130 @@ export default class Run extends SfdxCommand {
         };
       }
 
-      const res = await testService.runTestAsynchronous(
+      const res = (await testService.runTestAsynchronous(
         payload,
         this.flags.codecoverage
-      );
+      )) as AsyncTestResult;
+
+      if (this.flags.resultformat === 'human') {
+        this.ux.log(this.formatHuman(res));
+      }
       return res;
     } catch (e) {
       return Promise.reject(e);
     }
+  }
+
+  public formatHuman(testResult: AsyncTestResult): string {
+    const tb = new Table();
+    // Summary Table
+    const summary: { [key: string]: string | number | undefined } =
+      testResult.summary;
+    const summaryRowArray: Row[] = [];
+    for (const prop in summary) {
+      const row: Row = {
+        name: messages.getMessage(prop),
+        value: summary[prop] ? String(summary[prop]) : ''
+      };
+      summaryRowArray.push(row);
+    }
+    let tbResult = tb.createTable(
+      summaryRowArray,
+      [
+        {
+          key: 'name',
+          label: messages.getMessage('name_col_header')
+        },
+        { key: 'value', label: messages.getMessage('value_col_header') }
+      ],
+      messages.getMessage('test_summary_header')
+    );
+
+    // Test Result Table
+    const testRowArray: Row[] = [];
+    testResult.tests.forEach(
+      (elem: {
+        fullName: string;
+        outcome: string;
+        message: string | null;
+        runTime: number;
+      }) => {
+        testRowArray.push({
+          name: elem.fullName,
+          outcome: elem.outcome,
+          msg: elem.message ? elem.message : '',
+          runtime: `${elem.runTime}`
+        });
+      }
+    );
+
+    tbResult += '\n\n';
+    tbResult += tb.createTable(
+      testRowArray,
+      [
+        {
+          key: 'name',
+          label: messages.getMessage('test_name_col_header')
+        },
+        { key: 'outcome', label: messages.getMessage('outcome_col_header') },
+        { key: 'msg', label: messages.getMessage('msg_col_header') },
+        { key: 'runtime', label: messages.getMessage('runtime_col_header') }
+      ],
+      messages.getMessage('test_results_header')
+    );
+
+    // Code coverage
+    if (testResult.codecoverage) {
+      const codeCovRowArray: Row[] = [];
+      testResult.codecoverage.forEach(
+        (elem: {
+          name: string;
+          percentage: string;
+          uncoveredLines: number[];
+        }) => {
+          codeCovRowArray.push({
+            name: elem.name,
+            percent: elem.percentage,
+            uncoveredLines: this.formatUncoveredLines(elem.uncoveredLines)
+          });
+        }
+      );
+
+      tbResult += '\n\n';
+      tbResult += tb.createTable(
+        codeCovRowArray,
+        [
+          {
+            key: 'name',
+            label: messages.getMessage('classes_col_header')
+          },
+          {
+            key: 'percent',
+            label: messages.getMessage('percent_col_header')
+          },
+          {
+            key: 'uncoveredLines',
+            label: messages.getMessage('uncovered_lines_col_header')
+          }
+        ],
+        messages.getMessage('code_cov_header')
+      );
+    }
+    return tbResult;
+  }
+
+  public formatUncoveredLines(uncoveredLines: number[]): string {
+    const arrayLimit = 5;
+    if (uncoveredLines.length === 0) {
+      return '';
+    }
+
+    const limit =
+      uncoveredLines.length > arrayLimit ? arrayLimit : uncoveredLines.length;
+    let processedLines = uncoveredLines.slice(0, limit).join(',');
+    if (uncoveredLines.length > arrayLimit) {
+      processedLines += '...';
+    }
+    return processedLines;
   }
 }
