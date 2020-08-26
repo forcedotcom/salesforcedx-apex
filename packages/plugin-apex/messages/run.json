@@ -19,5 +19,6 @@
   "waitLongDescription": "Sets the streaming client socket timeout, in minutes. If the streaming client socket has no contact from the server for a number of minutes, the client exits. Specify a longer wait time if timeouts occur frequently",
   "synchronousDescription": "runs test methods from a single Apex class synchronously; if not specified, tests are run ansynchronously",
   "verboseDescription": "display Apex test processing details; if JSON is specified, processing details aren't displayed",
+  "detailedCoverageDescription": "display detailed code coverage per test",
   "missing_auth_error": "Must pass a username and/or OAuth options when creating an AuthInfo instance."
 }

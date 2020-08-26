@@ -111,6 +111,10 @@ export default class Run extends SfdxCommand {
     }),
     verbose: flags.builtin({
       description: messages.getMessage('verboseDescription')
+    }),
+    detailedcoverage: flags.boolean({
+      char: 'v',
+      description: messages.getMessage('detailedCoverageDescription')
     })
   };
 
