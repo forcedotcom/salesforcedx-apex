@@ -9,11 +9,52 @@ import {
   ApexCodeCoverageAggregateRecord,
   ApexTestResultOutcome,
   ApexTestResultRecord,
-  AsyncTestResult
+  SyncTestResult,
+  TestResult
 } from '../../src/tests/types';
 
+export const syncTestResultSimple: SyncTestResult = {
+  apexLogId: '07Lxx00000cxy6YUAQ',
+  failures: [],
+  numFailures: 0,
+  numTestsRun: 1,
+  successes: [
+    {
+      id: '01pxx00000NWwb3AAD',
+      methodName: 'testOne',
+      name: 'TestSample',
+      namespace: null,
+      seeAllData: false,
+      time: 107
+    }
+  ],
+  totalTime: 270
+};
+
+export const syncTestResultWithFailures: SyncTestResult = {
+  apexLogId: '07Lxx00000cxy6YUAQ',
+  successes: [],
+  numFailures: 0,
+  numTestsRun: 1,
+  failures: [
+    {
+      id: '01pxx00000NWwb3AAD',
+      message:
+        'System.AssertException: Assertion Failed: Expected: false, Actual: true',
+      methodName: 'testOne',
+      name: 'TestSample',
+      namespace: 'tr',
+      seeAllData: false,
+      stackTrace: 'Class.TestSample.testOne: line 27, column 1',
+      time: 68,
+      type: 'Class'
+    }
+  ],
+  totalTime: 87
+};
+
 export const testRunId = '707xx0000AGQ3jbQQD';
-export const testResultData: AsyncTestResult = {
+export const testResultData: TestResult = {
   // @ts-ignore
   summary: {
     failRate: '0%',

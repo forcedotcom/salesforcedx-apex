@@ -8,18 +8,18 @@ import { Connection } from '@salesforce/core';
 import {
   SyncTestConfiguration,
   SyncTestResult,
-  SyncTestErrorResult,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
   ApexTestRunResult,
   ApexTestResult,
   ApexTestQueueItem,
-  AsyncTestResult,
   ApexCodeCoverageAggregate,
   ApexTestResultData,
   CodeCoverageResult,
   ApexOrgWideCoverage,
-  ApexTestResultOutcome
+  ApexTestResultOutcome,
+  ApexTestRunResultStatus,
+  TestResult
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
@@ -32,9 +32,97 @@ export class TestService {
     this.connection = connection;
   }
 
+  private async formatSyncResults(
+    apiTestResult: SyncTestResult,
+    startTime: number,
+    codeCoverage = false
+  ): Promise<TestResult> {
+    const testResults: ApexTestResultData[] = [];
+    apiTestResult.successes.forEach(item => {
+      const nms = item.namespace ? `${item.namespace}__` : '';
+      testResults.push({
+        id: '',
+        queueItemId: '',
+        stackTrace: '',
+        message: '',
+        asyncApexJobId: '',
+        methodName: item.methodName,
+        outcome: ApexTestResultOutcome.Pass,
+        apexLogId: apiTestResult.apexLogId,
+        apexClass: {
+          id: item.id,
+          name: item.name,
+          namespacePrefix: item.namespace,
+          fullName: `${nms}${item.name}`
+        },
+        runTime: item.time,
+        testTimestamp: '',
+        fullName: `${nms}${item.name}.${item.methodName}`
+      });
+    });
+
+    apiTestResult.failures.forEach(item => {
+      const nms = item.namespace ? `${item.namespace}__` : '';
+      testResults.push({
+        id: '',
+        queueItemId: '',
+        stackTrace: item.stackTrace,
+        message: item.message,
+        asyncApexJobId: '',
+        methodName: item.methodName,
+        outcome: ApexTestResultOutcome.Fail,
+        apexLogId: apiTestResult.apexLogId,
+        apexClass: {
+          id: item.id,
+          name: item.name,
+          namespacePrefix: item.namespace,
+          fullName: `${nms}${item.name}`
+        },
+        runTime: item.time,
+        testTimestamp: '',
+        fullName: `${nms}${item.name}.${item.methodName}`
+      });
+    });
+
+    const globalTestFailed = apiTestResult.failures.length;
+    const globalTestPassed = apiTestResult.successes.length;
+    const result: TestResult = {
+      summary: {
+        failRate: this.calculatePercentage(
+          globalTestFailed,
+          apiTestResult.numTestsRun
+        ),
+        numTestsRan: apiTestResult.numTestsRun,
+        orgId: this.connection.getAuthInfoFields().orgId,
+        outcome:
+          globalTestFailed === 0
+            ? ApexTestRunResultStatus.Completed
+            : ApexTestRunResultStatus.Failed,
+        passRate: this.calculatePercentage(
+          globalTestPassed,
+          apiTestResult.numTestsRun
+        ),
+        skipRate: this.calculatePercentage(0, apiTestResult.numTestsRun),
+        testStartTime: `${startTime}`,
+        testExecutionTime: apiTestResult.totalTime,
+        testRunId: '',
+        userId: this.connection.getConnectionOptions().userId,
+        username: this.connection.getUsername()
+      },
+      tests: testResults
+    };
+
+    if (codeCoverage) {
+      result.codecoverage = await this.getTestCodeCoverage();
+      result.summary.orgWideCoverage = await this.getOrgWideCoverage();
+    }
+    return result;
+  }
+
   public async runTestSynchronous(
-    options: SyncTestConfiguration
-  ): Promise<SyncTestResult | SyncTestErrorResult[]> {
+    options: SyncTestConfiguration,
+    codeCoverage = false
+  ): Promise<TestResult> {
     const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
     const request = {
       method: 'POST',
@@ -43,14 +131,18 @@ export class TestService {
       headers: { 'content-type': 'application/json' }
     };
 
-    const testRun = await this.connection.tooling.request(request);
-    return testRun as SyncTestResult | SyncTestErrorResult[];
+    const startTime = Date.now();
+    const testRun = (await this.connection.tooling.request(
+      request
+    )) as SyncTestResult;
+
+    return this.formatSyncResults(testRun, startTime, codeCoverage);
   }
 
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false
-  ): Promise<AsyncTestResult> {
+  ): Promise<TestResult> {
     const sClient = new StreamingClient(this.connection);
     await sClient.init();
     const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
@@ -87,7 +179,7 @@ export class TestService {
     testQueueResult: ApexTestQueueItem,
     testRunId: string,
     codeCoverage = false
-  ): Promise<AsyncTestResult> {
+  ): Promise<TestResult> {
     let testRunSummaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
     testRunSummaryQuery +=
@@ -157,7 +249,7 @@ export class TestService {
       });
     });
 
-    const result: AsyncTestResult = {
+    const result: TestResult = {
       summary: {
         failRate: this.calculatePercentage(
           globalTestFailed,

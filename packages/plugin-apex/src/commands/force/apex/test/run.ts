@@ -6,11 +6,11 @@
  */
 import { TestService } from '@salesforce/apex-node';
 import {
-  AsyncTestResult,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
   SyncTestConfiguration,
-  TestItem
+  TestItem,
+  TestResult
 } from '@salesforce/apex-node/lib/src/tests/types';
 import { Row, Table } from '@salesforce/apex-node/lib/src/common';
 import { flags, SfdxCommand } from '@salesforce/command';
@@ -135,7 +135,10 @@ export default class Run extends SfdxCommand {
           tests: buildTestItem(this.flags.tests),
           testLevel: 'RunSpecifiedTests'
         };
-        const resSync = await testService.runTestSynchronous(testOptions);
+        const resSync = await testService.runTestSynchronous(
+          testOptions,
+          this.flags.codecoverage
+        );
         if (this.flags.resultformat === 'human') {
           this.ux.log(this.formatHuman(resSync));
         }
@@ -163,7 +166,7 @@ export default class Run extends SfdxCommand {
       const res = (await testService.runTestAsynchronous(
         payload,
         this.flags.codecoverage
-      )) as AsyncTestResult;
+      )) as TestResult;
 
       if (this.flags.resultformat === 'human') {
         this.ux.log(this.formatHuman(res));
@@ -174,7 +177,7 @@ export default class Run extends SfdxCommand {
     }
   }
 
-  public formatHuman(testResult: AsyncTestResult): string {
+  public formatHuman(testResult: TestResult): string {
     const tb = new Table();
     // Summary Table
     const summary: { [key: string]: string | number | undefined } =

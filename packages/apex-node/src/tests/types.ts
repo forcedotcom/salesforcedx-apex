@@ -5,22 +5,6 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-// NOTE: half of these values are declared by loglevel enum
-export const enum TestLogLevel {
-  trace = 'trace',
-  debug = 'debug',
-  info = 'info',
-  warn = 'warn',
-  error = 'error',
-  fatal = 'fatal',
-  TRACE = 'TRACE',
-  DEBUG = 'DEBUG',
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR',
-  FATAL = 'FATAL'
-}
-
 export const enum TestLevel {
   /**
    * All tests in your org are run, except the ones that originate from installed managed packages
@@ -143,6 +127,12 @@ export type SyncTestResult = {
 export type SyncTestErrorResult = {
   message: string;
   errorCode: string; // might change it to an enum
+};
+
+export type ApiSyncTestResult = {
+  done: boolean;
+  totalSize: number;
+  records: SyncTestResult[];
 };
 
 export const enum ApexTestResultOutcome {
@@ -349,7 +339,7 @@ export type CodeCoverageResult = {
   uncoveredLines: number[];
 };
 
-export type AsyncTestResult = {
+export type TestResult = {
   summary: {
     failRate: string;
     numTestsRan: number;
