@@ -43,6 +43,8 @@
   "test_results_header": "Test Results",
   "classes_col_header": "CLASSES",
   "percent_col_header": "PERCENT",
+  "class_tested_header": "CLASS BEING TESTED",
   "uncovered_lines_col_header": "UNCOVERED LINES",
-  "code_cov_header": "Apex Code Coverage by Class"
+  "code_cov_header": "Apex Code Coverage by Class",
+  "detailed_code_cov_header": "Apex Code Coverage for Test Run %s"
 }

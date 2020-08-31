@@ -93,7 +93,8 @@ export default class Run extends SfdxCommand {
     resultformat: flags.enum({
       char: 'r',
       description: messages.getMessage('resultFormatLongDescription'),
-      options: resultFormat
+      options: resultFormat,
+      required: true
     }),
     suitenames: flags.string({
       char: 's',
@@ -116,7 +117,8 @@ export default class Run extends SfdxCommand {
     }),
     detailedcoverage: flags.boolean({
       char: 'v',
-      description: messages.getMessage('detailedCoverageDescription')
+      description: messages.getMessage('detailedCoverageDescription'),
+      dependsOn: ['codecoverage']
     })
   };
 
@@ -140,7 +142,7 @@ export default class Run extends SfdxCommand {
           this.flags.codecoverage
         );
         if (this.flags.resultformat === 'human') {
-          this.ux.log(this.formatHuman(resSync));
+          this.ux.log(this.formatHuman(resSync, this.flags.detailedcoverage));
         }
         return resSync;
       }
@@ -169,7 +171,7 @@ export default class Run extends SfdxCommand {
       )) as TestResult;
 
       if (this.flags.resultformat === 'human') {
-        this.ux.log(this.formatHuman(res));
+        this.ux.log(this.formatHuman(res, this.flags.detailedcoverage));
       }
       return res;
     } catch (e) {
@@ -177,7 +179,10 @@ export default class Run extends SfdxCommand {
     }
   }
 
-  public formatHuman(testResult: TestResult): string {
+  public formatHuman(
+    testResult: TestResult,
+    detailedCoverage: boolean
+  ): string {
     const tb = new Table();
     // Summary Table
     const summary: { [key: string]: string | number | undefined } =
@@ -203,40 +208,97 @@ export default class Run extends SfdxCommand {
     );
 
     // Test Result Table
-    const testRowArray: Row[] = [];
-    testResult.tests.forEach(
-      (elem: {
-        fullName: string;
-        outcome: string;
-        message: string | null;
-        runTime: number;
-      }) => {
-        testRowArray.push({
-          name: elem.fullName,
-          outcome: elem.outcome,
-          msg: elem.message ? elem.message : '',
-          runtime: `${elem.runTime}`
-        });
-      }
-    );
+    if (!detailedCoverage) {
+      const testRowArray: Row[] = [];
+      testResult.tests.forEach(
+        (elem: {
+          fullName: string;
+          outcome: string;
+          message: string | null;
+          runTime: number;
+        }) => {
+          testRowArray.push({
+            name: elem.fullName,
+            outcome: elem.outcome,
+            msg: elem.message ? elem.message : '',
+            runtime: `${elem.runTime}`
+          });
+        }
+      );
 
-    tbResult += '\n\n';
-    tbResult += tb.createTable(
-      testRowArray,
-      [
-        {
-          key: 'name',
-          label: messages.getMessage('test_name_col_header')
-        },
-        { key: 'outcome', label: messages.getMessage('outcome_col_header') },
-        { key: 'msg', label: messages.getMessage('msg_col_header') },
-        { key: 'runtime', label: messages.getMessage('runtime_col_header') }
-      ],
-      messages.getMessage('test_results_header')
-    );
-
+      tbResult += '\n\n';
+      tbResult += tb.createTable(
+        testRowArray,
+        [
+          {
+            key: 'name',
+            label: messages.getMessage('test_name_col_header')
+          },
+          { key: 'outcome', label: messages.getMessage('outcome_col_header') },
+          { key: 'msg', label: messages.getMessage('msg_col_header') },
+          { key: 'runtime', label: messages.getMessage('runtime_col_header') }
+        ],
+        messages.getMessage('test_results_header')
+      );
+    }
     // Code coverage
     if (testResult.codecoverage) {
+      if (detailedCoverage) {
+        const testRowArray: Row[] = [];
+        testResult.tests.forEach(
+          (elem: {
+            fullName: string;
+            outcome: string;
+            perClassCoverage?: {
+              apexClassOrTriggerName: string;
+              percentage: string;
+            };
+            message: string | null;
+            runTime: number;
+          }) => {
+            testRowArray.push({
+              name: elem.fullName,
+              coveredClassName: elem.perClassCoverage
+                ? elem.perClassCoverage.apexClassOrTriggerName
+                : '',
+              outcome: elem.outcome,
+              coveredClassPercentage: elem.perClassCoverage
+                ? elem.perClassCoverage.percentage
+                : '',
+              msg: elem.message ? elem.message : '',
+              runtime: `${elem.runTime}`
+            });
+          }
+        );
+
+        tbResult += '\n\n';
+        tbResult += tb.createTable(
+          testRowArray,
+          [
+            {
+              key: 'name',
+              label: messages.getMessage('test_name_col_header')
+            },
+            {
+              key: 'coveredClassName',
+              label: messages.getMessage('class_tested_header')
+            },
+            {
+              key: 'outcome',
+              label: messages.getMessage('outcome_col_header')
+            },
+            {
+              key: 'coveredClassPercentage',
+              label: messages.getMessage('percent_col_header')
+            },
+            { key: 'msg', label: messages.getMessage('msg_col_header') },
+            { key: 'runtime', label: messages.getMessage('runtime_col_header') }
+          ],
+          messages.getMessage('detailed_code_cov_header', [
+            testResult.summary.testRunId
+          ])
+        );
+      }
       const codeCovRowArray: Row[] = [];
       testResult.codecoverage.forEach(
         (elem: {

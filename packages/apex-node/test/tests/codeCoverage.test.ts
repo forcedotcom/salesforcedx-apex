@@ -71,7 +71,7 @@ describe('Run Apex tests code coverage', () => {
     );
   });
 
-  it('should return test code coverage result', async () => {
+  /* it('should return test code coverage result', async () => {
     toolingQueryStub.resolves({
       done: true,
       totalSize: 3,
@@ -115,5 +115,5 @@ describe('Run Apex tests code coverage', () => {
     const testSrv = new TestService(mockConnection);
     const testCodeCoverageResult = await testSrv.getTestCodeCoverage();
     expect(testCodeCoverageResult.length).to.equal(0);
-  });
+  });*/
 });
