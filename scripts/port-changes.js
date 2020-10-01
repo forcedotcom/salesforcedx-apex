@@ -98,11 +98,19 @@ function filterDiffs(parsedCommits) {
 function isTrueDiff(commitMap) {
     var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline main`, { silent: true });
     var developResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline develop`, { silent: true });
-    if (!mainResult || mainResult.length === 0) {
+    var noResultsFound = !mainResult || mainResult.length === 0;
+    if (noResultsFound) {
+        // Search by PR # in case there are special characters preventing a match
+        var mainResultByPR = shell.exec(`git log --grep="${commitMap[PR_NUM]}" --oneline main`);
+        var developResultByPR = shell.exec(`git log --grep="${commitMap[PR_NUM]}" --oneline develop`);
+        noResultsFound = !mainResultByPR || mainResultByPR.length === 0;
+        console.log(`Tried by PR. \n\tMain: ${mainResultByPR}\n\tDevelop: ${developResultByPR}`);
+    }
+    if (noResultsFound) {
         if (ADD_VERBOSE_LOGGING)
             console.log(`Commit is missing from main. Porting.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}\n\tMain: ${mainResult}\n\tDevelop: ${developResult}`);
         return true;
-    } else if (mainResult && developResult) {
+    } else {
         // if (ADD_VERBOSE_LOGGING)
         //     console.log(`Commit is present in both branches. Filtering.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
         return false;
