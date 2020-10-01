@@ -100,11 +100,11 @@ function isTrueDiff(commitMap) {
     var developResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" --oneline develop`, { silent: true });
     if (!mainResult || mainResult.length === 0) {
         if (ADD_VERBOSE_LOGGING)
-            console.log(`Commit is missing from main. Porting.`);
+            console.log(`Commit is missing from main. Porting.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}\n\rMain: ${mainResult}\n\tDevelop: ${developResult}`);
         return true;
     } else if (mainResult && developResult) {
-        if (ADD_VERBOSE_LOGGING)
-            console.log(`Commit is present in both branches. Filtering.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
+        // if (ADD_VERBOSE_LOGGING)
+        //     console.log(`Commit is present in both branches. Filtering.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
         return false;
     }
 }
