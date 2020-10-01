@@ -96,8 +96,8 @@ function filterDiffs(parsedCommits) {
 }
 
 function isTrueDiff(commitMap) {
-    var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -E --oneline main`, { silent: true });
-    var developResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -E --oneline develop`, { silent: true });
+    var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline main`, { silent: true });
+    var developResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline develop`, { silent: true });
     if (!mainResult || mainResult.length === 0) {
         if (ADD_VERBOSE_LOGGING)
             console.log(`Commit is missing from main. Porting.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}\n\tMain: ${mainResult}\n\tDevelop: ${developResult}`);
