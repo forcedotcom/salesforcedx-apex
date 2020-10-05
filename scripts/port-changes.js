@@ -103,11 +103,11 @@ function isTrueDiff(commitMap) {
     var noResultsFound = !mainResult || mainResult.length === 0;
     if (noResultsFound) {
         if (ADD_VERBOSE_LOGGING)
-            console.log(`Commit is missing from main. Porting.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}\n\tMain: ${mainResult}\n\tDevelop: ${developResult}`);
+            console.log(`Porting - Commit is missing from main.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}\n\tMain: ${mainResult}\n\tDevelop: ${developResult}`);
         return true;
     } else {
         if (ADD_VERBOSE_LOGGING)
-            console.log(`Commit is present in both branches. Filtering.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
+            console.log(`Filtering - Commit is present in both branches.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
         return false;
     }
 }
