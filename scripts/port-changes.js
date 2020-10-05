@@ -14,9 +14,11 @@ const MESSAGE = 'MESSAGE';
 
 function getAllDiffs(baseBranch, featureBranch) {
     if (ADD_VERBOSE_LOGGING)
-        console.log(`\n\nStep 1: Get all diffs between branches ${baseBranch} and ${featureBranch}`);
-    shell.exec(`git fetch upstream main:main`, { silent: !ADD_VERBOSE_LOGGING });
-    shell.exec(`git fetch upstream develop:develop`, { silent: !ADD_VERBOSE_LOGGING });
+        console.log(`\n\nStep 1: Update branches ${baseBranch} and ${featureBranch}`);
+    shell.exec(`git fetch upstream main`, { silent: !ADD_VERBOSE_LOGGING });
+    shell.exec(`git fetch upstream develop`, { silent: !ADD_VERBOSE_LOGGING });
+    if (ADD_VERBOSE_LOGGING)
+        console.log(`\n\nStep 2: Get all diffs between branches ${baseBranch} and ${featureBranch}`);
     return shell
         .exec(`git log --oneline ${baseBranch}..${featureBranch}`, {
             silent: !ADD_VERBOSE_LOGGING
@@ -96,23 +98,16 @@ function filterDiffs(parsedCommits) {
 }
 
 function isTrueDiff(commitMap) {
-    var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline main`, { silent: true });
-    var developResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline develop`, { silent: true });
+    var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" --oneline main`, { silent: true });
+    var developResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" --oneline develop`, { silent: true });
     var noResultsFound = !mainResult || mainResult.length === 0;
-    if (noResultsFound) {
-        // Search by PR # in case there are special characters preventing a match
-        var mainResultByPR = shell.exec(`git log --grep="${commitMap[PR_NUM]}" --oneline main`);
-        var developResultByPR = shell.exec(`git log --grep="${commitMap[PR_NUM]}" --oneline develop`);
-        noResultsFound = !mainResultByPR || mainResultByPR.length === 0;
-        console.log(`Tried by PR. \n\tMain: ${mainResultByPR}\n\tDevelop: ${developResultByPR}`);
-    }
     if (noResultsFound) {
         if (ADD_VERBOSE_LOGGING)
             console.log(`Commit is missing from main. Porting.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}\n\tMain: ${mainResult}\n\tDevelop: ${developResult}`);
         return true;
     } else {
-        // if (ADD_VERBOSE_LOGGING)
-        //     console.log(`Commit is present in both branches. Filtering.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
+        if (ADD_VERBOSE_LOGGING)
+            console.log(`Commit is present in both branches. Filtering.\n\t${commitMap[COMMIT]} ${commitMap[MESSAGE]}`);
         return false;
     }
 }
