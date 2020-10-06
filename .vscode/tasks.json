@@ -56,7 +56,8 @@
     {
       "label": "Launch Pre-Publish Steps",
       "command": "./scripts/port-changes.js",
-      "type": "shell"
+      "type": "shell",
+      "args": ["${input:verboseOutput}", "-r", "${input:releaseBranch}"]
     },
     {
       "label": "Publish Packages",
@@ -77,6 +78,21 @@
       "description": "Type of version to publish",
       "options": ["minor", "patch", "major"],
       "default": "patch"
+    },
+    {
+      "id": "releaseBranch",
+      "type": "promptString",
+      "description": "Provide the release version (Ex 0.1.1)"
+    },
+    {
+      "id": "verboseOutput",
+      "type": "pickString",
+      "description": "Output verbose logging? Select -v for verbose, and blank for quiet.",
+      "options": [
+        "",
+        "-v"
+      ],
+      "default": "-v"
     }
   ]
 }
