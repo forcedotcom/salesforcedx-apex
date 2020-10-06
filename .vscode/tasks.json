@@ -54,6 +54,11 @@
       }
     },
     {
+      "label": "Launch Pre-Publish Steps",
+      "command": "./scripts/port-changes.js",
+      "type": "shell"
+    },
+    {
       "label": "Publish Packages",
       "command": "./scripts/publish-workflow.sh",
       "type": "shell",
