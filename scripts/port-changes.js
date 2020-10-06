@@ -53,7 +53,7 @@ function buildMapFromCommit(commit) {
                 message = message.replace(pr[0], '');
             }
             map[COMMIT] = commitNum[0];
-            map[MESSAGE] = message.trim().replace(':', '\:');
+            map[MESSAGE] = message.trim();
         }
     }
     if (ADD_VERBOSE_LOGGING) {
