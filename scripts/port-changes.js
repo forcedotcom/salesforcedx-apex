@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 
+/*
+ * Ports changes from develop to main. The only commits
+ * that will be ported are 'true diffs'. This logic will
+ * generate a new portPR branch and cherry-pick the commits
+ * to the new branch.
+ */
+
 const shell = require('shelljs');
 
-const PR_REGEX = new RegExp(/(?:\(#\d+\))(\s+\(#\d+\))*$/);
+const PR_REGEX = new RegExp(/(\(#\d+\))(\s+\(#\d+\))*$/);
 const COMMIT_REGEX = new RegExp(/^([\da-zA-Z]+)/);
 const RELEASE_REGEX = new RegExp(/^\d{1,2}\.\d{1,2}\.\d/);
 
@@ -10,11 +17,14 @@ const PR_NUM = 'PR_NUM';
 const COMMIT = 'COMMIT';
 const MESSAGE = 'MESSAGE';
 
-function getAllDiffs(baseBranch, featureBranch) {
+function updateBranches(baseBranch, featureBranch) {
     if (ADD_VERBOSE_LOGGING)
         console.log(`\n\nStep 1: Update branches ${baseBranch} and ${featureBranch}`);
-    shell.exec(`git fetch . origin/main:main`, { silent: !ADD_VERBOSE_LOGGING });
-    shell.exec(`git fetch . origin/develop:develop`, { silent: !ADD_VERBOSE_LOGGING });
+    shell.exec(`git fetch . origin/${baseBranch}:${baseBranch}`, { silent: !ADD_VERBOSE_LOGGING });
+    shell.exec(`git fetch . origin/${featureBranch}:${featureBranch}`, { silent: !ADD_VERBOSE_LOGGING });
+}
+
+function getAllDiffs(baseBranch, featureBranch) {
     if (ADD_VERBOSE_LOGGING)
         console.log(`\n\nStep 2: Get all diffs between branches ${baseBranch} and ${featureBranch}`);
     return shell
@@ -130,6 +140,7 @@ function getCherryPickCommits(diffList) {
 
 let ADD_VERBOSE_LOGGING = process.argv.indexOf('-v') > -1 ? true : false;
 
+updateBranches('main', 'develop');
 const diffList = getAllDiffs('main', 'develop');
 const parsedCommits = parseCommits(diffList);
 const filteredDiffList = filterDiffs(parsedCommits);
