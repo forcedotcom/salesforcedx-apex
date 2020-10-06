@@ -90,7 +90,7 @@ function filterDiffs(parsedCommits) {
 }
 
 function isTrueDiff(commitMap) {
-    var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" --oneline main`, { silent: true });
+    var mainResult = shell.exec(`git log --grep="${commitMap[MESSAGE]}" -F --oneline main`, { silent: true });
     var noResultsFound = !mainResult || mainResult.length === 0;
     if (noResultsFound) {
         if (ADD_VERBOSE_LOGGING)
