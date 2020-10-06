@@ -4,19 +4,17 @@ const shell = require('shelljs');
 
 const PR_REGEX = new RegExp(/(?:\(#\d+\))(\s+\(#\d+\))*$/);
 const COMMIT_REGEX = new RegExp(/^([\da-zA-Z]+)/);
-const TYPE_REGEX = new RegExp(/([a-zA-Z]+)(?:\([a-zA-Z]+\))?:/);
 const RELEASE_REGEX = new RegExp(/^\d{1,2}\.\d{1,2}\.\d/);
 
 const PR_NUM = 'PR_NUM';
 const COMMIT = 'COMMIT';
-const TYPE = 'TYPE';
 const MESSAGE = 'MESSAGE';
 
 function getAllDiffs(baseBranch, featureBranch) {
     if (ADD_VERBOSE_LOGGING)
         console.log(`\n\nStep 1: Update branches ${baseBranch} and ${featureBranch}`);
-    shell.exec(`git fetch main`, { silent: !ADD_VERBOSE_LOGGING });
-    shell.exec(`git fetch develop`, { silent: !ADD_VERBOSE_LOGGING });
+    shell.exec(`git pull main`, { silent: !ADD_VERBOSE_LOGGING });
+    shell.exec(`git pull develop`, { silent: !ADD_VERBOSE_LOGGING });
     if (ADD_VERBOSE_LOGGING)
         console.log(`\n\nStep 2: Get all diffs between branches ${baseBranch} and ${featureBranch}`);
     return shell
@@ -54,18 +52,12 @@ function buildMapFromCommit(commit) {
                 map[PR_NUM] = pr[0];
                 message = message.replace(pr[0], '');
             }
-            var type = TYPE_REGEX.exec(message);
-            if (type) {
-                map[TYPE] = type[1];
-                message = message.replace(type[0], '');
-            }
             map[COMMIT] = commitNum[0];
             map[MESSAGE] = message.trim().replace(':', '\:');
         }
     }
     if (ADD_VERBOSE_LOGGING) {
         console.log('\nCommit: ' + commit);
-        console.log('Commit Map:');
         console.log(map);
     }
     return map;
