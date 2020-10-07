@@ -54,10 +54,10 @@
       }
     },
     {
-      "label": "Launch Pre-Publish Steps",
+      "label": "Create Port PR for Publishing",
       "command": "./scripts/port-changes.js",
       "type": "shell",
-      "args": ["${input:verboseOutput}", "-r", "${input:releaseVersion}"]
+      "args": ["${input:verboseOutput}", "-r", "${input:publishType}"]
     },
     {
       "label": "Publish Packages",
@@ -78,11 +78,6 @@
       "description": "Type of version to publish",
       "options": ["minor", "patch", "major"],
       "default": "patch"
-    },
-    {
-      "id": "releaseVersion",
-      "type": "promptString",
-      "description": "Provide the release version (Ex 0.1.1)"
     },
     {
       "id": "verboseOutput",
