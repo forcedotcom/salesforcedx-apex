@@ -7,10 +7,10 @@
   "devDependencies": {
     "@commitlint/cli": "^7",
     "@commitlint/config-conventional": "^7",
-    "commitizen": "^3.0.5",
-    "cz-conventional-changelog": "^2.1.0",
     "@typescript-eslint/eslint-plugin": "^2.22.0",
     "@typescript-eslint/parser": "^2.22.0",
+    "commitizen": "^3.0.5",
+    "cz-conventional-changelog": "^2.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-header": "^3.0.0",
@@ -45,6 +45,11 @@
       "pre-commit": "yarn lint-staged",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
+  },
+  "lint-staged": {
+    "./{src,test}/**/*.{ts,js}": [
+      "eslint -c .eslintrc.json --fix"
+    ]
   },
   "private": true,
   "volta": {
