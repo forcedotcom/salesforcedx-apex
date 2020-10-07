@@ -18,7 +18,7 @@ const MESSAGE = 'MESSAGE';
 
 function getReleaseVersion() {
     const releaseType = getReleaseType();
-    const currentVersion = require('../package.json').version;
+    const currentVersion = require('../packages/apex-node/package.json').version;
     var [version, major, minor, patch] = currentVersion.match(/^(\d+)\.?(\d+)\.?(\*|\d+)$/);
     switch (releaseType) {
         case 'major':
