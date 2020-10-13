@@ -5,8 +5,8 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Connection } from '@salesforce/core';
-import { ApexLogGetOptions } from './types';
-import { createFile, QueryResult } from '../common';
+import { ApexLogGetOptions, LogIdQueryResult, LogIdRecord } from './types';
+import { createFile } from '../common';
 import { nls } from '../i18n';
 import * as path from 'path';
 import { AnyJson } from '@salesforce/ts-types';
@@ -20,6 +20,7 @@ export class LogService {
     this.connection = connection;
   }
 
+  // i think this should be private
   public async getIdList(options: ApexLogGetOptions): Promise<string[]> {
     if (
       !(
@@ -29,13 +30,12 @@ export class LogService {
     ) {
       throw new Error(nls.localize('missing_info_log_error'));
     }
-    let logIdList: string[] = [];
+
     if (typeof options.numberOfLogs === 'number') {
-      logIdList = await this.getLogIds(options.numberOfLogs);
-    } else {
-      logIdList.push(options.logId);
+      const logIdRecordList = await this.getLogIdRecords(options.numberOfLogs);
+      return logIdRecordList.map(logRecord => logRecord.Id);
     }
-    return logIdList;
+    return [options.logId];
   }
 
   // TODO: readableStream cannot be used until updates are made in jsforce and sfdx-core
@@ -60,17 +60,27 @@ export class LogService {
     return logs;
   }
 
-  public async getLogIds(numberOfLogs: number): Promise<string[]> {
-    if (numberOfLogs <= 0) {
-      throw new Error(nls.localize('num_logs_error'));
+  // mess with this to return more than just the ID will need to add the other table headers to the query request
+  public async getLogIdRecords(numberOfLogs?: number): Promise<LogIdRecord[]> {
+    let query =
+      'Select Id, Application, DurationMilliseconds, Location, LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime';
+
+    if (numberOfLogs) {
+      if (numberOfLogs <= 0) {
+        throw new Error(nls.localize('num_logs_error'));
+      }
+      numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
+      query += `DESC LIMIT ${numberOfLogs}`;
     }
-    numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
-    const query = `Select Id from ApexLog Order By StartTime DESC LIMIT ${numberOfLogs}`;
     const response = (await this.connection.tooling.query(
       query
-    )) as QueryResult;
-    return response.records.map(record => record.Id);
+    )) as LogIdQueryResult;
+    return response.records as LogIdRecord[];
   }
+
+  // method to format the date data correctly
+
+  // method to table format
 
   public async toolingRequest(url: string): Promise<AnyJson> {
     const log = (await this.connection.tooling.request(url)) as AnyJson;

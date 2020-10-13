@@ -11,3 +11,50 @@ export type ApexLogGetOptions = CommonOptions & {
   logId?: string;
   outputDir?: string;
 };
+
+export interface LogIdRecord {
+  Id: string;
+  /**
+   * Application type
+   */
+  Application: string;
+  /**
+   * Time to generate log
+   */
+  DurationMilliseconds: number;
+  /**
+   * Where the log was stored
+   */
+  Location: string;
+  /**
+   * Length of the debug log
+   */
+  LogLength: number;
+  /**
+   * Name of the user who generated the log
+   */
+  LogUser: {
+    attributes: {};
+    Name: string;
+  };
+  /**
+   * Type of operation
+   */
+  Operation: string;
+  /**
+   * Type of request
+   */
+  Request: string;
+  /**
+   * Time the log was generated
+   */
+  StartTime: string;
+  /**
+   * Status of the operation
+   */
+  Status: string;
+}
+
+export type LogIdQueryResult = {
+  records: LogIdRecord[];
+};

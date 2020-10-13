@@ -59,7 +59,10 @@ describe('Apex Log Service Tests', () => {
   it('should return correct log given log id', async () => {
     const apexLogGet = new LogService(mockConnection);
     const log = '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..';
-    const getLogIdStub = sandboxStub.stub(LogService.prototype, 'getLogIds');
+    const getLogIdStub = sandboxStub.stub(
+      LogService.prototype,
+      'getLogIdRecords'
+    );
     toolingRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
     expect(response.length).to.eql(1);
@@ -130,7 +133,7 @@ describe('Apex Log Service Tests', () => {
     const apexLogGet = new LogService(mockConnection);
     const filePath = path.join('testTmp', 'file', 'path', 'logs');
     const logIds = ['07L5tgg0005PGdTnEAL', '07L5tgg0005PGdTnFPL'];
-    sandboxStub.stub(LogService.prototype, 'getLogIds').resolves(logIds);
+    // sandboxStub.stub(LogService.prototype, 'getLogIdRecords').resolves(logIds);
 
     const createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
