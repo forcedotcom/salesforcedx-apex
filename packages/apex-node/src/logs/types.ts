@@ -12,7 +12,7 @@ export type ApexLogGetOptions = CommonOptions & {
   outputDir?: string;
 };
 
-export interface LogIdRecord {
+export interface LogRecord {
   Id: string;
   /**
    * Application type
@@ -55,6 +55,6 @@ export interface LogIdRecord {
   Status: string;
 }
 
-export type LogIdQueryResult = {
-  records: LogIdRecord[];
+export type LogQueryResult = {
+  records: LogRecord[];
 };

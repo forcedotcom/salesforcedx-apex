@@ -13,8 +13,42 @@ import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { LogService } from '../../src/logs/logService';
 import * as path from 'path';
 import * as stream from 'stream';
+import { LogRecord } from '../../src/logs/types';
 
 const $$ = testSetup();
+
+const logRecords: LogRecord[] = [
+  {
+    Id: '07L5tgg0005PGdTnEAL',
+    Application: 'Unknown',
+    DurationMilliseconds: 75,
+    Location: 'Unknown',
+    LogLength: 450,
+    LogUser: {
+      Name: 'Test User',
+      attributes: {}
+    },
+    Operation: 'API',
+    Request: 'API',
+    StartTime: '88888.000:000',
+    Status: 'Assertion Failed'
+  },
+  {
+    Id: '07L5tgg0005PGdTnFPL',
+    Application: 'Unknown',
+    DurationMilliseconds: 75,
+    Location: 'Unknown',
+    LogLength: 450,
+    LogUser: {
+      Name: 'Test User2',
+      attributes: {}
+    },
+    Operation: 'API',
+    Request: 'API',
+    StartTime: '66666.000:000',
+    Status: 'Successful'
+  }
+];
 
 describe('Apex Log Service Tests', () => {
   const testData = new MockTestOrgData();
@@ -61,7 +95,7 @@ describe('Apex Log Service Tests', () => {
     const log = '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..';
     const getLogIdStub = sandboxStub.stub(
       LogService.prototype,
-      'getLogIdRecords'
+      'getLogRecords'
     );
     toolingRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.getLogs({ logId: '07L5w00005PGdTnEAL' });
@@ -132,8 +166,9 @@ describe('Apex Log Service Tests', () => {
   it('should store logs in the directory', async () => {
     const apexLogGet = new LogService(mockConnection);
     const filePath = path.join('testTmp', 'file', 'path', 'logs');
-    const logIds = ['07L5tgg0005PGdTnEAL', '07L5tgg0005PGdTnFPL'];
-    // sandboxStub.stub(LogService.prototype, 'getLogIdRecords').resolves(logIds);
+    sandboxStub
+      .stub(LogService.prototype, 'getLogRecords')
+      .resolves(logRecords);
 
     const createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -180,7 +215,7 @@ describe('Apex Log Service Tests', () => {
     expect(createStreamStub.calledWith(logsPath)).to.be.true;
   });
 
-  it('should throw an error if numberOfLogs or logId are not given', async () => {
+  it('should throw an error if numberOfLogs or logId are not given to getLogs', async () => {
     const apexLogGet = new LogService(mockConnection);
     const filePath = path.join('path', 'to', 'logs');
     try {

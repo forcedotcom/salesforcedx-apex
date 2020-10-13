@@ -6,7 +6,7 @@
  */
 
 import { LogService } from '@salesforce/apex-node';
-import { LogIdRecord } from '@salesforce/apex-node/lib/src/logs/types';
+import { LogRecord } from '@salesforce/apex-node/lib/src/logs/types';
 import { Table } from '@salesforce/apex-node/lib/src/common';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
@@ -18,7 +18,6 @@ const messages = Messages.loadMessages('@salesforce/plugin-apex', 'list');
 
 export default class List extends SfdxCommand {
   protected static requiresUsername = true;
-  // Guaranteed by requires username
   protected org!: Org;
 
   public static description = buildDescription(
@@ -45,53 +44,97 @@ export default class List extends SfdxCommand {
     apiversion: flags.builtin()
   };
 
-  public async run(): Promise<LogIdRecord[]> {
+  public async run(): Promise<LogRecord[]> {
     try {
       const conn = this.org.getConnection();
       const logService = new LogService(conn);
 
-      const logRecords = await logService.getLogIdRecords();
+      let logRecords = await logService.getLogRecords();
+      logRecords = this.cleanRecords(logRecords);
+
       const table = this.formatTable(logRecords);
       this.ux.log(table);
-      this.ux.log(logRecords[0].Id);
-      this.ux.log(logRecords[1].Id);
-      this.ux.log(logRecords[2].Id);
-      return logRecords;
+
+      return { ...logRecords };
     } catch (e) {
-      return [{} as LogIdRecord];
+      return Promise.reject(e);
     }
   }
 
-  public formatTable(logRecords: LogIdRecord[]): string {
+  public formatTable(logRecords: LogRecord[]): string {
     const tb = new Table();
     const logRowArray: Row[] = [];
 
     for (const logRecord of logRecords) {
       const row: Row = {
-        APPLICATION: logRecord.Application,
-        DURATION: String(logRecord.DurationMilliseconds),
-        ID: logRecord.Id,
-        LOCATION: logRecord.Location,
-        SIZE: String(logRecord.LogLength),
-        USER: logRecord.LogUser.Name,
-        OPERATION: logRecord.Operation,
-        REQUEST: logRecord.Request,
-        STARTTIME: logRecord.StartTime,
-        STATUS: logRecord.Status
+        app: logRecord.Application,
+        duration: String(logRecord.DurationMilliseconds),
+        id: logRecord.Id,
+        location: logRecord.Location,
+        size: String(logRecord.LogLength),
+        user: logRecord.LogUser.Name,
+        operation: logRecord.Operation,
+        request: logRecord.Request,
+        time: this.formatTime(logRecord.StartTime),
+        status: logRecord.Status
       };
       logRowArray.push(row);
     }
 
-    const tableResult = tb.createTable(
-      logRowArray,
-      [
-        {
-          key: 'name',
-          label: 'colHeader'
-        }
-      ],
-      'Test Summary Header'
-    );
+    const tableResult = tb.createTable(logRowArray, [
+      {
+        key: 'app',
+        label: messages.getMessage('app_col_header')
+      },
+      {
+        key: 'duration',
+        label: messages.getMessage('duration_col_header')
+      },
+      {
+        key: 'id',
+        label: messages.getMessage('id_col_header')
+      },
+      {
+        key: 'location',
+        label: messages.getMessage('location_col_header')
+      },
+      {
+        key: 'size',
+        label: messages.getMessage('size_col_header')
+      },
+      {
+        key: 'user',
+        label: messages.getMessage('user_col_header')
+      },
+      {
+        key: 'operation',
+        label: messages.getMessage('operation_col_header')
+      },
+      {
+        key: 'request',
+        label: messages.getMessage('request_col_header')
+      },
+      {
+        key: 'time',
+        label: messages.getMessage('time_col_header')
+      },
+      {
+        key: 'status',
+        label: messages.getMessage('status_col_header')
+      }
+    ]);
     return tableResult;
+  }
+
+  private cleanRecords(logRecords: LogRecord[]): LogRecord[] {
+    return logRecords.map(record => {
+      record.StartTime = this.formatTime(record.StartTime);
+      return record;
+    });
+  }
+
+  private formatTime(time: string): string {
+    const milliIndex = time.indexOf('.');
+    return time.substring(0, milliIndex) + time.substring(milliIndex + 4);
   }
 }
