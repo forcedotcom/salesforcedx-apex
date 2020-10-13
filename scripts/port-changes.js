@@ -16,6 +16,29 @@ const PR_NUM = 'PR_NUM';
 const COMMIT = 'COMMIT';
 const MESSAGE = 'MESSAGE';
 
+/**
+ * Switch the current branch to the baseBranch. This will ensure we have the latest version and can
+ * update safely.
+ */
+function updateBranches(baseBranch, featureBranch) {
+  if (ADD_VERBOSE_LOGGING)
+    console.log(
+      `\n\nStep 1: Switch branch to ${baseBranch} and update ${baseBranch} and ${featureBranch}`
+    );
+  checkErrorCode(
+    shell.exec(`git checkout ${baseBranch}`).code,
+    `\n\nAn error occurred switching your current branch to ${baseBranch}. Exitting.`
+  );
+  checkErrorCode(
+    shell.exec(`git pull`).code,
+    `\n\nAn error occurred updating your base branch ${baseBranch}. Exitting.`
+  );
+  checkErrorCode(
+    shell.exec(`git fetch . origin/${featureBranch}:${featureBranch}`).code,
+    '\n\nAn error occurred updating your feature branch. Exitting.'
+  );
+}
+
 function getReleaseVersion() {
     const releaseType = getReleaseType();
     const currentVersion = require('../packages/apex-node/package.json').version;
@@ -52,13 +75,6 @@ function getReleaseType() {
     return process.argv[releaseIndex + 1];
 }
 
-function updateBranches(baseBranch, featureBranch) {
-    if (ADD_VERBOSE_LOGGING)
-        console.log(`\n\nStep 1: Update branches ${baseBranch} and ${featureBranch}`);
-    shell.exec(`git fetch . origin/${baseBranch}:${baseBranch}`, { silent: !ADD_VERBOSE_LOGGING });
-    shell.exec(`git fetch . origin/${featureBranch}:${featureBranch}`, { silent: !ADD_VERBOSE_LOGGING });
-}
-
 function getAllDiffs(baseBranch, featureBranch) {
     if (ADD_VERBOSE_LOGGING)
         console.log(`\n\nStep 2: Get all diffs between branches ${baseBranch} and ${featureBranch}`);
@@ -73,7 +89,7 @@ function getAllDiffs(baseBranch, featureBranch) {
 
 function parseCommits(commits) {
     if (ADD_VERBOSE_LOGGING) {
-        console.log('\n\nStep 2: Parse commits');
+        console.log('\n\nStep 3: Parse commits');
         console.log('Commit Parsing Results...');
     }
     var commitMaps = [];
@@ -110,7 +126,7 @@ function buildMapFromCommit(commit) {
 
 function filterDiffs(parsedCommits) {
     if (ADD_VERBOSE_LOGGING) {
-        console.log(`\n\nStep 3: Filter out non diffs. The commits we would want to filter...`);
+        console.log(`\n\nStep 4: Filter out non diffs. The commits we would want to filter...`);
         console.log('\ta) Are the same, but have a different hash.');
         console.log('\tb) Were ported from one branch to another. Therefore, they include an additional (PR #).\n');
     }
@@ -143,27 +159,33 @@ function isTrueDiff(commitMap) {
 }
 
 function getPortBranch(baseBranch, version) {
-    if (ADD_VERBOSE_LOGGING)
-        console.log('\n\nStep 4: Generate the port PR branch based on -r argument');
-    const result = shell.exec(`git checkout -b portPR-v${version} ${baseBranch}`).stderr.toString().trim();
-    if (result && result.startsWith('fatal')) {
-        console.log('\n\nManual review required. Unable to generate port branch.');
-        process.exit(-1);
-    }
+  if (ADD_VERBOSE_LOGGING)
+    console.log('\n\nStep 5: Generate the port PR branch based on -r argument');
+  checkErrorCode(
+    shell.exec(`git checkout -b portPR-v${version} ${baseBranch}`).code,
+    '\n\nManual review required. Unable to generate port branch.'
+  );
 }
 
 function getCherryPickCommits(diffList) {
     if (ADD_VERBOSE_LOGGING)
-        console.log('\n\nStep 5: Cherry-pick diffs into new branch');
+        console.log('\n\nStep 6: Cherry-pick diffs into new branch');
     for (var i = diffList.length - 1; i >= 0; i--) {
         shell.exec(`git cherry-pick --strategy=recursive -X theirs ${diffList[i][COMMIT]}`);
     }
 }
 
+function checkErrorCode(code, errorMessage) {
+  if (code !== 0) {
+    console.log(errorMessage);
+    process.exit(-1);
+  }
+}
+
 let ADD_VERBOSE_LOGGING = process.argv.indexOf('-v') > -1;
 
-const releaseVersion = getReleaseVersion();
 updateBranches('main', 'develop');
+const releaseVersion = getReleaseVersion();
 const diffList = getAllDiffs('main', 'develop');
 const parsedCommits = parseCommits(diffList);
 const filteredDiffList = filterDiffs(parsedCommits);
