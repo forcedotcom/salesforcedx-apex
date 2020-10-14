@@ -50,7 +50,7 @@ export default class List extends SfdxCommand {
       const logRecords = await logService.getLogRecords();
 
       if (logRecords.length === 0) {
-        this.ux.log('No results found');
+        this.ux.log(messages.getMessage('no_debug_logs_found'));
         return [];
       }
 

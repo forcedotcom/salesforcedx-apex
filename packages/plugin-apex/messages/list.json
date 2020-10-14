@@ -4,6 +4,7 @@
     "jsonDescription": "format output as JSON",
     "logLevelDescription": "logging level for this command invocation",
     "logLevelLongDescription":  "The logging level for this command invocation. Logs are stored in $HOME/.sfdx/sfdx.log.",
+    "no_debug_logs_found": "No debug logs found in org",
     "app_col_header": "APPLICATION",
     "duration_col_header": "DURATION (MS)",
     "id_col_header": "ID",

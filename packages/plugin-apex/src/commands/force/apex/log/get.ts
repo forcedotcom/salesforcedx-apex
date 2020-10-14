@@ -75,7 +75,7 @@ export default class Get extends SfdxCommand {
       });
 
       if (logs.length === 0) {
-        this.ux.log('No results found');
+        this.ux.log(messages.getMessage('noResultsFound'));
         return [];
       }
 
