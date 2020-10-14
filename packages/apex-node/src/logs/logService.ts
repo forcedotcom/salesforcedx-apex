@@ -20,7 +20,6 @@ export class LogService {
     this.connection = connection;
   }
 
-  // i think this should be private
   public async getLogIds(options: ApexLogGetOptions): Promise<string[]> {
     if (
       !(

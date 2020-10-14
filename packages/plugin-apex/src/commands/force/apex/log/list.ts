@@ -49,13 +49,13 @@ export default class List extends SfdxCommand {
       const conn = this.org.getConnection();
       const logService = new LogService(conn);
 
-      let logRecords = await logService.getLogRecords();
-      logRecords = this.cleanRecords(logRecords);
+      const logRecords = await logService.getLogRecords();
+      const cleanLogs = this.cleanRecords(logRecords);
 
-      const table = this.formatTable(logRecords);
+      const table = this.formatTable(cleanLogs);
       this.ux.log(table);
 
-      return { ...logRecords };
+      return logRecords;
     } catch (e) {
       return Promise.reject(e);
     }
@@ -75,7 +75,7 @@ export default class List extends SfdxCommand {
         user: logRecord.LogUser.Name,
         operation: logRecord.Operation,
         request: logRecord.Request,
-        time: this.formatTime(logRecord.StartTime),
+        time: logRecord.StartTime,
         status: logRecord.Status
       };
       logRowArray.push(row);
@@ -135,6 +135,9 @@ export default class List extends SfdxCommand {
 
   private formatTime(time: string): string {
     const milliIndex = time.indexOf('.');
-    return time.substring(0, milliIndex) + time.substring(milliIndex + 4);
+    if (milliIndex !== -1) {
+      return time.substring(0, milliIndex) + time.substring(milliIndex + 4);
+    }
+    return time;
   }
 }

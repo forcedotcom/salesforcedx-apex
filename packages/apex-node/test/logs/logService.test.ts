@@ -13,7 +13,7 @@ import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { LogService } from '../../src/logs/logService';
 import * as path from 'path';
 import * as stream from 'stream';
-import { LogRecord } from '../../src/logs/types';
+import { LogQueryResult, LogRecord } from '../../src/logs/types';
 
 const $$ = testSetup();
 
@@ -30,7 +30,7 @@ const logRecords: LogRecord[] = [
     },
     Operation: 'API',
     Request: 'API',
-    StartTime: '88888.000:000',
+    StartTime: '2020-10-13T05:39:43.000+0000',
     Status: 'Assertion Failed'
   },
   {
@@ -45,10 +45,45 @@ const logRecords: LogRecord[] = [
     },
     Operation: 'API',
     Request: 'API',
-    StartTime: '66666.000:000',
+    StartTime: '2020-10-13T05:39:43.000+0000',
     Status: 'Successful'
   }
 ];
+
+const rawLogResult: LogQueryResult = {
+  records: [
+    {
+      Id: '07L5tgg0005PGdTnEAL',
+      Application: 'Unknown',
+      DurationMilliseconds: 75,
+      Location: 'Unknown',
+      LogLength: 450,
+      LogUser: {
+        Name: 'Test User',
+        attributes: {}
+      },
+      Operation: 'API',
+      Request: 'API',
+      StartTime: '2020-10-13T05:39:43.000+0000',
+      Status: 'Assertion Failed'
+    },
+    {
+      Id: '07L5tgg0005PGdTnFPL',
+      Application: 'Unknown',
+      DurationMilliseconds: 75,
+      Location: 'Unknown',
+      LogLength: 450,
+      LogUser: {
+        Name: 'Test User2',
+        attributes: {}
+      },
+      Operation: 'API',
+      Request: 'API',
+      StartTime: '2020-10-13T05:39:43.000+0000',
+      Status: 'Successful'
+    }
+  ]
+};
 
 describe('Apex Log Service Tests', () => {
   const testData = new MockTestOrgData();
@@ -226,5 +261,39 @@ describe('Apex Log Service Tests', () => {
         'To retrieve logs, specify the log ID or the number of logs.'
       );
     }
+  });
+
+  describe('getLogRecords', async () => {
+    it('should return log records given a specific number of logs', async () => {
+      const numberOfLogs = 2;
+      let query = 'Select Id, Application, DurationMilliseconds, Location, ';
+      query +=
+        'LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime';
+      query += `DESC LIMIT ${numberOfLogs}`;
+      const queryStub = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        //@ts-ignore
+        .resolves(rawLogResult);
+
+      const logService = new LogService(mockConnection);
+      const records = await logService.getLogRecords(numberOfLogs);
+      expect(records).to.deep.equal(logRecords);
+      expect(queryStub.calledWith(query)).to.be.true;
+    });
+
+    it('should return all log records', async () => {
+      let query = 'Select Id, Application, DurationMilliseconds, Location, ';
+      query +=
+        'LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime';
+      const queryStub = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        //@ts-ignore
+        .resolves(rawLogResult);
+
+      const logService = new LogService(mockConnection);
+      const records = await logService.getLogRecords();
+      expect(records).to.deep.equal(logRecords);
+      expect(queryStub.calledWith(query)).to.be.true;
+    });
   });
 });
