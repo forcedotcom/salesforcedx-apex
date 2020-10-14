@@ -17,7 +17,7 @@ export interface LogRecord {
   /**
    * Application type
    */
-  Application: string;
+  Application: 'Unknown' | string;
   /**
    * Time to generate log
    */
@@ -25,7 +25,7 @@ export interface LogRecord {
   /**
    * Where the log was stored
    */
-  Location: string;
+  Location: 'SystemLog' | string;
   /**
    * Length of the debug log
    */
@@ -40,11 +40,11 @@ export interface LogRecord {
   /**
    * Type of operation
    */
-  Operation: string;
+  Operation: 'Api' | string;
   /**
    * Type of request
    */
-  Request: string;
+  Request: 'Api' | string;
   /**
    * Time the log was generated
    */

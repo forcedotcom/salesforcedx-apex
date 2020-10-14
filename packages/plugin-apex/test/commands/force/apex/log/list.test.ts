@@ -116,4 +116,28 @@ describe('force:apex:log:list', () => {
         expect(ctx.stdout).to.equal(`${expectedResult}\n`);
       }
     );
+
+  test
+    .withOrg({ username: 'test@username.com' }, true)
+    .stub(LogService.prototype, 'getLogRecords', () => [])
+    .stdout()
+    .command([
+      'force:apex:log:list',
+      '--targetusername',
+      'test@username.com',
+      '--json'
+    ])
+    .it('should return json output if no logs were found', ctx => {
+      const emptyResult = JSON.stringify({ status: 0, result: [] }, null, 2);
+      expect(ctx.stdout).to.equal(`${emptyResult}\n`);
+    });
+
+  test
+    .withOrg({ username: 'test@username.com' }, true)
+    .stub(LogService.prototype, 'getLogRecords', () => [])
+    .stdout()
+    .command(['force:apex:log:list', '--targetusername', 'test@username.com'])
+    .it('should correct message if no logs were found', ctx => {
+      expect(ctx.stdout).to.equal(`No results found\n`);
+    });
 });

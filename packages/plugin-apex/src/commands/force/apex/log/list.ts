@@ -47,10 +47,14 @@ export default class List extends SfdxCommand {
     try {
       const conn = this.org.getConnection();
       const logService = new LogService(conn);
-
       const logRecords = await logService.getLogRecords();
-      const cleanLogs = this.cleanRecords(logRecords);
 
+      if (logRecords.length === 0) {
+        this.ux.log('No results found');
+        return [];
+      }
+
+      const cleanLogs = this.cleanRecords(logRecords);
       const table = this.formatTable(cleanLogs);
       this.ux.log(table);
 
