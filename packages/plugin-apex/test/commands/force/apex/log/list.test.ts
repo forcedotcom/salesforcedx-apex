@@ -138,6 +138,6 @@ describe('force:apex:log:list', () => {
     .stdout()
     .command(['force:apex:log:list', '--targetusername', 'test@username.com'])
     .it('should correct message if no logs were found', ctx => {
-      expect(ctx.stdout).to.equal(`No results found\n`);
+      expect(ctx.stdout).to.equal(`No debug logs found in org\n`);
     });
 });
