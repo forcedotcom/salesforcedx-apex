@@ -6,7 +6,7 @@
  */
 import { Connection } from '@salesforce/core';
 import { ApexLogGetOptions, LogQueryResult, LogRecord } from './types';
-import { createFile } from '../common';
+import { createFile } from '../utils';
 import { nls } from '../i18n';
 import * as path from 'path';
 import { AnyJson } from '@salesforce/ts-types';

@@ -7,4 +7,4 @@
 
 export { createFile } from './fileSystemHandler';
 export { CommonOptions } from './types';
-export { Table } from './table';
+export { Table, Row } from './table';

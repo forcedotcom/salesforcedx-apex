@@ -7,11 +7,10 @@
 
 import { LogService } from '@salesforce/apex-node';
 import { LogRecord } from '@salesforce/apex-node/lib/src/logs/types';
-import { Table } from '@salesforce/apex-node/lib/src/common';
+import { Table, Row } from '@salesforce/apex-node/lib/src/utils';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { buildDescription, logLevels } from '../../../../utils';
-import { Row } from '@salesforce/apex-node/lib/src/common/table';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'list');
