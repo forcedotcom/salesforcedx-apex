@@ -47,17 +47,12 @@ describe('force:apex:test:run', () => {
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
     .stdout()
-    .command(['force:apex:test:run', '--tests', 'MyApexTests', '--json'])
-    .it('should return a success json message', ctx => {
+    .command(['force:apex:test:run', '--tests', 'MyApexTests', '--resultformat', 'human'])
+    .it('should return a success human format message', ctx => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
-      const resultJSON = JSON.parse(result);
-      expect(resultJSON).to.ownProperty('status');
-      expect(resultJSON.status).to.equal(0);
-      expect(resultJSON).to.ownProperty('result');
-      expect(resultJSON).to.be.an('object');
-      expect(resultJSON.result).to.ownProperty('summary');
-      expect(resultJSON.result).to.ownProperty('tests');
-      expect(resultJSON.result).to.deep.equal(testRunSimple);
+      expect(result).to.contain('Test Summary');
+      expect(result).to.contain('Test Results');
+      expect(result).to.not.contain('Apex Code Coverage by Class');
     });
 });
