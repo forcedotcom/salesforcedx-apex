@@ -371,7 +371,7 @@ export type ApexCodeCoverageRecord = {
   TestMethodName: string;
   NumLinesCovered: number;
   NumLinesUncovered: number;
-  Coverage: {
+  Coverage?: {
     coveredLines: number[];
     uncoveredLines: number[];
   };

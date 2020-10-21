@@ -343,7 +343,6 @@ export class TestService {
   public async getPerClassCodeCoverage(
     apexTestClassSet: Set<string>
   ): Promise<Map<string, PerClassCoverage>> {
-    console.log('getPerClassCodeCoverage');
     let str = '';
     apexTestClassSet.forEach(elem => {
       str += `'${elem}',`;
@@ -352,8 +351,6 @@ export class TestService {
 
     const perClassCodeCovQuery =
       'SELECT ApexTestClassId, ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, TestMethodName, NumLinesCovered, NumLinesUncovered FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
-
-    console.log(util.format(perClassCodeCovQuery, `${str}`));
     const perClassCodeCovResuls = (await this.connection.tooling.query(
       util.format(perClassCodeCovQuery, `${str}`)
     )) as ApexCodeCoverage;

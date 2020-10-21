@@ -20,14 +20,17 @@ import {
   ApexTestRunResult,
   ApexTestResult,
   ApexOrgWideCoverage,
-  ApexCodeCoverageAggregate
+  ApexCodeCoverageAggregate,
+  ApexCodeCoverage
 } from '../../src/tests/types';
 import { StreamingClient } from '../../src/streaming';
 import { fail } from 'assert';
 import { nls } from '../../src/i18n';
 import {
   codeCoverageQueryResult,
+  mixedPerClassCodeCoverage,
   mixedTestResults,
+  perClassCodeCoverage,
   syncTestResultSimple,
   syncTestResultWithFailures,
   testResultData,
@@ -155,12 +158,17 @@ describe('Run Apex tests synchronously', () => {
 
   it('should run a test with code coverage', async () => {
     toolingRequestStub.withArgs(testRequest).returns(syncTestResultSimple);
-    toolingQueryStub.onFirstCall().resolves({
+    toolingQueryStub.onCall(0).resolves({
+      done: true,
+      totalSize: 3,
+      records: perClassCodeCoverage
+    } as ApexCodeCoverage);
+    toolingQueryStub.onCall(1).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
-    toolingQueryStub.onSecondCall().resolves({
+    toolingQueryStub.onCall(2).resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -389,10 +397,16 @@ describe('Run Apex tests asynchronously', () => {
     mockToolingQuery.onCall(2).resolves({
       done: true,
       totalSize: 3,
+      records: mixedPerClassCodeCoverage
+    } as ApexCodeCoverage);
+
+    mockToolingQuery.onCall(3).resolves({
+      done: true,
+      totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
 
-    mockToolingQuery.onCall(3).resolves({
+    mockToolingQuery.onCall(4).resolves({
       done: true,
       totalSize: 1,
       records: [

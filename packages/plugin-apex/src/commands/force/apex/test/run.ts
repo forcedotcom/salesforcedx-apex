@@ -12,7 +12,7 @@ import {
   TestItem,
   TestResult
 } from '@salesforce/apex-node/lib/src/tests/types';
-import { Row, Table } from '@salesforce/apex-node/lib/src/common';
+import { Row, Table } from '@salesforce/apex-node/lib/src/utils';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
