@@ -10,11 +10,7 @@ import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { TestService } from '../../src/tests';
-import {
-  ApexCodeCoverageAggregate,
-  ApexOrgWideCoverage
-} from '../../src/tests/types';
-import { codeCoverageQueryResult } from './testData';
+import { ApexOrgWideCoverage } from '../../src/tests/types';
 
 const $$ = testSetup();
 let mockConnection: Connection;

@@ -47,7 +47,13 @@ describe('force:apex:test:run', () => {
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
     .stdout()
-    .command(['force:apex:test:run', '--tests', 'MyApexTests', '--resultformat', 'human'])
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests',
+      '--resultformat',
+      'human'
+    ])
     .it('should return a success human format message', ctx => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
