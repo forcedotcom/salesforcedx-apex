@@ -299,7 +299,6 @@ describe('Run Apex tests asynchronously', () => {
         {
           AsyncApexJobId: testRunId,
           Status: ApexTestRunResultStatus.Completed,
-          StartTime: '2020-07-12T02:54:47.000+0000',
           TestTime: 1765,
           UserId: '005xx000000abcDAAU'
         }
@@ -346,7 +345,7 @@ describe('Run Apex tests asynchronously', () => {
     testResultQuery +=
       'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
     testResultQuery +=
-      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix, ApexClass.FullName ';
+      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
     expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(testResultData);

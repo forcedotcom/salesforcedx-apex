@@ -82,7 +82,11 @@ export type AsyncTestArrayConfiguration = {
 };
 
 export type SyncTestConfiguration = {
-  tests: TestItem[];
+  classNames?: string;
+  /**
+   * Specifies which test class to run. Only one class is allowed for synchronous runs.
+   */
+  tests?: TestItem[];
   /**
    * Specifies which tests to run. The only valid value is RunSpecifiedTests.
    */
@@ -352,7 +356,7 @@ export type TestResult = {
     outcome: string;
     passRate: string;
     skipRate: string;
-    testStartTime: string;
+    testStartTime?: string;
     testExecutionTime: number;
     testRunId: string;
     userId: string;
