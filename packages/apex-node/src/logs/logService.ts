@@ -69,7 +69,7 @@ export class LogService {
         throw new Error(nls.localize('num_logs_error'));
       }
       numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
-      query += `DESC LIMIT ${numberOfLogs}`;
+      query += ` DESC LIMIT ${numberOfLogs}`;
     }
 
     const response = (await this.connection.tooling.query(

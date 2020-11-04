@@ -268,7 +268,7 @@ describe('Apex Log Service Tests', () => {
       const numberOfLogs = 2;
       let query = 'Select Id, Application, DurationMilliseconds, Location, ';
       query +=
-        'LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime';
+        'LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime ';
       query += `DESC LIMIT ${numberOfLogs}`;
       const queryStub = sandboxStub
         .stub(mockConnection.tooling, 'query')
