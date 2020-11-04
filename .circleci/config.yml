@@ -39,6 +39,14 @@ _refs:
   test: &test
     name: Run tests
     command: yarn test
+  build-artifact: &build-artifact
+    name: 'Archiving tarball'
+    command: |
+      yarn package
+      mkdir artifact
+      find . -name "*.tgz" -type f -exec cp {} ./artifact \;
+    - store_artifacts:
+          path: ./artifact
 
 commands:
   setup-publish:
@@ -105,6 +113,7 @@ jobs:
       - run: *lint
       - run: *build
       - run: *test
+      - run: *build-artifact
   node-12:
     <<: *node-test
     docker:
