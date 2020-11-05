@@ -244,7 +244,7 @@ export default class Run extends SfdxCommand {
     const tb = new Table();
 
     // Summary Table
-    const summaryRowArray1: Row[] = [
+    const summaryRowArray: Row[] = [
       {
         name: messages.getMessage('outcome'),
         value: testResult.summary.outcome
@@ -292,7 +292,7 @@ export default class Run extends SfdxCommand {
     ];
 
     let tbResult = tb.createTable(
-      summaryRowArray1,
+      summaryRowArray,
       [
         {
           key: 'name',
