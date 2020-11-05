@@ -256,6 +256,7 @@ export class TestService {
       }
 
       apexTestClassIdSet.add(item.ApexClass.Id);
+      // Can only query the FullName field if a single record is returned, so manually build the field
       item.ApexClass.FullName = item.ApexClass.NamespacePrefix
         ? `${item.ApexClass.NamespacePrefix}__${item.ApexClass.Name}`
         : item.ApexClass.Name;
@@ -289,6 +290,7 @@ export class TestService {
       testResults.forEach(item => {
         const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
         const perClassCov = perClassCoverageMap.get(keyCodeCov);
+        // Skipped test is not in coverage map, check to see if perClassCov exists first
         if (perClassCov) {
           coveredApexClassIdSet.add(perClassCov.apexClassorTriggerId);
           item.perClassCoverage = {
@@ -316,6 +318,7 @@ export class TestService {
           globalTestSkipped,
           testResults.length
         ),
+        testStartTime: summaryRecord.StartTime,
         testExecutionTime: summaryRecord.TestTime,
         testRunId,
         userId: summaryRecord.UserId,

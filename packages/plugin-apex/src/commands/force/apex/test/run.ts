@@ -242,19 +242,57 @@ export default class Run extends SfdxCommand {
     detailedCoverage: boolean
   ): string {
     const tb = new Table();
+
     // Summary Table
-    const summary: { [key: string]: string | number | undefined } =
-      testResult.summary;
-    const summaryRowArray: Row[] = [];
-    for (const prop in summary) {
-      const row: Row = {
-        name: messages.getMessage(prop),
-        value: summary[prop] ? String(summary[prop]) : ''
-      };
-      summaryRowArray.push(row);
-    }
+    const summaryRowArray1: Row[] = [
+      {
+        name: messages.getMessage('outcome'),
+        value: testResult.summary.outcome
+      },
+      {
+        name: messages.getMessage('numTestsRan'),
+        value: String(testResult.summary.numTestsRan)
+      },
+      {
+        name: messages.getMessage('passRate'),
+        value: testResult.summary.passRate
+      },
+      {
+        name: messages.getMessage('failRate'),
+        value: testResult.summary.failRate
+      },
+      {
+        name: messages.getMessage('skipRate'),
+        value: testResult.summary.skipRate
+      },
+      {
+        name: messages.getMessage('testRunId'),
+        value: testResult.summary.testRunId
+      },
+      {
+        name: messages.getMessage('testExecutionTime'),
+        value: `${testResult.summary.testExecutionTime} ms`
+      },
+      {
+        name: messages.getMessage('orgId'),
+        value: testResult.summary.orgId
+      },
+      {
+        name: messages.getMessage('username'),
+        value: testResult.summary.username
+      },
+      ...(testResult.summary.orgWideCoverage
+        ? [
+            {
+              name: messages.getMessage('orgWideCoverage'),
+              value: String(testResult.summary.orgWideCoverage)
+            }
+          ]
+        : [])
+    ];
+
     let tbResult = tb.createTable(
-      summaryRowArray,
+      summaryRowArray1,
       [
         {
           key: 'name',

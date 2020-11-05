@@ -63,6 +63,7 @@ export const testResultData: TestResult = {
     outcome: 'Completed',
     passRate: '100%',
     skipRate: '0%',
+    testStartTime: '2020-07-12T02:54:47.000+0000',
     testExecutionTime: 1765,
     testRunId,
     userId: '005xx000000abcDAAU'

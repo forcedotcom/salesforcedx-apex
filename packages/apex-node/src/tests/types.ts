@@ -356,7 +356,7 @@ export type TestResult = {
     outcome: string;
     passRate: string;
     skipRate: string;
-    testStartTime?: string;
+    testStartTime: string;
     testExecutionTime: number;
     testRunId: string;
     userId: string;

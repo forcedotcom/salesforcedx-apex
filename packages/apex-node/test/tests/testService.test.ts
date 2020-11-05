@@ -299,6 +299,7 @@ describe('Run Apex tests asynchronously', () => {
         {
           AsyncApexJobId: testRunId,
           Status: ApexTestRunResultStatus.Completed,
+          StartTime: '2020-07-12T02:54:47.000+0000',
           TestTime: 1765,
           UserId: '005xx000000abcDAAU'
         }
