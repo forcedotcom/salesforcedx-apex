@@ -62,7 +62,7 @@ commands:
             source $BASH_ENV
             git commit -m "Updated version $RELEASE_TAG"
       - run: *build
-      - run:	
+      - run:
           name: Generate plugin manifest	
           command: yarn manifest:generate
       - run: yarn package
