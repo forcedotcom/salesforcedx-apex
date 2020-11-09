@@ -61,7 +61,6 @@ export class TapReporter {
       if (testResult.message) {
         const startsWithNewlineRegex = new RegExp(/^[/\r\n|\r|\n][\w]*/gim);
         if (startsWithNewlineRegex.test(testResult.message)) {
-          // lightning tests return newline delimited messages
           testResult.message.split(/\r\n|\r|\n/g).forEach(msg => {
             if (msg && msg.length > 0) {
               message.push(msg.trim());
