@@ -71,6 +71,30 @@ describe('force:apex:test:run', () => {
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests',
+      '--resultformat',
+      'tap'
+    ])
+    .it('should return a success tap format message with async run', ctx => {
+      const result = ctx.stdout;
+      expect(result).to.not.be.empty;
+      expect(result).to.contain('1..1');
+      expect(result).to.contain('ok 1 MyApexTests.testConfig');
+      expect(result).to.contain('# Run "sfdx force:apex:test:report');
+      expect(result).to.not.contain('Apex Code Coverage by Class');
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestSynchronous', () => testRunSimple)
     .stdout()
     .command([
@@ -86,6 +110,31 @@ describe('force:apex:test:run', () => {
       expect(result).to.not.be.empty;
       expect(result).to.contain('Test Summary');
       expect(result).to.contain('Test Results');
+      expect(result).to.not.contain('Apex Code Coverage by Class');
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestSynchronous', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests',
+      '--resultformat',
+      'tap',
+      '--synchronous'
+    ])
+    .it('should return a success tap format message with sync run', ctx => {
+      const result = ctx.stdout;
+      expect(result).to.not.be.empty;
+      expect(result).to.contain('1..1');
+      expect(result).to.contain('ok 1 MyApexTests.testConfig');
+      expect(result).to.contain('# Run "sfdx force:apex:test:report');
       expect(result).to.not.contain('Apex Code Coverage by Class');
     });
 
