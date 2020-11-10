@@ -27,6 +27,9 @@ import * as util from 'util';
 import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
 
+// query char limit *should be* 100,000, but is closer to 12,000
+const QUERY_CHAR_LIMIT = 12000;
+
 export class TestService {
   public readonly connection: Connection;
 
@@ -195,6 +198,46 @@ export class TestService {
     return percentage;
   }
 
+  public async getApexTestResults(
+    testQueueResult: ApexTestQueueItem
+  ): Promise<ApexTestResult[]> {
+    let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
+    apexTestResultQuery +=
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+    apexTestResultQuery +=
+      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
+    apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
+
+    const apexResultIds = testQueueResult.records.map(record => record.Id);
+    let formattedIds = '';
+    const queries = [];
+
+    const addToQuery = (formattedIds: string, id: string): string =>
+      formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
+
+    // iterate thru ids, create query with id, & compare query length to char limit
+    for (const id of apexResultIds) {
+      const newIds = addToQuery(formattedIds, id);
+      const query = util.format(apexTestResultQuery, `'${newIds}'`);
+
+      if (query.length > QUERY_CHAR_LIMIT) {
+        queries.push(util.format(apexTestResultQuery, `'${formattedIds}'`));
+        formattedIds = '';
+      }
+      formattedIds = addToQuery(formattedIds, id);
+    }
+
+    if (formattedIds.length > 0) {
+      queries.push(util.format(apexTestResultQuery, `'${formattedIds}'`));
+    }
+
+    const queryPromise = queries.map(async query => {
+      return (await this.connection.tooling.query(query)) as ApexTestResult;
+    });
+    const apexTestResults = await Promise.all(queryPromise);
+    return apexTestResults;
+  }
+
   public async getTestResultData(
     testQueueResult: ApexTestQueueItem,
     testRunId: string,
@@ -214,21 +257,7 @@ export class TestService {
     }
 
     const summaryRecord = testRunSummaryResults.records[0];
-
-    let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
-    apexTestResultQuery +=
-      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
-    apexTestResultQuery +=
-      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
-    apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
-
-    // TODO: this needs to check for query length
-    const apexResultIds = testQueueResult.records
-      .map(record => record.Id)
-      .join("','");
-    const apexTestResults = (await this.connection.tooling.query(
-      util.format(apexTestResultQuery, `'${apexResultIds}'`)
-    )) as ApexTestResult;
+    const apexTestResults = await this.getApexTestResults(testQueueResult);
 
     let globalTestPassed = 0;
     let globalTestFailed = 0;
@@ -237,46 +266,48 @@ export class TestService {
     const coveredApexClassIdSet = new Set<string>();
     // Iterate over test results, format and add them as results.tests
     const testResults: ApexTestResultData[] = [];
-    apexTestResults.records.forEach(item => {
-      switch (item.Outcome) {
-        case ApexTestResultOutcome.Pass:
-          globalTestPassed++;
-          break;
-        case ApexTestResultOutcome.Fail:
-        case ApexTestResultOutcome.CompileFail:
-          globalTestFailed++;
-          break;
-        case ApexTestResultOutcome.Skip:
-          globalTestSkipped++;
-          break;
-      }
+    for (const result of apexTestResults) {
+      result.records.forEach(item => {
+        switch (item.Outcome) {
+          case ApexTestResultOutcome.Pass:
+            globalTestPassed++;
+            break;
+          case ApexTestResultOutcome.Fail:
+          case ApexTestResultOutcome.CompileFail:
+            globalTestFailed++;
+            break;
+          case ApexTestResultOutcome.Skip:
+            globalTestSkipped++;
+            break;
+        }
 
-      apexTestClassIdSet.add(item.ApexClass.Id);
-      // Can only query the FullName field if a single record is returned, so manually build the field
-      item.ApexClass.FullName = item.ApexClass.NamespacePrefix
-        ? `${item.ApexClass.NamespacePrefix}__${item.ApexClass.Name}`
-        : item.ApexClass.Name;
+        apexTestClassIdSet.add(item.ApexClass.Id);
+        // Can only query the FullName field if a single record is returned, so manually build the field
+        item.ApexClass.FullName = item.ApexClass.NamespacePrefix
+          ? `${item.ApexClass.NamespacePrefix}__${item.ApexClass.Name}`
+          : item.ApexClass.Name;
 
-      testResults.push({
-        id: item.Id,
-        queueItemId: item.QueueItemId,
-        stackTrace: item.StackTrace,
-        message: item.Message,
-        asyncApexJobId: item.AsyncApexJobId,
-        methodName: item.MethodName,
-        outcome: item.Outcome,
-        apexLogId: item.ApexLogId,
-        apexClass: {
-          id: item.ApexClass.Id,
-          name: item.ApexClass.Name,
-          namespacePrefix: item.ApexClass.NamespacePrefix,
-          fullName: item.ApexClass.FullName
-        },
-        runTime: item.RunTime,
-        testTimestamp: item.TestTimestamp, // TODO: convert timestamp
-        fullName: `${item.ApexClass.FullName}.${item.MethodName}`
+        testResults.push({
+          id: item.Id,
+          queueItemId: item.QueueItemId,
+          stackTrace: item.StackTrace,
+          message: item.Message,
+          asyncApexJobId: item.AsyncApexJobId,
+          methodName: item.MethodName,
+          outcome: item.Outcome,
+          apexLogId: item.ApexLogId,
+          apexClass: {
+            id: item.ApexClass.Id,
+            name: item.ApexClass.Name,
+            namespacePrefix: item.ApexClass.NamespacePrefix,
+            fullName: item.ApexClass.FullName
+          },
+          runTime: item.RunTime,
+          testTimestamp: item.TestTimestamp, // TODO: convert timestamp
+          fullName: `${item.ApexClass.FullName}.${item.MethodName}`
+        });
       });
-    });
+    }
 
     if (codeCoverage) {
       const perClassCoverageMap = await this.getPerClassCodeCoverage(

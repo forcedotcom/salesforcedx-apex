@@ -299,6 +299,118 @@ describe('Run Apex tests asynchronously', () => {
     }
   });
 
+  it('should split into multiple queries if query is longer than char limit', async () => {
+    const record = {
+      Id: '7092M000000Vt94QAC',
+      Status: ApexTestQueueItemStatus.Completed,
+      ApexClassId: '01p2M00000O6tXZQAZ',
+      TestRunResultId: '05m2M000000TgYuQAK'
+    };
+
+    const records = [];
+    let count = 700;
+    while (count > 0) {
+      records.push(record);
+      count--;
+    }
+
+    const testQueueItems: ApexTestQueueItem = {
+      done: true,
+      totalSize: 700,
+      records
+    };
+
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 600,
+      records: [
+        {
+          Id: '07Mxx00000F2Xx6UAF',
+          QueueItemId: '7092M000000Vt94QAC',
+          StackTrace: null,
+          Message: null,
+          AsyncApexJobId: testRunId,
+          MethodName: 'testLoggerLog',
+          Outcome: ApexTestResultOutcome.Pass,
+          ApexLogId: null,
+          ApexClass: {
+            Id: '01pxx00000O6tXZQAZ',
+            Name: 'TestLogger',
+            NamespacePrefix: 't3st',
+            FullName: 't3st__TestLogger'
+          },
+          RunTime: 8,
+          TestTimestamp: '3'
+        }
+      ]
+    } as ApexTestResult);
+    mockToolingQuery.onSecondCall().resolves({
+      done: true,
+      totalSize: 100,
+      records: [
+        {
+          Id: '07Mxx00000F2Xx6UAF',
+          QueueItemId: '7092M000000Vt94QAC',
+          StackTrace: null,
+          Message: null,
+          AsyncApexJobId: testRunId,
+          MethodName: 'testLoggerLog',
+          Outcome: ApexTestResultOutcome.Pass,
+          ApexLogId: null,
+          ApexClass: {
+            Id: '01pxx00000O6tXZQAZ',
+            Name: 'TestLogger',
+            NamespacePrefix: 't3st',
+            FullName: 't3st__TestLogger'
+          },
+          RunTime: 8,
+          TestTimestamp: '3'
+        }
+      ]
+    } as ApexTestResult);
+
+    const testSrv = new TestService(mockConnection);
+    const result = await testSrv.getApexTestResults(testQueueItems);
+
+    expect(mockToolingQuery.calledTwice).to.be.true;
+    expect(result.length).to.eql(2);
+  });
+
+  it('should make a single api call if query is under char limit', async () => {
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          Id: '07Mxx00000F2Xx6UAF',
+          QueueItemId: '7092M000000Vt94QAC',
+          StackTrace: null,
+          Message: null,
+          AsyncApexJobId: testRunId,
+          MethodName: 'testLoggerLog',
+          Outcome: ApexTestResultOutcome.Pass,
+          ApexLogId: null,
+          ApexClass: {
+            Id: '01pxx00000O6tXZQAZ',
+            Name: 'TestLogger',
+            NamespacePrefix: 't3st',
+            FullName: 't3st__TestLogger'
+          },
+          RunTime: 8,
+          TestTimestamp: '3'
+        }
+      ]
+    } as ApexTestResult);
+
+    const testSrv = new TestService(mockConnection);
+    const result = await testSrv.getApexTestResults(pollResponse);
+
+    expect(mockToolingQuery.calledOnce).to.be.true;
+    expect(result.length).to.eql(1);
+  });
+
   it('should return formatted test results', async () => {
     const testSrv = new TestService(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
