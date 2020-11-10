@@ -453,9 +453,15 @@ export default class Run extends SfdxCommand {
   }
 
   private formatTap(result: TestResult): void {
-    const reporter = new TapReporter();
-    const hint = this.formatReportHint(result);
-    this.ux.log(reporter.format(result, [hint]));
+    try {
+      const reporter = new TapReporter();
+      const hint = this.formatReportHint(result);
+      this.ux.log(reporter.format(result, [hint]));
+    } catch (err) {
+      this.ux.logJson(result);
+      const msg = messages.getMessage('testResultProcessErr', [err]);
+      this.ux.error(msg);
+    }
   }
 
   private formatReportHint(result: TestResult): string {

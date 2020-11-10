@@ -95,6 +95,31 @@ describe('force:apex:test:run', () => {
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => ({ tests: [] }))
+    .stdout()
+    .stderr()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests',
+      '--resultformat',
+      'tap'
+    ])
+    .it('should handle a tap format parsing error', ctx => {
+      expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
+      expect(ctx.stderr).to.contain(
+        messages.getMessage('testResultProcessErr', [
+          "TypeError: Cannot read property 'testRunId' of undefined"
+        ])
+      );
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestSynchronous', () => testRunSimple)
     .stdout()
     .command([
