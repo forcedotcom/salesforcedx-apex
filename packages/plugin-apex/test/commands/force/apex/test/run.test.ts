@@ -241,27 +241,106 @@ describe('force:apex:test:run', () => {
       expect(result).to.not.contain('Apex Code Coverage by Class');
     });
 
-  /*test
+  test
     .withOrg({ username: TEST_USERNAME }, true)
     .loadConfig({
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
-    .stub(TestService.prototype, 'runTestSynchronous', () => testRunSimple)
+    .do(ctx => {
+      ctx.myStub = sandboxStub.stub(
+        TestService.prototype,
+        'runTestSynchronous'
+      );
+    })
+    .stdout()
+    .stderr()
+    .command([
+      'force:apex:test:run',
+      '--classnames',
+      'MyApexTests',
+      '--synchronous'
+    ])
+    .it(
+      'should format request with correct properties for sync run with class name',
+      ctx => {
+        expect(
+          ctx.myStub.calledWith({
+            tests: [{ className: 'MyApexTests' }],
+            testLevel: 'RunSpecifiedTests'
+          })
+        ).to.be.true;
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .do(ctx => {
+      ctx.myStub = sandboxStub.stub(
+        TestService.prototype,
+        'runTestSynchronous'
+      );
+    })
+    .stdout()
+    .stderr()
+    .command([
+      'force:apex:test:run',
+      '--classnames',
+      '01p45678x123456',
+      '--synchronous'
+    ])
+    .it(
+      'should format request with correct properties for sync run with class id',
+      ctx => {
+        expect(
+          ctx.myStub.calledWith({
+            tests: [{ classId: '01p45678x123456' }],
+            testLevel: 'RunSpecifiedTests'
+          })
+        ).to.be.true;
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .do(ctx => {
+      ctx.myStub = sandboxStub.stub(
+        TestService.prototype,
+        'runTestSynchronous'
+      );
+    })
     .stdout()
     .stderr()
     .command([
       'force:apex:test:run',
       '--tests',
-      'MyApexClass.testInsertTrigger,MySecondClass.testAfterTrigger',
+      'MyApexTests.testMethodOne',
       '--synchronous'
     ])
     .it(
-      'should format synchronous classnames request with correct properties',
+      'should format request with correct properties for sync run with tests',
       ctx => {
-        // expect(runSyncStub.called).to.be.true;
+        expect(
+          ctx.myStub.calledWith({
+            tests: [
+              {
+                className: 'MyApexTests',
+                testMethods: ['testMethodOne']
+              }
+            ],
+            testLevel: 'RunSpecifiedTests'
+          })
+        ).to.be.true;
       }
-    );*/
+    );
 
   describe('Error checking', async () => {
     test
