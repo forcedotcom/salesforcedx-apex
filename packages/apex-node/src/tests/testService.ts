@@ -198,6 +198,10 @@ export class TestService {
     return percentage;
   }
 
+  private addIdToQuery(formattedIds: string, id: string): string {
+    return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
+  }
+
   public async getApexTestResults(
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
@@ -212,29 +216,26 @@ export class TestService {
     let formattedIds = '';
     const queries = [];
 
-    const addToQuery = (formattedIds: string, id: string): string =>
-      formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
-
     // iterate thru ids, create query with id, & compare query length to char limit
     for (const id of apexResultIds) {
-      const newIds = addToQuery(formattedIds, id);
+      const newIds = this.addIdToQuery(formattedIds, id);
       const query = util.format(apexTestResultQuery, `'${newIds}'`);
 
       if (query.length > QUERY_CHAR_LIMIT) {
         queries.push(util.format(apexTestResultQuery, `'${formattedIds}'`));
         formattedIds = '';
       }
-      formattedIds = addToQuery(formattedIds, id);
+      formattedIds = this.addIdToQuery(formattedIds, id);
     }
 
     if (formattedIds.length > 0) {
       queries.push(util.format(apexTestResultQuery, `'${formattedIds}'`));
     }
 
-    const queryPromise = queries.map(async query => {
-      return (await this.connection.tooling.query(query)) as ApexTestResult;
+    const queryPromises = queries.map(query => {
+      return this.connection.tooling.query(query) as Promise<ApexTestResult>;
     });
-    const apexTestResults = await Promise.all(queryPromise);
+    const apexTestResults = await Promise.all(queryPromises);
     return apexTestResults;
   }
 
