@@ -60,6 +60,7 @@ export class StreamingClient {
       ) => {
         if (message && message.error) {
           if (message.channel === '/meta/handshake') {
+            this.client.disconnect();
             throw new Error(
               nls.localize('streaming_handshake_fail', message.error)
             );
