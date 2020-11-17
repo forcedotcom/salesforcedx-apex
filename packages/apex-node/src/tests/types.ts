@@ -349,18 +349,22 @@ export type CodeCoverageResult = {
 
 export type TestResult = {
   summary: {
-    failRate: string;
-    numTestsRan: number;
-    orgId: string;
-    orgWideCoverage?: string;
     outcome: string;
+    numTestsRan: number;
+    passing: number;
+    failing: number;
+    skipped: number;
     passRate: string;
+    failRate: string;
     skipRate: string;
     testStartTime: string;
     testExecutionTime: number;
+    hostname: string;
+    orgId: string;
+    username: string;
     testRunId: string;
     userId: string;
-    username: string;
+    orgWideCoverage?: string;
   };
   tests: ApexTestResultData[];
   codecoverage?: CodeCoverageResult[];

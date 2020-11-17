@@ -7,6 +7,66 @@
 
 import { ApexTestResultOutcome, TestResult } from '../../src/tests/types';
 
+export const successResult: TestResult = {
+  summary: {
+    failRate: '0%',
+    numTestsRan: 2,
+    orgId: '00D3t000001vIruEAE',
+    outcome: 'Completed',
+    passRate: '100%',
+    skipRate: '0%',
+    testStartTime: '2020-11-09T18:02:50.000+0000',
+    testExecutionTime: 5463,
+    testRunId: '7073t000061uwZI',
+    userId: '0053t000007OxppAAC',
+    username: 'tpo-3',
+    failing: 0,
+    skipped: 0,
+    passing: 2,
+    hostname: 'https://na139.salesforce.com'
+  },
+  tests: [
+    {
+      id: '07M3t000003bQwqEAE',
+      queueItemId: '7093t000000c0eWAAQ',
+      stackTrace: null,
+      message: null,
+      asyncApexJobId: '7073t000061uwZIAAY',
+      methodName: 'should_create_account',
+      outcome: ApexTestResultOutcome.Pass,
+      apexLogId: null,
+      apexClass: {
+        id: '01p3t000000ivLzAAI',
+        name: 'AccountServiceTest',
+        namespacePrefix: null,
+        fullName: 'AccountServiceTest'
+      },
+      runTime: 86,
+      testTimestamp: '2020-11-09T18:02:51.000+0000',
+      fullName: 'AccountServiceTest.should_create_account'
+    },
+    {
+      id: '07M3t000003bQwgEAE',
+      queueItemId: '7093t000000c0eXAAQ',
+      stackTrace: null,
+      message: '',
+      asyncApexJobId: '7073t000061uwZIAAY',
+      methodName: 'testCallout',
+      outcome: ApexTestResultOutcome.Pass,
+      apexLogId: null,
+      apexClass: {
+        id: '01p3t000000imbvAAA',
+        name: 'AwesomeCalculatorTest',
+        namespacePrefix: null,
+        fullName: 'AwesomeCalculatorTest'
+      },
+      runTime: 23,
+      testTimestamp: '2020-11-09T18:02:51.000+0000',
+      fullName: 'AwesomeCalculatorTest.testCallout'
+    }
+  ]
+};
+
 export const testResults: TestResult = {
   summary: {
     failRate: '13%',
@@ -19,7 +79,11 @@ export const testResults: TestResult = {
     testExecutionTime: 5463,
     testRunId: '7073t000061uwZI',
     userId: '0053t000007OxppAAC',
-    username: 'tpo-3'
+    username: 'tpo-3',
+    failing: 4,
+    skipped: 0,
+    passing: 12,
+    hostname: 'https://na139.salesforce.com'
   },
   tests: [
     {
@@ -332,3 +396,89 @@ export const testResults: TestResult = {
     }
   ]
 };
+
+export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000+0000" hostname="https://na139.salesforce.com" tests="16" failures="4"  time="5.46 s">
+        <properties>
+            <property name="failRate" value="13%"/>
+            <property name="numTestsRan" value="16"/>
+            <property name="orgId" value="00D3t000001vIruEAE"/>
+            <property name="outcome" value="Completed"/>
+            <property name="passRate" value="88%"/>
+            <property name="skipRate" value="0%"/>
+            <property name="testStartTime" value="Mon Nov 09 2020 12:02:50 PM"/>
+            <property name="testExecutionTime" value="5.46 s"/>
+            <property name="testRunId" value="7073t000061uwZI"/>
+            <property name="userId" value="0053t000007OxppAAC"/>
+            <property name="username" value="tpo-3"/>
+            <property name="failing" value="4"/>
+            <property name="skipped" value="0"/>
+            <property name="passing" value="12"/>
+            <property name="hostname" value="https://na139.salesforce.com"/>
+        </properties>
+        <testcase name="should_create_account" classname="AccountServiceTest" time="0.09">
+        </testcase>
+        <testcase name="testCallout" classname="AwesomeCalculatorTest" time="0.02">
+            <failure message=""></failure>
+        </testcase>
+        <testcase name="testGetCurrentUser" classname="trlhdtips__tt_UtilControllerTest" time="0.01">
+        </testcase>
+        <testcase name="testResetMyPassword" classname="trlhdtips__tt_UtilControllerTest" time="0.18">
+        </testcase>
+        <testcase name="testGetCallout" classname="AnimalLocatorTest" time="0.02">
+        </testcase>
+        <testcase name="testMissingAnimal" classname="AnimalLocatorTest" time="0.01">
+            <failure message="System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:"><![CDATA[Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1]]></failure>
+        </testcase>
+        <testcase name="testProcessing" classname="LeadProcessorTest" time="2.26">
+        </testcase>
+        <testcase name="testDashboardPal" classname="Dashboard_Pal__DashboardPalTest" time="0.13">
+        </testcase>
+        <testcase name="testCountContacts" classname="AccountProcessorTest" time="0.24">
+            <failure message="System.AssertException: Assertion Failed: Incorrect count: Expected: 3, Actual: 2"><![CDATA[Class.AccountProcessorTest.testCountContacts: line 47, column 1]]></failure>
+        </testcase>
+        <testcase name="testCountContactsEmptyList" classname="AccountProcessorTest" time="0.01">
+        </testcase>
+        <testcase name="testCountContactsNullList" classname="AccountProcessorTest" time="0.01">
+        </testcase>
+        <testcase name="testCallout" classname="ParkLocatorTest" time="0.01">
+        </testcase>
+        <testcase name="testGetCallout" classname="AnimalsCalloutsTest" time="0.03">\n            <failure message="\r\n\r\nSurrounded by newlines.\r\n  and whitespace.\r\n\r
+"></failure>
+        </testcase>
+        <testcase name="testPostCallout" classname="AnimalsCalloutsTest" time="0.01">
+        </testcase>
+        <testcase name="testAddContact" classname="AddPrimaryContactTest" time="0.25">
+        </testcase>
+        <testcase name="testLeadProcessing" classname="DailyLeadProcessorTest" time="2.20">
+        </testcase>
+    </testsuite>
+</testsuites>\n`;
+
+export const junitSuccess = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000+0000" hostname="https://na139.salesforce.com" tests="2" failures="0"  time="5.46 s">
+        <properties>
+            <property name="failRate" value="0%"/>
+            <property name="numTestsRan" value="2"/>
+            <property name="orgId" value="00D3t000001vIruEAE"/>
+            <property name="outcome" value="Completed"/>
+            <property name="passRate" value="100%"/>
+            <property name="skipRate" value="0%"/>
+            <property name="testStartTime" value="Mon Nov 09 2020 12:02:50 PM"/>
+            <property name="testExecutionTime" value="5.46 s"/>
+            <property name="testRunId" value="7073t000061uwZI"/>
+            <property name="userId" value="0053t000007OxppAAC"/>
+            <property name="username" value="tpo-3"/>
+            <property name="failing" value="0"/>
+            <property name="skipped" value="0"/>
+            <property name="passing" value="2"/>
+            <property name="hostname" value="https://na139.salesforce.com"/>
+        </properties>
+        <testcase name="should_create_account" classname="AccountServiceTest" time="0.09">
+        </testcase>
+        <testcase name="testCallout" classname="AwesomeCalculatorTest" time="0.02">
+        </testcase>
+    </testsuite>
+</testsuites>\n`;
