@@ -35,7 +35,7 @@ export class JUnitReporter {
       }
       if (key === 'testStartTime') {
         const date = new Date(testResult.summary.testStartTime);
-        value = date.toDateString() + ' ' + date.toLocaleTimeString();
+        value = `${date.toDateString()} ${date.toLocaleTimeString()}`;
       }
 
       JUNIT_TEMPLATE += `            <property name="${key}" value="${value}"/>\n`;

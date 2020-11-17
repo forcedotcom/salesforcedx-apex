@@ -186,14 +186,6 @@ export default class Run extends SfdxCommand {
         );
       }
 
-      if (!this.flags.resultformat) {
-        const id = result.summary.testRunId;
-        const username = result.summary.username;
-        this.ux.log(
-          messages.getMessage('runTestReportCommand', [id, username])
-        );
-      }
-
       switch (this.flags.resultformat) {
         case 'human':
           this.ux.log(this.formatHuman(result, this.flags.detailedcoverage));
@@ -204,6 +196,12 @@ export default class Run extends SfdxCommand {
         case 'junit':
           this.logJUnit(result);
           break;
+        default:
+          const id = result.summary.testRunId;
+          const username = result.summary.username;
+          this.ux.log(
+            messages.getMessage('runTestReportCommand', [id, username])
+          );
       }
 
       return result;
