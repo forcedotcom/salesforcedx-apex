@@ -574,9 +574,9 @@ describe('Run Apex tests asynchronously', () => {
     });
 
     it('should format multiple queries correctly', async () => {
-      const queryOneIds = queryIds.slice(0, 139).join("','");
+      const queryOneIds = queryIds.slice(0, 120).join("','");
       const queryOne = `${queryStart}('${queryOneIds}')`;
-      const queryTwoIds = queryIds.slice(139).join("','");
+      const queryTwoIds = queryIds.slice(120).join("','");
       const queryTwo = `${queryStart}('${queryTwoIds}')`;
 
       const testQueueItems: ApexTestQueueItem = {
@@ -663,7 +663,7 @@ describe('Run Apex tests asynchronously', () => {
         queryIds.push(record.Id);
         count--;
       }
-      const queryOneIds = queryIds.slice(0, 139).join("','");
+      const queryOneIds = queryIds.slice(0, 120).join("','");
       const queryOne = `${queryStart}('${queryOneIds}')`;
 
       const testQueueItems: ApexTestQueueItem = {
