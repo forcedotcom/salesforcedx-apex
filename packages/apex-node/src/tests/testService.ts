@@ -28,7 +28,7 @@ import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
 
 // Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
-// local testing shows query char limit closer to ~12,400
+// local testing shows query char limit to be closer to ~12,400
 const QUERY_CHAR_LIMIT = 12400;
 
 export class TestService {
