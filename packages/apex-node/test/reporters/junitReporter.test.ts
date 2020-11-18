@@ -59,7 +59,7 @@ describe('JUnit Reporter Tests', () => {
     successResult.summary.orgWideCoverage = '85%';
     const result = reporter.format(successResult);
     expect(result).to.not.be.empty;
-    expect(result).to.deep.equal(junitCodeCov);
+    expect(result).to.eql(junitCodeCov);
     expect(result).to.contain('orgWideCoverage');
   });
 });
