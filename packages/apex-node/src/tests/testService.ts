@@ -27,8 +27,9 @@ import * as util from 'util';
 import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
 
-// query char limit *should be* 100,000, but is closer to 12,000
-const QUERY_CHAR_LIMIT = 12000;
+// Tooling API query char limit is 100,000 after v48; REST API limit for query + headers is ~16,000
+// local testing shows query char limit is closer to ~12,400
+const QUERY_CHAR_LIMIT = 12400;
 
 export class TestService {
   public readonly connection: Connection;
