@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import * as util from 'util';
 import { ApexTestResultOutcome, TestResult } from '../../src/tests/types';
 
 export const successResult: TestResult = {
@@ -456,11 +457,7 @@ export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
     </testsuite>
 </testsuites>\n`;
 
-export const junitSuccess = `<?xml version="1.0" encoding="UTF-8"?>
-<testsuites>
-    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000+0000" hostname="https://na139.salesforce.com" tests="2" failures="0"  time="5.46 s">
-        <properties>
-            <property name="failRate" value="0%"/>
+const successProperties = `            <property name="failRate" value="0%"/>
             <property name="numTestsRan" value="2"/>
             <property name="orgId" value="00D3t000001vIruEAE"/>
             <property name="outcome" value="Completed"/>
@@ -474,7 +471,27 @@ export const junitSuccess = `<?xml version="1.0" encoding="UTF-8"?>
             <property name="failing" value="0"/>
             <property name="skipped" value="0"/>
             <property name="passing" value="2"/>
-            <property name="hostname" value="https://na139.salesforce.com"/>
+            <property name="hostname" value="https://na139.salesforce.com"/>`;
+const missingValProperties = `            <property name="failRate" value="0%"/>
+            <property name="numTestsRan" value="2"/>
+            <property name="orgId" value="00D3t000001vIruEAE"/>
+            <property name="outcome" value="Completed"/>
+            <property name="passRate" value="100%"/>
+            <property name="skipRate" value="0%"/>
+            <property name="testStartTime" value="Mon Nov 09 2020 12:02:50 PM"/>
+            <property name="testExecutionTime" value="5.46 s"/>
+            <property name="username" value="tpo-3"/>
+            <property name="failing" value="0"/>
+            <property name="skipped" value="0"/>
+            <property name="passing" value="2"/>
+            <property name="hostname" value="https://na139.salesforce.com"/>`;
+const codeCovProperties = `${missingValProperties}\n            <property name="orgWideCoverage" value="85%"/>`;
+
+const successTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000+0000" hostname="https://na139.salesforce.com" tests="2" failures="0"  time="5.46 s">
+        <properties>
+%s
         </properties>
         <testcase name="should_create_account" classname="AccountServiceTest" time="0.09">
         </testcase>
@@ -482,3 +499,10 @@ export const junitSuccess = `<?xml version="1.0" encoding="UTF-8"?>
         </testcase>
     </testsuite>
 </testsuites>\n`;
+
+export const junitSuccess = util.format(successTemplate, successProperties);
+export const junitCodeCov = util.format(successTemplate, codeCovProperties);
+export const junitMissingVal = util.format(
+  successTemplate,
+  missingValProperties
+);

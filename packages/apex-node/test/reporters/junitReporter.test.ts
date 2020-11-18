@@ -10,6 +10,8 @@ import {
   testResults,
   junitResult,
   junitSuccess,
+  junitCodeCov,
+  junitMissingVal,
   successResult
 } from './testResults';
 
@@ -28,5 +30,36 @@ describe('JUnit Reporter Tests', () => {
     expect(result).to.not.be.empty;
     expect(result).to.eql(junitSuccess);
     expect(result).to.not.contain('</failure>');
+  });
+
+  it('should format test results with undefined or empty values', () => {
+    successResult.summary.testRunId = '';
+    successResult.summary.userId = undefined;
+
+    const result = reporter.format(successResult);
+    expect(result).to.not.be.empty;
+    expect(result).to.eql(junitMissingVal);
+    expect(result).to.not.contain('testRunId');
+    expect(result).to.not.contain('userId');
+  });
+
+  it('should format test results with code coverage', () => {
+    successResult.codecoverage = [
+      {
+        apexId: '001917xACG',
+        name: 'ApexTestClass',
+        type: 'ApexClass',
+        numLinesCovered: 8,
+        numLinesUncovered: 2,
+        percentage: '12.5%',
+        coveredLines: [1, 2, 3, 4, 5, 6, 7, 8],
+        uncoveredLines: [9, 10]
+      }
+    ];
+    successResult.summary.orgWideCoverage = '85%';
+    const result = reporter.format(successResult);
+    expect(result).to.not.be.empty;
+    expect(result).to.deep.equal(junitCodeCov);
+    expect(result).to.contain('orgWideCoverage');
   });
 });

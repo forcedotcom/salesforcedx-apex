@@ -4,47 +4,67 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { ApexTestResultOutcome, TestResult } from '../tests/types';
+import {
+  ApexTestResultData,
+  ApexTestResultOutcome,
+  TestResult
+} from '../tests/types';
+
+// cli currently has spaces in multiples of four for junit format
+const tab = '    ';
 
 export class JUnitReporter {
   public format(testResult: TestResult): string {
-    // header
-    let JUNIT_TEMPLATE = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    JUNIT_TEMPLATE += `<testsuites>\n`;
-    JUNIT_TEMPLATE += `    <testsuite name="force.apex" `;
-    JUNIT_TEMPLATE += `timestamp="${testResult.summary.testStartTime}" `;
-    JUNIT_TEMPLATE += `hostname="${testResult.summary.hostname}" `;
-    JUNIT_TEMPLATE += `tests="${testResult.summary.numTestsRan}" `;
-    JUNIT_TEMPLATE += `failures="${testResult.summary.failing}"  `;
-    JUNIT_TEMPLATE += `time="${this.msToSecond(
-      testResult.summary.testExecutionTime
-    )} s">\n`;
+    const { summary, tests } = testResult;
 
-    // properties
-    JUNIT_TEMPLATE += `        <properties>\n`;
-    for (let [key, value] of Object.entries(testResult.summary)) {
+    let output = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    output += `<testsuites>\n`;
+    output += `${tab}<testsuite name="force.apex" `;
+    output += `timestamp="${summary.testStartTime}" `;
+    output += `hostname="${summary.hostname}" `;
+    output += `tests="${summary.numTestsRan}" `;
+    output += `failures="${summary.failing}"  `;
+    output += `time="${this.msToSecond(summary.testExecutionTime)} s">\n`;
+
+    output += this.buildProperties(testResult);
+    output += this.buildTestCases(tests);
+
+    output += `${tab}</testsuite>\n`;
+    output += `</testsuites>\n`;
+    return output;
+  }
+
+  private buildProperties(testResult: TestResult): string {
+    let junitProperties = `${tab}${tab}<properties>\n`;
+
+    Object.entries(testResult.summary).forEach(([key, value]) => {
       if (
         value === null ||
         value === undefined ||
         (typeof value === 'string' && value.length === 0)
       ) {
-        continue;
+        return;
       }
       if (key === 'testExecutionTime') {
         value = `${this.msToSecond(value as number)} s`;
       }
       if (key === 'testStartTime') {
-        const date = new Date(testResult.summary.testStartTime);
+        const date = new Date(value);
         value = `${date.toDateString()} ${date.toLocaleTimeString()}`;
       }
 
-      JUNIT_TEMPLATE += `            <property name="${key}" value="${value}"/>\n`;
-    }
-    JUNIT_TEMPLATE += `        </properties>\n`;
+      junitProperties += `${tab}${tab}${tab}<property name="${key}" value="${value}"/>\n`;
+    });
 
-    // test cases
-    for (const testCase of testResult.tests) {
-      JUNIT_TEMPLATE += `        <testcase name="${
+    junitProperties += `${tab}${tab}</properties>\n`;
+    return junitProperties;
+  }
+
+  private buildTestCases(tests: ApexTestResultData[]): string {
+    let junitTests = '';
+
+    for (const testCase of tests) {
+      junitTests += `${tab}${tab}<testcase name="${
         testCase.methodName
       }" classname="${testCase.apexClass.fullName}" time="${this.msToSecond(
         testCase.runTime
@@ -54,19 +74,16 @@ export class JUnitReporter {
         testCase.outcome === ApexTestResultOutcome.Fail ||
         testCase.outcome === ApexTestResultOutcome.CompileFail
       ) {
-        JUNIT_TEMPLATE += `            <failure message="${testCase.message}">`;
+        junitTests += `${tab}${tab}${tab}<failure message="${testCase.message}">`;
         if (testCase.stackTrace) {
-          JUNIT_TEMPLATE += `<![CDATA[${testCase.stackTrace}]]>`;
+          junitTests += `<![CDATA[${testCase.stackTrace}]]>`;
         }
-        JUNIT_TEMPLATE += `</failure>\n`;
+        junitTests += `</failure>\n`;
       }
 
-      JUNIT_TEMPLATE += `        </testcase>\n`;
+      junitTests += `${tab}${tab}</testcase>\n`;
     }
-
-    JUNIT_TEMPLATE += `    </testsuite>\n`;
-    JUNIT_TEMPLATE += `</testsuites>\n`;
-    return JUNIT_TEMPLATE;
+    return junitTests;
   }
 
   private msToSecond(timestamp: number): string {
