@@ -655,14 +655,6 @@ describe('Run Apex tests asynchronously', () => {
         TestRunResultId: '05m2M000000TgYuQAK'
       };
 
-      const records = [];
-      const queryIds = [];
-      let count = 700;
-      while (count > 0) {
-        records.push(record);
-        queryIds.push(record.Id);
-        count--;
-      }
       const queryOneIds = queryIds.slice(0, 120).join("','");
       const queryOne = `${queryStart}('${queryOneIds}')`;
 
