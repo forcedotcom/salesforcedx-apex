@@ -262,8 +262,8 @@ export default class Run extends SfdxCommand {
         value: testResult.summary.outcome
       },
       {
-        name: messages.getMessage('numTestsRan'),
-        value: String(testResult.summary.numTestsRan)
+        name: messages.getMessage('testsRan'),
+        value: String(testResult.summary.testsRan)
       },
       {
         name: messages.getMessage('passRate'),
@@ -283,7 +283,7 @@ export default class Run extends SfdxCommand {
       },
       {
         name: messages.getMessage('testExecutionTime'),
-        value: `${testResult.summary.testExecutionTime} ms`
+        value: testResult.summary.testExecutionTime
       },
       {
         name: messages.getMessage('orgId'),

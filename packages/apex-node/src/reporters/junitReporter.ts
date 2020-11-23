@@ -20,11 +20,12 @@ export class JUnitReporter {
     let output = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     output += `<testsuites>\n`;
     output += `${tab}<testsuite name="force.apex" `;
-    output += `timestamp="${summary.testStartTime}" `;
+    output += `timestamp="${new Date(summary.testStartTime).toISOString()}" `;
     output += `hostname="${summary.hostname}" `;
-    output += `tests="${summary.numTestsRan}" `;
+    output += `tests="${summary.testsRan}" `;
     output += `failures="${summary.failing}"  `;
-    output += `time="${this.msToSecond(summary.testExecutionTime)} s">\n`;
+    output += `errors="0"  `;
+    output += `time="${this.msToSecond(summary.testExecutionTime)}">\n`;
 
     output += this.buildProperties(testResult);
     output += this.buildTestCases(tests);
@@ -41,16 +42,13 @@ export class JUnitReporter {
       if (
         value === null ||
         value === undefined ||
-        (typeof value === 'string' && value.length === 0)
+        (typeof value === 'string' && value.length === 0) ||
+        key === 'skipRate'
       ) {
         return;
       }
-      if (key === 'testExecutionTime') {
-        value = `${this.msToSecond(value as number)} s`;
-      }
-      if (key === 'testStartTime') {
-        const date = new Date(value);
-        value = `${date.toDateString()} ${date.toLocaleTimeString()}`;
+      if (key === 'testExecutionTime' || key === 'testTotalTime') {
+        value = `${this.msToSecond(value)} s`;
       }
 
       junitProperties += `${tab}${tab}${tab}<property name="${key}" value="${value}"/>\n`;
@@ -86,7 +84,11 @@ export class JUnitReporter {
     return junitTests;
   }
 
-  private msToSecond(timestamp: number): string {
+  private msToSecond(timestamp: string | number): string {
+    // remove ms suffix
+    if (typeof timestamp === 'string') {
+      timestamp = parseInt(timestamp.slice(0, -3));
+    }
     return (timestamp / 1000).toFixed(2);
   }
 }

@@ -211,8 +211,9 @@ export const enum ApexTestRunResultStatus {
   Queued = 'Queued',
   Processing = 'Processing',
   Aborted = 'Aborted',
-  Completed = 'Completed',
-  Failed = 'Failed'
+  Passed = 'Passed',
+  Failed = 'Failed',
+  Completed = 'Completed'
 }
 
 export type ApexTestRunResultRecord = {
@@ -350,7 +351,7 @@ export type CodeCoverageResult = {
 export type TestResult = {
   summary: {
     failRate: string;
-    numTestsRan: number;
+    testsRan: number;
     orgId: string;
     orgWideCoverage?: string;
     outcome: string;
@@ -360,7 +361,8 @@ export type TestResult = {
     passRate: string;
     skipRate: string;
     testStartTime: string;
-    testExecutionTime: number;
+    testExecutionTime: string;
+    testTotalTime: string;
     hostname: string;
     username: string;
     testRunId: string;

@@ -85,14 +85,14 @@ describe('Run Apex tests synchronously', () => {
     expect(toolingRequestStub.calledOnce).to.equal(true);
     expect(testResult.summary).to.be.a('object');
     expect(testResult.summary.failRate).to.equal('0%');
-    expect(testResult.summary.numTestsRan).to.equal(1);
+    expect(testResult.summary.testsRan).to.equal(1);
     expect(testResult.summary.orgId).to.equal(
       mockConnection.getAuthInfoFields().orgId
     );
-    expect(testResult.summary.outcome).to.equal('Completed');
+    expect(testResult.summary.outcome).to.equal('Passed');
     expect(testResult.summary.passRate).to.equal('100%');
     expect(testResult.summary.skipRate).to.equal('0%');
-    expect(testResult.summary.testExecutionTime).to.equal(270);
+    expect(testResult.summary.testExecutionTime).to.equal('270 ms');
     expect(testResult.summary.username).to.equal(mockConnection.getUsername());
 
     expect(testResult.tests).to.be.a('array');
@@ -124,14 +124,14 @@ describe('Run Apex tests synchronously', () => {
     expect(toolingRequestStub.calledOnce).to.equal(true);
     expect(testResult.summary).to.be.a('object');
     expect(testResult.summary.failRate).to.equal('100%');
-    expect(testResult.summary.numTestsRan).to.equal(1);
+    expect(testResult.summary.testsRan).to.equal(1);
     expect(testResult.summary.orgId).to.equal(
       mockConnection.getAuthInfoFields().orgId
     );
     expect(testResult.summary.outcome).to.equal('Failed');
     expect(testResult.summary.passRate).to.equal('0%');
     expect(testResult.summary.skipRate).to.equal('0%');
-    expect(testResult.summary.testExecutionTime).to.equal(87);
+    expect(testResult.summary.testExecutionTime).to.equal('87 ms');
     expect(testResult.summary.username).to.equal(mockConnection.getUsername());
 
     expect(testResult.tests).to.be.a('array');
@@ -435,11 +435,11 @@ describe('Run Apex tests asynchronously', () => {
 
     // verify summary data
     expect(getTestResultData.summary.failRate).to.equal('33%');
-    expect(getTestResultData.summary.numTestsRan).to.equal(6);
+    expect(getTestResultData.summary.testsRan).to.equal(6);
     expect(getTestResultData.summary.orgId).to.equal(
       mockConnection.getAuthInfoFields().orgId
     );
-    expect(getTestResultData.summary.outcome).to.equal('Completed');
+    expect(getTestResultData.summary.outcome).to.equal('Passed');
     expect(getTestResultData.summary.passRate).to.equal('50%');
     expect(getTestResultData.summary.skipRate).to.equal('17%');
     expect(getTestResultData.summary.username).to.equal(

@@ -116,9 +116,9 @@ export class TestService {
       summary: {
         outcome:
           globalTestFailed === 0
-            ? ApexTestRunResultStatus.Completed
+            ? ApexTestRunResultStatus.Passed
             : ApexTestRunResultStatus.Failed,
-        numTestsRan: apiTestResult.numTestsRun,
+        testsRan: apiTestResult.numTestsRun,
         passing: globalTestPassed,
         failing: globalTestFailed,
         skipped: 0,
@@ -131,8 +131,9 @@ export class TestService {
           apiTestResult.numTestsRun
         ),
         skipRate: this.calculatePercentage(0, apiTestResult.numTestsRun),
-        testStartTime: `${startTime}`,
-        testExecutionTime: apiTestResult.totalTime,
+        testStartTime: this.formatTime(String(startTime)),
+        testExecutionTime: `${apiTestResult.totalTime} ms`,
+        testTotalTime: `${apiTestResult.totalTime} ms`,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
@@ -330,10 +331,14 @@ export class TestService {
       });
     }
 
+    // TODO: deprecate testTotalTime
     const result: TestResult = {
       summary: {
-        outcome: summaryRecord.Status,
-        numTestsRan: testResults.length,
+        outcome:
+          summaryRecord.Status === 'Completed'
+            ? ApexTestRunResultStatus.Passed
+            : summaryRecord.Status,
+        testsRan: testResults.length,
         passing: globalTestPassed,
         failing: globalTestFailed,
         skipped: globalTestSkipped,
@@ -349,8 +354,9 @@ export class TestService {
           globalTestSkipped,
           testResults.length
         ),
-        testStartTime: summaryRecord.StartTime,
-        testExecutionTime: summaryRecord.TestTime,
+        testStartTime: this.formatTime(summaryRecord.StartTime),
+        testExecutionTime: `${summaryRecord.TestTime} ms`,
+        testTotalTime: `${summaryRecord.TestTime} ms`,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
@@ -368,6 +374,11 @@ export class TestService {
     }
 
     return result;
+  }
+
+  private formatTime(startTime: string): string {
+    const date = new Date(startTime);
+    return `${date.toDateString()} ${date.toLocaleTimeString()}`;
   }
 
   public async getOrgWideCoverage(): Promise<string> {
