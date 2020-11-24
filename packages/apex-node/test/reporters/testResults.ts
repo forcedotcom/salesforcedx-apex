@@ -23,6 +23,7 @@ export const successResult: TestResult = {
     testStartTime: localStartTime,
     testExecutionTime: '5463 ms',
     testTotalTime: '5463 ms',
+    commandTime: '6000 ms',
     testRunId: '7073t000061uwZI',
     userId: '0053t000007OxppAAC',
     username: 'tpo-3',
@@ -81,9 +82,10 @@ export const testResults: TestResult = {
     outcome: 'Completed',
     passRate: '88%',
     skipRate: '0%',
-    testStartTime: 'Mon Nov 09 2020 12:02:50 PM',
+    testStartTime: localStartTime,
     testExecutionTime: '5463 ms',
     testTotalTime: '5463 ms',
+    commandTime: '6000 ms',
     testRunId: '7073t000061uwZI',
     userId: '0053t000007OxppAAC',
     username: 'tpo-3',
@@ -416,6 +418,7 @@ export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>
             <property name="testTotalTime" value="5.46 s"/>
+            <property name="commandTime" value="6.00 s"/>
             <property name="testRunId" value="7073t000061uwZI"/>
             <property name="userId" value="0053t000007OxppAAC"/>
             <property name="username" value="tpo-3"/>
@@ -471,6 +474,7 @@ const successProperties = `            <property name="failRate" value="0%"/>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>
             <property name="testTotalTime" value="5.46 s"/>
+            <property name="commandTime" value="6.00 s"/>
             <property name="testRunId" value="7073t000061uwZI"/>
             <property name="userId" value="0053t000007OxppAAC"/>
             <property name="username" value="tpo-3"/>
@@ -486,6 +490,7 @@ const missingValProperties = `            <property name="failRate" value="0%"/>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>
             <property name="testTotalTime" value="5.46 s"/>
+            <property name="commandTime" value="6.00 s"/>
             <property name="username" value="tpo-3"/>
             <property name="failing" value="0"/>
             <property name="skipped" value="0"/>

@@ -31,7 +31,6 @@
   "testRunId": "Test Run Id",
   "userId": "User Id",
   "username": "Username",
-  "testRunCoverage": "Test Run Coverage",
   "orgWideCoverage": "Org Wide Coverage",
   "name_col_header": "NAME",
   "value_col_header": "VALUE",

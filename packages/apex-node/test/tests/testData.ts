@@ -70,6 +70,7 @@ export const testResultData: TestResult = {
     testStartTime: 'Sat Jul 11 2020 9:54:47 PM',
     testExecutionTime: '1765 ms',
     testTotalTime: '1765 ms',
+    commandTime: '1 ms',
     testRunId,
     userId: '005xx000000abcDAAU'
   },

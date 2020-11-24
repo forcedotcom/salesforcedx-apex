@@ -293,14 +293,6 @@ export default class Run extends SfdxCommand {
         name: messages.getMessage('username'),
         value: testResult.summary.username
       },
-      ...(testResult.summary.testRunCoverage
-        ? [
-            {
-              name: messages.getMessage('testRunCoverage'),
-              value: String(testResult.summary.testRunCoverage)
-            }
-          ]
-        : []),
       ...(testResult.summary.orgWideCoverage
         ? [
             {

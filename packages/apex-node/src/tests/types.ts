@@ -364,6 +364,7 @@ export type TestResult = {
     testStartTime: string;
     testExecutionTime: string;
     testTotalTime: string;
+    commandTime: string;
     hostname: string;
     username: string;
     testRunId: string;

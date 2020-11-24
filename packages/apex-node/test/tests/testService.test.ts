@@ -327,7 +327,8 @@ describe('Run Apex tests asynchronously', () => {
 
     const getTestResultData = await testSrv.getTestResultData(
       pollResponse,
-      testRunId
+      testRunId,
+      new Date().getTime()
     );
 
     let summaryQuery =
@@ -356,7 +357,11 @@ describe('Run Apex tests asynchronously', () => {
     } as ApexTestRunResult);
 
     try {
-      await testSrv.getTestResultData(pollResponse, testRunId);
+      await testSrv.getTestResultData(
+        pollResponse,
+        testRunId,
+        new Date().getTime()
+      );
       fail('Test should have thrown an error');
     } catch (e) {
       expect(e.message).to.equal(
@@ -413,6 +418,7 @@ describe('Run Apex tests asynchronously', () => {
     const getTestResultData = await testSrv.getTestResultData(
       pollResponse,
       testRunId,
+      new Date().getTime(),
       true
     );
 

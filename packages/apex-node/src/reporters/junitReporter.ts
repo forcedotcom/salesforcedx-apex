@@ -39,15 +39,11 @@ export class JUnitReporter {
     let junitProperties = `${tab}${tab}<properties>\n`;
 
     Object.entries(testResult.summary).forEach(([key, value]) => {
-      if (
-        value === null ||
-        value === undefined ||
-        (typeof value === 'string' && value.length === 0) ||
-        key === 'skipRate'
-      ) {
+      // skipRate not in cli spec
+      if (this.isEmpty(value) || key === 'skipRate') {
         return;
       }
-      if (key === 'testExecutionTime' || key === 'testTotalTime') {
+      if (['testExecutionTime', 'testTotalTime', 'commandTime'].includes(key)) {
         value = `${this.msToSecond(value)} s`;
       }
 
@@ -82,6 +78,17 @@ export class JUnitReporter {
       junitTests += `${tab}${tab}</testcase>\n`;
     }
     return junitTests;
+  }
+
+  private isEmpty(value: string | number): boolean {
+    if (
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.length === 0)
+    ) {
+      return true;
+    }
+    return false;
   }
 
   private msToSecond(timestamp: string | number): string {

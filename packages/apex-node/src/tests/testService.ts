@@ -118,6 +118,7 @@ export class TestService {
         testStartTime: this.formatTime(String(startTime)),
         testExecutionTime: `${apiTestResult.totalTime} ms`,
         testTotalTime: `${apiTestResult.totalTime} ms`,
+        commandTime: `${new Date().getTime() - startTime} ms`,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
@@ -164,7 +165,7 @@ export class TestService {
       headers: { 'content-type': 'application/json' }
     };
 
-    const startTime = Date.now();
+    const startTime = new Date().getTime();
     const testRun = (await this.connection.tooling.request(
       request
     )) as SyncTestResult;
@@ -176,6 +177,7 @@ export class TestService {
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false
   ): Promise<TestResult> {
+    const commandStartTime = new Date().getTime();
     const sClient = new StreamingClient(this.connection);
     await sClient.init();
     await sClient.handshake();
@@ -187,6 +189,7 @@ export class TestService {
     return await this.getTestResultData(
       asyncRunResult.queueItem,
       asyncRunResult.runId,
+      commandStartTime,
       codeCoverage
     );
   }
@@ -244,6 +247,7 @@ export class TestService {
   public async getTestResultData(
     testQueueResult: ApexTestQueueItem,
     testRunId: string,
+    commandStartTime: number,
     codeCoverage = false
   ): Promise<TestResult> {
     let testRunSummaryQuery =
@@ -316,7 +320,7 @@ export class TestService {
     const result: TestResult = {
       summary: {
         outcome:
-          summaryRecord.Status === 'Completed'
+          summaryRecord.Status === ApexTestRunResultStatus.Completed
             ? ApexTestRunResultStatus.Passed
             : summaryRecord.Status,
         testsRan: testResults.length,
@@ -338,6 +342,7 @@ export class TestService {
         testStartTime: this.formatTime(summaryRecord.StartTime),
         testExecutionTime: `${summaryRecord.TestTime} ms`,
         testTotalTime: `${summaryRecord.TestTime} ms`,
+        commandTime: `${new Date().getTime() - commandStartTime} ms`,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
