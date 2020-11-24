@@ -35,7 +35,8 @@ import {
   syncTestResultSimple,
   syncTestResultWithFailures,
   testResultData,
-  testRunId
+  testRunId,
+  testStartTime
 } from './testData';
 
 const $$ = testSetup();
@@ -194,6 +195,7 @@ describe('Run Apex tests synchronously', () => {
 });
 
 describe('Run Apex tests asynchronously', () => {
+  let timeStub: SinonStub;
   const pollResponse: ApexTestQueueItem = {
     done: true,
     totalSize: 1,
@@ -220,6 +222,11 @@ describe('Run Apex tests asynchronously', () => {
     sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
     });
+    timeStub = sandboxStub
+      .stub(Date.prototype, 'getTime')
+      .onFirstCall()
+      .returns(6000);
+    timeStub.onSecondCall().returns(8000);
     testResultData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
     testResultData.summary.username = mockConnection.getUsername();
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
@@ -293,7 +300,7 @@ describe('Run Apex tests asynchronously', () => {
         {
           AsyncApexJobId: testRunId,
           Status: ApexTestRunResultStatus.Completed,
-          StartTime: '2020-07-12T02:54:47.000+0000',
+          StartTime: testStartTime,
           TestTime: 1765,
           UserId: '005xx000000abcDAAU'
         }
