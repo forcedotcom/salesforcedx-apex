@@ -353,6 +353,7 @@ export type TestResult = {
     failRate: string;
     testsRan: number;
     orgId: string;
+    testRunCoverage?: string;
     orgWideCoverage?: string;
     outcome: string;
     passing: number;

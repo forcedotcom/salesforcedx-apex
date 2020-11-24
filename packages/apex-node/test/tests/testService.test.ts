@@ -184,33 +184,16 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult).to.be.a('object');
     expect(toolingRequestStub.calledOnce).to.equal(true);
     expect(testResult.summary).to.be.a('object');
+    expect(testResult.summary.testRunCoverage).to.equal('44%');
     expect(testResult.summary.orgWideCoverage).to.equal('35%');
     expect(testResult.tests).to.be.a('array');
     expect(testResult.tests.length).to.equal(1);
     expect(testResult.codecoverage).to.be.a('array');
     expect(testResult.codecoverage.length).to.equal(3);
   });
-  /*
-  it('should run a test with failures', async () => {
-    const requestResult = [
-      {
-        message:
-          "This class name's value is invalid: TestConfig. Provide the name of an Apex class that has test methods.",
-        errorCode: 'INVALID_INPUT'
-      }
-    ];
-
-    toolingRequestStub.withArgs(testRequest).returns(requestResult);
-    const testSrv = new TestService(mockConnection);
-    const testResult = await testSrv.runTestSynchronous(requestOptions);
-    expect(testResult).to.be.a('array');
-    expect(toolingRequestStub.calledOnce).to.equal(true);
-    expect(testResult).to.deep.equals(requestResult);
-  }); */
 });
 
 describe('Run Apex tests asynchronously', () => {
-  let hostnameStub: SinonStub;
   const pollResponse: ApexTestQueueItem = {
     done: true,
     totalSize: 1,
@@ -234,7 +217,7 @@ describe('Run Apex tests asynchronously', () => {
         username: testData.username
       })
     });
-    hostnameStub = sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
+    sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
     });
     testResultData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
@@ -446,6 +429,7 @@ describe('Run Apex tests asynchronously', () => {
       mockConnection.getUsername()
     );
     expect(getTestResultData.summary.orgWideCoverage).to.equal('57%');
+    expect(getTestResultData.summary.testRunCoverage).to.equal('33%');
     expect(getTestResultData.tests.length).to.equal(6);
     expect(getTestResultData.codecoverage.length).to.equal(3);
   });
