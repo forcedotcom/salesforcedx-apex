@@ -71,9 +71,9 @@ export const testResultData: TestResult = {
     skipRate: '0%',
     skipped: 0,
     testStartTime: localStartTime,
-    testExecutionTime: 1765,
-    testTotalTime: 1765,
-    commandTime: 2000,
+    testExecutionTimeInMs: 1765,
+    testTotalTimeInMs: 1765,
+    commandTimeInMs: 2000,
     testRunId,
     userId: '005xx000000abcDAAU'
   },

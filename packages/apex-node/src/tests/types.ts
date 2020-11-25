@@ -362,9 +362,9 @@ export type TestResult = {
     passRate: string;
     skipRate: string;
     testStartTime: string;
-    testExecutionTime: number;
-    testTotalTime: number;
-    commandTime: number;
+    testExecutionTimeInMs: number;
+    testTotalTimeInMs: number;
+    commandTimeInMs: number;
     hostname: string;
     username: string;
     testRunId: string;

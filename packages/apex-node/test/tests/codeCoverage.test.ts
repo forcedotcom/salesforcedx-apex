@@ -137,7 +137,7 @@ describe('Get code coverage results', () => {
     const {
       codeCoverageResults,
       testRunCoverage
-    } = await testSrv.getTestCodeCoverage(
+    } = await testSrv.getAggregateCodeCoverage(
       new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
     );
 
@@ -156,7 +156,7 @@ describe('Get code coverage results', () => {
     const {
       codeCoverageResults,
       testRunCoverage
-    } = await testSrv.getTestCodeCoverage(new Set([]));
+    } = await testSrv.getAggregateCodeCoverage(new Set([]));
     expect(codeCoverageResults.length).to.equal(0);
     expect(testRunCoverage).to.equal('0%');
   });
@@ -198,25 +198,25 @@ describe('Get code coverage results', () => {
     } as ApexCodeCoverage);
 
     const testSrv = new TestService(mockConnection);
-    const perClassCoverageMap = await testSrv.getPerClassCodeCoverage(
+    const perTestCoverageMap = await testSrv.getPerTestCodeCoverage(
       new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
     );
-    expect(perClassCoverageMap.size).to.eql(3);
-    expect(perClassCoverageMap.get('0001x05958-MethodOne')).to.deep.equal({
+    expect(perTestCoverageMap.size).to.eql(3);
+    expect(perTestCoverageMap.get('0001x05958-MethodOne')).to.deep.equal({
       apexClassOrTriggerName: 'ApexTrigger1',
       apexClassorTriggerId: '0001x05958',
       apexTestClassId: '0001x05958',
       apexTestMethodName: 'MethodOne',
       percentage: '83%'
     });
-    expect(perClassCoverageMap.get('0001x05959-MethodTwo')).to.deep.equal({
+    expect(perTestCoverageMap.get('0001x05959-MethodTwo')).to.deep.equal({
       apexClassOrTriggerName: 'ApexTrigger2',
       apexClassorTriggerId: '0001x05959',
       apexTestClassId: '0001x05959',
       apexTestMethodName: 'MethodTwo',
       percentage: '75%'
     });
-    expect(perClassCoverageMap.get('0001x05951-MethodThree')).to.deep.equal({
+    expect(perTestCoverageMap.get('0001x05951-MethodThree')).to.deep.equal({
       apexClassOrTriggerName: 'ApexTrigger3',
       apexClassorTriggerId: '0001x05951',
       apexTestClassId: '0001x05951',
@@ -232,10 +232,10 @@ describe('Get code coverage results', () => {
       records: []
     } as ApexCodeCoverage);
     const testSrv = new TestService(mockConnection);
-    const perClassCoverageMap = await testSrv.getPerClassCodeCoverage(
+    const perTestCoverageMap = await testSrv.getPerTestCodeCoverage(
       new Set<string>([])
     );
 
-    expect(perClassCoverageMap.size).to.equal(0);
+    expect(perTestCoverageMap.size).to.equal(0);
   });
 });

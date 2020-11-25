@@ -91,9 +91,9 @@ export class TestService {
         ),
         skipRate: this.calculatePercentage(0, apiTestResult.numTestsRun),
         testStartTime: formatStartTime(String(startTime)),
-        testExecutionTime: apiTestResult.totalTime,
-        testTotalTime: apiTestResult.totalTime,
-        commandTime: getCurrentTime() - startTime,
+        testExecutionTimeInMs: apiTestResult.totalTime,
+        testTotalTimeInMs: apiTestResult.totalTime,
+        commandTimeInMs: getCurrentTime() - startTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
@@ -104,13 +104,13 @@ export class TestService {
     };
 
     if (codeCoverage) {
-      const perClassCoverageMap = await this.getPerClassCodeCoverage(
+      const perTestCovMap = await this.getPerTestCodeCoverage(
         apexTestClassIdSet
       );
 
       result.tests.forEach(item => {
         const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
-        const perClassCov = perClassCoverageMap.get(keyCodeCov);
+        const perClassCov = perTestCovMap.get(keyCodeCov);
         coveredApexClassIdSet.add(perClassCov.apexClassorTriggerId);
         item.perClassCoverage = {
           apexClassOrTriggerName: perClassCov.apexClassOrTriggerName,
@@ -121,7 +121,7 @@ export class TestService {
       const {
         codeCoverageResults,
         testRunCoverage
-      } = await this.getTestCodeCoverage(coveredApexClassIdSet);
+      } = await this.getAggregateCodeCoverage(coveredApexClassIdSet);
       result.codecoverage = codeCoverageResults;
       result.summary.testRunCoverage = testRunCoverage;
       result.summary.orgWideCoverage = await this.getOrgWideCoverage();
@@ -134,6 +134,7 @@ export class TestService {
   ): { apexTestClassIdSet: Set<string>; testResults: ApexTestResultData[] } {
     const testResults: ApexTestResultData[] = [];
     const apexTestClassIdSet = new Set<string>();
+
     apiTestResult.successes.forEach(item => {
       const nms = item.namespace ? `${item.namespace}__` : '';
       apexTestClassIdSet.add(item.id);
@@ -206,17 +207,102 @@ export class TestService {
     );
   }
 
-  private calculatePercentage(dividend: number, divisor: number): string {
-    let percentage = '0%';
-    if (dividend > 0) {
-      const calcPct = ((dividend / divisor) * 100).toFixed();
-      percentage = `${calcPct}%`;
-    }
-    return percentage;
-  }
+  public async formatAsyncResults(
+    testQueueResult: ApexTestQueueItem,
+    testRunId: string,
+    commandStartTime: number,
+    codeCoverage = false
+  ): Promise<TestResult> {
+    let testRunSummaryQuery =
+      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
+    testRunSummaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    testRunSummaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    const testRunSummaryResults = (await this.connection.tooling.query(
+      testRunSummaryQuery
+    )) as ApexTestRunResult;
 
-  private addIdToQuery(formattedIds: string, id: string): string {
-    return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
+    if (testRunSummaryResults.records.length === 0) {
+      throw new Error(nls.localize('no_test_result_summary', testRunId));
+    }
+
+    const summaryRecord = testRunSummaryResults.records[0];
+    const coveredApexClassIdSet = new Set<string>();
+    const apexTestResults = await this.getAsyncTestResults(testQueueResult);
+    const {
+      apexTestClassIdSet,
+      testResults,
+      globalTests
+    } = await this.buildAsyncTestResults(apexTestResults);
+
+    let outcome = summaryRecord.Status;
+    if (globalTests.failed > 0) {
+      outcome = ApexTestRunResultStatus.Failed;
+    } else if (summaryRecord.Status === ApexTestRunResultStatus.Completed) {
+      outcome = ApexTestRunResultStatus.Passed;
+    }
+
+    // TODO: deprecate testTotalTime
+    const result: TestResult = {
+      summary: {
+        outcome,
+        testsRan: testResults.length,
+        passing: globalTests.passed,
+        failing: globalTests.failed,
+        skipped: globalTests.skipped,
+        passRate: this.calculatePercentage(
+          globalTests.passed,
+          testResults.length
+        ),
+        failRate: this.calculatePercentage(
+          globalTests.failed,
+          testResults.length
+        ),
+        skipRate: this.calculatePercentage(
+          globalTests.skipped,
+          testResults.length
+        ),
+        testStartTime: formatStartTime(summaryRecord.StartTime),
+        testExecutionTimeInMs: summaryRecord.TestTime,
+        testTotalTimeInMs: summaryRecord.TestTime,
+        commandTimeInMs: getCurrentTime() - commandStartTime,
+        hostname: this.connection.instanceUrl,
+        orgId: this.connection.getAuthInfoFields().orgId,
+        username: this.connection.getUsername(),
+        testRunId,
+        userId: summaryRecord.UserId
+      },
+      tests: testResults
+    };
+
+    if (codeCoverage) {
+      const perTestCovMap = await this.getPerTestCodeCoverage(
+        apexTestClassIdSet
+      );
+
+      result.tests.forEach(item => {
+        const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
+        const perClassCov = perTestCovMap.get(keyCodeCov);
+        // Skipped test is not in coverage map, check to see if perClassCov exists first
+        if (perClassCov) {
+          coveredApexClassIdSet.add(perClassCov.apexClassorTriggerId);
+          item.perClassCoverage = {
+            apexClassOrTriggerName: perClassCov.apexClassOrTriggerName,
+            percentage: perClassCov.percentage
+          };
+        }
+      });
+
+      const {
+        codeCoverageResults,
+        testRunCoverage
+      } = await this.getAggregateCodeCoverage(coveredApexClassIdSet);
+      result.codecoverage = codeCoverageResults;
+      result.summary.testRunCoverage = testRunCoverage;
+      result.summary.orgWideCoverage = await this.getOrgWideCoverage();
+    }
+
+    return result;
   }
 
   public async getAsyncTestResults(
@@ -324,100 +410,6 @@ export class TestService {
     };
   }
 
-  public async formatAsyncResults(
-    testQueueResult: ApexTestQueueItem,
-    testRunId: string,
-    commandStartTime: number,
-    codeCoverage = false
-  ): Promise<TestResult> {
-    let testRunSummaryQuery =
-      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    testRunSummaryQuery +=
-      'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
-    testRunSummaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
-    const testRunSummaryResults = (await this.connection.tooling.query(
-      testRunSummaryQuery
-    )) as ApexTestRunResult;
-
-    if (testRunSummaryResults.records.length === 0) {
-      throw new Error(nls.localize('no_test_result_summary', testRunId));
-    }
-
-    const coveredApexClassIdSet = new Set<string>();
-    const summaryRecord = testRunSummaryResults.records[0];
-    const apexTestResults = await this.getAsyncTestResults(testQueueResult);
-    const {
-      apexTestClassIdSet,
-      testResults,
-      globalTests
-    } = await this.buildAsyncTestResults(apexTestResults);
-
-    // TODO: deprecate testTotalTime
-    const result: TestResult = {
-      summary: {
-        outcome:
-          summaryRecord.Status === ApexTestRunResultStatus.Completed
-            ? ApexTestRunResultStatus.Passed
-            : summaryRecord.Status,
-        testsRan: testResults.length,
-        passing: globalTests.passed,
-        failing: globalTests.failed,
-        skipped: globalTests.skipped,
-        passRate: this.calculatePercentage(
-          globalTests.passed,
-          testResults.length
-        ),
-        failRate: this.calculatePercentage(
-          globalTests.failed,
-          testResults.length
-        ),
-        skipRate: this.calculatePercentage(
-          globalTests.skipped,
-          testResults.length
-        ),
-        testStartTime: formatStartTime(summaryRecord.StartTime),
-        testExecutionTime: summaryRecord.TestTime,
-        testTotalTime: summaryRecord.TestTime,
-        commandTime: getCurrentTime() - commandStartTime,
-        hostname: this.connection.instanceUrl,
-        orgId: this.connection.getAuthInfoFields().orgId,
-        username: this.connection.getUsername(),
-        testRunId,
-        userId: summaryRecord.UserId
-      },
-      tests: testResults
-    };
-
-    if (codeCoverage) {
-      const perClassCoverageMap = await this.getPerClassCodeCoverage(
-        apexTestClassIdSet
-      );
-
-      result.tests.forEach(item => {
-        const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
-        const perClassCov = perClassCoverageMap.get(keyCodeCov);
-        // Skipped test is not in coverage map, check to see if perClassCov exists first
-        if (perClassCov) {
-          coveredApexClassIdSet.add(perClassCov.apexClassorTriggerId);
-          item.perClassCoverage = {
-            apexClassOrTriggerName: perClassCov.apexClassOrTriggerName,
-            percentage: perClassCov.percentage
-          };
-        }
-      });
-
-      const {
-        codeCoverageResults,
-        testRunCoverage
-      } = await this.getTestCodeCoverage(coveredApexClassIdSet);
-      result.codecoverage = codeCoverageResults;
-      result.summary.testRunCoverage = testRunCoverage;
-      result.summary.orgWideCoverage = await this.getOrgWideCoverage();
-    }
-
-    return result;
-  }
-
   public async getOrgWideCoverage(): Promise<string> {
     const orgWideCoverageResult = (await this.connection.tooling.query(
       'SELECT PercentCovered FROM ApexOrgWideCoverage'
@@ -429,7 +421,7 @@ export class TestService {
     return `${orgWideCoverageResult.records[0].PercentCovered}%`;
   }
 
-  public async getPerClassCodeCoverage(
+  public async getPerTestCodeCoverage(
     apexTestClassSet: Set<string>
   ): Promise<Map<string, PerClassCoverage>> {
     let str = '';
@@ -468,7 +460,7 @@ export class TestService {
     return perClassCoverageMap;
   }
 
-  public async getTestCodeCoverage(
+  public async getAggregateCodeCoverage(
     apexClassIdSet: Set<string>
   ): Promise<{
     codeCoverageResults: CodeCoverageResult[];
@@ -518,6 +510,19 @@ export class TestService {
       totalLinesCovered + totalLinesUncovered
     );
     return { codeCoverageResults, testRunCoverage };
+  }
+
+  private calculatePercentage(dividend: number, divisor: number): string {
+    let percentage = '0%';
+    if (dividend > 0) {
+      const calcPct = ((dividend / divisor) * 100).toFixed();
+      percentage = `${calcPct}%`;
+    }
+    return percentage;
+  }
+
+  private addIdToQuery(formattedIds: string, id: string): string {
+    return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
   }
 
   private getTestRunRequestAction(

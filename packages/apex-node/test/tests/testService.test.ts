@@ -93,7 +93,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.summary.outcome).to.equal('Passed');
     expect(testResult.summary.passRate).to.equal('100%');
     expect(testResult.summary.skipRate).to.equal('0%');
-    expect(testResult.summary.testExecutionTime).to.equal(270);
+    expect(testResult.summary.testExecutionTimeInMs).to.equal(270);
     expect(testResult.summary.username).to.equal(mockConnection.getUsername());
 
     expect(testResult.tests).to.be.a('array');
@@ -132,7 +132,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.summary.outcome).to.equal('Failed');
     expect(testResult.summary.passRate).to.equal('0%');
     expect(testResult.summary.skipRate).to.equal('0%');
-    expect(testResult.summary.testExecutionTime).to.equal(87);
+    expect(testResult.summary.testExecutionTimeInMs).to.equal(87);
     expect(testResult.summary.username).to.equal(mockConnection.getUsername());
 
     expect(testResult.tests).to.be.a('array');
@@ -435,7 +435,7 @@ describe('Run Apex tests asynchronously', () => {
     expect(getTestResultData.summary.orgId).to.equal(
       mockConnection.getAuthInfoFields().orgId
     );
-    expect(getTestResultData.summary.outcome).to.equal('Passed');
+    expect(getTestResultData.summary.outcome).to.equal('Failed');
     expect(getTestResultData.summary.passRate).to.equal('50%');
     expect(getTestResultData.summary.skipRate).to.equal('17%');
     expect(getTestResultData.summary.username).to.equal(

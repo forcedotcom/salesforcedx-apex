@@ -25,7 +25,7 @@ export class JUnitReporter {
     output += `tests="${summary.testsRan}" `;
     output += `failures="${summary.failing}"  `;
     output += `errors="0"  `;
-    output += `time="${this.msToSecond(summary.testExecutionTime)}">\n`;
+    output += `time="${this.msToSecond(summary.testExecutionTimeInMs)}">\n`;
 
     output += this.buildProperties(testResult);
     output += this.buildTestCases(tests);
@@ -43,8 +43,16 @@ export class JUnitReporter {
       if (this.isEmpty(value) || key === 'skipRate') {
         return;
       }
-      if (['testExecutionTime', 'testTotalTime', 'commandTime'].includes(key)) {
+
+      if (
+        [
+          'testExecutionTimeInMs',
+          'testTotalTimeInMs',
+          'commandTimeInMs'
+        ].includes(key)
+      ) {
         value = `${this.msToSecond(value)} s`;
+        key = key.replace('InMs', '');
       }
 
       junitProperties += `${tab}${tab}${tab}<property name="${key}" value="${value}"/>\n`;
