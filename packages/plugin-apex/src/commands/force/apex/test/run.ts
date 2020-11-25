@@ -283,7 +283,7 @@ export default class Run extends SfdxCommand {
       },
       {
         name: messages.getMessage('testExecutionTime'),
-        value: testResult.summary.testExecutionTime
+        value: `${testResult.summary.testExecutionTime} ms`
       },
       {
         name: messages.getMessage('orgId'),

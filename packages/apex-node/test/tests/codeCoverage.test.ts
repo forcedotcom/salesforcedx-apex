@@ -22,7 +22,7 @@ let sandboxStub: SinonSandbox;
 let toolingQueryStub: SinonStub;
 const testData = new MockTestOrgData();
 
-describe('Run Apex tests code coverage', () => {
+describe('Get code coverage results', () => {
   beforeEach(async () => {
     sandboxStub = createSandbox();
     $$.setConfigStubContents('AuthInfoConfig', {
@@ -134,11 +134,15 @@ describe('Run Apex tests code coverage', () => {
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
     const testSrv = new TestService(mockConnection);
-    const testCodeCoverageResult = await testSrv.getTestCodeCoverage(
+    const {
+      codeCoverageResults,
+      testRunCoverage
+    } = await testSrv.getTestCodeCoverage(
       new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
     );
 
-    expect(testCodeCoverageResult).to.eql(expectedResult);
+    expect(testRunCoverage).to.equal('75%');
+    expect(codeCoverageResults).to.eql(expectedResult);
   });
 
   it('should return test code coverage result with 0 records', async () => {
@@ -147,11 +151,14 @@ describe('Run Apex tests code coverage', () => {
       totalSize: 0,
       records: []
     } as ApexCodeCoverageAggregate);
+
     const testSrv = new TestService(mockConnection);
-    const testCodeCoverageResult = await testSrv.getTestCodeCoverage(
-      new Set([])
-    );
-    expect(testCodeCoverageResult.length).to.equal(0);
+    const {
+      codeCoverageResults,
+      testRunCoverage
+    } = await testSrv.getTestCodeCoverage(new Set([]));
+    expect(codeCoverageResults.length).to.equal(0);
+    expect(testRunCoverage).to.equal('0%');
   });
 
   it('should return per class code coverage and test run coverage', async () => {
@@ -191,10 +198,7 @@ describe('Run Apex tests code coverage', () => {
     } as ApexCodeCoverage);
 
     const testSrv = new TestService(mockConnection);
-    const {
-      perClassCoverageMap,
-      testRunCoverage
-    } = await testSrv.getPerClassCodeCoverage(
+    const perClassCoverageMap = await testSrv.getPerClassCodeCoverage(
       new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
     );
     expect(perClassCoverageMap.size).to.eql(3);
@@ -219,7 +223,6 @@ describe('Run Apex tests code coverage', () => {
       apexTestMethodName: 'MethodThree',
       percentage: '70%'
     });
-    expect(testRunCoverage).to.equal('75%');
   });
 
   it('should return per class coverage and test run coverage with 0 records', async () => {
@@ -229,12 +232,10 @@ describe('Run Apex tests code coverage', () => {
       records: []
     } as ApexCodeCoverage);
     const testSrv = new TestService(mockConnection);
-    const {
-      perClassCoverageMap,
-      testRunCoverage
-    } = await testSrv.getPerClassCodeCoverage(new Set<string>([]));
+    const perClassCoverageMap = await testSrv.getPerClassCodeCoverage(
+      new Set<string>([])
+    );
 
     expect(perClassCoverageMap.size).to.equal(0);
-    expect(testRunCoverage).to.equal('0%');
   });
 });

@@ -93,7 +93,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.summary.outcome).to.equal('Passed');
     expect(testResult.summary.passRate).to.equal('100%');
     expect(testResult.summary.skipRate).to.equal('0%');
-    expect(testResult.summary.testExecutionTime).to.equal('270 ms');
+    expect(testResult.summary.testExecutionTime).to.equal(270);
     expect(testResult.summary.username).to.equal(mockConnection.getUsername());
 
     expect(testResult.tests).to.be.a('array');
@@ -132,7 +132,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.summary.outcome).to.equal('Failed');
     expect(testResult.summary.passRate).to.equal('0%');
     expect(testResult.summary.skipRate).to.equal('0%');
-    expect(testResult.summary.testExecutionTime).to.equal('87 ms');
+    expect(testResult.summary.testExecutionTime).to.equal(87);
     expect(testResult.summary.username).to.equal(mockConnection.getUsername());
 
     expect(testResult.tests).to.be.a('array');
@@ -185,7 +185,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult).to.be.a('object');
     expect(toolingRequestStub.calledOnce).to.equal(true);
     expect(testResult.summary).to.be.a('object');
-    expect(testResult.summary.testRunCoverage).to.equal('44%');
+    expect(testResult.summary.testRunCoverage).to.equal('66%');
     expect(testResult.summary.orgWideCoverage).to.equal('35%');
     expect(testResult.tests).to.be.a('array');
     expect(testResult.tests.length).to.equal(1);
@@ -259,7 +259,7 @@ describe('Run Apex tests asynchronously', () => {
       .resolves(asyncResult);
     const testSrv = new TestService(mockConnection);
     const mockTestResultData = sandboxStub
-      .stub(testSrv, 'getTestResultData')
+      .stub(testSrv, 'formatAsyncResults')
       .resolves(testResultData);
     sandboxStub.stub(StreamingClient.prototype, 'handshake').resolves();
     const testResult = await testSrv.runTestAsynchronous(requestOptions);
@@ -332,7 +332,7 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const getTestResultData = await testSrv.getTestResultData(
+    const getTestResultData = await testSrv.formatAsyncResults(
       pollResponse,
       testRunId,
       new Date().getTime()
@@ -364,7 +364,7 @@ describe('Run Apex tests asynchronously', () => {
     } as ApexTestRunResult);
 
     try {
-      await testSrv.getTestResultData(
+      await testSrv.formatAsyncResults(
         pollResponse,
         testRunId,
         new Date().getTime()
@@ -422,7 +422,7 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexOrgWideCoverage);
 
-    const getTestResultData = await testSrv.getTestResultData(
+    const getTestResultData = await testSrv.formatAsyncResults(
       pollResponse,
       testRunId,
       new Date().getTime(),
@@ -442,7 +442,7 @@ describe('Run Apex tests asynchronously', () => {
       mockConnection.getUsername()
     );
     expect(getTestResultData.summary.orgWideCoverage).to.equal('57%');
-    expect(getTestResultData.summary.testRunCoverage).to.equal('33%');
+    expect(getTestResultData.summary.testRunCoverage).to.equal('66%');
     expect(getTestResultData.tests.length).to.equal(6);
     expect(getTestResultData.codecoverage.length).to.equal(3);
   });
@@ -527,7 +527,7 @@ describe('Run Apex tests asynchronously', () => {
       } as ApexTestResult);
 
       const testSrv = new TestService(mockConnection);
-      const result = await testSrv.getApexTestResults(testQueueItems);
+      const result = await testSrv.getAsyncTestResults(testQueueItems);
 
       expect(mockToolingQuery.calledTwice).to.be.true;
       expect(result.length).to.eql(2);
@@ -564,7 +564,7 @@ describe('Run Apex tests asynchronously', () => {
       } as ApexTestResult);
 
       const testSrv = new TestService(mockConnection);
-      const result = await testSrv.getApexTestResults(pollResponse);
+      const result = await testSrv.getAsyncTestResults(pollResponse);
 
       expect(mockToolingQuery.calledOnce).to.be.true;
       expect(result.length).to.eql(1);
@@ -636,7 +636,7 @@ describe('Run Apex tests asynchronously', () => {
       } as ApexTestResult);
 
       const testSrv = new TestService(mockConnection);
-      const result = await testSrv.getApexTestResults(testQueueItems);
+      const result = await testSrv.getAsyncTestResults(testQueueItems);
 
       expect(mockToolingQuery.calledTwice).to.be.true;
       expect(result.length).to.eql(2);
@@ -715,7 +715,7 @@ describe('Run Apex tests asynchronously', () => {
       } as ApexTestResult);
 
       const testSrv = new TestService(mockConnection);
-      const result = await testSrv.getApexTestResults(testQueueItems);
+      const result = await testSrv.getAsyncTestResults(testQueueItems);
 
       expect(mockToolingQuery.calledTwice).to.be.true;
       expect(result.length).to.eql(2);
@@ -756,7 +756,7 @@ describe('Run Apex tests asynchronously', () => {
       const singleQuery = `${queryStart}('${id}')`;
 
       const testSrv = new TestService(mockConnection);
-      const result = await testSrv.getApexTestResults(pollResponse);
+      const result = await testSrv.getAsyncTestResults(pollResponse);
 
       expect(mockToolingQuery.calledOnce).to.be.true;
       expect(mockToolingQuery.calledWith(singleQuery)).to.be.true;

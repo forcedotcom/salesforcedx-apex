@@ -92,10 +92,6 @@ export class JUnitReporter {
   }
 
   private msToSecond(timestamp: string | number): string {
-    // remove ms suffix
-    if (typeof timestamp === 'string') {
-      timestamp = parseInt(timestamp.slice(0, -3));
-    }
-    return (timestamp / 1000).toFixed(2);
+    return ((timestamp as number) / 1000).toFixed(2);
   }
 }
