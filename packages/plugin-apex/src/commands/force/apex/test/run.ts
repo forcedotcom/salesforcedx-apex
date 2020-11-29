@@ -357,7 +357,7 @@ export default class Run extends SfdxCommand {
           (elem: {
             fullName: string;
             outcome: string;
-            perClassCoverage?: {
+            perTestCoverage?: {
               apexClassOrTriggerName: string;
               percentage: string;
             };
@@ -366,12 +366,12 @@ export default class Run extends SfdxCommand {
           }) => {
             testRowArray.push({
               name: elem.fullName,
-              coveredClassName: elem.perClassCoverage
-                ? elem.perClassCoverage.apexClassOrTriggerName
+              coveredClassName: elem.perTestCoverage
+                ? elem.perTestCoverage.apexClassOrTriggerName
                 : '',
               outcome: elem.outcome,
-              coveredClassPercentage: elem.perClassCoverage
-                ? elem.perClassCoverage.percentage
+              coveredClassPercentage: elem.perTestCoverage
+                ? elem.perTestCoverage.percentage
                 : '',
               msg: elem.message ? elem.message : '',
               runtime: `${elem.runTime}`

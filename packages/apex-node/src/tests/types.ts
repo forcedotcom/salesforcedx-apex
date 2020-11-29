@@ -331,7 +331,7 @@ export type ApexTestResultData = {
    * The full name of the associated ApexClass method
    */
   fullName: string;
-  perClassCoverage?: {
+  perTestCoverage?: {
     apexClassOrTriggerName: string;
     percentage: string;
   };
@@ -395,7 +395,7 @@ export type ApexCodeCoverage = {
   records: ApexCodeCoverageRecord[];
 };
 
-export type PerClassCoverage = {
+export type PerTestCoverage = {
   apexClassOrTriggerName: string;
   apexClassorTriggerId: string;
   apexTestClassId: string;
