@@ -446,6 +446,9 @@ export class TestService {
 
       //NOTE: a test could cover more than one class, we should change this in order to handle that
       perTestCoverageMap.set(`${item.ApexTestClassId}-${item.TestMethodName}`, {
+        // perClassCodCovMap.set(`${item.ApexTestClassId}-${item.TestMethodName}`, {
+        // attributes: item.attributes,
+        // apexClassOrTriggerAttributes: item.ApexClassOrTrigger.attributes,
         apexClassOrTriggerName: item.ApexClassOrTrigger.Name,
         apexClassOrTriggerId: item.ApexClassOrTrigger.Id,
         apexTestClassId: item.ApexTestClassId,

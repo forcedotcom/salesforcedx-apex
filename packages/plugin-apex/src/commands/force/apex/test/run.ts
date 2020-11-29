@@ -52,11 +52,19 @@ type ClassCoverage = {
 };
 
 type PerTestCoverage = {
-  ApexTestClass: { Id: string; Name: string };
-  Coverage: { coveredLines: number[]; uncoveredLines: [] };
+  attributes: { type: string; url: string };
+  ApexTestClass: {
+    Id: string;
+    Name: string;
+  };
+  Coverage?: { coveredLines: number[]; uncoveredLines: number[] };
   TestMethodName: string;
   NumLinesCovered: number;
-  ApexClassOrTrigger: { Id: string; Name: string };
+  ApexClassOrTrigger: {
+    attributes: { type: string; url: string };
+    Id: string;
+    Name: string;
+  };
   NumLinesUncovered: number;
 };
 
@@ -70,19 +78,6 @@ type CliCoverageResult = {
     orgWideCoverage: string;
   };
 };
-
-// type jsonTestResult = {
-//   Id: string;
-//   QueueItemId: string;
-//   stackTrace: string | null;
-//   message: string | null;
-//   asyncApexJobId: string;
-//   methodName: string;
-//   outcome: ApexTestResultOutcome;
-//   ApexClass: { Id: string; Name: string; NamespacePrefix: string };
-//   FullName: string;
-//   RunTime: number;
-// };
 
 export const resultFormat = ['human', 'tap', 'junit', 'json'];
 
@@ -585,6 +580,7 @@ export default class Run extends SfdxCommand {
       testResult.tests.forEach(test => {
         if (test.perClassCoverage) {
           formattedCov.records.push({
+            attributes: test.perClassCoverage.attributes,
             ApexTestClass: { Id: test.id, Name: test.apexClass.name },
             ...(test.perClassCoverage.coverage
               ? { Coverage: test.perClassCoverage.coverage }
@@ -592,6 +588,7 @@ export default class Run extends SfdxCommand {
             TestMethodName: test.methodName,
             NumLinesCovered: test.perClassCoverage.numLinesCovered,
             ApexClassOrTrigger: {
+              attributes: test.perClassCoverage.apexClassOrTriggerAttributes,
               Id: test.perClassCoverage.apexClassOrTriggerId,
               Name: test.perClassCoverage.apexClassOrTriggerName
             },

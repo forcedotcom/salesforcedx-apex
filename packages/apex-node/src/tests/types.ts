@@ -389,7 +389,9 @@ export type TestResult = {
 };
 
 export type ApexCodeCoverageRecord = {
+  attributes: { type: string; url: string };
   ApexClassOrTrigger: {
+    attributes: { type: string; url: string };
     Id: string;
     Name: string;
   };
@@ -409,9 +411,12 @@ export type ApexCodeCoverage = {
   records: ApexCodeCoverageRecord[];
 };
 
-export type PerTestCoverage = {
+// export type PerTestCoverage = {
+export type PerClassCoverage = {
+  attributes: { type: string; url: string };
   apexClassOrTriggerName: string;
   apexClassOrTriggerId: string;
+  apexClassOrTriggerAttributes: { type: string; url: string };
   apexTestClassId: string;
   apexTestMethodName: string;
   numLinesCovered: number;
