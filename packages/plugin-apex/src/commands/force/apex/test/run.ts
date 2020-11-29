@@ -51,16 +51,18 @@ type ClassCoverage = {
   coveredPercent: number;
 };
 
+type PerTestCoverage = {
+  ApexTestClass: { Id: string; Name: string };
+  Coverage: { coveredLines: number[]; uncoveredLines: [] };
+  TestMethodName: string;
+  NumLinesCovered: number;
+  ApexClassOrTrigger: { Id: string; Name: string };
+  NumLinesUncovered: number;
+};
+
 type CliCoverageResult = {
   coverage: ClassCoverage[];
-  /*records: {
-    ApexTestClass: { Id: string; Name: string };
-    Coverage: { coveredLines: number[]; uncoveredLines: [] };
-    TestMethodName: string;
-    NumLinesCovered: number;
-    ApexClassOrTrigger: { Id: string; Name: string };
-    NumLinesUncovered: number;
-  }[];*/
+  records: PerTestCoverage[];
   summary: {
     // totalLines: number;
     // coveredLines: number;
@@ -533,28 +535,6 @@ export default class Run extends SfdxCommand {
     return processedLines;
   }
 
-  // id: string;
-  // queueItemId: string;
-  // stackTrace: string | null;
-  // message: string | null;
-  // asyncApexJobId: string;
-  // methodName: string;
-  // outcome: ApexTestResultOutcome;
-  // apexClass: {
-  //   id: string;
-  //   name: string;
-  //   namespacePrefix: string;
-  //   fullName: string;
-  // };
-  // apexLogId: string | null;
-  // runTime: number;
-  // testTimestamp: string;
-  // fullName: string;
-  // perClassCoverage?: {
-  //   apexClassOrTriggerName: string;
-  //   percentage: string;
-  // };
-
   private formatTestResults(
     testResults: ApexTestResultData[]
   ): CliTestResult[] {
@@ -581,6 +561,7 @@ export default class Run extends SfdxCommand {
   private formatCoverage(testResult: TestResult): CliCoverageResult {
     const formattedCov = {
       coverage: [],
+      records: [],
       summary: {
         orgWideCoverage: testResult.summary.orgWideCoverage
         // testRunCoverage: testResult.testRunCoverage
@@ -599,6 +580,24 @@ export default class Run extends SfdxCommand {
           totalCovered: cov.numLinesCovered,
           coveredPercent: parseInt(cov.percentage)
         } as ClassCoverage;
+      });
+
+      testResult.tests.forEach(test => {
+        if (test.perClassCoverage) {
+          formattedCov.records.push({
+            ApexTestClass: { Id: test.id, Name: test.apexClass.name },
+            ...(test.perClassCoverage.coverage
+              ? { Coverage: test.perClassCoverage.coverage }
+              : {}),
+            TestMethodName: test.methodName,
+            NumLinesCovered: test.perClassCoverage.numLinesCovered,
+            ApexClassOrTrigger: {
+              Id: test.perClassCoverage.apexClassOrTriggerId,
+              Name: test.perClassCoverage.apexClassOrTriggerName
+            },
+            NumLinesUncovered: test.perClassCoverage.numLinesUncovered
+          } as PerTestCoverage);
+        }
       });
     }
 

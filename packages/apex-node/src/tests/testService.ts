@@ -447,10 +447,13 @@ export class TestService {
       //NOTE: a test could cover more than one class, we should change this in order to handle that
       perTestCoverageMap.set(`${item.ApexTestClassId}-${item.TestMethodName}`, {
         apexClassOrTriggerName: item.ApexClassOrTrigger.Name,
-        apexClassorTriggerId: item.ApexClassOrTrigger.Id,
+        apexClassOrTriggerId: item.ApexClassOrTrigger.Id,
         apexTestClassId: item.ApexTestClassId,
         apexTestMethodName: item.TestMethodName,
-        percentage
+        numLinesCovered: item.NumLinesCovered,
+        numLinesUncovered: item.NumLinesUncovered,
+        percentage,
+        ...(item.Coverage ? { coverage: item.Coverage } : {})
       });
     });
 
