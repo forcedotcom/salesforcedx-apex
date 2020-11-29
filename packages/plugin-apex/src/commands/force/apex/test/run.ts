@@ -6,6 +6,8 @@
  */
 import { TapReporter, TestService, JUnitReporter } from '@salesforce/apex-node';
 import {
+  ApexTestResultData,
+  ApexTestResultOutcome,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
   SyncTestConfiguration,
@@ -26,6 +28,59 @@ export const TestLevel = [
   'RunAllTestsInOrg',
   'RunSpecifiedTests'
 ];
+
+type CliTestResult = {
+  Id: string;
+  QueueItemId: string;
+  StackTrace: string;
+  Message: string;
+  AsyncApexJobId: string;
+  MethodName: string;
+  Outcome: ApexTestResultOutcome;
+  ApexClass: { Id: string; Name: string; NamespacePrefix: string };
+  RunTime: number;
+  FullName: string;
+};
+
+type ClassCoverage = {
+  id: string;
+  name: string;
+  totalLines: number;
+  lines: {};
+  totalCovered: number;
+  coveredPercent: number;
+};
+
+type CliCoverageResult = {
+  coverage: ClassCoverage[];
+  /*records: {
+    ApexTestClass: { Id: string; Name: string };
+    Coverage: { coveredLines: number[]; uncoveredLines: [] };
+    TestMethodName: string;
+    NumLinesCovered: number;
+    ApexClassOrTrigger: { Id: string; Name: string };
+    NumLinesUncovered: number;
+  }[];*/
+  summary: {
+    // totalLines: number;
+    // coveredLines: number;
+    // testRunCoverage: string;
+    orgWideCoverage: string;
+  };
+};
+
+// type jsonTestResult = {
+//   Id: string;
+//   QueueItemId: string;
+//   stackTrace: string | null;
+//   message: string | null;
+//   asyncApexJobId: string;
+//   methodName: string;
+//   outcome: ApexTestResultOutcome;
+//   ApexClass: { Id: string; Name: string; NamespacePrefix: string };
+//   FullName: string;
+//   RunTime: number;
+// };
 
 export const resultFormat = ['human', 'tap', 'junit', 'json'];
 
@@ -209,8 +264,26 @@ export default class Run extends SfdxCommand {
             messages.getMessage('runTestReportCommand', [id, username])
           );
       }
-
-      return result;
+      // // @ts-ignore
+      // for (let test of result.tests) {
+      //   const entries = Object.entries(result.tests);
+      //   const capEntries = entries.map(entry => [
+      //     `${entry[0][0].toUpperCase()}${entry[0].slice(1)}`
+      //   ]);
+      //   const capTest = Object.fromEntries(capEntries);
+      //   test = capTest;
+      //   console.log('key' + Object.keys(capTest));
+      // }
+      return {
+        summary: result.summary,
+        tests: this.formatTestResults(result.tests),
+        ...(result.codecoverage
+          ? {
+              coverage: this.formatCoverage(result)
+            }
+          : {})
+      };
+      // return result;
     } catch (e) {
       return Promise.reject(e);
     }
@@ -460,6 +533,78 @@ export default class Run extends SfdxCommand {
     return processedLines;
   }
 
+  // id: string;
+  // queueItemId: string;
+  // stackTrace: string | null;
+  // message: string | null;
+  // asyncApexJobId: string;
+  // methodName: string;
+  // outcome: ApexTestResultOutcome;
+  // apexClass: {
+  //   id: string;
+  //   name: string;
+  //   namespacePrefix: string;
+  //   fullName: string;
+  // };
+  // apexLogId: string | null;
+  // runTime: number;
+  // testTimestamp: string;
+  // fullName: string;
+  // perClassCoverage?: {
+  //   apexClassOrTriggerName: string;
+  //   percentage: string;
+  // };
+
+  private formatTestResults(
+    testResults: ApexTestResultData[]
+  ): CliTestResult[] {
+    return testResults.map(test => {
+      return {
+        Id: test.id,
+        QueueItemId: test.queueItemId,
+        StackTrace: test.stackTrace,
+        Message: test.message,
+        AsyncApexJobId: test.asyncApexJobId,
+        MethodName: test.methodName,
+        Outcome: test.outcome,
+        ApexClass: {
+          Id: test.apexClass.id,
+          Name: test.apexClass.name,
+          NamespacePrefix: test.apexClass.namespacePrefix
+        },
+        RunTime: test.runTime,
+        FullName: test.fullName
+      };
+    }) as CliTestResult[];
+  }
+
+  private formatCoverage(testResult: TestResult): CliCoverageResult {
+    const formattedCov = {
+      coverage: [],
+      summary: {
+        orgWideCoverage: testResult.summary.orgWideCoverage
+        // testRunCoverage: testResult.testRunCoverage
+        // totalLines: number
+        // coveredLines: number
+      }
+    } as CliCoverageResult;
+
+    if (testResult.codecoverage) {
+      formattedCov.coverage = testResult.codecoverage.map(cov => {
+        return {
+          id: cov.apexId,
+          name: cov.name,
+          totalLines: cov.numLinesCovered + cov.numLinesUncovered,
+          lines: { ...cov.coveredLines },
+          totalCovered: cov.numLinesCovered,
+          coveredPercent: parseInt(cov.percentage)
+        } as ClassCoverage;
+      });
+    }
+
+    return formattedCov;
+  }
+
   private logTap(result: TestResult): void {
     try {
       const reporter = new TapReporter();
@@ -482,6 +627,12 @@ export default class Run extends SfdxCommand {
       this.ux.error(msg);
     }
   }
+
+  // private logJson(result: TestResult): void {
+  //   try {
+  //     const jsonResult = return
+  //   } catch (e) {}
+  // }
 
   private formatReportHint(result: TestResult): string {
     let reportArgs = `-i ${result.summary.testRunId}`;

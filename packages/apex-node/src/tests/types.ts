@@ -369,8 +369,18 @@ export type TestResult = {
     username: string;
     testRunId: string;
     userId: string;
+    // testRunCoverage?: string;
+    // totalLines?: number;
+    // coveredLines?: number;
   };
   tests: ApexTestResultData[];
+  // codecoverage?: {
+  //   coverageResults: CodeCoverageResult[];
+  //   orgWideCoverage: string;
+  //   // testRunCoverage:?: string;
+  //   // totalLines: number;
+  //   // coveredLines: number;
+  // };
   codecoverage?: CodeCoverageResult[];
 };
 
