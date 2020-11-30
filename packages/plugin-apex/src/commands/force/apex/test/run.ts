@@ -261,16 +261,7 @@ export default class Run extends SfdxCommand {
             messages.getMessage('runTestReportCommand', [id, username])
           );
       }
-      // // @ts-ignore
-      // for (let test of result.tests) {
-      //   const entries = Object.entries(result.tests);
-      //   const capEntries = entries.map(entry => [
-      //     `${entry[0][0].toUpperCase()}${entry[0].slice(1)}`
-      //   ]);
-      //   const capTest = Object.fromEntries(capEntries);
-      //   test = capTest;
-      //   console.log('key' + Object.keys(capTest));
-      // }
+
       return {
         summary: result.summary,
         tests: this.formatTestResults(result.tests),
