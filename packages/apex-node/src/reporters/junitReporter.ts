@@ -9,6 +9,7 @@ import {
   ApexTestResultOutcome,
   TestResult
 } from '../tests/types';
+import { msToSecond } from '../utils';
 
 // cli currently has spaces in multiples of four for junit format
 const tab = '    ';
@@ -25,7 +26,7 @@ export class JUnitReporter {
     output += `tests="${summary.testsRan}" `;
     output += `failures="${summary.failing}"  `;
     output += `errors="0"  `;
-    output += `time="${this.msToSecond(summary.testExecutionTimeInMs)}">\n`;
+    output += `time="${msToSecond(summary.testExecutionTimeInMs)}">\n`;
 
     output += this.buildProperties(testResult);
     output += this.buildTestCases(tests);
@@ -51,8 +52,12 @@ export class JUnitReporter {
           'commandTimeInMs'
         ].includes(key)
       ) {
-        value = `${this.msToSecond(value)} s`;
+        value = `${msToSecond(value)} s`;
         key = key.replace('InMs', '');
+      }
+
+      if (key === 'outcome' && value === 'Passed') {
+        value = 'Successful';
       }
 
       junitProperties += `${tab}${tab}${tab}<property name="${key}" value="${value}"/>\n`;
@@ -68,7 +73,7 @@ export class JUnitReporter {
     for (const testCase of tests) {
       junitTests += `${tab}${tab}<testcase name="${
         testCase.methodName
-      }" classname="${testCase.apexClass.fullName}" time="${this.msToSecond(
+      }" classname="${testCase.apexClass.fullName}" time="${msToSecond(
         testCase.runTime
       )}">\n`;
 
@@ -97,9 +102,5 @@ export class JUnitReporter {
       return true;
     }
     return false;
-  }
-
-  private msToSecond(timestamp: string | number): string {
-    return ((timestamp as number) / 1000).toFixed(2);
   }
 }

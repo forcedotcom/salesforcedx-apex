@@ -13,3 +13,7 @@ export function formatStartTime(startTime: string): string {
   const date = new Date(startTime);
   return `${date.toDateString()} ${date.toLocaleTimeString()}`;
 }
+
+export function msToSecond(timestamp: string | number): string {
+  return ((timestamp as number) / 1000).toFixed(2);
+}
