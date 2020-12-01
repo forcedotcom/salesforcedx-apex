@@ -75,18 +75,10 @@ export const runWithCoverage = {
       runTime: 53,
       testTimestamp: '2020-08-25T00:48:02.000+0000',
       fullName: 'MyApexTests.testConfig',
-      perClassCoverage: {
-        attributes: {
-          type: 'Name',
-          url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-        },
+      perTestCoverage: {
         apexTestClassId: '01pxx00000NnP2KQAV',
         apexClassOrTriggerName: 'ApexClassExample',
         apexClassOrTriggerId: '01pxx00000avcNeAAL',
-        apexClassOrTriggerAttributes: {
-          type: 'Name',
-          url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-        },
         apexTestMethodName: 'testAssignContains',
         numLinesCovered: 1,
         numLinesUncovered: 4,
@@ -165,12 +157,7 @@ export const jsonWithCoverage = {
         {
           ApexClassOrTrigger: {
             Id: '01pxx00000avcNeAAL',
-            Name: 'ApexClassExample',
-            attributes: {
-              type: 'Name',
-              url:
-                '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-            }
+            Name: 'ApexClassExample'
           },
           ApexTestClass: {
             Id: '07Mxx00000ErgiHUAR',
@@ -182,11 +169,7 @@ export const jsonWithCoverage = {
           },
           NumLinesCovered: 1,
           NumLinesUncovered: 4,
-          TestMethodName: 'testConfig',
-          attributes: {
-            type: 'Name',
-            url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-          }
+          TestMethodName: 'testConfig'
         }
       ],
       summary: {

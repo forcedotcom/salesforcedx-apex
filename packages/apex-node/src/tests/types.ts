@@ -331,14 +331,10 @@ export type ApexTestResultData = {
    * The full name of the associated ApexClass method
    */
   fullName: string;
-  perTestCoverage?: {
-    apexClassOrTriggerName: string;
-    percentage: string;
-  };
   /**
    * The associated ApexCodeCoverage object
    */
-  perClassCoverage?: PerClassCoverage;
+  perTestCoverage?: PerTestCoverage;
 };
 
 export type CodeCoverageResult = {
@@ -357,8 +353,6 @@ export type TestResult = {
     failRate: string;
     testsRan: number;
     orgId: string;
-    testRunCoverage?: string;
-    orgWideCoverage?: string;
     outcome: string;
     passing: number;
     failing: number;
@@ -373,25 +367,17 @@ export type TestResult = {
     username: string;
     testRunId: string;
     userId: string;
-    // testRunCoverage?: string;
-    // totalLines?: number;
-    // coveredLines?: number;
+    testRunCoverage?: string;
+    orgWideCoverage?: string;
+    totalLines?: number;
+    coveredLines?: number;
   };
   tests: ApexTestResultData[];
-  // codecoverage?: {
-  //   coverageResults: CodeCoverageResult[];
-  //   orgWideCoverage: string;
-  //   // testRunCoverage:?: string;
-  //   // totalLines: number;
-  //   // coveredLines: number;
-  // };
   codecoverage?: CodeCoverageResult[];
 };
 
 export type ApexCodeCoverageRecord = {
-  attributes: { type: string; url: string };
   ApexClassOrTrigger: {
-    attributes: { type: string; url: string };
     Id: string;
     Name: string;
   };
@@ -411,12 +397,9 @@ export type ApexCodeCoverage = {
   records: ApexCodeCoverageRecord[];
 };
 
-// export type PerTestCoverage = {
-export type PerClassCoverage = {
-  attributes: { type: string; url: string };
+export type PerTestCoverage = {
   apexClassOrTriggerName: string;
   apexClassOrTriggerId: string;
-  apexClassOrTriggerAttributes: { type: string; url: string };
   apexTestClassId: string;
   apexTestMethodName: string;
   numLinesCovered: number;

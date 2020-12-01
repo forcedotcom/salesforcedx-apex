@@ -52,7 +52,6 @@ type ClassCoverage = {
 };
 
 type PerTestCoverage = {
-  attributes: { type: string; url: string };
   ApexTestClass: {
     Id: string;
     Name: string;
@@ -61,7 +60,6 @@ type PerTestCoverage = {
   TestMethodName: string;
   NumLinesCovered: number;
   ApexClassOrTrigger: {
-    attributes: { type: string; url: string };
     Id: string;
     Name: string;
   };
@@ -569,21 +567,19 @@ export default class Run extends SfdxCommand {
       });
 
       testResult.tests.forEach(test => {
-        if (test.perClassCoverage) {
+        if (test.perTestCoverage) {
           formattedCov.records.push({
-            attributes: test.perClassCoverage.attributes,
             ApexTestClass: { Id: test.id, Name: test.apexClass.name },
-            ...(test.perClassCoverage.coverage
-              ? { Coverage: test.perClassCoverage.coverage }
+            ...(test.perTestCoverage.coverage
+              ? { Coverage: test.perTestCoverage.coverage }
               : {}),
             TestMethodName: test.methodName,
-            NumLinesCovered: test.perClassCoverage.numLinesCovered,
+            NumLinesCovered: test.perTestCoverage.numLinesCovered,
             ApexClassOrTrigger: {
-              attributes: test.perClassCoverage.apexClassOrTriggerAttributes,
-              Id: test.perClassCoverage.apexClassOrTriggerId,
-              Name: test.perClassCoverage.apexClassOrTriggerName
+              Id: test.perTestCoverage.apexClassOrTriggerId,
+              Name: test.perTestCoverage.apexClassOrTriggerName
             },
-            NumLinesUncovered: test.perClassCoverage.numLinesUncovered
+            NumLinesUncovered: test.perTestCoverage.numLinesUncovered
           } as PerTestCoverage);
         }
       });

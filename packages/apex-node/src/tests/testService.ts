@@ -111,11 +111,8 @@ export class TestService {
       result.tests.forEach(item => {
         const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
         const perTestCov = perTestCovMap.get(keyCodeCov);
-        coveredApexClassIdSet.add(perTestCov.apexClassorTriggerId);
-        item.perTestCoverage = {
-          apexClassOrTriggerName: perTestCov.apexClassOrTriggerName,
-          percentage: perTestCov.percentage
-        };
+        coveredApexClassIdSet.add(perTestCov.apexClassOrTriggerId);
+        item.perTestCoverage = perTestCov;
       });
 
       const {
@@ -285,11 +282,8 @@ export class TestService {
         const perTestCov = perTestCovMap.get(keyCodeCov);
         // Skipped test is not in coverage map, check to see if perTestCov exists first
         if (perTestCov) {
-          coveredApexClassIdSet.add(perTestCov.apexClassorTriggerId);
-          item.perTestCoverage = {
-            apexClassOrTriggerName: perTestCov.apexClassOrTriggerName,
-            percentage: perTestCov.percentage
-          };
+          coveredApexClassIdSet.add(perTestCov.apexClassOrTriggerId);
+          item.perTestCoverage = perTestCov;
         }
       });
 
@@ -446,9 +440,6 @@ export class TestService {
 
       //NOTE: a test could cover more than one class, we should change this in order to handle that
       perTestCoverageMap.set(`${item.ApexTestClassId}-${item.TestMethodName}`, {
-        // perClassCodCovMap.set(`${item.ApexTestClassId}-${item.TestMethodName}`, {
-        // attributes: item.attributes,
-        // apexClassOrTriggerAttributes: item.ApexClassOrTrigger.attributes,
         apexClassOrTriggerName: item.ApexClassOrTrigger.Name,
         apexClassOrTriggerId: item.ApexClassOrTrigger.Id,
         apexTestClassId: item.ApexTestClassId,

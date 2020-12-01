@@ -102,54 +102,30 @@ export const testResultData: TestResult = {
 
 export const perClassCodeCoverage: ApexCodeCoverageRecord[] = [
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NWwb3AAD',
     ApexClassOrTrigger: {
       Id: '01pxx00000avcNeAAL',
-      Name: 'ApexClassExample',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'ApexClassExample'
     },
     TestMethodName: 'testOne',
     NumLinesCovered: 1,
     NumLinesUncovered: 62
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NWwb3AAD',
     ApexClassOrTrigger: {
       Id: '01pxx00000avc00AAL',
-      Name: 'ApexSampleV2',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'ApexSampleV2'
     },
     TestMethodName: 'testOne',
     NumLinesCovered: 45,
     NumLinesUncovered: 2
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NWwb3AAD',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'MyTestTrigger'
     },
     TestMethodName: 'testOne',
     NumLinesCovered: 5,
@@ -332,16 +308,8 @@ export const mixedTestResults: ApexTestResultRecord[] = [
 
 export const mixedPerClassCodeCoverage: ApexCodeCoverageRecord[] = [
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      },
       Id: '01pxx00000avcNeAAL',
       Name: 'ApexClassExample'
     },
@@ -350,16 +318,8 @@ export const mixedPerClassCodeCoverage: ApexCodeCoverageRecord[] = [
     NumLinesUncovered: 62
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      },
       Id: '01pxx00000avc00AAL',
       Name: 'ApexSampleV2'
     },
@@ -368,72 +328,40 @@ export const mixedPerClassCodeCoverage: ApexCodeCoverageRecord[] = [
     NumLinesUncovered: 2
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'MyTestTrigger'
     },
     TestMethodName: 'testAssignOnInsert',
     NumLinesCovered: 5,
     NumLinesUncovered: 2
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'MyTestTrigger'
     },
     TestMethodName: 'testAssignRuleContainsV2',
     NumLinesCovered: 0,
     NumLinesUncovered: 20
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'MyTestTrigger'
     },
     TestMethodName: 'testAssignRuleContains',
     NumLinesCovered: 0,
     NumLinesUncovered: 14
   },
   {
-    attributes: {
-      type: 'Name',
-      url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-    },
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger',
-      attributes: {
-        type: 'Name',
-        url: '/services/data/v50.0/tooling/sobjects/ApexCodeCoverage/00001x'
-      }
+      Name: 'MyTestTrigger'
     },
     TestMethodName: 'testAssignOnFuture',
     NumLinesCovered: 0,
