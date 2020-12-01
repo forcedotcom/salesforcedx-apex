@@ -444,7 +444,6 @@ export class TestService {
 
     const perTestCoverageMap = new Map<string, PerTestCoverage>();
     perTestCodeCovResuls.records.forEach(item => {
-      console.log('yo ' + item.Coverage);
       const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
       const percentage = this.calculatePercentage(
         item.NumLinesCovered,
