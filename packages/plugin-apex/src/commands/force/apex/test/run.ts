@@ -70,9 +70,9 @@ type CliCoverageResult = {
   coverage: ClassCoverage[];
   records: PerTestCoverage[];
   summary: {
-    // totalLines: number;
-    // coveredLines: number;
-    // testRunCoverage: string;
+    totalLines: number;
+    coveredLines: number;
+    testRunCoverage: string;
     orgWideCoverage: string;
   };
 };
@@ -261,7 +261,7 @@ export default class Run extends SfdxCommand {
       }
 
       return {
-        summary: result.summary,
+        summary: this.formatSummary(result),
         tests: this.formatTestResults(result.tests),
         ...(result.codecoverage
           ? {
@@ -269,7 +269,6 @@ export default class Run extends SfdxCommand {
             }
           : {})
       };
-      // return result;
     } catch (e) {
       return Promise.reject(e);
     }
@@ -519,6 +518,31 @@ export default class Run extends SfdxCommand {
     return processedLines;
   }
 
+  private formatSummary(testResult: TestResult): {} {
+    const summary = {};
+
+    Object.entries(testResult.summary).forEach(([key, value]) => {
+      if (key === 'skipRate') {
+        return;
+      }
+
+      if (
+        [
+          'testExecutionTimeInMs',
+          'testTotalTimeInMs',
+          'commandTimeInMs'
+        ].includes(key)
+      ) {
+        key = key.replace('InMs', '');
+        value = `${value} ms`;
+      }
+
+      Object.assign(summary, { [key]: value });
+    });
+
+    return summary;
+  }
+
   private formatTestResults(
     testResults: ApexTestResultData[]
   ): CliTestResult[] {
@@ -547,10 +571,10 @@ export default class Run extends SfdxCommand {
       coverage: [],
       records: [],
       summary: {
-        orgWideCoverage: testResult.summary.orgWideCoverage
-        // testRunCoverage: testResult.testRunCoverage
-        // totalLines: number
-        // coveredLines: number
+        totalLines: testResult.summary.totalLines,
+        coveredLines: testResult.summary.coveredLines,
+        orgWideCoverage: testResult.summary.orgWideCoverage,
+        testRunCoverage: testResult.summary.testRunCoverage
       }
     } as CliCoverageResult;
 
@@ -610,12 +634,6 @@ export default class Run extends SfdxCommand {
       this.ux.error(msg);
     }
   }
-
-  // private logJson(result: TestResult): void {
-  //   try {
-  //     const jsonResult = return
-  //   } catch (e) {}
-  // }
 
   private formatReportHint(result: TestResult): string {
     let reportArgs = `-i ${result.summary.testRunId}`;

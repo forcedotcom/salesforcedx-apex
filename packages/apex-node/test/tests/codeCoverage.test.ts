@@ -136,12 +136,14 @@ describe('Get code coverage results', () => {
     const testSrv = new TestService(mockConnection);
     const {
       codeCoverageResults,
-      testRunCoverage
+      totalLines,
+      coveredLines
     } = await testSrv.getAggregateCodeCoverage(
       new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
     );
 
-    expect(testRunCoverage).to.equal('75%');
+    expect(totalLines).to.equal(24);
+    expect(coveredLines).to.equal(18);
     expect(codeCoverageResults).to.eql(expectedResult);
   });
 
@@ -155,10 +157,12 @@ describe('Get code coverage results', () => {
     const testSrv = new TestService(mockConnection);
     const {
       codeCoverageResults,
-      testRunCoverage
+      totalLines,
+      coveredLines
     } = await testSrv.getAggregateCodeCoverage(new Set([]));
     expect(codeCoverageResults.length).to.equal(0);
-    expect(testRunCoverage).to.equal('0%');
+    expect(totalLines).to.equal(0);
+    expect(coveredLines).to.equal(0);
   });
 
   it('should return per test code coverage', async () => {
