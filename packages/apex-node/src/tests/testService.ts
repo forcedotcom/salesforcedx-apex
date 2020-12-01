@@ -437,13 +437,14 @@ export class TestService {
     str = str.slice(0, -1);
 
     const perTestCodeCovQuery =
-      'SELECT ApexTestClassId, ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, TestMethodName, NumLinesCovered, NumLinesUncovered FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
+      'SELECT ApexTestClassId, ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, TestMethodName, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
     const perTestCodeCovResuls = (await this.connection.tooling.query(
       util.format(perTestCodeCovQuery, `${str}`)
     )) as ApexCodeCoverage;
 
     const perTestCoverageMap = new Map<string, PerTestCoverage>();
     perTestCodeCovResuls.records.forEach(item => {
+      console.log('yo ' + item.Coverage);
       const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
       const percentage = this.calculatePercentage(
         item.NumLinesCovered,

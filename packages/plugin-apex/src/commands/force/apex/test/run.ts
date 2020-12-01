@@ -6,8 +6,6 @@
  */
 import { TapReporter, TestService, JUnitReporter } from '@salesforce/apex-node';
 import {
-  ApexTestResultData,
-  ApexTestResultOutcome,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
   SyncTestConfiguration,
@@ -18,6 +16,7 @@ import { Row, Table } from '@salesforce/apex-node/lib/src/utils';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
+import { JsonReporter } from '../../../../jsonReporter';
 import { buildDescription, logLevels } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
@@ -28,54 +27,6 @@ export const TestLevel = [
   'RunAllTestsInOrg',
   'RunSpecifiedTests'
 ];
-
-type CliTestResult = {
-  Id: string;
-  QueueItemId: string;
-  StackTrace: string;
-  Message: string;
-  AsyncApexJobId: string;
-  MethodName: string;
-  Outcome: ApexTestResultOutcome;
-  ApexClass: { Id: string; Name: string; NamespacePrefix: string };
-  RunTime: number;
-  FullName: string;
-};
-
-type ClassCoverage = {
-  id: string;
-  name: string;
-  totalLines: number;
-  lines: {};
-  totalCovered: number;
-  coveredPercent: number;
-};
-
-type PerTestCoverage = {
-  ApexTestClass: {
-    Id: string;
-    Name: string;
-  };
-  Coverage?: { coveredLines: number[]; uncoveredLines: number[] };
-  TestMethodName: string;
-  NumLinesCovered: number;
-  ApexClassOrTrigger: {
-    Id: string;
-    Name: string;
-  };
-  NumLinesUncovered: number;
-};
-
-type CliCoverageResult = {
-  coverage: ClassCoverage[];
-  records: PerTestCoverage[];
-  summary: {
-    totalLines: number;
-    coveredLines: number;
-    testRunCoverage: string;
-    orgWideCoverage: string;
-  };
-};
 
 export const resultFormat = ['human', 'tap', 'junit', 'json'];
 
@@ -260,15 +211,7 @@ export default class Run extends SfdxCommand {
           );
       }
 
-      return {
-        summary: this.formatSummary(result),
-        tests: this.formatTestResults(result.tests),
-        ...(result.codecoverage
-          ? {
-              coverage: this.formatCoverage(result)
-            }
-          : {})
-      };
+      return this.logJson(result);
     } catch (e) {
       return Promise.reject(e);
     }
@@ -518,100 +461,6 @@ export default class Run extends SfdxCommand {
     return processedLines;
   }
 
-  private formatSummary(testResult: TestResult): {} {
-    const summary = {};
-
-    Object.entries(testResult.summary).forEach(([key, value]) => {
-      if (key === 'skipRate') {
-        return;
-      }
-
-      if (
-        [
-          'testExecutionTimeInMs',
-          'testTotalTimeInMs',
-          'commandTimeInMs'
-        ].includes(key)
-      ) {
-        key = key.replace('InMs', '');
-        value = `${value} ms`;
-      }
-
-      Object.assign(summary, { [key]: value });
-    });
-
-    return summary;
-  }
-
-  private formatTestResults(
-    testResults: ApexTestResultData[]
-  ): CliTestResult[] {
-    return testResults.map(test => {
-      return {
-        Id: test.id,
-        QueueItemId: test.queueItemId,
-        StackTrace: test.stackTrace,
-        Message: test.message,
-        AsyncApexJobId: test.asyncApexJobId,
-        MethodName: test.methodName,
-        Outcome: test.outcome,
-        ApexClass: {
-          Id: test.apexClass.id,
-          Name: test.apexClass.name,
-          NamespacePrefix: test.apexClass.namespacePrefix
-        },
-        RunTime: test.runTime,
-        FullName: test.fullName
-      };
-    }) as CliTestResult[];
-  }
-
-  private formatCoverage(testResult: TestResult): CliCoverageResult {
-    const formattedCov = {
-      coverage: [],
-      records: [],
-      summary: {
-        totalLines: testResult.summary.totalLines,
-        coveredLines: testResult.summary.coveredLines,
-        orgWideCoverage: testResult.summary.orgWideCoverage,
-        testRunCoverage: testResult.summary.testRunCoverage
-      }
-    } as CliCoverageResult;
-
-    if (testResult.codecoverage) {
-      formattedCov.coverage = testResult.codecoverage.map(cov => {
-        return {
-          id: cov.apexId,
-          name: cov.name,
-          totalLines: cov.numLinesCovered + cov.numLinesUncovered,
-          lines: { ...cov.coveredLines },
-          totalCovered: cov.numLinesCovered,
-          coveredPercent: parseInt(cov.percentage)
-        } as ClassCoverage;
-      });
-
-      testResult.tests.forEach(test => {
-        if (test.perTestCoverage) {
-          formattedCov.records.push({
-            ApexTestClass: { Id: test.id, Name: test.apexClass.name },
-            ...(test.perTestCoverage.coverage
-              ? { Coverage: test.perTestCoverage.coverage }
-              : {}),
-            TestMethodName: test.methodName,
-            NumLinesCovered: test.perTestCoverage.numLinesCovered,
-            ApexClassOrTrigger: {
-              Id: test.perTestCoverage.apexClassOrTriggerId,
-              Name: test.perTestCoverage.apexClassOrTriggerName
-            },
-            NumLinesUncovered: test.perTestCoverage.numLinesUncovered
-          } as PerTestCoverage);
-        }
-      });
-    }
-
-    return formattedCov;
-  }
-
   private logTap(result: TestResult): void {
     try {
       const reporter = new TapReporter();
@@ -633,6 +482,18 @@ export default class Run extends SfdxCommand {
       const msg = messages.getMessage('testResultProcessErr', [e]);
       this.ux.error(msg);
     }
+  }
+
+  private logJson(result: TestResult): AnyJson {
+    try {
+      const reporter = new JsonReporter();
+      return reporter.format(result);
+    } catch (e) {
+      this.ux.logJson(result);
+      const msg = messages.getMessage('testResultProcessErr', [e]);
+      this.ux.error(msg);
+    }
+    return result;
   }
 
   private formatReportHint(result: TestResult): string {
