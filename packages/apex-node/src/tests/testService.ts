@@ -21,12 +21,16 @@ import {
   ApexTestRunResultStatus,
   TestResult,
   ApexCodeCoverage,
-  PerTestCoverage
+  PerTestCoverage,
+  OutputDirConfig
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
 import { formatStartTime, getCurrentTime } from '../utils';
+import { AnyJson } from '@salesforce/ts-types';
+import { join } from 'path';
+import { JUnitReporter, TapReporter } from '../reporters';
 
 // Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
 // local testing shows query char limit to be closer to ~12,400
@@ -202,12 +206,76 @@ export class TestService {
       this.getTestRunRequestAction(options)
     );
 
-    return await this.formatAsyncResults(
+    const result = await this.formatAsyncResults(
       asyncRunResult.queueItem,
       asyncRunResult.runId,
       getCurrentTime(),
       codeCoverage
     );
+
+    if (options.outputDir) {
+      await this.writeResultFiles(result, options.outputDir, codeCoverage);
+    }
+
+    return result;
+  }
+
+  private async writeResultFiles(
+    result: TestResult,
+    outputDirConfig: OutputDirConfig,
+    codeCoverage = false
+  ): Promise<void> {
+    const fileMap = new Map<string, AnyJson>();
+
+    if (outputDirConfig.defaultJson) {
+      fileMap.set(
+        join(
+          outputDirConfig.dirPath,
+          `test-result-${result.summary.testRunId}.json`
+        ),
+        result
+      );
+
+      if (codeCoverage) {
+        const coverageRecords = result.tests.map(record => {
+          return record.perTestCoverage;
+        });
+
+        fileMap.set(
+          join(outputDirConfig.dirPath, `test-result-codecoverage.json`),
+          coverageRecords
+        );
+      }
+    }
+
+    fileMap.set(
+      join(outputDirConfig.dirPath, 'test-run-id.txt'),
+      result.summary.testRunId
+    );
+
+    const junitResult = new JUnitReporter().format(result);
+    fileMap.set(
+      join(
+        outputDirConfig.dirPath,
+        `test-result-${result.summary.testRunId}-junit.xml`
+      ),
+      junitResult
+    );
+
+    if (outputDirConfig.resultFormat) {
+      if (outputDirConfig.resultFormat === 'junit') {
+        fileMap.set(
+          join(outputDirConfig.dirPath, `test-result.xml`),
+          junitResult
+        );
+      } else {
+        const tapResult = new TapReporter().format(result);
+        fileMap.set(
+          join(outputDirConfig.dirPath, `test-result.txt`),
+          tapResult
+        );
+      }
+    }
   }
 
   public async formatAsyncResults(

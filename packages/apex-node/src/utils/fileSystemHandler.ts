@@ -34,3 +34,17 @@ export function createFile(filePath: string, fileContent: AnyJson): void {
   const writeStream = fs.createWriteStream(filePath);
   writeStream.write(fileContent);
 }
+
+/**
+ * Method to save multiple files on disk
+ * @param fileMap key = filePath, value = file contents
+ */
+export function createFiles(fileMap: Map<string, AnyJson>): void {
+  for (const filePath of fileMap.keys()) {
+    ensureFileExists(filePath);
+
+    const writeStream = fs.createWriteStream(filePath);
+    writeStream.write(fileMap.get(filePath));
+    writeStream.end();
+  }
+}
