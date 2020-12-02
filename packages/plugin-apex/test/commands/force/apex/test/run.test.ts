@@ -13,8 +13,8 @@ import { createSandbox, SinonSandbox } from 'sinon';
 import {
   testRunSimple,
   runWithCoverage,
-  jsonResult,
-  jsonWithCoverage
+  cliJsonResult,
+  cliWithCoverage
 } from './testData';
 
 Messages.importMessagesDirectory(__dirname);
@@ -267,7 +267,7 @@ describe('force:apex:test:run', () => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
       const resultJSON = JSON.parse(result);
-      expect(resultJSON).to.deep.equal(jsonResult);
+      expect(resultJSON).to.deep.equal(cliJsonResult);
     });
 
   test
@@ -293,7 +293,7 @@ describe('force:apex:test:run', () => {
         const result = ctx.stdout;
         expect(result).to.not.be.empty;
         const resultJSON = JSON.parse(result);
-        expect(resultJSON).to.deep.equal(jsonWithCoverage);
+        expect(resultJSON).to.deep.equal(cliWithCoverage);
       }
     );
 

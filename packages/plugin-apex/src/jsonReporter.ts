@@ -59,6 +59,13 @@ type CliCoverageResult = {
   };
 };
 
+const skippedProperties = ['skipRate', 'coveredLines', 'totalLines'];
+const timeProperties = [
+  'testExecutionTimeInMs',
+  'testTotalTimeInMs',
+  'commandTimeInMs'
+];
+
 export class JsonReporter {
   public format(result: TestResult): AnyJson {
     return {
@@ -76,17 +83,11 @@ export class JsonReporter {
     const summary = {};
 
     Object.entries(testResult.summary).forEach(([key, value]) => {
-      if (key === 'skipRate') {
+      if (skippedProperties.includes(key)) {
         return;
       }
 
-      if (
-        [
-          'testExecutionTimeInMs',
-          'testTotalTimeInMs',
-          'commandTimeInMs'
-        ].includes(key)
-      ) {
+      if (timeProperties.includes(key)) {
         key = key.replace('InMs', '');
         value = `${value} ms`;
       }
