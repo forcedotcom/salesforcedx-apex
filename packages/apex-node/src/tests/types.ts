@@ -47,26 +47,13 @@ export type AsyncTestConfiguration = {
    */
   testLevel: TestLevel;
   skipCodeCoverage?: boolean;
-  outputDir?: OutputDirConfig;
 };
 
-// by default if outputdir is specifed then the command will output a test-run-id txt file,
-// test-result-IDNUM-junit.xml file, and the test-result-idnum json and test-result-codecoverage.json files
-// if you specify result format then a test-result.xml or test-result.txt file is created
-// if default json is false then the json files dont get generated
-// if there are fileConfigs specified then those files are also written to the dirPath
 export type OutputDirConfig = {
   dirPath: string;
-  // set the defaultJson value to true for all the runTest functions
-  defaultJson: boolean;
-  // if tap is specified then test-result.txt has tap info. if junit is specified then its test-result.xml
+  defaultFiles: boolean;
   resultFormat?: 'tap' | 'junit';
-  // if consumers have their own reporters, they can specify more files and contents to be written to the file system
-  // cli always needs to provide the json output here and add in the json code coverage when needed
-  // cli should keep default json false, add the tap and junit reports when needed
-  // cli will specify the human result test-result.txt files here and leave result format empty
-  // cli will specify json result format here and leave result format empty
-  fileConfigs?: { filename: string; content: string | {} }[];
+  fileInfos?: { filename: string; content: string | object }[];
 };
 
 /**
@@ -99,7 +86,6 @@ export type AsyncTestArrayConfiguration = {
    * Specifies which tests to run, default level is RunSpecifiedTests
    */
   testLevel: TestLevel;
-  outputDir?: OutputDirConfig;
 };
 
 export type SyncTestConfiguration = {

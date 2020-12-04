@@ -35,16 +35,39 @@ export function createFile(filePath: string, fileContent: AnyJson): void {
   writeStream.write(fileContent);
 }
 
+function streamPromise(stream: fs.WriteStream): Promise<void> {
+  return new Promise((resolve, reject) => {
+    stream.on('end', () => {
+      resolve();
+    });
+    stream.on('error', error => {
+      reject(error);
+    });
+  });
+}
+
 /**
  * Method to save multiple files on disk
  * @param fileMap key = filePath, value = file contents
  */
-export function createFiles(fileMap: Map<string, AnyJson>): void {
-  for (const filePath of fileMap.keys()) {
-    ensureFileExists(filePath);
-
-    const writeStream = fs.createWriteStream(filePath);
-    writeStream.write(fileMap.get(filePath));
+export async function createFiles(
+  fileMap: { path: string; content: string }[]
+): Promise<void> {
+  const writePromises = fileMap.map(file => {
+    ensureFileExists(file.path);
+    const writeStream = fs.createWriteStream(file.path);
+    writeStream.write(file.content);
     writeStream.end();
-  }
+    return streamPromise(writeStream);
+  });
+
+  await Promise.all(writePromises);
+
+  // for (const filePath of fileMap.keys()) {
+  //   ensureFileExists(filePath);
+
+  //   const writeStream = fs.createWriteStream(filePath);
+  //   writeStream.write(fileMap.get(filePath));
+  //   writeStream.end();
+  // }
 }

@@ -28,9 +28,9 @@ import * as util from 'util';
 import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
 import { formatStartTime, getCurrentTime } from '../utils';
-import { AnyJson } from '@salesforce/ts-types';
 import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
+import { createFiles } from '../utils/fileSystemHandler';
 
 // Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
 // local testing shows query char limit to be closer to ~12,400
@@ -206,76 +206,12 @@ export class TestService {
       this.getTestRunRequestAction(options)
     );
 
-    const result = await this.formatAsyncResults(
+    return await this.formatAsyncResults(
       asyncRunResult.queueItem,
       asyncRunResult.runId,
       getCurrentTime(),
       codeCoverage
     );
-
-    if (options.outputDir) {
-      await this.writeResultFiles(result, options.outputDir, codeCoverage);
-    }
-
-    return result;
-  }
-
-  private async writeResultFiles(
-    result: TestResult,
-    outputDirConfig: OutputDirConfig,
-    codeCoverage = false
-  ): Promise<void> {
-    const fileMap = new Map<string, AnyJson>();
-
-    if (outputDirConfig.defaultJson) {
-      fileMap.set(
-        join(
-          outputDirConfig.dirPath,
-          `test-result-${result.summary.testRunId}.json`
-        ),
-        result
-      );
-
-      if (codeCoverage) {
-        const coverageRecords = result.tests.map(record => {
-          return record.perTestCoverage;
-        });
-
-        fileMap.set(
-          join(outputDirConfig.dirPath, `test-result-codecoverage.json`),
-          coverageRecords
-        );
-      }
-    }
-
-    fileMap.set(
-      join(outputDirConfig.dirPath, 'test-run-id.txt'),
-      result.summary.testRunId
-    );
-
-    const junitResult = new JUnitReporter().format(result);
-    fileMap.set(
-      join(
-        outputDirConfig.dirPath,
-        `test-result-${result.summary.testRunId}-junit.xml`
-      ),
-      junitResult
-    );
-
-    if (outputDirConfig.resultFormat) {
-      if (outputDirConfig.resultFormat === 'junit') {
-        fileMap.set(
-          join(outputDirConfig.dirPath, `test-result.xml`),
-          junitResult
-        );
-      } else {
-        const tapResult = new TapReporter().format(result);
-        fileMap.set(
-          join(outputDirConfig.dirPath, `test-result.txt`),
-          tapResult
-        );
-      }
-    }
   }
 
   public async formatAsyncResults(
@@ -587,6 +523,84 @@ export class TestService {
     };
   }
 
+  public async writeResultFiles(
+    result: TestResult,
+    outputDirConfig: OutputDirConfig,
+    codeCoverage = false
+  ): Promise<string[]> {
+    const { dirPath, resultFormat, fileInfos, defaultFiles } = outputDirConfig;
+    const fileMap: { path: string; content: string }[] = [];
+    const junitResult = new JUnitReporter().format(result);
+
+    // add junit & id files by default. add the json files if they weren't already provided by fileInfos
+    if (defaultFiles) {
+      fileMap.push({
+        path: join(dirPath, 'test-run-id.txt'),
+        content: result.summary.testRunId
+      });
+      fileMap.push({
+        path: join(
+          dirPath,
+          `test-result-${result.summary.testRunId}-junit.xml`
+        ),
+        content: junitResult
+      });
+
+      const summaryJson = `test-result-${result.summary.testRunId}.json`;
+      const fileNames = fileInfos?.map(fileInfo => {
+        return fileInfo.filename;
+      });
+      if (!fileNames.includes(summaryJson)) {
+        fileMap.push({
+          path: join(dirPath, summaryJson),
+          content: this.stringify(result)
+        });
+        if (codeCoverage) {
+          const coverageRecords = result.tests.map(record => {
+            return record.perTestCoverage;
+          });
+
+          fileMap.push({
+            path: join(dirPath, `test-result-codecoverage.json`),
+            content: this.stringify(coverageRecords)
+          });
+        }
+      }
+    }
+
+    // if a result format is specified, add the associated test-result file
+    if (resultFormat) {
+      if (resultFormat === 'junit') {
+        fileMap.push({
+          path: join(dirPath, `test-result.xml`),
+          content: junitResult
+        });
+      } else {
+        const tapResult = new TapReporter().format(result);
+        fileMap.push({
+          path: join(dirPath, `test-result.txt`),
+          content: tapResult
+        });
+      }
+    }
+
+    // add any provided fileInfos
+    fileInfos?.forEach(fileInfo => {
+      fileMap.push({
+        path: join(dirPath, fileInfo.filename),
+        content:
+          typeof fileInfo.content !== 'string'
+            ? this.stringify(fileInfo.content)
+            : fileInfo.content
+      });
+    });
+
+    createFiles(fileMap);
+    return fileMap.map(file => {
+      return file.path;
+    });
+  }
+
   private calculatePercentage(dividend: number, divisor: number): string {
     let percentage = '0%';
     if (dividend > 0) {
@@ -598,6 +612,10 @@ export class TestService {
 
   private addIdToQuery(formattedIds: string, id: string): string {
     return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
+  }
+
+  private stringify(jsonObj: object): string {
+    return JSON.stringify(jsonObj, null, 2);
   }
 
   private getTestRunRequestAction(

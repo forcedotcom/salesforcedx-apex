@@ -16,7 +16,8 @@ import { Row, Table } from '@salesforce/apex-node/lib/src/utils';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import { JsonReporter } from '../../../../jsonReporter';
+import { extname, join } from 'path';
+import { CliJsonFormat, JsonReporter } from '../../../../jsonReporter';
 import { buildDescription, logLevels } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
@@ -193,9 +194,61 @@ export default class Run extends SfdxCommand {
         );
       }
 
+      let resultFiles: string[] = [];
+      if (this.flags.outputdir) {
+        const jsonOutput = this.logJson(result) as CliJsonFormat;
+        const outputDirConfig = {
+          dirPath: this.flags.outputdir,
+          defaultFiles: true,
+          fileInfos: [
+            {
+              filename: `test-result-${result.summary.testRunId}.json`,
+              content: jsonOutput
+            },
+            ...(jsonOutput.coverage
+              ? [
+                  {
+                    filename: `test-result-codecoverage.json`,
+                    content: jsonOutput.coverage
+                  }
+                ]
+              : [])
+          ],
+          ...(this.flags.resultformat === 'junit' ||
+          this.flags.resultformat === 'tap'
+            ? { resultFormat: this.flags.resultformat }
+            : {})
+        };
+
+        resultFiles = await testService.writeResultFiles(
+          result,
+          outputDirConfig,
+          this.flags.codecoverage
+        );
+      }
+
       switch (this.flags.resultformat) {
         case 'human':
-          this.ux.log(this.formatHuman(result, this.flags.detailedcoverage));
+          let humanOutput: string;
+          if (this.flags.outputdir) {
+            const humanResultFile = 'test-result.txt';
+            resultFiles.push(join(this.flags.outputdir, humanResultFile));
+            humanOutput = this.formatHuman(
+              result,
+              this.flags.detailedCoverage,
+              resultFiles
+            );
+
+            await testService.writeResultFiles(result, {
+              dirPath: this.flags.outputdir,
+              defaultFiles: false,
+              fileInfos: [{ filename: humanResultFile, content: humanOutput }]
+            });
+          } else {
+            humanOutput = this.formatHuman(result, this.flags.detailedcoverage);
+          }
+
+          this.ux.log(humanOutput);
           break;
         case 'tap':
           this.logTap(result);
@@ -211,7 +264,7 @@ export default class Run extends SfdxCommand {
           );
       }
 
-      return this.logJson(result);
+      return this.logJson(result) as AnyJson;
     } catch (e) {
       return Promise.reject(e);
     }
@@ -252,9 +305,31 @@ export default class Run extends SfdxCommand {
 
   public formatHuman(
     testResult: TestResult,
-    detailedCoverage: boolean
+    detailedCoverage: boolean,
+    resultFiles?: string[]
   ): string {
     const tb = new Table();
+    let tbResult = '';
+
+    // Test Reports Table
+    if (resultFiles) {
+      const fileRowArray: Row[] = [];
+      resultFiles.forEach(file => {
+        const format =
+          this.extName(file) === 'xml' ? 'junit' : this.extName(file);
+        fileRowArray.push({ format, file });
+      });
+
+      tbResult += tb.createTable(
+        fileRowArray,
+        [
+          { key: 'format', label: messages.getMessage('format_col_header') },
+          { key: 'file', label: messages.getMessage('file_col_header') }
+        ],
+        messages.getMessage('test_reports_header')
+      );
+      tbResult += '\n\n';
+    }
 
     // Summary Table
     const summaryRowArray: Row[] = [
@@ -304,7 +379,7 @@ export default class Run extends SfdxCommand {
         : [])
     ];
 
-    let tbResult = tb.createTable(
+    tbResult += tb.createTable(
       summaryRowArray,
       [
         {
@@ -484,7 +559,7 @@ export default class Run extends SfdxCommand {
     }
   }
 
-  private logJson(result: TestResult): AnyJson {
+  private logJson(result: TestResult): CliJsonFormat | TestResult {
     try {
       const reporter = new JsonReporter();
       return reporter.format(result);
@@ -503,5 +578,10 @@ export default class Run extends SfdxCommand {
     }
     const hint = messages.getMessage('apexTestReportFormatHint', [reportArgs]);
     return hint;
+  }
+
+  private extName(path: string): string {
+    const split = extname(path).split('.');
+    return split.length > 1 ? split[1] : split[0];
   }
 }
