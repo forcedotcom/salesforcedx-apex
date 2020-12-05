@@ -16,7 +16,6 @@ import { Row, Table } from '@salesforce/apex-node/lib/src/utils';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import { extname, join } from 'path';
 import { CliJsonFormat, JsonReporter } from '../../../../jsonReporter';
 import { buildDescription, logLevels } from '../../../../utils';
 
@@ -194,7 +193,6 @@ export default class Run extends SfdxCommand {
         );
       }
 
-      let resultFiles: string[] = [];
       if (this.flags.outputdir) {
         const jsonOutput = this.logJson(result) as CliJsonFormat;
         const outputDirConfig = {
@@ -220,7 +218,7 @@ export default class Run extends SfdxCommand {
             : {})
         };
 
-        resultFiles = await testService.writeResultFiles(
+        await testService.writeResultFiles(
           result,
           outputDirConfig,
           this.flags.codecoverage
@@ -229,24 +227,11 @@ export default class Run extends SfdxCommand {
 
       switch (this.flags.resultformat) {
         case 'human':
-          let humanOutput: string;
-          if (this.flags.outputdir) {
-            const humanResultFile = 'test-result.txt';
-            resultFiles.push(join(this.flags.outputdir, humanResultFile));
-            humanOutput = this.formatHuman(
-              result,
-              this.flags.detailedCoverage,
-              resultFiles
-            );
-
-            await testService.writeResultFiles(result, {
-              dirPath: this.flags.outputdir,
-              defaultFiles: false,
-              fileInfos: [{ filename: humanResultFile, content: humanOutput }]
-            });
-          } else {
-            humanOutput = this.formatHuman(result, this.flags.detailedcoverage);
-          }
+          const humanOutput = this.formatHuman(
+            result,
+            this.flags.detailedcoverage,
+            this.flags.outputdir
+          );
 
           this.ux.log(humanOutput);
           break;
@@ -306,31 +291,11 @@ export default class Run extends SfdxCommand {
   public formatHuman(
     testResult: TestResult,
     detailedCoverage: boolean,
-    resultFiles?: string[]
+    outputDir: string
   ): string {
-    const tb = new Table();
-    let tbResult = '';
-
-    // Test Reports Table
-    if (resultFiles) {
-      const fileRowArray: Row[] = [];
-      resultFiles.forEach(file => {
-        const format =
-          this.extName(file) === 'xml' ? 'junit' : this.extName(file);
-        fileRowArray.push({ format, file });
-      });
-
-      tbResult += tb.createTable(
-        fileRowArray,
-        [
-          { key: 'format', label: messages.getMessage('format_col_header') },
-          { key: 'file', label: messages.getMessage('file_col_header') }
-        ],
-        messages.getMessage('test_reports_header')
-      );
-      tbResult += '\n\n';
+    if (outputDir) {
+      this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
     }
-
     // Summary Table
     const summaryRowArray: Row[] = [
       {
@@ -379,7 +344,8 @@ export default class Run extends SfdxCommand {
         : [])
     ];
 
-    tbResult += tb.createTable(
+    const tb = new Table();
+    let tbResult = tb.createTable(
       summaryRowArray,
       [
         {
@@ -578,10 +544,5 @@ export default class Run extends SfdxCommand {
     }
     const hint = messages.getMessage('apexTestReportFormatHint', [reportArgs]);
     return hint;
-  }
-
-  private extName(path: string): string {
-    const split = extname(path).split('.');
-    return split.length > 1 ? split[1] : split[0];
   }
 }
