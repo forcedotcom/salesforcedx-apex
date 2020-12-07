@@ -57,17 +57,8 @@ export async function createFiles(
     ensureFileExists(file.path);
     const writeStream = fs.createWriteStream(file.path);
     writeStream.write(file.content);
-    writeStream.end();
     return streamPromise(writeStream);
   });
 
   await Promise.all(writePromises);
-
-  // for (const filePath of fileMap.keys()) {
-  //   ensureFileExists(filePath);
-
-  //   const writeStream = fs.createWriteStream(filePath);
-  //   writeStream.write(fileMap.get(filePath));
-  //   writeStream.end();
-  // }
 }

@@ -550,7 +550,8 @@ export class TestService {
       const fileNames = fileInfos?.map(fileInfo => {
         return fileInfo.filename;
       });
-      if (!fileNames.includes(summaryJson)) {
+
+      if (!fileNames || !fileNames.includes(summaryJson)) {
         fileMap.push({
           path: join(dirPath, summaryJson),
           content: this.stringify(result)
@@ -614,7 +615,7 @@ export class TestService {
     return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
   }
 
-  private stringify(jsonObj: object): string {
+  public stringify(jsonObj: object): string {
     return JSON.stringify(jsonObj, null, 2);
   }
 
