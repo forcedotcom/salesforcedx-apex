@@ -197,7 +197,6 @@ export default class Run extends SfdxCommand {
         const jsonOutput = this.logJson(result) as CliJsonFormat;
         const outputDirConfig = {
           dirPath: this.flags.outputdir,
-          defaultFiles: true,
           fileInfos: [
             {
               filename: `test-result-${result.summary.testRunId}.json`,
@@ -240,6 +239,9 @@ export default class Run extends SfdxCommand {
           break;
         case 'junit':
           this.logJUnit(result);
+          break;
+        case 'json':
+          this.ux.logJson(this.logJson(result));
           break;
         default:
           const id = result.summary.testRunId;

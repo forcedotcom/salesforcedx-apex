@@ -797,10 +797,9 @@ describe('Run Apex tests asynchronously', () => {
       sandboxStub.restore();
     });
 
-    it('should create test-run-id and test-result-junit.xml files if default is specified', async () => {
+    it('should only create test-run-id.txt if no result format nor fileInfos are specified', async () => {
       const config = {
-        dirPath: 'path/to/directory',
-        defaultFiles: true
+        dirPath: 'path/to/directory'
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);
@@ -808,39 +807,13 @@ describe('Run Apex tests asynchronously', () => {
       expect(
         createStreamStub.calledWith(join(config.dirPath, 'test-run-id.txt'))
       ).to.be.true;
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-${testRunId}-junit.xml`)
-        )
-      ).to.be.true;
-      expect(stringifySpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(3);
+      expect(createStreamStub.callCount).to.eql(1);
     });
 
-    it('should not create default json files if they are provided in fileInfos', async () => {
+    it('should create the json files if json result format is specified', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        defaultFiles: true,
-        fileInfos: [
-          { filename: `test-result-${testRunId}.json`, content: 'summary: {}' }
-        ]
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-${testRunId}.json`)
-        )
-      ).to.be.true;
-      expect(stringifySpy.callCount).to.eql(0);
-      expect(createStreamStub.callCount).to.eql(3);
-    });
-
-    it('should create the default json files if they are not provided in fileInfos', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        defaultFiles: true
+        resultFormat: 'json'
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);
@@ -851,57 +824,46 @@ describe('Run Apex tests asynchronously', () => {
         )
       ).to.be.true;
       expect(stringifySpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(3);
+      expect(createStreamStub.callCount).to.eql(2);
     });
 
-    it('should not create any default files if it is not specified', async () => {
+    it('should create the junit result files if junit result format is specified', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        defaultFiles: false
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(stringifySpy.callCount).to.eql(0);
-      expect(createStreamStub.callCount).to.eql(0);
-    });
-
-    it('should create the corresponding junit result file if result format is specified', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        defaultFiles: false,
         resultFormat: 'junit'
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);
 
       expect(
-        createStreamStub.calledWith(join(config.dirPath, `test-result.xml`))
+        createStreamStub.calledWith(
+          join(config.dirPath, `test-result-${testRunId}-junit.xml`)
+        )
       ).to.be.true;
       expect(junitSpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(1);
+      expect(createStreamStub.callCount).to.eql(2);
     });
 
-    it('should create the corresponding tap result file if result format is specified', async () => {
+    it('should create the tap result files if result format is specified', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        defaultFiles: false,
         resultFormat: 'tap'
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);
 
       expect(
-        createStreamStub.calledWith(join(config.dirPath, `test-result.txt`))
+        createStreamStub.calledWith(
+          join(config.dirPath, `test-result-${testRunId}-tap.txt`)
+        )
       ).to.be.true;
       expect(tapSpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(1);
+      expect(createStreamStub.callCount).to.eql(2);
     });
 
     it('should create any files provided in fileInfos', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        defaultFiles: false,
         fileInfos: [
           { filename: `test-result-myFile.json`, content: { summary: {} } }
         ]
@@ -915,7 +877,23 @@ describe('Run Apex tests asynchronously', () => {
         )
       ).to.be.true;
       expect(stringifySpy.callCount).to.eql(1);
-      expect(createStreamStub.callCount).to.eql(1);
+      expect(createStreamStub.callCount).to.eql(2);
+    });
+
+    it('should create code coverage files if set to true', async () => {
+      const config = {
+        dirPath: 'path/to/directory'
+      } as OutputDirConfig;
+      const testSrv = new TestService(mockConnection);
+      await testSrv.writeResultFiles(testResultData, config, true);
+
+      expect(
+        createStreamStub.calledWith(
+          join(config.dirPath, `test-result-${testRunId}-codecoverage.json`)
+        )
+      ).to.be.true;
+      expect(stringifySpy.callCount).to.eql(1);
+      expect(createStreamStub.callCount).to.eql(2);
     });
   });
 });

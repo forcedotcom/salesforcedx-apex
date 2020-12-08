@@ -51,8 +51,7 @@ export type AsyncTestConfiguration = {
 
 export type OutputDirConfig = {
   dirPath: string;
-  defaultFiles: boolean;
-  resultFormat?: 'tap' | 'junit';
+  resultFormat?: 'tap' | 'junit' | 'json';
   fileInfos?: { filename: string; content: string | object }[];
 };
 

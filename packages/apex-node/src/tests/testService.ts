@@ -528,64 +528,55 @@ export class TestService {
     outputDirConfig: OutputDirConfig,
     codeCoverage = false
   ): Promise<string[]> {
-    const { dirPath, resultFormat, fileInfos, defaultFiles } = outputDirConfig;
+    const { dirPath, resultFormat, fileInfos } = outputDirConfig;
     const fileMap: { path: string; content: string }[] = [];
-    const junitResult = new JUnitReporter().format(result);
 
-    // add junit & id files by default. add the json files if they weren't already provided by fileInfos
-    if (defaultFiles) {
-      fileMap.push({
-        path: join(dirPath, 'test-run-id.txt'),
-        content: result.summary.testRunId
+    fileMap.push({
+      path: join(dirPath, 'test-run-id.txt'),
+      content: result.summary.testRunId
+    });
+    switch (resultFormat) {
+      case 'json':
+        fileMap.push({
+          path: join(dirPath, `test-result-${result.summary.testRunId}.json`),
+          content: this.stringify(result)
+        });
+        break;
+      case 'tap':
+        const tapResult = new TapReporter().format(result);
+        fileMap.push({
+          path: join(
+            dirPath,
+            `test-result-${result.summary.testRunId}-tap.txt`
+          ),
+          content: tapResult
+        });
+        break;
+      case 'junit':
+        const junitResult = new JUnitReporter().format(result);
+        fileMap.push({
+          path: join(
+            dirPath,
+            `test-result-${result.summary.testRunId}-junit.xml`
+          ),
+          content: junitResult
+        });
+        break;
+    }
+
+    if (codeCoverage) {
+      const coverageRecords = result.tests.map(record => {
+        return record.perTestCoverage;
       });
       fileMap.push({
         path: join(
           dirPath,
-          `test-result-${result.summary.testRunId}-junit.xml`
+          `test-result-${result.summary.testRunId}-codecoverage.json`
         ),
-        content: junitResult
+        content: this.stringify(coverageRecords)
       });
-
-      const summaryJson = `test-result-${result.summary.testRunId}.json`;
-      const fileNames = fileInfos?.map(fileInfo => {
-        return fileInfo.filename;
-      });
-
-      if (!fileNames || !fileNames.includes(summaryJson)) {
-        fileMap.push({
-          path: join(dirPath, summaryJson),
-          content: this.stringify(result)
-        });
-        if (codeCoverage) {
-          const coverageRecords = result.tests.map(record => {
-            return record.perTestCoverage;
-          });
-
-          fileMap.push({
-            path: join(dirPath, `test-result-codecoverage.json`),
-            content: this.stringify(coverageRecords)
-          });
-        }
-      }
     }
 
-    // if a result format is specified, add the associated test-result file
-    if (resultFormat) {
-      if (resultFormat === 'junit') {
-        fileMap.push({
-          path: join(dirPath, `test-result.xml`),
-          content: junitResult
-        });
-      } else {
-        const tapResult = new TapReporter().format(result);
-        fileMap.push({
-          path: join(dirPath, `test-result.txt`),
-          content: tapResult
-        });
-      }
-    }
-
-    // add any provided fileInfos
     fileInfos?.forEach(fileInfo => {
       fileMap.push({
         path: join(dirPath, fileInfo.filename),
