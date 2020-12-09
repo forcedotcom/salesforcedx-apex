@@ -8,9 +8,10 @@
 import {
   ApexTestResultData,
   CodeCoverageResult,
-  TestResult
-} from '@salesforce/apex-node/lib/src/tests/types';
-import { Table, Row } from '@salesforce/apex-node/lib/src/utils';
+  TestResult,
+  Table,
+  Row
+} from '@salesforce/apex-node';
 import { Messages } from '@salesforce/core';
 
 Messages.importMessagesDirectory(__dirname);

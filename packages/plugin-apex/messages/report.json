@@ -16,5 +16,6 @@
     "verboseDescription": "display Apex test processing details; if JSON is specified, processing details aren't displayed",
     "apexTestReportFormatHint":
     "Run \"sfdx force:apex:test:report %s --resultformat <format>\" to retrieve test results in a different format.",
-    "outputDirHint": "Test result files written to %s"
+    "outputDirHint": "Test result files written to %s",
+    "testResultProcessErr": "Encountered an error when processing test results\n%s"
 }

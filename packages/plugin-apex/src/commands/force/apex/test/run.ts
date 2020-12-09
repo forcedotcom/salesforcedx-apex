@@ -4,14 +4,16 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { TapReporter, TestService, JUnitReporter } from '@salesforce/apex-node';
 import {
+  TapReporter,
+  TestService,
+  JUnitReporter,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
   SyncTestConfiguration,
   TestItem,
   TestResult
-} from '@salesforce/apex-node/lib/src/tests/types';
+} from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
