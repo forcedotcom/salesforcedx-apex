@@ -32,7 +32,7 @@ export class HumanReporter {
     return tbResult;
   }
 
-  public formatSummary(testResult: TestResult): string {
+  private formatSummary(testResult: TestResult): string {
     const tb = new Table();
 
     // Summary Table
@@ -97,7 +97,7 @@ export class HumanReporter {
     return summaryTable;
   }
 
-  public formatTestResults(tests: ApexTestResultData[]): string {
+  private formatTestResults(tests: ApexTestResultData[]): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
     tests.forEach(
@@ -133,7 +133,7 @@ export class HumanReporter {
     return testResultTable;
   }
 
-  public formatDetailedCov(testResult: TestResult): string {
+  private formatDetailedCov(testResult: TestResult): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
     testResult.tests.forEach(
@@ -192,7 +192,7 @@ export class HumanReporter {
     return detailedCovTable;
   }
 
-  public formatCodeCov(codeCoverages: CodeCoverageResult[]): string {
+  private formatCodeCov(codeCoverages: CodeCoverageResult[]): string {
     const tb = new Table();
     const codeCovRowArray: Row[] = [];
     codeCoverages.forEach(
