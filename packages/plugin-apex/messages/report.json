@@ -15,5 +15,6 @@
     "waitLongDescription": "Sets the streaming client socket timeout, in minutes. If the streaming client socket has no contact from the server for a number of minutes, the client exits. Specify a longer wait time if timeouts occur frequently",
     "verboseDescription": "display Apex test processing details; if JSON is specified, processing details aren't displayed",
     "apexTestReportFormatHint":
-    "Run \"sfdx force:apex:test:report %s --resultformat <format>\" to retrieve test results in a different format."
+    "Run \"sfdx force:apex:test:report %s --resultformat <format>\" to retrieve test results in a different format.",
+    "outputDirHint": "Test result files written to %s"
 }

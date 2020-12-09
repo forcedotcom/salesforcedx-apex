@@ -15,9 +15,11 @@ import {
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import { CliJsonFormat, JsonReporter } from '../../../../jsonReporter';
-import { buildDescription, logLevels } from '../../../../utils';
-import { JsonReporter, HumanReporter } from '../../../../reporters';
+import {
+  CliJsonFormat,
+  JsonReporter,
+  HumanReporter
+} from '../../../../reporters';
 import { buildDescription, logLevels, resultFormat } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
@@ -225,7 +227,11 @@ export default class Run extends SfdxCommand {
 
       switch (this.flags.resultformat) {
         case 'human':
-          this.logHuman(result, this.flags.detailedcoverage);
+          this.logHuman(
+            result,
+            this.flags.detailedcoverage,
+            this.flags.outputdir
+          );
           break;
         case 'tap':
           this.logTap(result);
@@ -283,10 +289,15 @@ export default class Run extends SfdxCommand {
     }
   }
 
-  private logHuman(result: TestResult, detailedCoverage: boolean, outputdir: string): void {
+  private logHuman(
+    result: TestResult,
+    detailedCoverage: boolean,
+    outputDir: string
+  ): void {
     try {
       if (outputDir) {
         this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
+      }
       const humanReporter = new HumanReporter();
       const output = humanReporter.format(result, detailedCoverage);
       this.ux.log(output);
@@ -296,7 +307,6 @@ export default class Run extends SfdxCommand {
       this.ux.error(msg);
     }
   }
-}
 
   private logTap(result: TestResult): void {
     try {
