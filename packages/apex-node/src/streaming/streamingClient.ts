@@ -133,12 +133,21 @@ export class StreamingClient {
     }
 
     const testRunId15char = testRunId.substring(0, 14);
-    const subscribedTestRunId15char = this.subscribedTestRunId.substring(0, 14);
-    return subscribedTestRunId15char === testRunId15char;
+    if (this.subscribedTestRunId) {
+      const subscribedTestRunId15char = this.subscribedTestRunId.substring(
+        0,
+        14
+      );
+      return subscribedTestRunId15char === testRunId15char;
+    }
+    return true;
   }
 
-  public async handler(message: TestResultMessage): Promise<ApexTestQueueItem> {
-    const testRunId = message.sobject.Id;
+  public async handler(
+    message?: TestResultMessage,
+    runId?: string
+  ): Promise<ApexTestQueueItem> {
+    const testRunId = runId || message.sobject.Id;
     if (!this.isValidTestRunID(testRunId)) {
       return null;
     }
