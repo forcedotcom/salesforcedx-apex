@@ -4,7 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { TestService } from '@salesforce/apex-node';
+import { JUnitReporter, TapReporter, TestService } from '@salesforce/apex-node';
 import { expect, test } from '@salesforce/command/lib/test';
 import { Messages, SfdxProject } from '@salesforce/core';
 import * as path from 'path';
@@ -13,7 +13,8 @@ import {
   testRunSimple,
   cliJsonResult,
   cliWithCoverage,
-  runWithCoverage
+  runWithCoverage,
+  jsonResult
 } from './testData';
 
 Messages.importMessagesDirectory(__dirname);
@@ -99,7 +100,10 @@ describe('force:apex:test:report', () => {
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
-    .stub(TestService.prototype, 'reportAsyncResults', () => ({ tests: [] }))
+    .stub(TestService.prototype, 'reportAsyncResults', () => testRunSimple)
+    .stub(TapReporter.prototype, 'format', () => {
+      throw new Error('Error with TAP');
+    })
     .stdout()
     .stderr()
     .command([
@@ -110,11 +114,9 @@ describe('force:apex:test:report', () => {
       'tap'
     ])
     .it('should handle a tap format parsing error', ctx => {
-      expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
+      expect(JSON.parse(ctx.stdout)).to.deep.equal(jsonResult);
       expect(ctx.stderr).to.contain(
-        messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testRunId' of undefined"
-        ])
+        messages.getMessage('testResultProcessErr', ['Error: Error with TAP'])
       );
     });
 
@@ -153,7 +155,10 @@ describe('force:apex:test:report', () => {
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
-    .stub(TestService.prototype, 'reportAsyncResults', () => ({ tests: [] }))
+    .stub(TestService.prototype, 'reportAsyncResults', () => testRunSimple)
+    .stub(JUnitReporter.prototype, 'format', () => {
+      throw new Error('Error with JUnit');
+    })
     .stdout()
     .stderr()
     .command([
@@ -164,11 +169,9 @@ describe('force:apex:test:report', () => {
       'junit'
     ])
     .it('should handle a junit format parsing error', ctx => {
-      expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
+      expect(JSON.parse(ctx.stdout)).to.deep.equal(jsonResult);
       expect(ctx.stderr).to.contain(
-        messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testStartTime' of undefined"
-        ])
+        messages.getMessage('testResultProcessErr', ['Error: Error with JUnit'])
       );
     });
 

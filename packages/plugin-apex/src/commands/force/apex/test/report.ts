@@ -80,45 +80,45 @@ export default class Report extends SfdxCommand {
   };
 
   public async run(): Promise<AnyJson> {
-    try {
-      const conn = this.org.getConnection();
-      const testService = new TestService(conn);
-      const result = await testService.reportAsyncResults(
-        this.flags.testrunid,
+    const conn = this.org.getConnection();
+    const testService = new TestService(conn);
+    const result = await testService.reportAsyncResults(
+      this.flags.testrunid,
+      this.flags.codecoverage
+    );
+    const jsonOutput = this.logJson(result);
+
+    if (this.flags.outputdir) {
+      const outputDirConfig = {
+        dirPath: this.flags.outputdir,
+        fileInfos: [
+          {
+            filename: `test-result-${result.summary.testRunId}.json`,
+            content: jsonOutput
+          },
+          ...(jsonOutput.coverage
+            ? [
+                {
+                  filename: `test-result-codecoverage.json`,
+                  content: jsonOutput.coverage
+                }
+              ]
+            : [])
+        ],
+        ...(this.flags.resultformat === 'junit' ||
+        this.flags.resultformat === 'tap'
+          ? { resultFormat: this.flags.resultformat }
+          : {})
+      };
+
+      await testService.writeResultFiles(
+        result,
+        outputDirConfig,
         this.flags.codecoverage
       );
-      const jsonOutput = this.logJson(result) as CliJsonFormat;
+    }
 
-      if (this.flags.outputdir) {
-        const outputDirConfig = {
-          dirPath: this.flags.outputdir,
-          fileInfos: [
-            {
-              filename: `test-result-${result.summary.testRunId}.json`,
-              content: jsonOutput
-            },
-            ...(jsonOutput.coverage
-              ? [
-                  {
-                    filename: `test-result-codecoverage.json`,
-                    content: jsonOutput.coverage
-                  }
-                ]
-              : [])
-          ],
-          ...(this.flags.resultformat === 'junit' ||
-          this.flags.resultformat === 'tap'
-            ? { resultFormat: this.flags.resultformat }
-            : {})
-        };
-
-        await testService.writeResultFiles(
-          result,
-          outputDirConfig,
-          this.flags.codecoverage
-        );
-      }
-
+    try {
       switch (this.flags.resultformat) {
         case 'tap':
           this.logTap(result);
@@ -132,11 +132,13 @@ export default class Report extends SfdxCommand {
         default:
           this.logHuman(result, true, this.flags.outputdir);
       }
-
-      return jsonOutput as AnyJson;
     } catch (e) {
-      return Promise.reject(e);
+      this.ux.logJson(jsonOutput);
+      const msg = messages.getMessage('testResultProcessErr', [e]);
+      this.ux.error(msg);
     }
+
+    return jsonOutput as AnyJson;
   }
 
   private logHuman(
@@ -144,44 +146,26 @@ export default class Report extends SfdxCommand {
     detailedCoverage: boolean,
     outputDir: string
   ): void {
-    try {
-      if (outputDir) {
-        this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
-      }
-      const humanReporter = new HumanReporter();
-      const output = humanReporter.format(result, detailedCoverage);
-      this.ux.log(output);
-    } catch (e) {
-      this.ux.logJson(result);
-      const msg = messages.getMessage('testResultProcessErr', [e]);
-      this.ux.error(msg);
+    if (outputDir) {
+      this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
     }
+    const humanReporter = new HumanReporter();
+    const output = humanReporter.format(result, detailedCoverage);
+    this.ux.log(output);
   }
 
   private logTap(result: TestResult): void {
-    try {
-      const reporter = new TapReporter();
-      const hint = this.formatReportHint(result);
-      this.ux.log(reporter.format(result, [hint]));
-    } catch (err) {
-      this.ux.logJson(result);
-      const msg = messages.getMessage('testResultProcessErr', [err]);
-      this.ux.error(msg);
-    }
+    const reporter = new TapReporter();
+    const hint = this.formatReportHint(result);
+    this.ux.log(reporter.format(result, [hint]));
   }
 
   private logJUnit(result: TestResult): void {
-    try {
-      const reporter = new JUnitReporter();
-      this.ux.log(reporter.format(result));
-    } catch (e) {
-      this.ux.logJson(result);
-      const msg = messages.getMessage('testResultProcessErr', [e]);
-      this.ux.error(msg);
-    }
+    const reporter = new JUnitReporter();
+    this.ux.log(reporter.format(result));
   }
 
-  private logJson(result: TestResult): CliJsonFormat | TestResult {
+  private logJson(result: TestResult): CliJsonFormat {
     try {
       const reporter = new JsonReporter();
       return reporter.format(result);
@@ -189,8 +173,8 @@ export default class Report extends SfdxCommand {
       this.ux.logJson(result);
       const msg = messages.getMessage('testResultProcessErr', [e]);
       this.ux.error(msg);
+      throw e;
     }
-    return result;
   }
 
   private formatReportHint(result: TestResult): string {

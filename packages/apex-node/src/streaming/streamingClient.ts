@@ -127,17 +127,14 @@ export class StreamingClient {
     });
   }
 
-  private isValidTestRunID(testRunId: string): boolean {
+  private isValidTestRunID(testRunId: string, subscribedId?: string): boolean {
     if (testRunId.length !== 15 && testRunId.length !== 18) {
       return false;
     }
 
     const testRunId15char = testRunId.substring(0, 14);
-    if (this.subscribedTestRunId) {
-      const subscribedTestRunId15char = this.subscribedTestRunId.substring(
-        0,
-        14
-      );
+    if (subscribedId) {
+      const subscribedTestRunId15char = subscribedId.substring(0, 14);
       return subscribedTestRunId15char === testRunId15char;
     }
     return true;
@@ -148,7 +145,7 @@ export class StreamingClient {
     runId?: string
   ): Promise<ApexTestQueueItem> {
     const testRunId = runId || message.sobject.Id;
-    if (!this.isValidTestRunID(testRunId)) {
+    if (!this.isValidTestRunID(testRunId, this.subscribedTestRunId)) {
       return null;
     }
 
