@@ -6,7 +6,7 @@
    what you're trying to add/fix. That way, we can also offer suggestions or
    let you know if there is already an effort in progress.
 1. Fork this repository.
-1. The [development](./contributing/developing.md) doc has details on how to set up your environment.
+1. Set up your environment using the information in the [Developing](./contributing/developing.md) doc.
 1. Create a _topic_ branch in your fork based on the correct branch (usually the **develop** branch, see [Branches section](./contributing/developing.md)). Note: this step is recommended but technically not required if contributing using a fork.
 1. Edit the code in your fork.
 1. Sign the CLA (see [CLA](#cla)).
@@ -17,9 +17,11 @@
 
 ### Committing
 
-1. We enforce commit message format. We recommend using [commitizen](https://github.com/commitizen/cz-cli) by installing it with `npm install -g commitizen` and running `npm run commit-init`. When you commit, we recommend that you use `npm run commit`, which prompts you with a series of questions to format the commit message. Or you can use our VS Code Task `Commit`.
-1. The commit message format that we expect is: `type: commit message`. Valid types are: feat, fix, improvement, docs, style, refactor, perf, test, build, ci, chore and revert.
-1. Before commit and push, Husky runs several hooks to ensure the commit message is in the correct format and that everything lints and compiles properly.
+We enforce commit message format. We recommend using [commitizen](https://github.com/commitizen/cz-cli) by installing it with `npm install -g commitizen` and running `npm run commit-init`. When you commit, we recommend that you use `npm run commit`, which prompts you with a series of questions to format the commit message. Or you can use our VS Code Task `Commit`.
+
+The commit message format that we expect is: `type: commit message`. Valid types are: feat, fix, improvement, docs, style, refactor, perf, test, build, ci, chore and revert.
+
+Before commit and push, Husky runs several hooks to ensure the commit message is in the correct format and that everything lints and compiles properly.
 
 ### CLA
 

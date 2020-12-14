@@ -18,7 +18,7 @@ Note: This library is in beta and has been released early so we can collect feed
 
 If you're interested in contributing, take a look at the [CONTRIBUTING](./CONTRIBUTING.md) guide.
 
-If you're interested in building the plugin and library locally, take a look at the development [doc](./contributing/developing.md).
+If you're interested in building the plugin and library locally, take a look at the [Developing](./contributing/developing.md) doc.
 
-You can find more information about commands that the plugin provides in the [commands](./contributing/commands.md) doc.
+You can find more information about commands that the plugin provides in the [Commands](./contributing/commands.md) doc.
 
