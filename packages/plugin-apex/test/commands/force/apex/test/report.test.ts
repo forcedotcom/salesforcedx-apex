@@ -286,7 +286,7 @@ describe('force:apex:test:report', () => {
     .stub(fs, 'mkdirSync')
     .stub(fs, 'createWriteStream')
     .stub(fs, 'openSync', () => 10)
-    .stub(fs, 'closeSync')
+    .stub(fs, 'closeSync', () => true)
     .stdout()
     .stderr()
     .command([
@@ -317,7 +317,7 @@ describe('force:apex:test:report', () => {
     .stub(fs, 'existsSync', () => true)
     .stub(fs, 'mkdirSync')
     .stub(fs, 'openSync', () => 10)
-    .stub(fs, 'closeSync')
+    .stub(fs, 'closeSync', () => true)
     .stub(fs, 'createWriteStream')
     .stdout()
     .stderr()
