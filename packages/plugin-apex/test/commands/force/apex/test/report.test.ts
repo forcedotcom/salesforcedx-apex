@@ -9,6 +9,7 @@ import { expect, test } from '@salesforce/command/lib/test';
 import { Messages, SfdxProject } from '@salesforce/core';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as stream from 'stream';
 import { createSandbox, SinonSandbox } from 'sinon';
 import {
   testRunSimple,
@@ -284,7 +285,7 @@ describe('force:apex:test:report', () => {
     .stub(TestService.prototype, 'reportAsyncResults', () => testRunSimple)
     .stub(fs, 'existsSync', () => true)
     .stub(fs, 'mkdirSync', () => true)
-    .stub(fs, 'createWriteStream', () => true)
+    .stub(fs, 'createWriteStream', () => new stream.PassThrough())
     .stub(fs, 'openSync', () => 10)
     .stub(fs, 'closeSync', () => true)
     .stdout()
@@ -318,7 +319,7 @@ describe('force:apex:test:report', () => {
     .stub(fs, 'mkdirSync', () => true)
     .stub(fs, 'openSync', () => 10)
     .stub(fs, 'closeSync', () => true)
-    .stub(fs, 'createWriteStream')
+    .stub(fs, 'createWriteStream', () => new stream.PassThrough())
     .stdout()
     .stderr()
     .command([
