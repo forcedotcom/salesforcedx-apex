@@ -7,6 +7,7 @@
 import { JUnitReporter, TapReporter, TestService } from '@salesforce/apex-node';
 import { expect, test } from '@salesforce/command/lib/test';
 import { Messages, SfdxProject } from '@salesforce/core';
+import * as fs from 'fs';
 import * as path from 'path';
 import { createSandbox, SinonSandbox } from 'sinon';
 import {
@@ -281,6 +282,9 @@ describe('force:apex:test:report', () => {
     })
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'reportAsyncResults', () => testRunSimple)
+    .stub(fs, 'existsSync', () => true)
+    .stub(fs, 'mkdirSync')
+    .stub(fs, 'createWriteStream')
     .stdout()
     .stderr()
     .command([
@@ -308,6 +312,9 @@ describe('force:apex:test:report', () => {
     })
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'reportAsyncResults', () => runWithCoverage)
+    .stub(fs, 'existsSync', () => true)
+    .stub(fs, 'mkdirSync')
+    .stub(fs, 'createWriteStream')
     .stdout()
     .stderr()
     .command([

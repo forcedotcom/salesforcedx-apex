@@ -8,6 +8,7 @@
 import { TestService } from '@salesforce/apex-node';
 import { expect, test } from '@salesforce/command/lib/test';
 import { Messages, SfdxProject } from '@salesforce/core';
+import * as fs from 'fs';
 import * as path from 'path';
 import { createSandbox, SinonSandbox } from 'sinon';
 import {
@@ -431,6 +432,9 @@ describe('force:apex:test:run', () => {
     })
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
+    .stub(fs, 'existsSync', () => true)
+    .stub(fs, 'mkdirSync')
+    .stub(fs, 'createWriteStream')
     .stdout()
     .stderr()
     .command([
