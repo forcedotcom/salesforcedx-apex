@@ -10,6 +10,7 @@ import { expect, test } from '@salesforce/command/lib/test';
 import { Messages, SfdxProject } from '@salesforce/core';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as stream from 'stream';
 import { createSandbox, SinonSandbox } from 'sinon';
 import {
   testRunSimple,
@@ -433,8 +434,10 @@ describe('force:apex:test:run', () => {
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
     .stub(fs, 'existsSync', () => true)
-    .stub(fs, 'mkdirSync')
-    .stub(fs, 'createWriteStream')
+    .stub(fs, 'mkdirSync', () => true)
+    .stub(fs, 'createWriteStream', () => new stream.PassThrough())
+    .stub(fs, 'openSync', () => 10)
+    .stub(fs, 'closeSync', () => true)
     .stdout()
     .stderr()
     .command([
