@@ -285,6 +285,8 @@ describe('force:apex:test:report', () => {
     .stub(fs, 'existsSync', () => true)
     .stub(fs, 'mkdirSync')
     .stub(fs, 'createWriteStream')
+    .stub(fs, 'openSync')
+    .stub(fs, 'closeSync')
     .stdout()
     .stderr()
     .command([
@@ -314,6 +316,8 @@ describe('force:apex:test:report', () => {
     .stub(TestService.prototype, 'reportAsyncResults', () => runWithCoverage)
     .stub(fs, 'existsSync', () => true)
     .stub(fs, 'mkdirSync')
+    .stub(fs, 'openSync')
+    .stub(fs, 'closeSync')
     .stub(fs, 'createWriteStream')
     .stdout()
     .stderr()
