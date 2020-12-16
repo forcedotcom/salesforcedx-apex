@@ -148,7 +148,7 @@ export class JsonReporter {
       formattedCov.coverage = testResult.codecoverage.map(cov => {
         const lines: { [key: number]: number } = {};
         cov.coveredLines.forEach(covLine => (lines[covLine] = 1));
-        cov.uncoveredLines.forEach(covLine => (lines[covLine] = 0));
+        cov.uncoveredLines.forEach(uncovLine => (lines[uncovLine] = 0));
 
         return {
           id: cov.apexId,
