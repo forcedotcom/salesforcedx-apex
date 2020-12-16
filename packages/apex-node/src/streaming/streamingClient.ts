@@ -75,9 +75,8 @@ export class StreamingClient {
               nls.localize('streaming_handshake_fail', message.error)
             );
           }
-
-          console.log(nls.localize('streaming_failure', message.error));
           this.client.disconnect();
+          throw new Error(nls.localize('streaming_failure', message.error));
         }
         callback(message);
       }
