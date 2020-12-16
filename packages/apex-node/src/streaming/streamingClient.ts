@@ -59,12 +59,23 @@ export class StreamingClient {
         callback: (message: StreamMessage) => void
       ) => {
         if (message && message.error) {
+          if (
+            message.error === '401::Authentication invalid' ||
+            (message.ext &&
+              message.ext.sfdc.failureReason === '401::Authentication invalid')
+          ) {
+            this.client.disconnect();
+            console.log('Authentication failed, retrying...');
+            this.handshake();
+          }
+
           if (message.channel === '/meta/handshake') {
             this.client.disconnect();
             throw new Error(
               nls.localize('streaming_handshake_fail', message.error)
             );
           }
+
           console.log(nls.localize('streaming_failure', message.error));
           this.client.disconnect();
         }
