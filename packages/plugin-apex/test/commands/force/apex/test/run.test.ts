@@ -17,7 +17,8 @@ import {
   runWithCoverage,
   cliJsonResult,
   cliWithCoverage,
-  jsonResult
+  jsonResult,
+  jsonWithCoverage
 } from './testData';
 
 Messages.importMessagesDirectory(__dirname);
@@ -455,6 +456,58 @@ describe('force:apex:test:run', () => {
         expect(ctx.stdout).to.contain(
           messages.getMessage('outputDirHint', ['path/to/dir'])
         );
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => runWithCoverage)
+    .stub(fs, 'existsSync', () => true)
+    .stub(fs, 'mkdirSync', () => true)
+    .stub(fs, 'createWriteStream', () => new stream.PassThrough())
+    .stub(fs, 'openSync', () => 10)
+    .stub(fs, 'closeSync', () => true)
+    .do(ctx => {
+      ctx.myStub = sandboxStub.stub(TestService.prototype, 'writeResultFiles');
+    })
+    .stdout()
+    .stderr()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests.testMethodOne',
+      '-d',
+      'path/to/dir',
+      '--resultformat',
+      'json',
+      '-c'
+    ])
+    .it(
+      'should create test-run-codecoverage file with correct content when code cov is specified',
+      ctx => {
+        expect(ctx.myStub.args).to.deep.equal([
+          [
+            runWithCoverage,
+            {
+              dirPath: 'path/to/dir',
+              fileInfos: [
+                {
+                  filename: `test-result-${jsonWithCoverage.summary.testRunId}.json`,
+                  content: jsonWithCoverage
+                },
+                {
+                  filename: `test-result-codecoverage.json`,
+                  content: jsonWithCoverage.coverage.coverage
+                }
+              ]
+            },
+            true
+          ]
+        ]);
       }
     );
 
