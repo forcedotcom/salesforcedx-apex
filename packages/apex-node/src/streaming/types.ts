@@ -25,5 +25,4 @@ export type StreamMessage = {
   id?: string;
   data?: TestResultMessage;
   error?: string;
-  ext?: { sfdc: { failureReason: string } };
 };

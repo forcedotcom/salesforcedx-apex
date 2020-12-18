@@ -7,9 +7,10 @@
 
 import { Client as FayeClient } from 'faye';
 import { Connection, Org } from '@salesforce/core';
-import { ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
 import { StreamMessage, TestResultMessage } from './types';
 import { nls } from '../i18n';
+import { refreshAuth } from '../utils';
+import { ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
@@ -59,16 +60,6 @@ export class StreamingClient {
         callback: (message: StreamMessage) => void
       ) => {
         if (message && message.error) {
-          if (
-            message.error === '401::Authentication invalid' ||
-            (message.ext &&
-              message.ext.sfdc.failureReason === '401::Authentication invalid')
-          ) {
-            this.client.disconnect();
-            console.log('Authentication failed, retrying...');
-            this.handshake();
-          }
-
           if (message.channel === '/meta/handshake') {
             this.client.disconnect();
             throw new Error(
@@ -76,7 +67,7 @@ export class StreamingClient {
             );
           }
           this.client.disconnect();
-          throw new Error(nls.localize('streaming_failure', message.error));
+          console.log(nls.localize('streaming_failure', message.error));
         }
         callback(message);
       }
@@ -84,9 +75,9 @@ export class StreamingClient {
   }
 
   public async init(): Promise<void> {
+    await refreshAuth(this.conn);
     const username = this.conn.getUsername();
-    const org = await Org.create({ aliasOrUsername: username });
-    await org.refreshAuth();
+    await Org.create({ aliasOrUsername: username });
 
     const accessToken = this.conn.getConnectionOptions().accessToken;
     if (accessToken) {
