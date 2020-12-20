@@ -88,11 +88,11 @@ describe('Streaming API Client', () => {
     }
   });
 
-  it('should force a refresh the connection during init', async () => {
-    const requestStub = sandboxStub.stub(Connection.prototype, 'request');
-    // sandboxStub.stub(Connection.prototype, 'getConnectionOptions').returns({
-    //   accessToken: '0157xdeaxfg7543233'
-    // });
+  it('should force refresh the connection during init', async () => {
+    const requestStub = sandboxStub
+      .stub(mockConnection, 'baseUrl')
+      .returns('66568xxxx');
+
     const streamClient = new StreamingClient(mockConnection);
     await streamClient.init();
     expect(requestStub.calledOnce).to.be.true;
