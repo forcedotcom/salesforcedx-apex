@@ -6,7 +6,7 @@
  */
 
 import { Client as FayeClient } from 'faye';
-import { Connection, Org } from '@salesforce/core';
+import { Connection } from '@salesforce/core';
 import { StreamMessage, TestResultMessage } from './types';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
@@ -78,8 +78,6 @@ export class StreamingClient {
   // The builtin org.refreshAuth() util only refreshes the connection associated with the instance of the org you provide, not all connections associated with that username's orgs
   public async init(): Promise<void> {
     await refreshAuth(this.conn);
-    const username = this.conn.getUsername();
-    await Org.create({ aliasOrUsername: username });
 
     const accessToken = this.conn.getConnectionOptions().accessToken;
     if (accessToken) {
