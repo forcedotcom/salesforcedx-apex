@@ -74,7 +74,7 @@ export class StreamingClient {
     });
   }
 
-  // There's an intermittent auth issue with Streaming API that requires the connection to be reset
+  // NOTE: There's an intermittent auth issue with Streaming API that requires the connection to be refreshed
   // The builtin org.refreshAuth() util only refreshes the connection associated with the instance of the org you provide, not all connections associated with that username's orgs
   public async init(): Promise<void> {
     await refreshAuth(this.conn);
