@@ -137,7 +137,7 @@ export class HumanReporter {
             coveredClassName: perClassCov.apexClassOrTriggerName,
             outcome: elem.outcome,
             coveredClassPercentage: perClassCov.percentage,
-            msg: elem.message ? elem.message : '',
+            msg: elem.message ?? '',
             runtime: `${elem.runTime}`
           });
         });
