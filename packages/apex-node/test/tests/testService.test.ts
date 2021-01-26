@@ -35,6 +35,7 @@ import {
   codeCoverageQueryResult,
   mixedPerClassCodeCoverage,
   mixedTestResults,
+  missingTimeTestData,
   perClassCodeCoverage,
   syncTestResultSimple,
   syncTestResultWithFailures,
@@ -299,6 +300,8 @@ describe('Run Apex tests asynchronously', () => {
   });
 
   it('should return formatted test results', async () => {
+    missingTimeTestData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
+    missingTimeTestData.summary.username = mockConnection.getUsername();
     const testSrv = new TestService(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.onFirstCall().resolves({
@@ -309,7 +312,7 @@ describe('Run Apex tests asynchronously', () => {
           AsyncApexJobId: testRunId,
           Status: ApexTestRunResultStatus.Completed,
           StartTime: testStartTime,
-          TestTime: 1765,
+          TestTime: 0,
           UserId: '005xx000000abcDAAU'
         }
       ]
@@ -334,7 +337,7 @@ describe('Run Apex tests asynchronously', () => {
             NamespacePrefix: 't3st',
             FullName: 't3st__TestLogger'
           },
-          RunTime: 8,
+          RunTime: null,
           TestTimestamp: '3'
         }
       ]
@@ -359,7 +362,7 @@ describe('Run Apex tests asynchronously', () => {
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
     expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
-    expect(getTestResultData).to.deep.equals(testResultData);
+    expect(getTestResultData).to.deep.equals(missingTimeTestData);
   });
 
   it('should return an error if no test results are found', async () => {
