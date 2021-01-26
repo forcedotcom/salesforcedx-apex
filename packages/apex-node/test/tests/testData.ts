@@ -142,25 +142,27 @@ export const missingTimeTestData: TestResult = {
   ]
 };
 
+const failureSummary = {
+  failRate: '100%',
+  failing: 1,
+  hostname: 'https://na139.salesforce.com',
+  testsRan: 1,
+  outcome: 'Failed',
+  passRate: '0%',
+  passing: 0,
+  skipRate: '0%',
+  skipped: 0,
+  testStartTime: localStartTime,
+  testExecutionTimeInMs: 0,
+  testTotalTimeInMs: 0,
+  commandTimeInMs: 2000,
+  testRunId,
+  userId: '005xx000000abcDAAU'
+};
+
 export const diagnosticResult: TestResult = {
   // @ts-ignore
-  summary: {
-    failRate: '100%',
-    failing: 1,
-    hostname: 'https://na139.salesforce.com',
-    testsRan: 1,
-    outcome: 'Failed',
-    passRate: '0%',
-    passing: 0,
-    skipRate: '0%',
-    skipped: 0,
-    testStartTime: localStartTime,
-    testExecutionTimeInMs: 0,
-    testTotalTimeInMs: 0,
-    commandTimeInMs: 2000,
-    testRunId,
-    userId: '005xx000000abcDAAU'
-  },
+  summary: failureSummary,
   tests: [
     {
       id: '07Mxx00000F2Xx6UAF',
@@ -195,23 +197,7 @@ export const diagnosticResult: TestResult = {
 
 export const diagnosticFailure: TestResult = {
   // @ts-ignore
-  summary: {
-    failRate: '100%',
-    failing: 1,
-    hostname: 'https://na139.salesforce.com',
-    testsRan: 1,
-    outcome: 'Failed',
-    passRate: '0%',
-    passing: 0,
-    skipRate: '0%',
-    skipped: 0,
-    testStartTime: localStartTime,
-    testExecutionTimeInMs: 0,
-    testTotalTimeInMs: 0,
-    commandTimeInMs: 2000,
-    testRunId,
-    userId: '005xx000000abcDAAU'
-  },
+  summary: failureSummary,
   tests: [
     {
       id: '07Mxx00000F2Xx6UAF',
