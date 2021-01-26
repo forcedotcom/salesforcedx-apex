@@ -312,7 +312,7 @@ describe('Run Apex tests asynchronously', () => {
           AsyncApexJobId: testRunId,
           Status: ApexTestRunResultStatus.Completed,
           StartTime: testStartTime,
-          TestTime: 0,
+          TestTime: null,
           UserId: '005xx000000abcDAAU'
         }
       ]

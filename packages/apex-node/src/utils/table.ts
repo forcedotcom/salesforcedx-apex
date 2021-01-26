@@ -67,7 +67,8 @@ export class Table {
               );
             } else {
               // If the cell is multiline, add an additional line to the table
-              // and pad it to the beginning of the current column
+              // and pad it to the beginning of the current column.
+              // Only add col separator padding once to additional line.
               outputRow +=
                 '\n' +
                 this.fillColumn('', rowWidth, COLUMN_FILLER, true) +
