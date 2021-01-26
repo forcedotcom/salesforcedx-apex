@@ -95,8 +95,8 @@ export class TestService {
         ),
         skipRate: this.calculatePercentage(0, apiTestResult.numTestsRun),
         testStartTime: formatStartTime(String(startTime)),
-        testExecutionTimeInMs: apiTestResult.totalTime,
-        testTotalTimeInMs: apiTestResult.totalTime,
+        testExecutionTimeInMs: apiTestResult.totalTime ?? 0,
+        testTotalTimeInMs: apiTestResult.totalTime ?? 0,
         commandTimeInMs: getCurrentTime() - startTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
@@ -162,7 +162,7 @@ export class TestService {
           namespacePrefix: item.namespace,
           fullName: `${nms}${item.name}`
         },
-        runTime: item.time,
+        runTime: item.time ?? 0,
         testTimestamp: '',
         fullName: `${nms}${item.name}.${item.methodName}`
       });
@@ -186,7 +186,7 @@ export class TestService {
           namespacePrefix: item.namespace,
           fullName: `${nms}${item.name}`
         },
-        runTime: item.time,
+        runTime: item.time ?? 0,
         testTimestamp: '',
         fullName: `${nms}${item.name}.${item.methodName}`
       });
@@ -286,8 +286,8 @@ export class TestService {
           testResults.length
         ),
         testStartTime: formatStartTime(summaryRecord.StartTime),
-        testExecutionTimeInMs: summaryRecord.TestTime,
-        testTotalTimeInMs: summaryRecord.TestTime,
+        testExecutionTimeInMs: summaryRecord.TestTime ?? 0,
+        testTotalTimeInMs: summaryRecord.TestTime ?? 0,
         commandTimeInMs: getCurrentTime() - commandStartTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
@@ -424,7 +424,7 @@ export class TestService {
             namespacePrefix: item.ApexClass.NamespacePrefix,
             fullName: item.ApexClass.FullName
           },
-          runTime: item.RunTime,
+          runTime: item.RunTime ?? 0,
           testTimestamp: item.TestTimestamp, // TODO: convert timestamp
           fullName: `${item.ApexClass.FullName}.${item.MethodName}`
         });

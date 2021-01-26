@@ -70,7 +70,7 @@ export class Table {
               // and pad it to the beginning of the current column
               outputRow +=
                 '\n' +
-                this.fillColumn('', rowWidth, COLUMN_FILLER, isLastCol) +
+                this.fillColumn('', rowWidth, COLUMN_FILLER, true) +
                 this.fillColumn(line, rowWidth, COLUMN_FILLER, isLastCol);
             }
           }
