@@ -41,7 +41,8 @@ import {
   syncTestResultWithFailures,
   testResultData,
   testRunId,
-  testStartTime
+  testStartTime,
+  diagnosticResult
 } from './testData';
 import { join } from 'path';
 import * as stream from 'stream';
@@ -363,6 +364,72 @@ describe('Run Apex tests asynchronously', () => {
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
     expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(missingTimeTestData);
+  });
+
+  it('should return formatted test results with diagnostics', async () => {
+    diagnosticResult.summary.orgId = mockConnection.getAuthInfoFields().orgId;
+    diagnosticResult.summary.username = mockConnection.getUsername();
+    const testSrv = new TestService(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Completed,
+          StartTime: testStartTime,
+          TestTime: null,
+          UserId: '005xx000000abcDAAU'
+        }
+      ]
+    } as ApexTestRunResult);
+
+    mockToolingQuery.onSecondCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          Id: '07Mxx00000F2Xx6UAF',
+          QueueItemId: '7092M000000Vt94QAC',
+          StackTrace: 'Class.LIFXControllerTest.makeData: line 6, column 1',
+          Message: 'System.AssertException: Assertion Failed',
+          AsyncApexJobId: testRunId,
+          MethodName: 'testLoggerLog',
+          Outcome: ApexTestResultOutcome.Fail,
+          ApexLogId: null,
+          ApexClass: {
+            Id: '01pxx00000O6tXZQAZ',
+            Name: 'TestLogger',
+            NamespacePrefix: 't3st',
+            FullName: 't3st__TestLogger'
+          },
+          RunTime: null,
+          TestTimestamp: '3'
+        }
+      ]
+    } as ApexTestResult);
+
+    const getTestResultData = await testSrv.formatAsyncResults(
+      pollResponse,
+      testRunId,
+      new Date().getTime()
+    );
+
+    let summaryQuery =
+      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
+    summaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    summaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    expect(mockToolingQuery.getCall(0).args[0]).to.equal(summaryQuery);
+
+    let testResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
+    testResultQuery +=
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+    testResultQuery +=
+      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
+    testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
+    expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
+    expect(getTestResultData).to.deep.equals(diagnosticResult);
   });
 
   it('should return an error if no test results are found', async () => {

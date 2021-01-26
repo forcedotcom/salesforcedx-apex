@@ -22,7 +22,9 @@ import {
   TestResult,
   ApexCodeCoverage,
   PerClassCoverage,
-  OutputDirConfig
+  OutputDirConfig,
+  ApexTestResultRecord,
+  SyncTestFailure
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
@@ -31,6 +33,7 @@ import { formatStartTime, getCurrentTime } from '../utils';
 import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
+import { ApexDiagnostic } from '../utils/types';
 
 // Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
 // local testing shows query char limit to be closer to ~12,400
@@ -171,6 +174,9 @@ export class TestService {
     apiTestResult.failures.forEach(item => {
       const nms = item.namespace ? `${item.namespace}__` : '';
       apexTestClassIdSet.add(item.id);
+      const diagnostic =
+        item.message || item.stackTrace ? this.getSyncDiagnostic(item) : null;
+
       testResults.push({
         id: '',
         queueItemId: '',
@@ -188,11 +194,29 @@ export class TestService {
         },
         runTime: item.time ?? 0,
         testTimestamp: '',
-        fullName: `${nms}${item.name}.${item.methodName}`
+        fullName: `${nms}${item.name}.${item.methodName}`,
+        ...(diagnostic ? { diagnostic } : {})
       });
     });
 
     return { apexTestClassIdSet, testResults };
+  }
+
+  private getSyncDiagnostic(syncRecord: SyncTestFailure): ApexDiagnostic {
+    const stackTrace = syncRecord.stackTrace;
+    const lineIndex = stackTrace.indexOf('line');
+    const colIndex = stackTrace.indexOf('column');
+    const line = stackTrace.substring(lineIndex + 5, lineIndex + 6);
+    const column = stackTrace.substring(colIndex + 7);
+
+    return {
+      compileProblem: '',
+      exceptionMessage: syncRecord.message,
+      exceptionStackTrace: syncRecord.stackTrace,
+      columnNumber: Number(column),
+      lineNumber: Number(line),
+      className: syncRecord.stackTrace.split('.')[1]
+    };
   }
 
   // Asynchronous Test Runs
@@ -409,6 +433,11 @@ export class TestService {
           ? `${item.ApexClass.NamespacePrefix}__${item.ApexClass.Name}`
           : item.ApexClass.Name;
 
+        const diagnostic =
+          item.Message || item.StackTrace
+            ? this.getAsyncDiagnostic(item)
+            : null;
+
         testResults.push({
           id: item.Id,
           queueItemId: item.QueueItemId,
@@ -426,7 +455,8 @@ export class TestService {
           },
           runTime: item.RunTime ?? 0,
           testTimestamp: item.TestTimestamp, // TODO: convert timestamp
-          fullName: `${item.ApexClass.FullName}.${item.MethodName}`
+          fullName: `${item.ApexClass.FullName}.${item.MethodName}`,
+          ...(diagnostic ? { diagnostic } : {})
         });
       });
     }
@@ -435,6 +465,22 @@ export class TestService {
       apexTestClassIdSet,
       testResults,
       globalTests: { passed, failed, skipped }
+    };
+  }
+
+  public getAsyncDiagnostic(asyncRecord: ApexTestResultRecord): ApexDiagnostic {
+    const lineIndex = asyncRecord.StackTrace.indexOf('line');
+    const colIndex = asyncRecord.StackTrace.indexOf('column');
+    const line = asyncRecord.StackTrace.substring(lineIndex + 5, lineIndex + 6);
+    const column = asyncRecord.StackTrace.substring(colIndex + 7);
+
+    return {
+      compileProblem: '',
+      exceptionMessage: asyncRecord.Message,
+      exceptionStackTrace: asyncRecord.StackTrace,
+      columnNumber: Number(column),
+      lineNumber: Number(line),
+      className: asyncRecord.StackTrace.split('.')[1]
     };
   }
 
