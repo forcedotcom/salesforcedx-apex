@@ -203,20 +203,19 @@ export class TestService {
   }
 
   private getSyncDiagnostic(syncRecord: SyncTestFailure): ApexDiagnostic {
-    const stackTrace = syncRecord.stackTrace;
-    const lineIndex = stackTrace.indexOf('line');
-    const colIndex = stackTrace.indexOf('column');
-    const line = stackTrace.substring(lineIndex + 5, lineIndex + 6);
-    const column = stackTrace.substring(colIndex + 7);
-
-    return {
-      compileProblem: '',
+    const diagnostic: ApexDiagnostic = {
       exceptionMessage: syncRecord.message,
       exceptionStackTrace: syncRecord.stackTrace,
-      columnNumber: Number(column),
-      lineNumber: Number(line),
-      className: syncRecord.stackTrace.split('.')[1]
+      className: syncRecord.stackTrace.split('.')[1],
+      compileProblem: ''
     };
+
+    const matches = syncRecord.stackTrace.match(/(line (\d+), column (\d+))/);
+    if (matches && matches[2] && matches[3]) {
+      diagnostic.lineNumber = Number(matches[2]);
+      diagnostic.columnNumber = Number(matches[3]);
+    }
+    return diagnostic;
   }
 
   // Asynchronous Test Runs
@@ -469,19 +468,19 @@ export class TestService {
   }
 
   public getAsyncDiagnostic(asyncRecord: ApexTestResultRecord): ApexDiagnostic {
-    const lineIndex = asyncRecord.StackTrace.indexOf('line');
-    const colIndex = asyncRecord.StackTrace.indexOf('column');
-    const line = asyncRecord.StackTrace.substring(lineIndex + 5, lineIndex + 6);
-    const column = asyncRecord.StackTrace.substring(colIndex + 7);
-
-    return {
-      compileProblem: '',
+    const diagnostic: ApexDiagnostic = {
       exceptionMessage: asyncRecord.Message,
       exceptionStackTrace: asyncRecord.StackTrace,
-      columnNumber: Number(column),
-      lineNumber: Number(line),
-      className: asyncRecord.StackTrace.split('.')[1]
+      className: asyncRecord.StackTrace.split('.')[1],
+      compileProblem: ''
     };
+
+    const matches = asyncRecord.StackTrace.match(/(line (\d+), column (\d+))/);
+    if (matches && matches[2] && matches[3]) {
+      diagnostic.lineNumber = Number(matches[2]);
+      diagnostic.columnNumber = Number(matches[3]);
+    }
+    return diagnostic;
   }
 
   public async getOrgWideCoverage(): Promise<string> {

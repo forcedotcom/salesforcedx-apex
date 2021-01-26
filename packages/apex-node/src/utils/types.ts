@@ -20,8 +20,8 @@ export type CommonOptions = {
 };
 
 export type ApexDiagnostic = {
-  lineNumber: number;
-  columnNumber: number;
+  lineNumber?: number;
+  columnNumber?: number;
   exceptionMessage: string;
   compileProblem: string;
   exceptionStackTrace: string;
