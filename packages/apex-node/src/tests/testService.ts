@@ -211,9 +211,13 @@ export class TestService {
     };
 
     const matches = syncRecord.stackTrace.match(/(line (\d+), column (\d+))/);
-    if (matches && matches[2] && matches[3]) {
-      diagnostic.lineNumber = Number(matches[2]);
-      diagnostic.columnNumber = Number(matches[3]);
+    if (matches) {
+      if (matches[2]) {
+        diagnostic.lineNumber = Number(matches[2]);
+      }
+      if (matches[3]) {
+        diagnostic.columnNumber = Number(matches[3]);
+      }
     }
     return diagnostic;
   }
@@ -476,9 +480,13 @@ export class TestService {
     };
 
     const matches = asyncRecord.StackTrace.match(/(line (\d+), column (\d+))/);
-    if (matches && matches[2] && matches[3]) {
-      diagnostic.lineNumber = Number(matches[2]);
-      diagnostic.columnNumber = Number(matches[3]);
+    if (matches) {
+      if (matches[2]) {
+        diagnostic.lineNumber = Number(matches[2]);
+      }
+      if (matches[3]) {
+        diagnostic.columnNumber = Number(matches[3]);
+      }
     }
     return diagnostic;
   }
