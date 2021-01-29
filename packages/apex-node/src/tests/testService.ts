@@ -24,7 +24,8 @@ import {
   PerClassCoverage,
   OutputDirConfig,
   ApexTestResultRecord,
-  SyncTestFailure
+  SyncTestFailure,
+  TestItem
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
@@ -44,6 +45,61 @@ export class TestService {
 
   constructor(connection: Connection) {
     this.connection = connection;
+  }
+
+  public async queryNamespaces(): Promise<Set<string>> {
+    // maybe these should be individualprivate methods so we can promise.all in getting the results
+    // so its faster
+
+    // const namespaces = new Set();
+    const query = 'SELECT NamespacePrefix FROM PackageLicense';
+    const queryResult = await this.connection.query(query);
+    const installedNamespaces = queryResult.records.map(record => {
+      // @ts-ignore
+      return record.NamespacePrefix;
+    });
+
+    const queryTwo = 'SELECT NamespacePrefix FROM Organization';
+    const queryResultTwo = await this.connection.query(queryTwo);
+    const namespaces = queryResultTwo.records.map(record => {
+      // @ts-ignore
+      return record.NamespacePrefix;
+    });
+
+    return new Set([...namespaces, ...installedNamespaces]);
+    // console.log(JSON.stringify(queryResult, null, 2));
+    // console.log('\n' + JSON.stringify(queryResultTwo, null, 2));
+  }
+
+  // Utils to build payloads
+  public async buildTestItem(testNames: string): Promise<TestItem[]> {
+    const testNameArray = testNames.split(',');
+    const tItems = testNameArray.map(async item => {
+      if (item.indexOf('.') > 0) {
+        const splitItemData = item.split('.');
+        if (splitItemData.length === 3) {
+          return {
+            className: `${splitItemData[0]}.${splitItemData[1]}`,
+            testMethods: [splitItemData[2]]
+          } as TestItem;
+        }
+        // somehow figure out if it is a namespace.testclass instead of testclass.testmethod
+        const namespaces = await this.queryNamespaces();
+        if (namespaces.has(splitItemData[0])) {
+          return {
+            className: `${splitItemData[0]}.${splitItemData[1]}`
+          } as TestItem;
+        }
+
+        return {
+          className: splitItemData[0],
+          testMethods: [splitItemData[1]]
+        } as TestItem;
+      }
+
+      return { className: item } as TestItem;
+    });
+    return Promise.all(tItems);
   }
 
   // Synchronous Test Runs
