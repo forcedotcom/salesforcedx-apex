@@ -32,21 +32,28 @@ export const TestLevel = [
 
 const CLASS_ID_PREFIX = '01p';
 
-export function buildTestItem(testNames: string): TestItem[] {
-  const testNameArray = testNames.split(',');
-  const tItems = testNameArray.map(item => {
-    if (item.indexOf('.') > 0) {
-      const splitItemData = item.split('.');
-      return {
-        className: splitItemData[0],
-        testMethods: [splitItemData[1]]
-      } as TestItem;
-    }
+// export function buildTestItem(testNames: string): TestItem[] {
+//   const testNameArray = testNames.split(',');
+//   const tItems = testNameArray.map(item => {
+//     if (item.indexOf('.') > 0) {
+//       const splitItemData = item.split('.');
+//       if (splitItemData.length === 3) {
+//         return {
+//           className: `${splitItemData[0]}.${splitItemData[1]}`,
+//           testMethods: [splitItemData[2]]
+//         } as TestItem;
+//       }
+//       // somehow figure out if it is a namespace.testclass instead of testclass.testmethod
+//       return {
+//         className: splitItemData[0],
+//         testMethods: [splitItemData[1]]
+//       } as TestItem;
+//     }
 
-    return { className: item } as TestItem;
-  });
-  return tItems;
-}
+//     return { className: item } as TestItem;
+//   });
+//   return tItems;
+// }
 
 export default class Run extends SfdxCommand {
   protected static requiresUsername = true;
@@ -140,7 +147,7 @@ export default class Run extends SfdxCommand {
       let testOptions: SyncTestConfiguration;
       if (this.flags.tests) {
         testOptions = {
-          tests: buildTestItem(this.flags.tests),
+          tests: await testService.buildTestItem(this.flags.tests),
           testLevel
         };
 
@@ -173,15 +180,32 @@ export default class Run extends SfdxCommand {
 
       if (this.flags.tests) {
         payload = {
-          tests: buildTestItem(this.flags.tests),
+          tests: await testService.buildTestItem(this.flags.tests),
           testLevel
         };
+      } else if (this.flags.classnames) {
+        const classNameArray = this.flags.classnames.split(',');
+        // @ts-ignore
+        const classItems = classNameArray.map(item => {
+          const classParts = item.split('.');
+          if (classParts.length > 1) {
+            return { className: `${classParts[0]}.${classParts[1]}` };
+          }
+          return { className: item } as TestItem;
+        });
+        payload = { tests: classItems, testLevel };
       } else {
-        payload = {
-          classNames: this.flags.classnames,
-          suiteNames: this.flags.suitenames,
-          testLevel
-        };
+        if (this.flags.classnames.split(',')) {
+          payload = {
+            tests: await testService.buildTestItem(this.flags.classnames),
+            testLevel
+          };
+        } else {
+          payload = {
+            classNames: this.flags.classnames,
+            testLevel
+          };
+        }
       }
 
       result = await testService.runTestAsynchronous(
