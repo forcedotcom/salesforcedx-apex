@@ -9,10 +9,10 @@ import {
   TestService,
   JUnitReporter,
   HumanReporter,
-  AsyncTestConfiguration,
-  AsyncTestArrayConfiguration,
-  SyncTestConfiguration,
-  TestItem,
+  // AsyncTestConfiguration,
+  // AsyncTestArrayConfiguration,
+  // SyncTestConfiguration,
+  // TestItem,
   TestResult
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
@@ -30,7 +30,7 @@ export const TestLevel = [
   'RunSpecifiedTests'
 ];
 
-const CLASS_ID_PREFIX = '01p';
+// const CLASS_ID_PREFIX = '01p';
 
 // export function buildTestItem(testNames: string): TestItem[] {
 //   const testNameArray = testNames.split(',');
@@ -144,70 +144,22 @@ export default class Run extends SfdxCommand {
     let result: TestResult;
 
     if (this.flags.synchronous) {
-      let testOptions: SyncTestConfiguration;
-      if (this.flags.tests) {
-        testOptions = {
-          tests: await testService.buildTestItem(this.flags.tests),
-          testLevel
-        };
-
-        const classes = testOptions.tests?.map(testItem => {
-          if (testItem.className) {
-            return testItem.className;
-          }
-        });
-        if (new Set(classes).size !== 1) {
-          return Promise.reject(new Error(messages.getMessage('syncClassErr')));
-        }
-      } else {
-        const prop = this.flags.classnames
-          .toLowerCase()
-          .startsWith(CLASS_ID_PREFIX)
-          ? 'classId'
-          : 'className';
-        testOptions = {
-          tests: [{ [prop]: this.flags.classnames }],
-          testLevel
-        };
-      }
-
+      const payload = await testService.buildSyncPayload(
+        testLevel,
+        this.flags.tests,
+        this.flags.classnames
+      );
       result = await testService.runTestSynchronous(
-        testOptions,
+        payload,
         this.flags.codecoverage
       );
     } else {
-      let payload: AsyncTestConfiguration | AsyncTestArrayConfiguration;
-
-      if (this.flags.tests) {
-        payload = {
-          tests: await testService.buildTestItem(this.flags.tests),
-          testLevel
-        };
-      } else if (this.flags.classnames) {
-        const classNameArray = this.flags.classnames.split(',');
-        // @ts-ignore
-        const classItems = classNameArray.map(item => {
-          const classParts = item.split('.');
-          if (classParts.length > 1) {
-            return { className: `${classParts[0]}.${classParts[1]}` };
-          }
-          return { className: item } as TestItem;
-        });
-        payload = { tests: classItems, testLevel };
-      } else {
-        if (this.flags.classnames.split(',')) {
-          payload = {
-            tests: await testService.buildTestItem(this.flags.classnames),
-            testLevel
-          };
-        } else {
-          payload = {
-            classNames: this.flags.classnames,
-            testLevel
-          };
-        }
-      }
-
+      const payload = await testService.buildAsyncPayload(
+        testLevel,
+        this.flags.tests,
+        this.flags.classnames,
+        this.flags.suitenames
+      );
       result = await testService.runTestAsynchronous(
         payload,
         this.flags.codecoverage

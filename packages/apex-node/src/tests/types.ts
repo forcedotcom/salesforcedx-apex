@@ -441,3 +441,11 @@ export type ApexOrgWideCoverage = {
   totalSize: number;
   records: { PercentCovered: string }[];
 };
+
+export type NamespaceRecord = {
+  NamespacePrefix: string;
+};
+
+export type NamespaceQueryResult = {
+  records: NamespaceRecord[];
+};
