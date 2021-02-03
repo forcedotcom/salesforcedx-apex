@@ -102,36 +102,44 @@ export class TestService {
     testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
-    const testPromises = testNameArray.map(async item => {
-      if (item.indexOf('.') > 0) {
-        const splitItemData = item.split('.');
-        if (splitItemData.length === 3) {
-          return {
-            namespace: `${splitItemData[0]}`,
-            className: `${splitItemData[1]}`,
-            testMethods: [splitItemData[2]]
-          } as TestItem;
-        }
+    const testItems: TestItem[] = [];
+    let namespaces: Set<string>;
 
-        const namespaces = await this.queryNamespaces();
-        if (namespaces.has(splitItemData[0])) {
-          return {
-            namespace: `${splitItemData[0]}`,
-            className: `${splitItemData[1]}`
-          } as TestItem;
-        }
+    for (const test of testNameArray) {
+      if (test.indexOf('.') > 0) {
+        const testParts = test.split('.');
+        if (testParts.length === 3) {
+          testItems.push({
+            namespace: `${testParts[0]}`,
+            className: `${testParts[1]}`,
+            testMethods: [testParts[2]]
+          });
+        } else {
+          if (typeof namespaces === 'undefined') {
+            namespaces = await this.queryNamespaces();
+          }
 
-        return {
-          className: splitItemData[0],
-          testMethods: [splitItemData[1]]
-        } as TestItem;
+          if (namespaces.has(testParts[0])) {
+            testItems.push({
+              namespace: `${testParts[0]}`,
+              className: `${testParts[1]}`
+            });
+          } else {
+            testItems.push({
+              className: testParts[0],
+              testMethods: [testParts[1]]
+            });
+          }
+        }
+      } else {
+        testItems.push({ className: test });
       }
+    }
 
-      return { className: item } as TestItem;
-    });
-
-    const testItems = await Promise.all(testPromises);
-    return { tests: testItems, testLevel: TestLevel.RunSpecifiedTests };
+    return {
+      tests: testItems,
+      testLevel: TestLevel.RunSpecifiedTests
+    };
   }
 
   private async buildAsyncClassPayload(

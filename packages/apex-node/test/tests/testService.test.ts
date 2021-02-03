@@ -1146,6 +1146,32 @@ describe('Run Apex tests asynchronously', () => {
       expect(namespaceStub.calledOnce).to.be.true;
     });
 
+    it('should only query for namespaces once when multiple tests are specified', async () => {
+      const namespaceStub = sandboxStub
+        .stub(TestService.prototype, 'queryNamespaces')
+        .resolves(new Set(['myNamespace']));
+      const testSrv = new TestService(mockConnection);
+      const payload = await testSrv.buildAsyncPayload(
+        TestLevel.RunSpecifiedTests,
+        'myNamespace.myClass,myNamespace.mySecondClass'
+      );
+
+      expect(payload).to.deep.equal({
+        tests: [
+          {
+            namespace: 'myNamespace',
+            className: 'myClass'
+          },
+          {
+            namespace: 'myNamespace',
+            className: 'mySecondClass'
+          }
+        ],
+        testLevel: TestLevel.RunSpecifiedTests
+      });
+      expect(namespaceStub.calledOnce).to.be.true;
+    });
+
     it('should build async payload for tests with 3 parts', async () => {
       const namespaceStub = sandboxStub
         .stub(TestService.prototype, 'queryNamespaces')
