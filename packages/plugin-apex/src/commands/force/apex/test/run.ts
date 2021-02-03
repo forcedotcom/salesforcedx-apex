@@ -9,10 +9,6 @@ import {
   TestService,
   JUnitReporter,
   HumanReporter,
-  // AsyncTestConfiguration,
-  // AsyncTestArrayConfiguration,
-  // SyncTestConfiguration,
-  // TestItem,
   TestResult
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
@@ -29,32 +25,6 @@ export const TestLevel = [
   'RunAllTestsInOrg',
   'RunSpecifiedTests'
 ];
-
-// const CLASS_ID_PREFIX = '01p';
-
-// export function buildTestItem(testNames: string): TestItem[] {
-//   const testNameArray = testNames.split(',');
-//   const tItems = testNameArray.map(item => {
-//     if (item.indexOf('.') > 0) {
-//       const splitItemData = item.split('.');
-//       if (splitItemData.length === 3) {
-//         return {
-//           className: `${splitItemData[0]}.${splitItemData[1]}`,
-//           testMethods: [splitItemData[2]]
-//         } as TestItem;
-//       }
-//       // somehow figure out if it is a namespace.testclass instead of testclass.testmethod
-//       return {
-//         className: splitItemData[0],
-//         testMethods: [splitItemData[1]]
-//       } as TestItem;
-//     }
-
-//     return { className: item } as TestItem;
-//   });
-//   return tItems;
-// }
-
 export default class Run extends SfdxCommand {
   protected static requiresUsername = true;
   // Guaranteed by requires username

@@ -98,26 +98,6 @@ export class TestService {
     }
   }
 
-  private async queryNamespaces(): Promise<Set<string>> {
-    const installedNsQuery = 'SELECT NamespacePrefix FROM PackageLicense';
-    const installedNsResult = (await this.connection.query(
-      installedNsQuery
-    )) as NamespaceQueryResult;
-    const installedNamespaces = installedNsResult.records.map(record => {
-      return record.NamespacePrefix;
-    });
-
-    const orgNsQuery = 'SELECT NamespacePrefix FROM Organization';
-    const orgNsResult = (await this.connection.query(
-      orgNsQuery
-    )) as NamespaceQueryResult;
-    const orgNamespaces = orgNsResult.records.map(record => {
-      return record.NamespacePrefix;
-    });
-
-    return new Set([...orgNamespaces, ...installedNamespaces]);
-  }
-
   private async buildTestPayload(
     testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
@@ -169,6 +149,26 @@ export class TestService {
       return { className: item } as TestItem;
     });
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
+  }
+
+  public async queryNamespaces(): Promise<Set<string>> {
+    const installedNsQuery = 'SELECT NamespacePrefix FROM PackageLicense';
+    const installedNsResult = (await this.connection.query(
+      installedNsQuery
+    )) as NamespaceQueryResult;
+    const installedNamespaces = installedNsResult.records.map(record => {
+      return record.NamespacePrefix;
+    });
+
+    const orgNsQuery = 'SELECT NamespacePrefix FROM Organization';
+    const orgNsResult = (await this.connection.query(
+      orgNsQuery
+    )) as NamespaceQueryResult;
+    const orgNamespaces = orgNsResult.records.map(record => {
+      return record.NamespacePrefix;
+    });
+
+    return new Set([...orgNamespaces, ...installedNamespaces]);
   }
 
   // Synchronous Test Runs
