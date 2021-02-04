@@ -25,6 +25,7 @@
     "@salesforce/ts-types": "1.2.2",
     "@types/chai": "^4",
     "@types/mocha": "^5",
+    "@types/mkdirp": "0.5.2",
     "@types/node": "^10",
     "chai": "^4",
     "cross-env": "7.0.2",
