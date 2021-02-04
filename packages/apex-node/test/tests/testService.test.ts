@@ -1124,6 +1124,23 @@ describe('Run Apex tests asynchronously', () => {
       expect(namespaceStub.calledOnce).to.be.true;
     });
 
+    it('should build async payload for test with namespace when org returns 0 namespaces', async () => {
+      const namespaceStub = sandboxStub
+        .stub(TestService.prototype, 'queryNamespaces')
+        .resolves(new Set([]));
+      const testSrv = new TestService(mockConnection);
+      const payload = await testSrv.buildAsyncPayload(
+        TestLevel.RunSpecifiedTests,
+        'myNamespace.myClass'
+      );
+
+      expect(payload).to.deep.equal({
+        tests: [{ className: 'myNamespace', testMethods: ['myClass'] }],
+        testLevel: TestLevel.RunSpecifiedTests
+      });
+      expect(namespaceStub.calledOnce).to.be.true;
+    });
+
     it('should build async payload for tests with namespace', async () => {
       const namespaceStub = sandboxStub
         .stub(TestService.prototype, 'queryNamespaces')
