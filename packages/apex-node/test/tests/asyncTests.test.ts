@@ -735,24 +735,25 @@ describe('Run Apex tests asynchronously', () => {
     let stringifySpy: SinonSpy;
     let junitSpy: SinonSpy;
     let tapSpy: SinonSpy;
+    let sandboxStub1: SinonSandbox;
 
     beforeEach(async () => {
-      sandboxStub = createSandbox();
-      sandboxStub.stub(fs, 'existsSync').returns(true);
-      sandboxStub.stub(fs, 'mkdirSync');
-      createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
+      sandboxStub1 = createSandbox();
+      sandboxStub1.stub(fs, 'existsSync').returns(true);
+      sandboxStub1.stub(fs, 'mkdirSync');
+      createStreamStub = sandboxStub1.stub(fs, 'createWriteStream');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       createStreamStub.returns(new stream.PassThrough() as any);
-      sandboxStub.stub(fs, 'closeSync');
-      sandboxStub.stub(fs, 'openSync');
-      stringifySpy = sandboxStub.spy(TestService.prototype, 'stringify');
-      junitSpy = sandboxStub.spy(JUnitReporter.prototype, 'format');
-      tapSpy = sandboxStub.spy(TapReporter.prototype, 'format');
+      sandboxStub1.stub(fs, 'closeSync');
+      sandboxStub1.stub(fs, 'openSync');
+      stringifySpy = sandboxStub1.spy(TestService.prototype, 'stringify');
+      junitSpy = sandboxStub1.spy(JUnitReporter.prototype, 'format');
+      tapSpy = sandboxStub1.spy(TapReporter.prototype, 'format');
     });
 
     afterEach(() => {
       timeStub.restore();
-      sandboxStub.restore();
+      sandboxStub1.restore();
     });
 
     it('should only create test-run-id.txt if no result format nor fileInfos are specified', async () => {
