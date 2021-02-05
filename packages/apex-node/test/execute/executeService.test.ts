@@ -42,6 +42,7 @@ describe('Apex Execute Tests', async () => {
         username: testData.username
       })
     });
+
     sandboxStub.stub(fs, 'readFileSync').returns('System.assert(true);');
     fsStub = sandboxStub.stub(fs, 'existsSync').returns(true);
   });
