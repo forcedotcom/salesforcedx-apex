@@ -6,7 +6,7 @@
  */
 import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { createSandbox, SinonSandbox, SinonSpy, SinonStub } from 'sinon';
 import { TestService, OutputDirConfig } from '../../src/tests';
 import {
@@ -854,6 +854,23 @@ describe('Run Apex tests asynchronously', () => {
       ).to.be.true;
       expect(stringifySpy.callCount).to.eql(1);
       expect(createStreamStub.callCount).to.eql(2);
+    });
+
+    it('should throw an error if unexpected type is specified for result format', async () => {
+      const config = {
+        dirPath: 'path/to/directory',
+        resultFormats: ['rando']
+      };
+      const testSrv = new TestService(mockConnection);
+      try {
+        // @ts-ignore
+        await testSrv.writeResultFiles(testResultData, config, true);
+        assert.fail();
+      } catch (e) {
+        expect(e.message).to.equal(
+          'Specified result formats must be of type json, junit, or tap'
+        );
+      }
     });
   });
 

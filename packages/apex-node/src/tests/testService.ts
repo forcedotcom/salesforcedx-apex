@@ -757,9 +757,7 @@ export class TestService {
     if (resultFormats) {
       for (const format of resultFormats) {
         if (!(format in ResultFormat)) {
-          throw new Error(
-            'All result formats must be of type json, junit, or tap'
-          );
+          throw new Error(nls.localize('resultFormatErr'));
         }
 
         switch (format) {
