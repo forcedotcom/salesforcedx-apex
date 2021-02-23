@@ -21,7 +21,8 @@ import {
   ApexOrgWideCoverage,
   ApexCodeCoverageAggregate,
   ApexCodeCoverage,
-  ApexTestQueueItemRecord
+  ApexTestQueueItemRecord,
+  ResultFormat
 } from '../../src/tests/types';
 import { AsyncTestRun, StreamingClient } from '../../src/streaming';
 import { fail } from 'assert';
@@ -772,7 +773,7 @@ describe('Run Apex tests asynchronously', () => {
     it('should create the json files if json result format is specified', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        resultFormat: 'json'
+        resultFormats: [ResultFormat.json]
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);
@@ -789,7 +790,7 @@ describe('Run Apex tests asynchronously', () => {
     it('should create the junit result files if junit result format is specified', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        resultFormat: 'junit'
+        resultFormats: [ResultFormat.junit]
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);
@@ -806,7 +807,7 @@ describe('Run Apex tests asynchronously', () => {
     it('should create the tap result files if result format is specified', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        resultFormat: 'tap'
+        resultFormats: [ResultFormat.tap]
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(testResultData, config);

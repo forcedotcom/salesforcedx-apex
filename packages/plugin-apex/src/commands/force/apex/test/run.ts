@@ -14,7 +14,11 @@ import {
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import { CliJsonFormat, JsonReporter } from '../../../../reporters';
+import {
+  buildOutputDirConfig,
+  CliJsonFormat,
+  JsonReporter
+} from '../../../../reporters';
 import { buildDescription, logLevels, resultFormat } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
@@ -138,27 +142,13 @@ export default class Run extends SfdxCommand {
 
     if (this.flags.outputdir) {
       const jsonOutput = this.logJson(result);
-      const outputDirConfig = {
-        dirPath: this.flags.outputdir,
-        fileInfos: [
-          {
-            filename: `test-result-${result.summary.testRunId}.json`,
-            content: jsonOutput
-          },
-          ...(jsonOutput.coverage
-            ? [
-                {
-                  filename: `test-result-codecoverage.json`,
-                  content: jsonOutput.coverage.coverage
-                }
-              ]
-            : [])
-        ],
-        ...(this.flags.resultformat === 'junit' ||
-        this.flags.resultformat === 'tap'
-          ? { resultFormat: this.flags.resultformat }
-          : {})
-      };
+      const outputDirConfig = buildOutputDirConfig(
+        result,
+        jsonOutput,
+        this.flags.outputdir,
+        this.flags.resultformat,
+        this.flags.detailedcoverage
+      );
 
       await testService.writeResultFiles(
         result,
@@ -278,4 +268,57 @@ export default class Run extends SfdxCommand {
     const hint = messages.getMessage('apexTestReportFormatHint', [reportArgs]);
     return hint;
   }
+
+  // private buildOutputDirConfig(
+  //   result: TestResult,
+  //   jsonOutput: CliJsonFormat
+  // ): OutputDirConfig {
+  //   const outputDirConfig: OutputDirConfig = {
+  //     dirPath: this.flags.outputdir,
+  //     fileInfos: [
+  //       {
+  //         filename: `test-result-${result.summary.testRunId}.json`,
+  //         content: jsonOutput
+  //       },
+  //       ...(jsonOutput.coverage
+  //         ? [
+  //             {
+  //               filename: `test-result-codecoverage.json`,
+  //               content: jsonOutput.coverage.coverage
+  //             }
+  //           ]
+  //         : [])
+  //     ],
+  //     resultFormats: [ResultFormat.junit]
+  //   };
+
+  //   if (this.flags.resultformat === 'tap') {
+  //     const tapResult = new TapReporter().format(result);
+  //     outputDirConfig.fileInfos!.push({
+  //       filename: `test-result.txt`,
+  //       content: tapResult
+  //     });
+  //   }
+
+  //   if (this.flags.resultformat === 'junit') {
+  //     const junitResult = new JUnitReporter().format(result);
+  //     outputDirConfig.fileInfos!.push({
+  //       filename: `test-result.xml`,
+  //       content: junitResult
+  //     });
+  //   }
+
+  //   if (this.flags.resultformat === 'human') {
+  //     const humanResult = new HumanReporter().format(
+  //       result,
+  //       this.flags.detailedcoverage
+  //     );
+  //     outputDirConfig.fileInfos!.push({
+  //       filename: `test-result.txt`,
+  //       content: humanResult
+  //     });
+  //   }
+
+  //   return outputDirConfig;
+  // }
 }
