@@ -556,7 +556,7 @@ describe('force:apex:test:run', () => {
                   filename: `test-result.txt`
                 }
               ],
-              resultFormats: [ResultFormat.junit]
+              resultFormats: [ResultFormat.junit, ResultFormat.tap]
             },
             true
           ]

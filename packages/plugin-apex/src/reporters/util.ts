@@ -43,21 +43,22 @@ export function buildOutputDirConfig(
   switch (resultFormat) {
     case 'tap':
       const tapResult = new TapReporter().format(result);
-      outputDirConfig.fileInfos!.push({
+      outputDirConfig.fileInfos?.push({
         filename: `test-result.txt`,
         content: tapResult
       });
+      outputDirConfig.resultFormats?.push(ResultFormat.tap);
       break;
     case 'junit':
       const junitResult = new JUnitReporter().format(result);
-      outputDirConfig.fileInfos!.push({
+      outputDirConfig.fileInfos?.push({
         filename: `test-result.xml`,
         content: junitResult
       });
       break;
     case 'human':
       const humanResult = new HumanReporter().format(result, detailedCoverage);
-      outputDirConfig.fileInfos!.push({
+      outputDirConfig.fileInfos?.push({
         filename: `test-result.txt`,
         content: humanResult
       });

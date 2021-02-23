@@ -440,7 +440,7 @@ describe('force:apex:test:report', () => {
                   filename: `test-result.txt`
                 }
               ],
-              resultFormats: [ResultFormat.junit]
+              resultFormats: [ResultFormat.junit, ResultFormat.tap]
             },
             true
           ]
