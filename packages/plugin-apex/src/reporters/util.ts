@@ -40,29 +40,28 @@ export function buildOutputDirConfig(
     resultFormats: [ResultFormat.junit]
   };
 
-  if (resultFormat === 'tap') {
-    const tapResult = new TapReporter().format(result);
-    outputDirConfig.fileInfos!.push({
-      filename: `test-result.txt`,
-      content: tapResult
-    });
+  switch (resultFormat) {
+    case 'tap':
+      const tapResult = new TapReporter().format(result);
+      outputDirConfig.fileInfos!.push({
+        filename: `test-result.txt`,
+        content: tapResult
+      });
+      break;
+    case 'junit':
+      const junitResult = new JUnitReporter().format(result);
+      outputDirConfig.fileInfos!.push({
+        filename: `test-result.xml`,
+        content: junitResult
+      });
+      break;
+    case 'human':
+      const humanResult = new HumanReporter().format(result, detailedCoverage);
+      outputDirConfig.fileInfos!.push({
+        filename: `test-result.txt`,
+        content: humanResult
+      });
+      break;
   }
-
-  if (resultFormat === 'junit') {
-    const junitResult = new JUnitReporter().format(result);
-    outputDirConfig.fileInfos!.push({
-      filename: `test-result.xml`,
-      content: junitResult
-    });
-  }
-
-  if (resultFormat === 'human') {
-    const humanResult = new HumanReporter().format(result, detailedCoverage);
-    outputDirConfig.fileInfos!.push({
-      filename: `test-result.txt`,
-      content: humanResult
-    });
-  }
-
   return outputDirConfig;
 }
