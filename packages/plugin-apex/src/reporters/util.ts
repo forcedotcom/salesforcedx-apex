@@ -14,11 +14,20 @@ import {
 } from '@salesforce/apex-node';
 import { CliJsonFormat } from './jsonReporter';
 
+/**
+ * Builds output directory configuration with CLI format result files
+ * @param result Test results from async/sync test run
+ * @param jsonOutput JSON CLI format of test results
+ * @param outputDir Output directory for result files
+ * @param resultFormat Result format for output files
+ * @param detailedCoverage Boolean to control detailed coverage reporting
+ * @returns Output directory configuration
+ */
 export function buildOutputDirConfig(
   result: TestResult,
   jsonOutput: CliJsonFormat,
   outputDir: string,
-  resultFormat: string,
+  resultFormat: ResultFormat,
   detailedCoverage: boolean
 ): OutputDirConfig {
   const outputDirConfig: OutputDirConfig = {

@@ -54,7 +54,8 @@ export type AsyncTestConfiguration = {
 export enum ResultFormat {
   junit = 'junit',
   tap = 'tap',
-  json = 'json'
+  json = 'json',
+  human = 'human'
 }
 
 export type OutputDirConfig = {
