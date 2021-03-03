@@ -11,6 +11,7 @@ import { StreamMessage, TestResultMessage } from './types';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
 import { ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
+import { Progress } from '../streaming/types';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
@@ -19,10 +20,22 @@ export interface AsyncTestRun {
   runId: string;
   queueItem: ApexTestQueueItem;
 }
+// import { EventEmitter } from 'events';
+// interface AsyncResult<Result, ProgressValue = void> {
+//   resultPromise: Promise<Result>;
+//   progressEventEmitter?: Promise<ProgressValue>;
+//   cancellationCallback?: Function;
+// }
+// const x: AsyncResult<string> = {
+//   resultPromise: new Promise<string>(resolve => {
+//     resolve(null);
+//   })
+// };
 
 export class StreamingClient {
   private client: FayeClient;
   private conn: Connection;
+  private progress?: Progress<ApexTestQueueItemStatus>;
   private apiVersion = '36.0';
   public subscribedTestRunId: string;
 
@@ -39,8 +52,12 @@ export class StreamingClient {
     return urlElements.join('/');
   }
 
-  public constructor(connection: Connection) {
+  public constructor(
+    connection: Connection,
+    progress?: Progress<ApexTestQueueItemStatus>
+  ) {
     this.conn = connection;
+    this.progress = progress;
     const streamUrl = this.getStreamURL(this.conn.instanceUrl);
     this.client = new FayeClient(streamUrl, {
       timeout: DEFAULT_STREAMING_TIMEOUT_MS
@@ -173,6 +190,8 @@ export class StreamingClient {
 
     for (let i = 0; i < result.records.length; i++) {
       const item = result.records[i];
+      console.log(JSON.stringify(item, null, 2));
+      this.progress?.report(item.Status);
       if (
         item.Status === ApexTestQueueItemStatus.Queued ||
         item.Status === ApexTestQueueItemStatus.Holding ||

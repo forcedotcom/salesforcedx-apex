@@ -38,6 +38,8 @@ import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
 import { ApexDiagnostic } from '../utils/types';
+import { Progress, CancellationToken } from '../streaming/types';
+import { ApexTestQueueItemStatus } from '../tests/types';
 
 // Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
 // local testing shows query char limit to be closer to ~12,400
@@ -277,7 +279,10 @@ export class TestService {
 
   private buildSyncTestResults(
     apiTestResult: SyncTestResult
-  ): { apexTestClassIdSet: Set<string>; testResults: ApexTestResultData[] } {
+  ): {
+    apexTestClassIdSet: Set<string>;
+    testResults: ApexTestResultData[];
+  } {
     const testResults: ApexTestResultData[] = [];
     const apexTestClassIdSet = new Set<string>();
 
@@ -359,9 +364,15 @@ export class TestService {
   // Asynchronous Test Runs
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
-    codeCoverage = false
+    codeCoverage = false,
+    progress?: Progress<ApexTestQueueItemStatus>,
+    token?: CancellationToken
   ): Promise<TestResult> {
-    const sClient = new StreamingClient(this.connection);
+    token.onCancellationRequested(() => {
+      // abort test run
+    });
+    // progress.report('Processing');
+    const sClient = new StreamingClient(this.connection, progress);
     await sClient.init();
     await sClient.handshake();
 
