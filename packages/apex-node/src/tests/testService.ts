@@ -182,10 +182,16 @@ export class TestService {
     return new Set([...orgNamespaces, ...installedNamespaces]);
   }
 
-  // Synchronous Test Runs
+  /**
+   * Synchronous Test Runs
+   * @param options Synchronous Test Runs configuration
+   * @param codeCoverage should report code coverage
+   * @param token cancellation token
+   */
   public async runTestSynchronous(
     options: SyncTestConfiguration,
-    codeCoverage = false
+    codeCoverage = false,
+    token?: CancellationToken
   ): Promise<TestResult> {
     const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
     const request = {
@@ -198,6 +204,10 @@ export class TestService {
     const testRun = (await this.connection.tooling.request(
       request
     )) as SyncTestResult;
+
+    if (token && token.isCancellationRequested) {
+      return null;
+    }
 
     return this.formatSyncResults(testRun, getCurrentTime(), codeCoverage);
   }
@@ -383,7 +393,7 @@ export class TestService {
     );
 
     if (token && token.isCancellationRequested) {
-      return;
+      return null;
     }
 
     return await this.formatAsyncResults(
@@ -409,7 +419,7 @@ export class TestService {
     const queueResult = await sClient.handler(undefined, testRunId);
 
     if (token && token.isCancellationRequested) {
-      return;
+      return null;
     }
 
     return await this.formatAsyncResults(
