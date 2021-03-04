@@ -128,6 +128,10 @@ export class StreamingClient {
     });
   }
 
+  public async unsubscribe(): Promise<void> {
+    this.client.disconnect();
+  }
+
   private isValidTestRunID(testRunId: string, subscribedId?: string): boolean {
     if (testRunId.length !== 15 && testRunId.length !== 18) {
       return false;
@@ -145,6 +149,7 @@ export class StreamingClient {
     message?: TestResultMessage,
     runId?: string
   ): Promise<ApexTestQueueItem> {
+    console.log('YOGOS');
     const testRunId = runId || message.sobject.Id;
     if (!this.isValidTestRunID(testRunId, this.subscribedTestRunId)) {
       return null;
@@ -182,6 +187,7 @@ export class StreamingClient {
         return null;
       }
     }
+    console.log(JSON.stringify(result, null, 2));
     return result;
   }
 }

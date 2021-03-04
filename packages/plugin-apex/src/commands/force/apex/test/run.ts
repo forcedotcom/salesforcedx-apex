@@ -5,20 +5,20 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import {
-  TapReporter,
-  TestService,
-  JUnitReporter,
-  HumanReporter,
-  TestResult
+  // TapReporter,
+  TestService
+  // JUnitReporter,
+  // HumanReporter,
+  // TestResult
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
-import { AnyJson } from '@salesforce/ts-types';
-import {
-  buildOutputDirConfig,
-  CliJsonFormat,
-  JsonReporter
-} from '../../../../reporters';
+// import { AnyJson } from '@salesforce/ts-types';
+// import {
+//   // buildOutputDirConfig,
+//   CliJsonFormat,
+//   JsonReporter
+// } from '../../../../reporters';
 import { buildDescription, logLevels, resultFormat } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
@@ -107,7 +107,7 @@ export default class Run extends SfdxCommand {
     })
   };
 
-  public async run(): Promise<AnyJson> {
+  public async run(): Promise<void> {
     await this.validateFlags();
     const testLevel = this.flags.testlevel
       ? this.flags.testlevel
@@ -115,18 +115,18 @@ export default class Run extends SfdxCommand {
 
     const conn = this.org.getConnection();
     const testService = new TestService(conn);
-    let result: TestResult;
+    // let result: TestResult;
 
     if (this.flags.synchronous) {
-      const payload = await testService.buildSyncPayload(
-        testLevel,
-        this.flags.tests,
-        this.flags.classnames
-      );
-      result = await testService.runTestSynchronous(
-        payload,
-        this.flags.codecoverage
-      );
+      // const payload = await testService.buildSyncPayload(
+      //   testLevel,
+      //   this.flags.tests,
+      //   this.flags.classnames
+      // );
+      // result = await testService.runTestSynchronous(
+      //   payload,
+      //   this.flags.codecoverage
+      // );
     } else {
       const payload = await testService.buildAsyncPayload(
         testLevel,
@@ -134,61 +134,67 @@ export default class Run extends SfdxCommand {
         this.flags.classnames,
         this.flags.suitenames
       );
-      result = await testService.runTestAsynchronous(
-        payload,
-        this.flags.codecoverage
-      );
+      testService.runTestAsynchronous(payload, this.flags.codecoverage);
+      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+      await delay(3000);
+      console.log('yahan se' + testService.testRunId);
+      await delay(3000);
+      // @ts-ignore
+      await testService.cancelTestRun(testService.testRunId!);
+      // setTimeout(testService.cancelTestRun, 3000);
     }
 
-    if (this.flags.outputdir) {
-      const jsonOutput = this.logJson(result);
-      const outputDirConfig = buildOutputDirConfig(
-        result,
-        jsonOutput,
-        this.flags.outputdir,
-        this.flags.resultformat,
-        this.flags.detailedcoverage
-      );
+    // if (this.flags.outputdir) {
+    //   const jsonOutput = this.logJson(result);
+    //   const outputDirConfig = buildOutputDirConfig(
+    //     result,
+    //     jsonOutput,
+    //     this.flags.outputdir,
+    //     this.flags.resultformat,
+    //     this.flags.detailedcoverage
+    //   );
 
-      await testService.writeResultFiles(
-        result,
-        outputDirConfig,
-        this.flags.codecoverage
-      );
-    }
+    //   await testService.writeResultFiles(
+    //     result,
+    //     outputDirConfig,
+    //     this.flags.codecoverage
+    //   );
+    // }
 
-    try {
-      switch (this.flags.resultformat) {
-        case 'human':
-          this.logHuman(
-            result,
-            this.flags.detailedcoverage,
-            this.flags.outputdir
-          );
-          break;
-        case 'tap':
-          this.logTap(result);
-          break;
-        case 'junit':
-          this.logJUnit(result);
-          break;
-        case 'json':
-          this.ux.logJson(this.logJson(result));
-          break;
-        default:
-          const id = result.summary.testRunId;
-          const username = result.summary.username;
-          this.ux.log(
-            messages.getMessage('runTestReportCommand', [id, username])
-          );
-      }
-    } catch (e) {
-      this.ux.logJson(result);
-      const msg = messages.getMessage('testResultProcessErr', [e]);
-      this.ux.error(msg);
-    }
+    // try {
+    //   switch (this.flags.resultformat) {
+    //     case 'human':
+    //       this.logHuman(
+    //         result,
+    //         this.flags.detailedcoverage,
+    //         this.flags.outputdir
+    //       );
+    //       break;
+    //     case 'tap':
+    //       this.logTap(result);
+    //       break;
+    //     case 'junit':
+    //       this.logJUnit(result);
+    //       break;
+    //     case 'json':
+    //       this.ux.logJson(this.logJson(result));
+    //       break;
+    //     default:
+    //       const id = result.summary.testRunId;
+    //       const username = result.summary.username;
+    //       this.ux.log(
+    //         messages.getMessage('runTestReportCommand', [id, username])
+    //       );
+    //   }
+    // } catch (e) {
+    //   this.ux.logJson(result);
+    //   const msg = messages.getMessage('testResultProcessErr', [e]);
+    //   this.ux.error(msg);
+    // }
 
-    return this.logJson(result) as AnyJson;
+    // return this.logJson(result) as AnyJson;
   }
 
   public async validateFlags(): Promise<void> {
@@ -224,48 +230,48 @@ export default class Run extends SfdxCommand {
     }
   }
 
-  private logHuman(
-    result: TestResult,
-    detailedCoverage: boolean,
-    outputDir: string
-  ): void {
-    if (outputDir) {
-      this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
-    }
-    const humanReporter = new HumanReporter();
-    const output = humanReporter.format(result, detailedCoverage);
-    this.ux.log(output);
-  }
+  // private logHuman(
+  //   result: TestResult,
+  //   detailedCoverage: boolean,
+  //   outputDir: string
+  // ): void {
+  //   if (outputDir) {
+  //     this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
+  //   }
+  //   const humanReporter = new HumanReporter();
+  //   const output = humanReporter.format(result, detailedCoverage);
+  //   this.ux.log(output);
+  // }
 
-  private logTap(result: TestResult): void {
-    const reporter = new TapReporter();
-    const hint = this.formatReportHint(result);
-    this.ux.log(reporter.format(result, [hint]));
-  }
+  // private logTap(result: TestResult): void {
+  //   const reporter = new TapReporter();
+  //   const hint = this.formatReportHint(result);
+  //   this.ux.log(reporter.format(result, [hint]));
+  // }
 
-  private logJUnit(result: TestResult): void {
-    const reporter = new JUnitReporter();
-    this.ux.log(reporter.format(result));
-  }
+  // private logJUnit(result: TestResult): void {
+  //   const reporter = new JUnitReporter();
+  //   this.ux.log(reporter.format(result));
+  // }
 
-  private logJson(result: TestResult): CliJsonFormat {
-    try {
-      const reporter = new JsonReporter();
-      return reporter.format(result);
-    } catch (e) {
-      this.ux.logJson(result);
-      const msg = messages.getMessage('testResultProcessErr', [e]);
-      this.ux.error(msg);
-      throw e;
-    }
-  }
+  // private logJson(result: TestResult): CliJsonFormat {
+  //   try {
+  //     const reporter = new JsonReporter();
+  //     return reporter.format(result);
+  //   } catch (e) {
+  //     this.ux.logJson(result);
+  //     const msg = messages.getMessage('testResultProcessErr', [e]);
+  //     this.ux.error(msg);
+  //     throw e;
+  //   }
+  // }
 
-  private formatReportHint(result: TestResult): string {
-    let reportArgs = `-i ${result.summary.testRunId}`;
-    if (this.flags.targetusername) {
-      reportArgs += ` -u ${this.flags.targetusername}`;
-    }
-    const hint = messages.getMessage('apexTestReportFormatHint', [reportArgs]);
-    return hint;
-  }
+  // private formatReportHint(result: TestResult): string {
+  //   let reportArgs = `-i ${result.summary.testRunId}`;
+  //   if (this.flags.targetusername) {
+  //     reportArgs += ` -u ${this.flags.targetusername}`;
+  //   }
+  //   const hint = messages.getMessage('apexTestReportFormatHint', [reportArgs]);
+  //   return hint;
+  // }
 }

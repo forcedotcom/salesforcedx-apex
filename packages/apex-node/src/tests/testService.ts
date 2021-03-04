@@ -45,6 +45,8 @@ const QUERY_CHAR_LIMIT = 12400;
 const CLASS_ID_PREFIX = '01p';
 export class TestService {
   public readonly connection: Connection;
+  public streamingClient?: StreamingClient;
+  public testRun?: string;
 
   constructor(connection: Connection) {
     this.connection = connection;
@@ -361,14 +363,16 @@ export class TestService {
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false
   ): Promise<TestResult> {
-    const sClient = new StreamingClient(this.connection);
-    await sClient.init();
-    await sClient.handshake();
+    this.streamingClient = new StreamingClient(this.connection);
+    await this.streamingClient.init();
+    await this.streamingClient.handshake();
 
-    const asyncRunResult = await sClient.subscribe(
+    // check for cancellation
+    const asyncRunResult = await this.streamingClient.subscribe(
       this.getTestRunRequestAction(options)
     );
 
+    // check for cancellation
     return await this.formatAsyncResults(
       asyncRunResult.queueItem,
       asyncRunResult.runId,
@@ -490,7 +494,7 @@ export class TestService {
       );
       result.summary.orgWideCoverage = await this.getOrgWideCoverage();
     }
-
+    console.log(JSON.stringify(result, null, 2));
     return result;
   }
 
@@ -623,6 +627,33 @@ export class TestService {
       }
     }
     return diagnostic;
+  }
+
+  public async cancelTestRun(testRunId: string): Promise<void> {
+    console.log('HELLO' + testRunId);
+    // if (!this.testRun) {
+    //   console.log('its not set');
+    //   return;
+    // }
+    this.streamingClient.unsubscribe();
+    this.streamingClient = null;
+
+    const result = await this.connection.tooling.query(
+      `SELECT Id, Status FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`
+    );
+    for (const r of result.records) {
+      // console.log('the originals\n' + JSON.stringify(r, null, 2));
+      // @ts-ignore
+      r.Status = 'Aborted';
+      await this.connection.tooling.update('ApexTestQueueItem', r);
+    }
+
+    // const result2 = await this.connection.tooling.query(
+    //   `SELECT Id, Status FROM ApexTestQueueItem WHERE ParentJobId = '${this.testRun.testRunId}'`
+    // );
+    // for (const yo of result2.records) {
+    //   // console.log('new ones\n' + JSON.stringify(yo, null, 2));
+    // }
   }
 
   public async getOrgWideCoverage(): Promise<string> {
@@ -856,6 +887,8 @@ export class TestService {
         const testRunId = (await this.connection.tooling.request(
           request
         )) as string;
+        this.testRun = { testRunId };
+        console.log('just got here w the test run ' + this.testRun.testRunId);
         return Promise.resolve(testRunId);
       } catch (e) {
         return Promise.reject(e);
