@@ -10,6 +10,7 @@ import {
   SyncTestResult,
   AsyncTestConfiguration,
   AsyncTestArrayConfiguration,
+  ApexTestProgressValue,
   ApexTestRunResult,
   ApexTestResult,
   ApexTestQueueItem,
@@ -31,6 +32,7 @@ import {
   ResultFormat
 } from './types';
 import * as util from 'util';
+import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
 import { formatStartTime, getCurrentTime } from '../utils';
@@ -277,7 +279,10 @@ export class TestService {
 
   private buildSyncTestResults(
     apiTestResult: SyncTestResult
-  ): { apexTestClassIdSet: Set<string>; testResults: ApexTestResultData[] } {
+  ): {
+    apexTestClassIdSet: Set<string>;
+    testResults: ApexTestResultData[];
+  } {
     const testResults: ApexTestResultData[] = [];
     const apexTestClassIdSet = new Set<string>();
 
@@ -356,14 +361,28 @@ export class TestService {
     return diagnostic;
   }
 
-  // Asynchronous Test Runs
+  /**
+   * Asynchronous Test Runs
+   * @param options test options
+   * @param codeCoverage should report code coverage
+   * @param progress progress reporter
+   * @param token cancellation token
+   */
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
-    codeCoverage = false
+    codeCoverage = false,
+    progress?: Progress<ApexTestProgressValue>,
+    token?: CancellationToken
   ): Promise<TestResult> {
     const sClient = new StreamingClient(this.connection);
     await sClient.init();
     await sClient.handshake();
+
+    if (token && token.onCancellationRequested) {
+      token.onCancellationRequested(() => {
+        // Abort test run
+      });
+    }
 
     const asyncRunResult = await sClient.subscribe(
       this.getTestRunRequestAction(options)
