@@ -60,6 +60,6 @@ export type LogQueryResult = {
 };
 
 export type LogResult = {
-  logPaths?: string[];
-  logs: string[];
+  logPath?: string;
+  log: string;
 };

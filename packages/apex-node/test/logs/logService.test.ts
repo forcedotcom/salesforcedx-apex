@@ -13,7 +13,7 @@ import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { LogService } from '../../src/logs/logService';
 import * as path from 'path';
 import * as stream from 'stream';
-import { LogQueryResult, LogRecord } from '../../src/logs/types';
+import { LogQueryResult, LogRecord, LogResult } from '../../src/logs/types';
 
 const $$ = testSetup();
 
@@ -128,7 +128,7 @@ describe('Apex Log Service Tests', () => {
     const response = await apexLogGet.getLogs({
       numberOfLogs: 2
     });
-    expect(response.logs.length).to.eql(2);
+    expect(response.length).to.eql(2);
   });
 
   it('should return correct log given log id', async () => {
@@ -142,7 +142,7 @@ describe('Apex Log Service Tests', () => {
     const response = await apexLogGet.getLogs({
       logId: '07L5w00005PGdTnEAL'
     });
-    expect(response.logs.length).to.eql(1);
+    expect(response.length).to.eql(1);
     expect(getLogIdStub.callCount).to.eql(0);
   });
 
@@ -182,7 +182,7 @@ describe('Apex Log Service Tests', () => {
     const response = await apexLogGet.getLogs({
       numberOfLogs: 27
     });
-    expect(response.logs.length).to.eql(25);
+    expect(response.length).to.eql(25);
   });
 
   it('should handle invalid id', async () => {
@@ -227,11 +227,10 @@ describe('Apex Log Service Tests', () => {
     toolingRequestStub.onFirstCall().resolves(logs[0]);
     toolingRequestStub.onSecondCall().resolves(logs[1]);
 
-    const logPaths = [
-      path.join(filePath, `${logRecords[0].Id}.log`),
-      path.join(filePath, `${logRecords[1].Id}.log`)
+    const logResult: LogResult[] = [
+      { log: logs[0], logPath: path.join(filePath, `${logRecords[0].Id}.log`) },
+      { log: logs[1], logPath: path.join(filePath, `${logRecords[1].Id}.log`) }
     ];
-    const logResult = { logs, logPaths };
 
     const response = await apexLogGet.getLogs({
       numberOfLogs: 2,
