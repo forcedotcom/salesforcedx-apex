@@ -374,19 +374,17 @@ export class TestService {
     progress?: Progress<ApexTestProgressValue>,
     token?: CancellationToken
   ): Promise<TestResult> {
-    const sClient = new StreamingClient(this.connection);
+    const sClient = new StreamingClient(this.connection, progress);
     await sClient.init();
     await sClient.handshake();
-
-    if (token && token.onCancellationRequested) {
-      token.onCancellationRequested(() => {
-        // Abort test run
-      });
-    }
 
     const asyncRunResult = await sClient.subscribe(
       this.getTestRunRequestAction(options)
     );
+
+    if (token && token.isCancellationRequested) {
+      return;
+    }
 
     return await this.formatAsyncResults(
       asyncRunResult.queueItem,
@@ -396,12 +394,24 @@ export class TestService {
     );
   }
 
+  /**
+   * Report Asynchronous Test Run Results
+   * @param testRunId test run id
+   * @param codeCoverage should report code coverages
+   * @param token cancellation token
+   */
   public async reportAsyncResults(
     testRunId: string,
-    codeCoverage = false
+    codeCoverage = false,
+    token?: CancellationToken
   ): Promise<TestResult> {
     const sClient = new StreamingClient(this.connection);
     const queueResult = await sClient.handler(undefined, testRunId);
+
+    if (token && token.isCancellationRequested) {
+      return;
+    }
+
     return await this.formatAsyncResults(
       queueResult,
       testRunId,

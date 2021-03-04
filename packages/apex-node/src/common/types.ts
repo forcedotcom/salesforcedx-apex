@@ -12,7 +12,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * The following definition is adapted from Type Definition for Visual Studio Code 1.46 Extension API
+ * The following definitions are adapted from Type Definition for Visual Studio Code 1.46 Extension API
  * See https://code.visualstudio.com/api for more information
  */
 
