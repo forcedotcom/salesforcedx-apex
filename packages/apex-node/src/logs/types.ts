@@ -58,3 +58,8 @@ export interface LogRecord {
 export type LogQueryResult = {
   records: LogRecord[];
 };
+
+export type LogResult = {
+  logPaths?: string[];
+  logs: string[];
+};

@@ -68,7 +68,7 @@ export default class Get extends SfdxCommand {
       if (!this.flags.logid && !this.flags.number) {
         this.flags.number = 1;
       }
-      const logs = await logService.getLogs({
+      const { logs } = await logService.getLogs({
         logId: this.flags.logid,
         numberOfLogs: this.flags.number,
         outputDir: this.flags.outputdir
