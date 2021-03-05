@@ -21,7 +21,7 @@ You can find more information about commands that the library supports in the [C
 
 <br />
 
-### Building the library
+### Building the Library
 
 Clone the project and `cd` into it:
 
@@ -38,7 +38,7 @@ $ yarn build
 ```
 
 
-### Using the library 
+### Using the Library 
 
 Install the library locally by adding this information to your project's `package.json`:
 

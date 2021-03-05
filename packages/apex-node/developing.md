@@ -20,12 +20,12 @@ $ yarn build
 
 ## Branches
 
-- We work in `develop`
-- Our released (_production_) branch is `main`
-- Our work happens in _topic_ branches (feature and/or bug fix)
-  - These branches are based on `develop` and can live in forks for external contributors or within this repository for authors
-  - Be sure to prefix branches in this repository with `<developer-name>/`
-  - Be sure to keep branches up-to-date using `rebase`
+- We work in `develop`.
+- Our released (_production_) branch is `main`.
+- Our work happens in _topic_ branches (feature and/or bug fix).
+  - These branches are based on `develop` and can live in forks for external contributors or within this repository for authors.
+  - Be sure to prefix branches in this repository with `<developer-name>/`.
+  - Be sure to keep branches up-to-date using `rebase`.
 
 <br/>
 
@@ -77,7 +77,7 @@ $ yarn test
 
 We recommend using the Visual Studio Code (VS Code) IDE for your plugin development. Included in the `.vscode` directory of this plugin is a `launch.json` config file, which allows you to attach a debugger to the node process when running your commands. To debug a command:
 
-1. If you linked your plugin to the Salesforce CLI using `yarn plugin:link`, call your command with the `dev-suspend` switch:
+1. If you linked your plugin to Salesforce CLI using `yarn plugin:link`, call your command with the `dev-suspend` switch:
 
 ```
 $ sfdx force:apex:log:list -u myOrg@example.com --dev-suspend
