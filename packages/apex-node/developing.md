@@ -92,7 +92,7 @@ $ NODE_OPTIONS=--inspect-brk bin/run force:apex:log:list -u myOrg@example.com
 2. Set some breakpoints in your code.
 3. Click on the Debug icon in the Activity Bar to open up the Debugger view.
 4. In the upper left hand corner, set the launch configuration to `Attach to Remote`.
-5. Click the green play button on the left of the debugger view. The debugger should now by suspended on the first line of the program.
+5. Click the green play button on the left of the Debugger view. The debugger should now be suspended on the first line of the program.
 6. Click the green play button in the mini toolbar to continue running the program. 
 <br /><br />
 <img src="../../.images/vscodeScreenshot.png" width="480" height="278">
