@@ -9,7 +9,7 @@ $ git clone git@github.com:forcedotcom/salesforcedx-apex.git
 $ cd salesforcedx-apex
 ```
 
-Ensure you have [Yarn](https://yarnpkg.com/) installed, then run:
+Ensure that you have [Yarn](https://yarnpkg.com/) installed, then run:
 
 ```
 $ yarn install
