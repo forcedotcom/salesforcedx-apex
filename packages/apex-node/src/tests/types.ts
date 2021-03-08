@@ -460,3 +460,5 @@ export type NamespaceRecord = {
 export type NamespaceQueryResult = {
   records: NamespaceRecord[];
 };
+
+export type TestSuiteMembershipRecord = { ApexClassId: string };

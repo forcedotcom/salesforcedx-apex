@@ -28,7 +28,8 @@ import {
   TestItem,
   TestLevel,
   NamespaceQueryResult,
-  ResultFormat
+  ResultFormat,
+  TestSuiteMembershipRecord
 } from './types';
 import * as util from 'util';
 import { nls } from '../i18n';
@@ -37,7 +38,7 @@ import { formatStartTime, getCurrentTime } from '../utils';
 import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
-import { ApexDiagnostic } from '../utils/types';
+import { ApexDiagnostic, QueryResult } from '../utils/types';
 
 // Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
 // local testing shows query char limit to be closer to ~12,400
@@ -48,6 +49,48 @@ export class TestService {
 
   constructor(connection: Connection) {
     this.connection = connection;
+  }
+
+  public async buildSuite(suitename: string, test: string): Promise<void> {
+    const testSuite = (await this.connection.tooling.query(
+      `SELECT id FROM ApexTestSuite WHERE TestSuiteName = '${suitename}'`
+    )) as QueryResult;
+    let testSuiteId: string;
+    if (testSuite.records.length > 0) {
+      testSuiteId = testSuite.records[0].Id;
+    } else {
+      const result = await this.connection.tooling.create('ApexTestSuite', {
+        TestSuiteName: suitename
+      });
+      //@ts-ignore
+      testSuiteId = result.Id;
+    }
+    console.log('this was the test suite id ' + testSuiteId);
+
+    const apexClass = (await this.connection.tooling.query(
+      `SELECT id, name FROM ApexClass WHERE Name = '${test}'`
+    )) as QueryResult;
+    const apexClassId = apexClass.records[0].Id;
+    console.log('this was the apex class id ' + apexClassId);
+
+    const rec = (await this.connection.tooling.query(
+      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = '${testSuiteId}'`
+    )) as QueryResult<TestSuiteMembershipRecord>;
+    const existingClass = rec?.records.filter(
+      rec => rec.ApexClassId === apexClassId
+    );
+    // how do you handle the scenario that the apex class was already in the org
+    if (!existingClass) {
+      const membershipid = await this.connection.tooling.create(
+        'TestSuiteMembership',
+        { ApexClassId: apexClassId, ApexTestSuiteId: testSuiteId }
+      );
+      console.log(
+        'this was the membership id ' + JSON.stringify(membershipid, null, 2)
+      );
+    } else {
+      console.log('class already exists in test suite');
+    }
   }
 
   // utils to build test run payloads that may contain namespaces
