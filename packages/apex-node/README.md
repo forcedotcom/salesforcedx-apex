@@ -8,7 +8,7 @@
 ## Introduction
 Typescript library to support the Apex plugin and [Salesforce Extensions for VS Code](https://github.com/forcedotcom/salesforcedx-vscode/).
 
-Note: This library is in beta and has been released early so we can collect feedback. It may contain bugs, undergo major changes, or be discontinued. Please report any issues via the [Issues tab](https://github.com/forcedotcom/salesforcedx-apex/issues)
+Note: This library is in beta and has been released early so we can collect feedback. It may contain bugs, undergo major changes, or be discontinued. Please report any issues via the [Issues tab](https://github.com/forcedotcom/salesforcedx-apex/issues).
 
 
 ## Getting Started
