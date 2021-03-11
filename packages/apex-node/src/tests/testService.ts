@@ -440,6 +440,10 @@ export class TestService {
     commandStartTime: number,
     codeCoverage = false
   ): Promise<TestResult> {
+    if (!this.isValidTestRunID(testRunId)) {
+      throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
+    }
+
     let testRunSummaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
     testRunSummaryQuery +=
@@ -885,6 +889,13 @@ export class TestService {
 
   private addIdToQuery(formattedIds: string, id: string): string {
     return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
+  }
+
+  private isValidTestRunID(testRunId: string): boolean {
+    if (testRunId.length !== 15 && testRunId.length !== 18) {
+      return false;
+    }
+    return true;
   }
 
   public stringify(jsonObj: object): string {
