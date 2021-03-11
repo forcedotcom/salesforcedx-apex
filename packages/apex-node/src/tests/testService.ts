@@ -465,7 +465,7 @@ export class TestService {
     let outcome = summaryRecord.Status;
     if (globalTests.failed > 0) {
       outcome = ApexTestRunResultStatus.Failed;
-    } else if (globalTests.skipped > 0 && globalTests.passed === 0) {
+    } else if (globalTests.passed === 0) {
       outcome = ApexTestRunResultStatus.Skipped;
     } else if (summaryRecord.Status === ApexTestRunResultStatus.Completed) {
       outcome = ApexTestRunResultStatus.Passed;
