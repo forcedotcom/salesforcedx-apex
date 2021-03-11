@@ -894,12 +894,12 @@ export class TestService {
 
   private isValidTestRunID(testRunId: string): boolean {
     if (
-      (testRunId.length !== 15 && testRunId.length !== 18) ||
-      !testRunId.startsWith(TEST_RUN_ID_PREFIX)
+      (testRunId.length === 15 || testRunId.length === 18) &&
+      testRunId.startsWith(TEST_RUN_ID_PREFIX)
     ) {
-      return false;
+      return true;
     }
-    return true;
+    return false;
   }
 
   public stringify(jsonObj: object): string {
