@@ -67,5 +67,5 @@ export const messages = {
   resultFormatErr:
     'Specified result formats must be of type json, junit, or tap',
   invalidTestRunIdErr:
-    'The test run id %s is not in the correct format for "id." Must be a 15- or 18-char string in the format "00Dxxxxxxxxxxxx", where "00D" is a valid sObject prefix.'
+    'The test run id %s is not in the correct format for "id." Must be a 15- or 18-char string in the format "707xxxxxxxxxxxx"'
 };

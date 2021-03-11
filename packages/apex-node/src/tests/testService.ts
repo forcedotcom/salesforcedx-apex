@@ -892,7 +892,10 @@ export class TestService {
   }
 
   private isValidTestRunID(testRunId: string): boolean {
-    if (testRunId.length !== 15 && testRunId.length !== 18) {
+    if (
+      (testRunId.length !== 15 && testRunId.length !== 18) ||
+      !testRunId.startsWith('707')
+    ) {
       return false;
     }
     return true;
