@@ -40,11 +40,12 @@ import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
 import { ApexDiagnostic } from '../utils/types';
+import {
+  CLASS_ID_PREFIX,
+  QUERY_CHAR_LIMIT,
+  TEST_RUN_ID_PREFIX
+} from './constants';
 
-// Tooling API query char limit is 100,000 after v48; REST API limit for uri + headers is 16,348 bytes
-// local testing shows query char limit to be closer to ~12,400
-const QUERY_CHAR_LIMIT = 12400;
-const CLASS_ID_PREFIX = '01p';
 export class TestService {
   public readonly connection: Connection;
 
@@ -894,7 +895,7 @@ export class TestService {
   private isValidTestRunID(testRunId: string): boolean {
     if (
       (testRunId.length !== 15 && testRunId.length !== 18) ||
-      !testRunId.startsWith('707')
+      !testRunId.startsWith(TEST_RUN_ID_PREFIX)
     ) {
       return false;
     }
