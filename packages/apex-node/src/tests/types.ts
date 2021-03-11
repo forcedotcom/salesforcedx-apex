@@ -461,4 +461,17 @@ export type NamespaceQueryResult = {
   records: NamespaceRecord[];
 };
 
-export type ApexTestProgressValue = ApexTestRunResultRecord;
+export type ApexTestProgressValue =
+  | {
+      type: 'StreamingClientProgress';
+      value: 'streamingTransportUp' | 'streamingTransportDown';
+    }
+  | {
+      type: 'StreamingClientProgress';
+      value: 'streamingProcessingTestRun';
+      testRunId: string;
+    }
+  | {
+      type: 'TestQueueProgress';
+      value: ApexTestQueueItem;
+    };

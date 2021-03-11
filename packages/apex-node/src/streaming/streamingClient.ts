@@ -59,10 +59,18 @@ export class StreamingClient {
     });
 
     this.client.on('transport:up', () => {
+      this.progress?.report({
+        type: 'StreamingClientProgress',
+        value: 'streamingTransportUp'
+      });
       console.log(nls.localize('streamingTransportUp'));
     });
 
     this.client.on('transport:down', () => {
+      this.progress?.report({
+        type: 'StreamingClientProgress',
+        value: 'streamingTransportDown'
+      });
       console.log(nls.localize('streamingTransportDown'));
     });
 
@@ -167,6 +175,11 @@ export class StreamingClient {
       return result;
     }
 
+    this.progress?.report({
+      type: 'StreamingClientProgress',
+      value: 'streamingProcessingTestRun',
+      testRunId
+    });
     console.log(nls.localize('streamingProcessingTestRun', testRunId));
     return null;
   }
@@ -182,6 +195,11 @@ export class StreamingClient {
     if (result.records.length === 0) {
       throw new Error(nls.localize('noTestQueueResults', testRunId));
     }
+
+    this.progress?.report({
+      type: 'TestQueueProgress',
+      value: result
+    });
 
     for (let i = 0; i < result.records.length; i++) {
       const item = result.records[i];
