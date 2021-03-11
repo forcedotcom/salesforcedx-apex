@@ -158,7 +158,10 @@ export class TestService {
           className: `${classParts[1]}`
         };
       }
-      return { className: item } as TestItem;
+      const prop = item.toLowerCase().startsWith(CLASS_ID_PREFIX)
+        ? 'classId'
+        : 'className';
+      return { [prop]: item } as TestItem;
     });
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
   }
