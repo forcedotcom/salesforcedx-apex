@@ -477,4 +477,9 @@ export type ApexTestProgressValue =
   | {
       type: 'TestQueueProgress';
       value: ApexTestQueueItem;
+    }
+  | {
+      type: 'FormatTestResultProgress';
+      value: 'retrievingTestRunSummary' | 'queryingForAggregateCodeCoverage';
+      message: string;
     };
