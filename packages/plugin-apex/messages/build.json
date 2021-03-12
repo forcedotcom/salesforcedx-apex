@@ -1,0 +1,4 @@
+{
+    "suitenameDescription": "Name of the Apex test suite to create or add test classes to",
+    "testClassesDescription": "Test classes to add to test suite"
+}

@@ -51,45 +51,134 @@ export class TestService {
     this.connection = connection;
   }
 
-  public async buildSuite(suitename: string, test: string): Promise<void> {
-    const testSuite = (await this.connection.tooling.query(
+  /**
+   * Retrieve all suites in org
+   * @returns list of Suites in org
+   */
+  public async retrieveAllSuites(): Promise<
+    { id: string; TestSuiteName: string }[]
+  > {
+    const testSuiteRecords = (await this.connection.tooling.query(
+      `SELECT id, TestSuiteName FROM ApexTestSuite`
+    )) as QueryResult<{ id: string; TestSuiteName: string }>;
+
+    return testSuiteRecords.records;
+  }
+
+  private async retrieveSuiteId(
+    suitename: string
+  ): Promise<string | undefined> {
+    const suiteResult = (await this.connection.tooling.query(
       `SELECT id FROM ApexTestSuite WHERE TestSuiteName = '${suitename}'`
     )) as QueryResult;
-    let testSuiteId: string;
-    if (testSuite.records.length > 0) {
-      testSuiteId = testSuite.records[0].Id;
-    } else {
-      const result = await this.connection.tooling.create('ApexTestSuite', {
-        TestSuiteName: suitename
-      });
-      //@ts-ignore
-      testSuiteId = result.Id;
+
+    if (suiteResult.records.length === 0) {
+      return undefined;
     }
-    console.log('this was the test suite id ' + testSuiteId);
+    return suiteResult.records[0].Id;
+  }
 
-    const apexClass = (await this.connection.tooling.query(
-      `SELECT id, name FROM ApexClass WHERE Name = '${test}'`
-    )) as QueryResult;
-    const apexClassId = apexClass.records[0].Id;
-    console.log('this was the apex class id ' + apexClassId);
+  /**
+   * Retrive the ids for the given suites
+   * @param suitenames names of suites
+   * @returns Ids associated with each suite
+   */
+  private async getOrCreateSuiteIds(suitenames: string[]): Promise<string[]> {
+    const suiteIds = suitenames.map(async suite => {
+      const suiteId = await this.retrieveSuiteId(suite);
 
-    const rec = (await this.connection.tooling.query(
-      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = '${testSuiteId}'`
+      if (suiteId === undefined) {
+        const result = await this.connection.tooling.create('ApexTestSuite', {
+          TestSuiteName: suite
+        });
+        //@ts-ignore
+        return result.id;
+      }
+      return suiteId;
+    });
+    return await Promise.all(suiteIds);
+  }
+
+  /**
+   * Retrieves the test classes in a given suite
+   * @param suitename name of suite
+   * @param suiteId id of suite
+   * @returns list of test classes in the suite
+   */
+  public async getTestsInSuite(
+    suitename?: string,
+    suiteId?: string
+  ): Promise<TestSuiteMembershipRecord[]> {
+    if (suitename === undefined && suiteId === undefined) {
+      throw new Error(
+        'Must provide a suite name or suite id to retrieve test classes in suite'
+      );
+    }
+
+    if (suitename) {
+      const suiteId = await this.retrieveSuiteId(suitename);
+      if (suiteId === undefined) {
+        throw new Error('Suite does not exist');
+      }
+    }
+    const classRecords = (await this.connection.tooling.query(
+      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = '${suiteId}'`
     )) as QueryResult<TestSuiteMembershipRecord>;
-    const existingClass = rec?.records.filter(
-      rec => rec.ApexClassId === apexClassId
-    );
-    // how do you handle the scenario that the apex class was already in the org
-    if (!existingClass) {
-      const membershipid = await this.connection.tooling.create(
-        'TestSuiteMembership',
-        { ApexClassId: apexClassId, ApexTestSuiteId: testSuiteId }
+
+    return classRecords.records;
+  }
+
+  /**
+   * Returns the associated Ids for each given Apex class
+   * @param testClasses list of Apex class names
+   * @returns the associated ids for each Apex class
+   */
+  public async getApexClassIds(testClasses: string[]): Promise<string[]> {
+    const classIds = testClasses.map(async testClass => {
+      const apexClass = (await this.connection.tooling.query(
+        `SELECT id, name FROM ApexClass WHERE Name = '${testClass}'`
+      )) as QueryResult;
+      if (apexClass.records.length === 0) {
+        throw new Error(`Apex class ${testClass} does not exist in the org`);
+      }
+      return apexClass.records[0].Id;
+    });
+    return await Promise.all(classIds);
+  }
+
+  /**
+   * Builds a test suite with the given test classes. Creates the test suite if it doesn't exist already
+   * @param suitename name of suite
+   * @param tests tests to be added to suite
+   */
+  public async buildSuite(
+    suitename: string,
+    testClasses: string[]
+  ): Promise<void> {
+    const testSuiteId = (await this.getOrCreateSuiteIds([suitename]))[0];
+
+    const classesInSuite = await this.getTestsInSuite(undefined, testSuiteId);
+    const testClassIds = await this.getApexClassIds(testClasses);
+    let count = 0;
+    for (const classId of testClassIds) {
+      const existingClass = classesInSuite.filter(
+        rec => rec.ApexClassId === classId
       );
-      console.log(
-        'this was the membership id ' + JSON.stringify(membershipid, null, 2)
-      );
-    } else {
-      console.log('class already exists in test suite');
+
+      if (existingClass.length > 0) {
+        console.log(
+          `Apex test class ${testClasses[count]} already exists in Apex test suite ${suitename}`
+        );
+      } else {
+        await this.connection.tooling.create('TestSuiteMembership', {
+          ApexClassId: classId,
+          ApexTestSuiteId: testSuiteId
+        });
+        console.log(
+          `Added Apex class ${testClasses[count]} to your Apex test suite ${suitename}`
+        );
+      }
+      count++;
     }
   }
 

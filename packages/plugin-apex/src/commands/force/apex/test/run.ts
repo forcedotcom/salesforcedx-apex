@@ -115,7 +115,8 @@ export default class Run extends SfdxCommand {
 
     const conn = this.org.getConnection();
     const testService = new TestService(conn);
-    await testService.buildSuite('myNewSuite', 'LIFXControllerTest');
+    await testService.buildSuite('poop', ['LIFXControllerTest']);
+    // myNewSuite
     // let result: TestResult;
 
     // if (this.flags.synchronous) {
