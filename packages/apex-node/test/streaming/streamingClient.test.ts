@@ -254,7 +254,8 @@ describe('Streaming API Client', () => {
     assert.calledOnce(reportStub);
     assert.calledWith(reportStub, {
       type: 'StreamingClientProgress',
-      value: 'streamingTransportUp'
+      value: 'streamingTransportUp',
+      message: nls.localize('streamingTransportUp')
     });
   });
 
@@ -273,7 +274,8 @@ describe('Streaming API Client', () => {
     assert.calledOnce(reportStub);
     assert.calledWith(reportStub, {
       type: 'StreamingClientProgress',
-      value: 'streamingTransportDown'
+      value: 'streamingTransportDown',
+      message: nls.localize('streamingTransportDown')
     });
   });
 
@@ -302,6 +304,7 @@ describe('Streaming API Client', () => {
     assert.calledWith(reportStub, {
       type: 'StreamingClientProgress',
       value: 'streamingProcessingTestRun',
+      message: nls.localize('streamingProcessingTestRun', '707xx0000AGQ3jbQQD'),
       testRunId: '707xx0000AGQ3jbQQD'
     });
   });

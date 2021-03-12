@@ -466,11 +466,13 @@ export type ApexTestProgressValue =
   | {
       type: 'StreamingClientProgress';
       value: 'streamingTransportUp' | 'streamingTransportDown';
+      message: string;
     }
   | {
       type: 'StreamingClientProgress';
       value: 'streamingProcessingTestRun';
       testRunId: string;
+      message: string;
     }
   | {
       type: 'TestQueueProgress';

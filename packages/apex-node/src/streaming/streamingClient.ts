@@ -61,7 +61,8 @@ export class StreamingClient {
     this.client.on('transport:up', () => {
       this.progress?.report({
         type: 'StreamingClientProgress',
-        value: 'streamingTransportUp'
+        value: 'streamingTransportUp',
+        message: nls.localize('streamingTransportUp')
       });
       console.log(nls.localize('streamingTransportUp'));
     });
@@ -69,7 +70,8 @@ export class StreamingClient {
     this.client.on('transport:down', () => {
       this.progress?.report({
         type: 'StreamingClientProgress',
-        value: 'streamingTransportDown'
+        value: 'streamingTransportDown',
+        message: nls.localize('streamingTransportDown')
       });
       console.log(nls.localize('streamingTransportDown'));
     });
@@ -178,6 +180,7 @@ export class StreamingClient {
     this.progress?.report({
       type: 'StreamingClientProgress',
       value: 'streamingProcessingTestRun',
+      message: nls.localize('streamingProcessingTestRun', testRunId),
       testRunId
     });
     console.log(nls.localize('streamingProcessingTestRun', testRunId));
