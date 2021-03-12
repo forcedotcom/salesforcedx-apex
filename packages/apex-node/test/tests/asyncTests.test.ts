@@ -36,7 +36,8 @@ import {
   testRunId,
   testStartTime,
   diagnosticFailure,
-  diagnosticResult
+  diagnosticResult,
+  skippedTestData
 } from './testData';
 import { join } from 'path';
 import * as stream from 'stream';
@@ -215,6 +216,72 @@ describe('Run Apex tests asynchronously', () => {
     expect(getTestResultData).to.deep.equals(missingTimeTestData);
   });
 
+  it('should return correct summary outcome for single skipped test', async () => {
+    skippedTestData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
+    skippedTestData.summary.username = mockConnection.getUsername();
+    const testSrv = new TestService(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Completed,
+          StartTime: testStartTime,
+          TestTime: null,
+          UserId: '005xx000000abcDAAU'
+        }
+      ]
+    } as ApexTestRunResult);
+
+    mockToolingQuery.onSecondCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          Id: '07Mxx00000F2Xx6UAF',
+          QueueItemId: '7092M000000Vt94QAC',
+          StackTrace: null,
+          Message: null,
+          AsyncApexJobId: testRunId,
+          MethodName: 'testLoggerLog',
+          Outcome: ApexTestResultOutcome.Skip,
+          ApexLogId: null,
+          ApexClass: {
+            Id: '01pxx00000O6tXZQAZ',
+            Name: 'TestLogger',
+            NamespacePrefix: 't3st',
+            FullName: 't3st__TestLogger'
+          },
+          RunTime: null,
+          TestTimestamp: '3'
+        }
+      ]
+    } as ApexTestResult);
+
+    const getTestResultData = await testSrv.formatAsyncResults(
+      pollResponse,
+      testRunId,
+      new Date().getTime()
+    );
+
+    let summaryQuery =
+      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
+    summaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    summaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    expect(mockToolingQuery.getCall(0).args[0]).to.equal(summaryQuery);
+
+    let testResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
+    testResultQuery +=
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+    testResultQuery +=
+      'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
+    testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
+    expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
+    expect(getTestResultData).to.deep.equals(skippedTestData);
+  });
+
   it('should return formatted test results with diagnostics', async () => {
     diagnosticResult.summary.orgId = mockConnection.getAuthInfoFields().orgId;
     diagnosticResult.summary.username = mockConnection.getUsername();
@@ -343,6 +410,54 @@ describe('Run Apex tests asynchronously', () => {
     } catch (e) {
       expect(e.message).to.equal(
         nls.localize('noTestResultSummary', testRunId)
+      );
+    }
+  });
+
+  it('should return an error if invalid test run id was provided', async () => {
+    const invalidId = '000000xxxxx';
+    const testSrv = new TestService(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 0,
+      records: []
+    } as ApexTestRunResult);
+
+    try {
+      await testSrv.formatAsyncResults(
+        pollResponse,
+        invalidId,
+        new Date().getTime()
+      );
+      fail('Test should have thrown an error');
+    } catch (e) {
+      expect(e.message).to.equal(
+        nls.localize('invalidTestRunIdErr', invalidId)
+      );
+    }
+  });
+
+  it('should return an error if invalid test run id prefix was provided', async () => {
+    const invalidId = '708000000xxxxxx';
+    const testSrv = new TestService(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 0,
+      records: []
+    } as ApexTestRunResult);
+
+    try {
+      await testSrv.formatAsyncResults(
+        pollResponse,
+        invalidId,
+        new Date().getTime()
+      );
+      fail('Test should have thrown an error');
+    } catch (e) {
+      expect(e.message).to.equal(
+        nls.localize('invalidTestRunIdErr', invalidId)
       );
     }
   });
