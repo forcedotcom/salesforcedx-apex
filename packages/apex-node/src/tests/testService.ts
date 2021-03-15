@@ -40,11 +40,8 @@ import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
 import { ApexDiagnostic } from '../utils/types';
-import {
-  CLASS_ID_PREFIX,
-  QUERY_CHAR_LIMIT,
-  TEST_RUN_ID_PREFIX
-} from './constants';
+import { isValidApexClassID, isValidTestRunID } from './utils';
+import { QUERY_CHAR_LIMIT } from './constants';
 
 export class TestService {
   public readonly connection: Connection;
@@ -71,9 +68,7 @@ export class TestService {
         return Promise.reject(new Error(nls.localize('syncClassErr')));
       }
     } else {
-      const prop = classnames.toLowerCase().startsWith(CLASS_ID_PREFIX)
-        ? 'classId'
-        : 'className';
+      const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
       payload = {
         tests: [{ [prop]: classnames }],
         testLevel
@@ -158,9 +153,7 @@ export class TestService {
           className: `${classParts[1]}`
         };
       }
-      const prop = item.toLowerCase().startsWith(CLASS_ID_PREFIX)
-        ? 'classId'
-        : 'className';
+      const prop = isValidApexClassID(item) ? 'classId' : 'className';
       return { [prop]: item } as TestItem;
     });
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
@@ -446,7 +439,7 @@ export class TestService {
     codeCoverage = false,
     progress?: Progress<ApexTestProgressValue>
   ): Promise<TestResult> {
-    if (!this.isValidTestRunID(testRunId)) {
+    if (!isValidTestRunID(testRunId)) {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
 
@@ -909,16 +902,6 @@ export class TestService {
 
   private addIdToQuery(formattedIds: string, id: string): string {
     return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
-  }
-
-  private isValidTestRunID(testRunId: string): boolean {
-    if (
-      (testRunId.length === 15 || testRunId.length === 18) &&
-      testRunId.startsWith(TEST_RUN_ID_PREFIX)
-    ) {
-      return true;
-    }
-    return false;
   }
 
   public stringify(jsonObj: object): string {
