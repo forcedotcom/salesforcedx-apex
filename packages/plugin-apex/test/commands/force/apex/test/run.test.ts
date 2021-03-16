@@ -472,6 +472,41 @@ describe('force:apex:test:run', () => {
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestSynchronous', () => rawSyncResult)
+    .stub(fs, 'existsSync', () => true)
+    .stub(fs, 'mkdirSync', () => true)
+    .stub(fs, 'createWriteStream', () => new stream.PassThrough())
+    .stub(fs, 'openSync', () => 10)
+    .stub(fs, 'closeSync', () => true)
+    .stdout()
+    .stderr()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests.testMethodOne',
+      '-d',
+      'path/to/dir',
+      '-y'
+    ])
+    .it(
+      'should output human-readable result for synchronous test run with no result format specified',
+      ctx => {
+        expect(ctx.stdout).to.contain(
+          messages.getMessage('outputDirHint', ['path/to/dir'])
+        );
+        expect(ctx.stdout).to.contain(
+          // @ts-ignore
+          new HumanReporter().format(rawSyncResult, false)
+        );
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestAsynchronous', () => runWithCoverage)
     .do(ctx => {
       ctx.myStub = sandboxStub.stub(TestService.prototype, 'writeResultFiles');
