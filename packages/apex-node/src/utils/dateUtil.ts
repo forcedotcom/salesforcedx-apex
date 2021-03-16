@@ -9,7 +9,7 @@ export function getCurrentTime(): number {
   return new Date().getTime();
 }
 
-export function formatStartTime(startTime: string): string {
+export function formatStartTime(startTime: string | number): string {
   const date = new Date(startTime);
   return `${date.toDateString()} ${date.toLocaleTimeString()}`;
 }

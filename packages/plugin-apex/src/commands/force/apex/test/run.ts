@@ -146,7 +146,10 @@ export default class Run extends SfdxCommand {
         jsonOutput,
         this.flags.outputdir,
         this.flags.resultformat,
-        this.flags.detailedcoverage
+        this.flags.detailedcoverage,
+        typeof this.flags.synchronous === 'boolean'
+          ? this.flags.synchronous
+          : false
       );
 
       await testService.writeResultFiles(

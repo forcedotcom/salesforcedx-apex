@@ -1020,6 +1020,8 @@ describe('Run Apex tests asynchronously', () => {
 
     afterEach(() => {
       timeStub.restore();
+      createStreamStub.restore();
+      junitSpy.restore();
       sandboxStub1.restore();
     });
 
