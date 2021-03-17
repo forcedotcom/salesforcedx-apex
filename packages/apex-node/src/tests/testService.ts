@@ -132,7 +132,6 @@ export class TestService {
         }
       } else {
         const prop = isValidApexClassID(test) ? 'classId' : 'className';
-        // return { [prop]: item } as TestItem;
         testItems.push({ [prop]: test });
       }
     }
