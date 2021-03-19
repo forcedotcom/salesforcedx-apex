@@ -920,9 +920,11 @@ export class TestService {
   ): Promise<void> {
     progress?.report({
       type: 'AbortTestRunProgress',
-      value: 'abortingTestingRun',
+      value: 'abortingTestRun',
+      message: nls.localize('abortingTestRun', testRunId),
       testRunId
     });
+    console.log(nls.localize('abortingTestRun', testRunId));
 
     const testQueueItems = await this.connection.tooling.query<
       ApexTestQueueItemRecord
@@ -941,8 +943,10 @@ export class TestService {
     progress?.report({
       type: 'AbortTestRunProgress',
       value: 'abortingTestRunRequested',
+      message: nls.localize('abortingTestRunRequested', testRunId),
       testRunId
     });
+    console.log(nls.localize('abortingTestRunRequested', testRunId));
   }
 
   private calculatePercentage(dividend: number, divisor: number): string {

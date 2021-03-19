@@ -485,6 +485,7 @@ export type ApexTestProgressValue =
     }
   | {
       type: 'AbortTestRunProgress';
-      value: 'abortingTestingRun' | 'abortingTestRunRequested';
+      value: 'abortingTestRun' | 'abortingTestRunRequested';
+      message: string;
       testRunId: string;
     };
