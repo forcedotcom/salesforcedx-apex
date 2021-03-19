@@ -14,6 +14,8 @@ import {
   ApexTestRunResult,
   ApexTestResult,
   ApexTestQueueItem,
+  ApexTestQueueItemRecord,
+  ApexTestQueueItemStatus,
   ApexCodeCoverageAggregate,
   ApexTestResultData,
   CodeCoverageResult,
@@ -390,6 +392,13 @@ export class TestService {
     await sClient.init();
     await sClient.handshake();
 
+    token &&
+      token.onCancellationRequested(async () => {
+        const testRunId = await sClient.subscribedTestRunIdPromise;
+        await this.abortTestRun(testRunId, progress);
+        sClient.disconnect();
+      });
+
     const asyncRunResult = await sClient.subscribe(
       this.getTestRunRequestAction(options)
     );
@@ -420,6 +429,11 @@ export class TestService {
   ): Promise<TestResult> {
     const sClient = new StreamingClient(this.connection);
     const queueResult = await sClient.handler(undefined, testRunId);
+
+    token &&
+      token.onCancellationRequested(async () => {
+        sClient.disconnect();
+      });
 
     if (token && token.isCancellationRequested) {
       return null;
@@ -893,6 +907,41 @@ export class TestService {
     createFiles(fileMap);
     return fileMap.map(file => {
       return file.path;
+    });
+  }
+
+  /**
+   * Abort test run with test run id
+   * @param testRunId
+   */
+  public async abortTestRun(
+    testRunId: string,
+    progress?: Progress<ApexTestProgressValue>
+  ): Promise<void> {
+    progress?.report({
+      type: 'AbortTestRunProgress',
+      value: 'abortingTestingRun',
+      testRunId
+    });
+
+    const testQueueItems = await this.connection.tooling.query<
+      ApexTestQueueItemRecord
+    >(
+      `SELECT Id, Status FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`
+    );
+    const requests = [];
+    for (const record of testQueueItems.records) {
+      record.Status = ApexTestQueueItemStatus.Aborted;
+      requests.push(
+        this.connection.tooling.update('ApexTestQueueItem', record)
+      );
+    }
+    await Promise.all(requests);
+
+    progress?.report({
+      type: 'AbortTestRunProgress',
+      value: 'abortingTestRunRequested',
+      testRunId
     });
   }
 
