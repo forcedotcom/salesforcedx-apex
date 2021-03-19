@@ -1399,4 +1399,70 @@ describe('Run Apex tests asynchronously', () => {
       );
     });
   });
+
+  describe('Abort Test Runs', () => {
+    it('should send requests to abort test run', async () => {
+      const testRunId = '707xx0000AGQ3jbQQD';
+      const mockTestQueueItemRecord: ApexTestQueueItem = ({
+        size: 2,
+        totalSize: 2,
+        done: true,
+        queryLocator: null,
+        entityTypeName: 'ApexTestQueueItem',
+        records: [
+          {
+            attributes: {
+              type: 'ApexTestQueueItem',
+              url:
+                '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
+            },
+            Id: testRunId,
+            Status: ApexTestQueueItemStatus.Processing
+          },
+          {
+            attributes: {
+              type: 'ApexTestQueueItem',
+              url:
+                '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
+            },
+            Id: testRunId,
+            Status: ApexTestQueueItemStatus.Processing
+          }
+        ]
+      } as unknown) as ApexTestQueueItem;
+      sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        //@ts-ignore
+        .resolves<ApexTestQueueItemRecord>(mockTestQueueItemRecord);
+      const toolingUpdateStub = sandboxStub.stub(
+        mockConnection.tooling,
+        'update'
+      );
+
+      const testSrv = new TestService(mockConnection);
+      await testSrv.abortTestRun(testRunId);
+
+      sinonAssert.calledOnce(toolingUpdateStub);
+      sinonAssert.calledWith(toolingUpdateStub, ([
+        {
+          attributes: {
+            type: 'ApexTestQueueItem',
+            url:
+              '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
+          },
+          Id: testRunId,
+          Status: ApexTestQueueItemStatus.Aborted
+        },
+        {
+          attributes: {
+            type: 'ApexTestQueueItem',
+            url:
+              '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
+          },
+          Id: testRunId,
+          Status: ApexTestQueueItemStatus.Aborted
+        }
+      ] as unknown) as ApexTestQueueItemRecord[]);
+    });
+  });
 });

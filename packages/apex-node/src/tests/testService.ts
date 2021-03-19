@@ -931,14 +931,11 @@ export class TestService {
     >(
       `SELECT Id, Status FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`
     );
-    const requests = [];
+
     for (const record of testQueueItems.records) {
       record.Status = ApexTestQueueItemStatus.Aborted;
-      requests.push(
-        this.connection.tooling.update('ApexTestQueueItem', record)
-      );
     }
-    await Promise.all(requests);
+    await this.connection.tooling.update(testQueueItems.records);
 
     progress?.report({
       type: 'AbortTestRunProgress',
