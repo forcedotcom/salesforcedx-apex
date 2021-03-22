@@ -924,7 +924,6 @@ export class TestService {
       message: nls.localize('abortingTestRun', testRunId),
       testRunId
     });
-    console.log(nls.localize('abortingTestRun', testRunId));
 
     const testQueueItems = await this.connection.tooling.query<
       ApexTestQueueItemRecord
@@ -943,7 +942,6 @@ export class TestService {
       message: nls.localize('abortingTestRunRequested', testRunId),
       testRunId
     });
-    console.log(nls.localize('abortingTestRunRequested', testRunId));
   }
 
   private calculatePercentage(dividend: number, divisor: number): string {
