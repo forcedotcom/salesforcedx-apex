@@ -39,6 +39,8 @@ export const messages = {
   retrievingTestRunSummary: 'Retrieving test run summary record',
   queryingForAggregateCodeCoverage:
     'Querying for aggregate code coverage results',
+  abortingTestRun: 'Aborting test run %s',
+  abortingTestRunRequested: 'Test run %s is aborted',
   failRate: 'Fail Rate',
   testsRan: 'Tests Ran',
   orgId: 'Org Id',
