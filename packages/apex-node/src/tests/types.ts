@@ -482,4 +482,10 @@ export type ApexTestProgressValue =
       type: 'FormatTestResultProgress';
       value: 'retrievingTestRunSummary' | 'queryingForAggregateCodeCoverage';
       message: string;
+    }
+  | {
+      type: 'AbortTestRunProgress';
+      value: 'abortingTestRun' | 'abortingTestRunRequested';
+      message: string;
+      testRunId: string;
     };

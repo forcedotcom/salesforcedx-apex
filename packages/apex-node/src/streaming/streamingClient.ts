@@ -25,12 +25,24 @@ export interface AsyncTestRun {
   queueItem: ApexTestQueueItem;
 }
 
+class Deferred<T> {
+  public promise: Promise<T>;
+  public resolve: Function;
+  constructor() {
+    this.promise = new Promise(resolve => (this.resolve = resolve));
+  }
+}
+
 export class StreamingClient {
   private client: FayeClient;
   private conn: Connection;
   private progress?: Progress<ApexTestProgressValue>;
   private apiVersion = '36.0';
   public subscribedTestRunId: string;
+  private subscribedTestRunIdDeferred = new Deferred<string>();
+  public get subscribedTestRunIdPromise(): Promise<string> {
+    return this.subscribedTestRunIdDeferred.promise;
+  }
 
   private removeTrailingSlashURL(instanceUrl?: string): string {
     return instanceUrl ? instanceUrl.replace(/\/+$/, '') : '';
@@ -50,9 +62,7 @@ export class StreamingClient {
     progress?: Progress<ApexTestProgressValue>
   ) {
     this.conn = connection;
-    if (progress) {
-      this.progress = progress;
-    }
+    this.progress = progress;
     const streamUrl = this.getStreamURL(this.conn.instanceUrl);
     this.client = new FayeClient(streamUrl, {
       timeout: DEFAULT_STREAMING_TIMEOUT_MS
@@ -117,6 +127,10 @@ export class StreamingClient {
     });
   }
 
+  public disconnect(): void {
+    this.client.disconnect();
+  }
+
   public async subscribe(action: () => Promise<string>): Promise<AsyncTestRun> {
     return new Promise((subscriptionResolve, subscriptionReject) => {
       try {
@@ -138,6 +152,7 @@ export class StreamingClient {
         action()
           .then(id => {
             this.subscribedTestRunId = id;
+            this.subscribedTestRunIdDeferred.resolve(id);
           })
           .catch(e => {
             this.client.disconnect();

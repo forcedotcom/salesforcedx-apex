@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import {
+  CancellationTokenSource,
   TapReporter,
   TestService,
   JUnitReporter,
@@ -33,6 +34,7 @@ export default class Run extends SfdxCommand {
   protected static requiresUsername = true;
   // Guaranteed by requires username
   protected org!: Org;
+  protected cancellationTokenSource = new CancellationTokenSource();
 
   public static description = buildDescription(
     messages.getMessage('commandDescription'),
@@ -116,6 +118,15 @@ export default class Run extends SfdxCommand {
     const testService = new TestService(conn);
     let result: TestResult;
 
+    // graceful shutdown
+    const exitHandler = async (): Promise<void> => {
+      await this.cancellationTokenSource.asyncCancel();
+      process.exit();
+    };
+
+    process.on('SIGINT', exitHandler);
+    process.on('SIGTERM', exitHandler);
+
     if (this.flags.synchronous) {
       const payload = await testService.buildSyncPayload(
         testLevel,
@@ -124,7 +135,8 @@ export default class Run extends SfdxCommand {
       );
       result = await testService.runTestSynchronous(
         payload,
-        this.flags.codecoverage
+        this.flags.codecoverage,
+        this.cancellationTokenSource.token
       );
     } else {
       const payload = await testService.buildAsyncPayload(
@@ -133,10 +145,17 @@ export default class Run extends SfdxCommand {
         this.flags.classnames,
         this.flags.suitenames
       );
+      const reporter = undefined;
       result = await testService.runTestAsynchronous(
         payload,
-        this.flags.codecoverage
+        this.flags.codecoverage,
+        reporter,
+        this.cancellationTokenSource.token
       );
+    }
+
+    if (this.cancellationTokenSource.token.isCancellationRequested) {
+      return null;
     }
 
     if (this.flags.outputdir) {

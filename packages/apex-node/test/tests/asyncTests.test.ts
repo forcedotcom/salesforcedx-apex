@@ -49,6 +49,7 @@ import { join } from 'path';
 import * as stream from 'stream';
 import * as fs from 'fs';
 import {
+  CancellationTokenSource,
   JUnitReporter,
   TapReporter,
   Progress,
@@ -1397,6 +1398,126 @@ describe('Run Apex tests asynchronously', () => {
       expect(namespaces).to.deep.equal(
         new Set(['myNamespace', 'otherNamespace'])
       );
+    });
+  });
+
+  describe('Abort Test Runs', () => {
+    it('should send requests to abort test run', async () => {
+      const mockTestQueueItemRecord: ApexTestQueueItem = ({
+        size: 2,
+        totalSize: 2,
+        done: true,
+        queryLocator: null,
+        entityTypeName: 'ApexTestQueueItem',
+        records: [
+          {
+            attributes: {
+              type: 'ApexTestQueueItem',
+              url:
+                '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
+            },
+            Id: testRunId,
+            Status: ApexTestQueueItemStatus.Processing
+          },
+          {
+            attributes: {
+              type: 'ApexTestQueueItem',
+              url:
+                '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
+            },
+            Id: testRunId,
+            Status: ApexTestQueueItemStatus.Processing
+          }
+        ]
+      } as unknown) as ApexTestQueueItem;
+      sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        //@ts-ignore
+        .resolves<ApexTestQueueItemRecord>(mockTestQueueItemRecord);
+      const toolingUpdateStub = sandboxStub.stub(
+        mockConnection.tooling,
+        'update'
+      );
+
+      const testSrv = new TestService(mockConnection);
+      await testSrv.abortTestRun(testRunId);
+
+      sinonAssert.calledOnce(toolingUpdateStub);
+      sinonAssert.calledWith(toolingUpdateStub, ([
+        {
+          attributes: {
+            type: 'ApexTestQueueItem',
+            url:
+              '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
+          },
+          Id: testRunId,
+          Status: ApexTestQueueItemStatus.Aborted
+        },
+        {
+          attributes: {
+            type: 'ApexTestQueueItem',
+            url:
+              '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
+          },
+          Id: testRunId,
+          Status: ApexTestQueueItemStatus.Aborted
+        }
+      ] as unknown) as ApexTestQueueItemRecord[]);
+    });
+
+    it('should abort test run on cancellation requested', async () => {
+      const requestOptions: AsyncTestConfiguration = {
+        classNames: 'TestSample',
+        testLevel: TestLevel.RunSpecifiedTests
+      };
+      const testAsyncRequest = {
+        method: 'POST',
+        url: `${mockConnection.tooling._baseUrl()}/runTestsAsynchronous`,
+        body: JSON.stringify(requestOptions),
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+      toolingRequestStub.withArgs(testAsyncRequest).returns(testRunId);
+      sandboxStub
+        .stub(StreamingClient.prototype, 'subscribe')
+        .callsFake(function(action: () => Promise<string>) {
+          // eslint-disable-next-line
+          const that = this;
+          return new Promise(function() {
+            action().then(function(id) {
+              that.subscribedTestRunId = id;
+              that.subscribedTestRunIdDeferred.resolve(id);
+            });
+          });
+        });
+      const diconnectStub = sandboxStub.stub(
+        StreamingClient.prototype,
+        'disconnect'
+      );
+      sandboxStub.stub(StreamingClient.prototype, 'handshake').resolves();
+      const abortTestRunStub = sandboxStub
+        .stub(TestService.prototype, 'abortTestRun')
+        .resolves();
+
+      const cancellationTokenSource = new CancellationTokenSource();
+      const testSrv = new TestService(mockConnection);
+      testSrv.runTestAsynchronous(
+        requestOptions,
+        false,
+        undefined,
+        cancellationTokenSource.token
+      );
+
+      return new Promise(resolve => {
+        // wait for task queue
+        setTimeout(async () => {
+          await cancellationTokenSource.asyncCancel();
+          sinonAssert.calledOnce(abortTestRunStub);
+          sinonAssert.calledOnce(diconnectStub);
+          resolve();
+        }, 100);
+      });
     });
   });
 });
