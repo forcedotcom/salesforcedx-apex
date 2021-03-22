@@ -13,7 +13,7 @@ import {
   TestResult
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, Org } from '@salesforce/core';
+import { Messages, Org, SfdxError } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 import {
   buildOutputDirConfig,
@@ -110,6 +110,15 @@ export default class Run extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     await this.validateFlags();
+    // add listener for errors
+    process.on('uncaughtException', err => {
+      const errrs = this.formatError(
+        new SfdxError('Unknown error in apex library: ' + err.message)
+      );
+      this.ux.error(...errrs);
+      process.exit();
+    });
+
     const testLevel = this.flags.testlevel
       ? this.flags.testlevel
       : 'RunSpecifiedTests';

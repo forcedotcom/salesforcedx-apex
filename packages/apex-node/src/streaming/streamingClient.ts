@@ -74,7 +74,6 @@ export class StreamingClient {
         value: 'streamingTransportUp',
         message: nls.localize('streamingTransportUp')
       });
-      console.log(nls.localize('streamingTransportUp'));
     });
 
     this.client.on('transport:down', () => {
@@ -83,7 +82,6 @@ export class StreamingClient {
         value: 'streamingTransportDown',
         message: nls.localize('streamingTransportDown')
       });
-      console.log(nls.localize('streamingTransportDown'));
     });
 
     this.client.addExtension({
@@ -98,8 +96,9 @@ export class StreamingClient {
               nls.localize('streamingHandshakeFail', message.error)
             );
           }
-          console.log(nls.localize('streamingFailure', message.error));
+
           this.client.disconnect();
+          throw new Error(message.error);
         }
         callback(message);
       }
@@ -198,7 +197,6 @@ export class StreamingClient {
       message: nls.localize('streamingProcessingTestRun', testRunId),
       testRunId
     });
-    console.log(nls.localize('streamingProcessingTestRun', testRunId));
     return null;
   }
 
