@@ -113,7 +113,7 @@ export default class Run extends SfdxCommand {
     // add listener for errors
     process.on('uncaughtException', err => {
       const errrs = this.formatError(
-        new SfdxError('Unknown error in apex library: ' + err.message)
+        new SfdxError(messages.getMessage('apexLibErr', [err.message]))
       );
       this.ux.error(...errrs);
       process.exit();
