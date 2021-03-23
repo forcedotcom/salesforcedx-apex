@@ -13,7 +13,7 @@ import {
   TestResult
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
-import { Messages, Org } from '@salesforce/core';
+import { Messages, Org, SfdxError } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 import {
   buildOutputDirConfig,
@@ -110,13 +110,14 @@ export default class Run extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     await this.validateFlags();
-    const testLevel = this.flags.testlevel
-      ? this.flags.testlevel
-      : 'RunSpecifiedTests';
-
-    const conn = this.org.getConnection();
-    const testService = new TestService(conn);
-    let result: TestResult;
+    // add listener for errors
+    process.on('uncaughtException', err => {
+      const formattedErr = this.formatError(
+        new SfdxError(messages.getMessage('apexLibErr', [err.message]))
+      );
+      this.ux.error(...formattedErr);
+      process.exit();
+    });
 
     // graceful shutdown
     const exitHandler = async (): Promise<void> => {
@@ -126,6 +127,14 @@ export default class Run extends SfdxCommand {
 
     process.on('SIGINT', exitHandler);
     process.on('SIGTERM', exitHandler);
+
+    const testLevel = this.flags.testlevel
+      ? this.flags.testlevel
+      : 'RunSpecifiedTests';
+
+    const conn = this.org.getConnection();
+    const testService = new TestService(conn);
+    let result: TestResult;
 
     if (this.flags.synchronous) {
       const payload = await testService.buildSyncPayload(
