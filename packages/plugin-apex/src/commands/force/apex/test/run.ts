@@ -112,20 +112,12 @@ export default class Run extends SfdxCommand {
     await this.validateFlags();
     // add listener for errors
     process.on('uncaughtException', err => {
-      const errrs = this.formatError(
+      const formattedErr = this.formatError(
         new SfdxError(messages.getMessage('apexLibErr', [err.message]))
       );
-      this.ux.error(...errrs);
+      this.ux.error(...formattedErr);
       process.exit();
     });
-
-    const testLevel = this.flags.testlevel
-      ? this.flags.testlevel
-      : 'RunSpecifiedTests';
-
-    const conn = this.org.getConnection();
-    const testService = new TestService(conn);
-    let result: TestResult;
 
     // graceful shutdown
     const exitHandler = async (): Promise<void> => {
@@ -135,6 +127,14 @@ export default class Run extends SfdxCommand {
 
     process.on('SIGINT', exitHandler);
     process.on('SIGTERM', exitHandler);
+
+    const testLevel = this.flags.testlevel
+      ? this.flags.testlevel
+      : 'RunSpecifiedTests';
+
+    const conn = this.org.getConnection();
+    const testService = new TestService(conn);
+    let result: TestResult;
 
     if (this.flags.synchronous) {
       const payload = await testService.buildSyncPayload(

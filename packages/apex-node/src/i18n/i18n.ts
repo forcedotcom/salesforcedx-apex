@@ -32,7 +32,6 @@ export const messages = {
   noAccessTokenFound:
     'No access token could be found for the provided username',
   streamingHandshakeFail: 'Test run handshake failed: %s',
-  streamingFailure: 'Error encountered during test update: %s',
   streamingTransportUp: 'Listening for streaming state changes...',
   streamingTransportDown: 'Faye client generated a transport:down event.',
   streamingProcessingTestRun: 'Processing test run %s',
