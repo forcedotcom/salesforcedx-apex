@@ -17,6 +17,7 @@ import {
 } from 'sinon';
 import * as fs from 'fs';
 import * as stream from 'stream';
+import * as utils from '../../src/tests/utils';
 import { join } from 'path';
 import { SyncTestConfiguration, TestService } from '../../src/tests';
 import {
@@ -212,8 +213,8 @@ describe('Run Apex tests synchronously', () => {
   describe('Build sync payload', async () => {
     it('should build synchronous payload for tests without namespace', async () => {
       const namespaceStub = sandboxStub
-        .stub(TestService.prototype, 'queryNamespaces')
-        .resolves(new Set(['myNamespace']));
+        .stub(utils, 'queryNamespaces')
+        .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
       const testSrv = new TestService(mockConnection);
       const payload = await testSrv.buildSyncPayload(
         TestLevel.RunSpecifiedTests,
@@ -229,8 +230,8 @@ describe('Run Apex tests synchronously', () => {
 
     it('should build synchronous payload for tests with namespace', async () => {
       const namespaceStub = sandboxStub
-        .stub(TestService.prototype, 'queryNamespaces')
-        .resolves(new Set(['myNamespace']));
+        .stub(utils, 'queryNamespaces')
+        .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
       const testSrv = new TestService(mockConnection);
       const payload = await testSrv.buildSyncPayload(
         TestLevel.RunSpecifiedTests,
@@ -251,9 +252,7 @@ describe('Run Apex tests synchronously', () => {
     });
 
     it('should build synchronous payload for class without namespace', async () => {
-      const namespaceStub = sandboxStub
-        .stub(TestService.prototype, 'queryNamespaces')
-        .resolves(new Set(['myNamespace']));
+      const namespaceStub = sandboxStub.stub(utils, 'queryNamespaces');
       const testSrv = new TestService(mockConnection);
       const payload = await testSrv.buildSyncPayload(
         TestLevel.RunSpecifiedTests,
@@ -270,8 +269,8 @@ describe('Run Apex tests synchronously', () => {
 
     it('should build synchronous payload for class with namespace', async () => {
       const namespaceStub = sandboxStub
-        .stub(TestService.prototype, 'queryNamespaces')
-        .resolves(new Set(['myNamespace']));
+        .stub(utils, 'queryNamespaces')
+        .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
       const testSrv = new TestService(mockConnection);
       const payload = await testSrv.buildSyncPayload(
         TestLevel.RunSpecifiedTests,

@@ -30,7 +30,6 @@ import {
   SyncTestFailure,
   TestItem,
   TestLevel,
-  NamespaceQueryResult,
   ResultFormat
 } from './types';
 import * as util from 'util';
@@ -42,7 +41,7 @@ import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
 import { ApexDiagnostic } from '../utils/types';
-import { isValidApexClassID, isValidTestRunID } from './utils';
+import { isValidApexClassID, isValidTestRunID, queryNamespaces } from './utils';
 import { QUERY_CHAR_LIMIT } from './constants';
 
 export class TestService {
@@ -104,7 +103,7 @@ export class TestService {
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
     const testItems: TestItem[] = [];
-    let namespaces: Set<string>;
+    let namespaceObjs: { installedNs?: boolean; namespace: string }[];
 
     for (const test of testNameArray) {
       if (test.indexOf('.') > 0) {
@@ -116,15 +115,24 @@ export class TestService {
             testMethods: [testParts[2]]
           });
         } else {
-          if (typeof namespaces === 'undefined') {
-            namespaces = await this.queryNamespaces();
+          if (typeof namespaceObjs === 'undefined') {
+            namespaceObjs = await queryNamespaces(this.connection);
           }
+          const namespaceObj = namespaceObjs?.filter(
+            namespaceObj => namespaceObj.namespace === testParts[0]
+          )[0];
 
-          if (namespaces.has(testParts[0])) {
-            testItems.push({
-              namespace: `${testParts[0]}`,
-              className: `${testParts[1]}`
-            });
+          if (namespaceObj) {
+            if (namespaceObj.installedNs) {
+              testItems.push({
+                className: `${testParts[0]}.${testParts[1]}`
+              });
+            } else {
+              testItems.push({
+                namespace: `${testParts[0]}`,
+                className: `${testParts[1]}`
+              });
+            }
           } else {
             testItems.push({
               className: testParts[0],
@@ -152,34 +160,13 @@ export class TestService {
       const classParts = item.split('.');
       if (classParts.length > 1) {
         return {
-          namespace: `${classParts[0]}`,
-          className: `${classParts[1]}`
+          className: `${classParts[0]}.${classParts[1]}`
         };
       }
       const prop = isValidApexClassID(item) ? 'classId' : 'className';
       return { [prop]: item } as TestItem;
     });
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
-  }
-
-  public async queryNamespaces(): Promise<Set<string>> {
-    const installedNsQuery = 'SELECT NamespacePrefix FROM PackageLicense';
-    const installedNsResult = (await this.connection.query(
-      installedNsQuery
-    )) as NamespaceQueryResult;
-    const installedNamespaces = installedNsResult.records.map(record => {
-      return record.NamespacePrefix;
-    });
-
-    const orgNsQuery = 'SELECT NamespacePrefix FROM Organization';
-    const orgNsResult = (await this.connection.query(
-      orgNsQuery
-    )) as NamespaceQueryResult;
-    const orgNamespaces = orgNsResult.records.map(record => {
-      return record.NamespacePrefix;
-    });
-
-    return new Set([...orgNamespaces, ...installedNamespaces]);
   }
 
   /**
