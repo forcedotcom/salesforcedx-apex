@@ -44,7 +44,6 @@ describe('Query Namespaces', async () => {
       .stub(mockConnection, 'query')
       //@ts-ignore
       .resolves({ records: [{ NamespacePrefix: 'myNamespace' }] });
-    // const testSrv = new TestService(mockConnection);
     await utils.queryNamespaces(mockConnection);
     expect(queryStub.calledTwice).to.be.true;
   });

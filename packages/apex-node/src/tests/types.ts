@@ -462,6 +462,11 @@ export type NamespaceQueryResult = {
   records: NamespaceRecord[];
 };
 
+export type NamespaceInfo = {
+  installedNs: boolean;
+  namespace: string;
+};
+
 export type ApexTestProgressValue =
   | {
       type: 'StreamingClientProgress';

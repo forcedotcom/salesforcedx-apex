@@ -30,7 +30,8 @@ import {
   SyncTestFailure,
   TestItem,
   TestLevel,
-  ResultFormat
+  ResultFormat,
+  NamespaceInfo
 } from './types';
 import * as util from 'util';
 import { CancellationToken, Progress } from '../common';
@@ -103,7 +104,7 @@ export class TestService {
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
     const testItems: TestItem[] = [];
-    let namespaceObjs: { installedNs?: boolean; namespace: string }[];
+    let namespaceInfos: NamespaceInfo[];
 
     for (const test of testNameArray) {
       if (test.indexOf('.') > 0) {
@@ -115,15 +116,15 @@ export class TestService {
             testMethods: [testParts[2]]
           });
         } else {
-          if (typeof namespaceObjs === 'undefined') {
-            namespaceObjs = await queryNamespaces(this.connection);
+          if (typeof namespaceInfos === 'undefined') {
+            namespaceInfos = await queryNamespaces(this.connection);
           }
-          const namespaceObj = namespaceObjs?.filter(
-            namespaceObj => namespaceObj.namespace === testParts[0]
+          const namespaceInfo = namespaceInfos.filter(
+            namespaceInfo => namespaceInfo.namespace === testParts[0]
           )[0];
 
-          if (namespaceObj) {
-            if (namespaceObj.installedNs) {
+          if (namespaceInfo) {
+            if (namespaceInfo.installedNs) {
               testItems.push({
                 className: `${testParts[0]}.${testParts[1]}`
               });

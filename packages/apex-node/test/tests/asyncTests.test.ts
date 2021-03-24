@@ -1198,6 +1198,27 @@ describe('Run Apex tests asynchronously', () => {
       expect(namespaceStub.calledOnce).to.be.true;
     });
 
+    it('should build async payload for tests with namespace from installed package', async () => {
+      const namespaceStub = sandboxStub
+        .stub(utils, 'queryNamespaces')
+        .resolves([{ installedNs: true, namespace: 'myNamespace' }]);
+      const testSrv = new TestService(mockConnection);
+      const payload = await testSrv.buildAsyncPayload(
+        TestLevel.RunSpecifiedTests,
+        'myNamespace.myClass'
+      );
+
+      expect(payload).to.deep.equal({
+        tests: [
+          {
+            className: 'myNamespace.myClass'
+          }
+        ],
+        testLevel: TestLevel.RunSpecifiedTests
+      });
+      expect(namespaceStub.calledOnce).to.be.true;
+    });
+
     it('should only query for namespaces once when multiple tests are specified', async () => {
       const namespaceStub = sandboxStub
         .stub(utils, 'queryNamespaces')
@@ -1351,43 +1372,6 @@ describe('Run Apex tests asynchronously', () => {
       expect(namespaceStub.notCalled).to.be.true;
     });
   });
-
-  // describe('Query Namespaces', async () => {
-  //   it('should query for installed packages and namespaced orgs', async () => {
-  //     const queryStub = sandboxStub
-  //       .stub(mockConnection, 'query')
-  //       //@ts-ignore
-  //       .resolves({ records: [{ NamespacePrefix: 'myNamespace' }] });
-  //     // const testSrv = new TestService(mockConnection);
-  //     await utils.queryNamespaces(mockConnection);
-  //     expect(queryStub.calledTwice).to.be.true;
-  //   });
-
-  //   it('should output set of namespaces from both queries', async () => {
-  //     const queryStub = sandboxStub.stub(mockConnection, 'query');
-  //     queryStub
-  //       .onFirstCall()
-  //       //@ts-ignore
-  //       .resolves({
-  //         records: [
-  //           { NamespacePrefix: 'myNamespace' },
-  //           { NamespacePrefix: 'otherNamespace' }
-  //         ]
-  //       });
-  //     //@ts-ignore
-  //     queryStub.onSecondCall().resolves({
-  //       records: [{ NamespacePrefix: 'otherNamespace' }]
-  //     });
-
-  //     const namespaces = await utils.queryNamespaces(mockConnection);
-  //     expect(queryStub.calledTwice).to.be.true;
-  //     expect(namespaces).to.deep.equal([
-  //       { installedNs: false, namespace: 'otherNamespace' },
-  //       { installedNs: true, namespace: 'myNamespace' },
-  //       { installedNs: true, namespace: 'otherNamespace' }
-  //     ]);
-  //   });
-  // });
 
   describe('Abort Test Runs', () => {
     it('should send requests to abort test run', async () => {

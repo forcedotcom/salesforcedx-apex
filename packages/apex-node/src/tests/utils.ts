@@ -7,7 +7,7 @@
 
 import { Connection } from '@salesforce/core';
 import { CLASS_ID_PREFIX, TEST_RUN_ID_PREFIX } from './constants';
-import { NamespaceQueryResult } from './types';
+import { NamespaceInfo, NamespaceQueryResult } from './types';
 
 export function isValidTestRunID(testRunId: string): boolean {
   return (
@@ -25,7 +25,7 @@ export function isValidApexClassID(apexClassId: string): boolean {
 
 export async function queryNamespaces(
   connection: Connection
-): Promise<{ installedNs?: boolean; namespace: string }[]> {
+): Promise<NamespaceInfo[]> {
   const installedNsQuery = 'SELECT NamespacePrefix FROM PackageLicense';
   const installedNsResult = (await connection.query(
     installedNsQuery
