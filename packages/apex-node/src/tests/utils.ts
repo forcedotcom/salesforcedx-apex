@@ -27,18 +27,19 @@ export async function queryNamespaces(
   connection: Connection
 ): Promise<NamespaceInfo[]> {
   const installedNsQuery = 'SELECT NamespacePrefix FROM PackageLicense';
-  const installedNsResult = (await connection.query(
-    installedNsQuery
-  )) as NamespaceQueryResult;
-  const installedNamespaces = installedNsResult.records.map(record => {
+  const installedNsPromise = connection.query(installedNsQuery) as Promise<
+    NamespaceQueryResult
+  >;
+  const orgNsQuery = 'SELECT NamespacePrefix FROM Organization';
+  const orgNsPromise = connection.query(orgNsQuery) as Promise<
+    NamespaceQueryResult
+  >;
+
+  const allNamespaces = await Promise.all([installedNsPromise, orgNsPromise]);
+  const installedNamespaces = allNamespaces[0].records.map(record => {
     return { installedNs: true, namespace: record.NamespacePrefix };
   });
-
-  const orgNsQuery = 'SELECT NamespacePrefix FROM Organization';
-  const orgNsResult = (await connection.query(
-    orgNsQuery
-  )) as NamespaceQueryResult;
-  const orgNamespaces = orgNsResult.records.map(record => {
+  const orgNamespaces = allNamespaces[1].records.map(record => {
     return { installedNs: false, namespace: record.NamespacePrefix };
   });
 

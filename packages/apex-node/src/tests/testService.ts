@@ -119,12 +119,14 @@ export class TestService {
           if (typeof namespaceInfos === 'undefined') {
             namespaceInfos = await queryNamespaces(this.connection);
           }
-          const namespaceInfo = namespaceInfos.filter(
+          const currentNamespace = namespaceInfos.find(
             namespaceInfo => namespaceInfo.namespace === testParts[0]
-          )[0];
+          );
 
-          if (namespaceInfo) {
-            if (namespaceInfo.installedNs) {
+          // NOTE: Installed packages require the namespace to be specified as part of the className field
+          // The namespace field should not be used with subscriber orgs
+          if (currentNamespace) {
+            if (currentNamespace.installedNs) {
               testItems.push({
                 className: `${testParts[0]}.${testParts[1]}`
               });
