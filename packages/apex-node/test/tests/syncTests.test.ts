@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { AuthInfo, Connection } from '@salesforce/core';
+import { AuthInfo, Connection, StreamingClient } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { expect } from 'chai';
 import {
@@ -37,6 +37,8 @@ import {
   syncTestResultWithFailures
 } from './testData';
 import { JUnitReporter } from '../../src';
+import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
+import { fail } from 'assert';
 
 const $$ = testSetup();
 let mockConnection: Connection;
@@ -330,6 +332,27 @@ describe('Run Apex tests synchronously', () => {
       ).to.be.true;
       expect(junitSpy.calledOnce).to.be.true;
       expect(createStreamStub.callCount).to.eql(2);
+    });
+  });
+
+  describe('Format Test Errors', async () => {
+    const formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
+
+    it('should format test error when running synchronous tests', async () => {
+      const testSrv = new TestService(mockConnection);
+      const errMsg = `sObject type 'ApexClass' not supported.`;
+      sandboxStub
+        .stub(StreamingClient.prototype, 'handshake')
+        .throws(new Error(errMsg));
+      try {
+        testSrv.runTestSynchronous({ testLevel: TestLevel.RunLocalTests });
+        fail('Should have failed');
+      } catch (e) {
+        expect(formatSpy.calledOnce).to.be.true;
+        expect(e.message).to.contain(
+          nls.localize('invalidsObjectErr', ['ApexClass', errMsg])
+        );
+      }
     });
   });
 });

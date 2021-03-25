@@ -48,6 +48,7 @@ import {
 import { join } from 'path';
 import * as stream from 'stream';
 import * as fs from 'fs';
+import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
 import {
   CancellationTokenSource,
   JUnitReporter,
@@ -1490,6 +1491,48 @@ describe('Run Apex tests asynchronously', () => {
           resolve();
         }, 100);
       });
+    });
+  });
+
+  describe('Format Test Errors', async () => {
+    const formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
+
+    it('should format test error when running asynchronous tests', async () => {
+      const testSrv = new TestService(mockConnection);
+      const errMsg = `sObject type 'ApexClass' not supported.`;
+      sandboxStub
+        .stub(StreamingClient.prototype, 'handshake')
+        .throws(new Error(errMsg));
+      try {
+        testSrv.runTestAsynchronous({ testLevel: TestLevel.RunLocalTests });
+        fail('Should have failed');
+      } catch (e) {
+        expect(formatSpy.calledOnce).to.be.true;
+        expect(e.message).to.contain(
+          nls.localize('invalidsObjectErr', ['ApexClass', errMsg])
+        );
+      }
+    });
+
+    it('should format test error when building asynchronous payload', async () => {
+      const testSrv = new TestService(mockConnection);
+      const errMsg = `sObject type 'PackageLicense' not supported.`;
+      sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
+      sandboxStub
+        .stub(TestService.prototype, 'queryNamespaces')
+        .throws(new Error(errMsg));
+      try {
+        testSrv.buildAsyncPayload(
+          TestLevel.RunSpecifiedTests,
+          'MyApexClass.MyTest'
+        );
+        fail('Should have failed');
+      } catch (e) {
+        expect(formatSpy.calledOnce).to.be.true;
+        expect(e.message).to.contain(
+          nls.localize('invalidsObjectErr', ['PackageLicense', errMsg])
+        );
+      }
     });
   });
 });
