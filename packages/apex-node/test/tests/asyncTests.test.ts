@@ -1518,9 +1518,7 @@ describe('Run Apex tests asynchronously', () => {
       const testSrv = new TestService(mockConnection);
       const errMsg = `sObject type 'PackageLicense' not supported.`;
       sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
-      sandboxStub
-        .stub(TestService.prototype, 'queryNamespaces')
-        .throws(new Error(errMsg));
+      sandboxStub.stub(utils, 'queryNamespaces').throws(new Error(errMsg));
       try {
         testSrv.buildAsyncPayload(
           TestLevel.RunSpecifiedTests,
