@@ -11,11 +11,13 @@ import { ApexTestResultRecord, SyncTestFailure } from './types';
 
 export function formatTestErrors(error: Error): Error {
   const matches = error.message?.match(
-    /\bsObject type (.*? )is not supported\b/
+    /\bsObject type ["'](.*?)["'] is not supported\b/
   );
   if (matches && matches[0] && matches[1]) {
-    const sObject = matches[1].replace(/['"\s]+/g, '');
-    error.message = nls.localize('invalidsObjectErr', [sObject, error.message]);
+    error.message = nls.localize('invalidsObjectErr', [
+      matches[1],
+      error.message
+    ]);
     return error;
   }
 
