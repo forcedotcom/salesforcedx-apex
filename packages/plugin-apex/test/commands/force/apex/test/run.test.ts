@@ -1030,4 +1030,29 @@ describe('force:apex:test:run', () => {
         }
       );
   });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
+    .stdout()
+    .stderr()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexClass.testInsertTrigger',
+      '--outputdir',
+      'my/path/to/dir',
+      '-r',
+      'human'
+    ])
+    .it(
+      'should display warning message when output directory flag is specifed',
+      ctx => {
+        expect(ctx.stderr).to.include(messages.getMessage('warningMessage'));
+      }
+    );
 });
