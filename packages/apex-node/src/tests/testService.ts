@@ -396,7 +396,7 @@ export class TestService {
         progress
       );
     } catch (e) {
-      throw formatTestErrors(e.message);
+      throw formatTestErrors(e);
     }
   }
 
