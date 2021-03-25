@@ -71,5 +71,7 @@ export const messages = {
   resultFormatErr:
     'Specified result formats must be of type json, junit, or tap',
   invalidTestRunIdErr:
-    'The test run id %s is not in the correct format for "id." Must be a 15- or 18-char string in the format "707xxxxxxxxxxxx"'
+    'The test run id %s is not in the correct format for "id." Must be a 15- or 18-char string in the format "707xxxxxxxxxxxx"',
+  invalidsObjectErr:
+    'User does not have permissions to access sObject of type %s. Make sure your user has permissions to access Apex code and the Streaming API. \nError: %s'
 };
