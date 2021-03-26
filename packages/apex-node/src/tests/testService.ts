@@ -210,13 +210,17 @@ export class TestService {
         return null;
       }
 
-      return this.formatSyncResults(testRun, getCurrentTime(), codeCoverage);
+      return await this.formatSyncResults(
+        testRun,
+        getCurrentTime(),
+        codeCoverage
+      );
     } catch (e) {
       throw formatTestErrors(e);
     }
   }
 
-  private async formatSyncResults(
+  public async formatSyncResults(
     apiTestResult: SyncTestResult,
     startTime: number,
     codeCoverage = false

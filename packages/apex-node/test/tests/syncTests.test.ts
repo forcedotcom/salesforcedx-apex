@@ -57,6 +57,7 @@ describe('Run Apex tests synchronously', () => {
 
   let createStreamStub: SinonStub;
   let junitSpy: SinonSpy;
+  let formatSpy: SinonSpy;
   beforeEach(async () => {
     sandboxStub = createSandbox();
     $$.setConfigStubContents('AuthInfoConfig', {
@@ -84,6 +85,7 @@ describe('Run Apex tests synchronously', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createStreamStub.returns(new stream.PassThrough() as any);
     junitSpy = sandboxStub.spy(JUnitReporter.prototype, 'format');
+    formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
   });
 
   afterEach(() => {
@@ -336,16 +338,16 @@ describe('Run Apex tests synchronously', () => {
   });
 
   describe('Format Test Errors', async () => {
-    const formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
-
     it('should format test error when running synchronous tests', async () => {
       const testSrv = new TestService(mockConnection);
-      const errMsg = `sObject type 'ApexClass' not supported.`;
+      const errMsg = `sObject type 'ApexClass' is not supported.`;
       sandboxStub
-        .stub(StreamingClient.prototype, 'handshake')
+        .stub(TestService.prototype, 'formatSyncResults')
         .throws(new Error(errMsg));
       try {
-        testSrv.runTestSynchronous({ testLevel: TestLevel.RunLocalTests });
+        await testSrv.runTestSynchronous({
+          testLevel: TestLevel.RunLocalTests
+        });
         fail('Should have failed');
       } catch (e) {
         expect(formatSpy.calledOnce).to.be.true;

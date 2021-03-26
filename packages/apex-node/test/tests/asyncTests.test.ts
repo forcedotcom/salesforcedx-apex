@@ -66,6 +66,7 @@ const testData = new MockTestOrgData();
 
 describe('Run Apex tests asynchronously', () => {
   let timeStub: SinonStub;
+  let formatSpy: SinonSpy;
   const pollResponse: ApexTestQueueItem = {
     done: true,
     totalSize: 1,
@@ -104,6 +105,7 @@ describe('Run Apex tests asynchronously', () => {
     testResultData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
     testResultData.summary.username = mockConnection.getUsername();
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
+    formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
   });
 
   afterEach(() => {
@@ -1495,16 +1497,16 @@ describe('Run Apex tests asynchronously', () => {
   });
 
   describe('Format Test Errors', async () => {
-    const formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
-
     it('should format test error when running asynchronous tests', async () => {
       const testSrv = new TestService(mockConnection);
-      const errMsg = `sObject type 'ApexClass' not supported.`;
+      const errMsg = `sObject type 'ApexClass' is not supported.`;
       sandboxStub
         .stub(StreamingClient.prototype, 'handshake')
         .throws(new Error(errMsg));
       try {
-        testSrv.runTestAsynchronous({ testLevel: TestLevel.RunLocalTests });
+        await testSrv.runTestAsynchronous({
+          testLevel: TestLevel.RunLocalTests
+        });
         fail('Should have failed');
       } catch (e) {
         expect(formatSpy.calledOnce).to.be.true;
@@ -1516,11 +1518,10 @@ describe('Run Apex tests asynchronously', () => {
 
     it('should format test error when building asynchronous payload', async () => {
       const testSrv = new TestService(mockConnection);
-      const errMsg = `sObject type 'PackageLicense' not supported.`;
-      sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
+      const errMsg = `sObject type 'PackageLicense' is not supported.`;
       sandboxStub.stub(utils, 'queryNamespaces').throws(new Error(errMsg));
       try {
-        testSrv.buildAsyncPayload(
+        await testSrv.buildAsyncPayload(
           TestLevel.RunSpecifiedTests,
           'MyApexClass.MyTest'
         );
