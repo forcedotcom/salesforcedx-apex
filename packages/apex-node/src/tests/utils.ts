@@ -23,6 +23,15 @@ export function isValidApexClassID(apexClassId: string): boolean {
   );
 }
 
+export function calculatePercentage(dividend: number, divisor: number): string {
+  let percentage = '0%';
+  if (dividend > 0) {
+    const calcPct = ((dividend / divisor) * 100).toFixed();
+    percentage = `${calcPct}%`;
+  }
+  return percentage;
+}
+
 export async function queryNamespaces(
   connection: Connection
 ): Promise<NamespaceInfo[]> {
