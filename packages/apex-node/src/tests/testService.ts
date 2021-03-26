@@ -26,8 +26,6 @@ import {
   ApexCodeCoverage,
   PerClassCoverage,
   OutputDirConfig,
-  ApexTestResultRecord,
-  SyncTestFailure,
   TestItem,
   TestLevel,
   ResultFormat,
@@ -41,9 +39,13 @@ import { formatStartTime, getCurrentTime } from '../utils';
 import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
 import { createFiles } from '../utils/fileSystemHandler';
-import { ApexDiagnostic } from '../utils/types';
 import { isValidApexClassID, isValidTestRunID, queryNamespaces } from './utils';
 import { QUERY_CHAR_LIMIT } from './constants';
+import {
+  formatTestErrors,
+  getAsyncDiagnostic,
+  getSyncDiagnostic
+} from './diagnosticUtil';
 
 export class TestService {
   public readonly connection: Connection;
@@ -58,25 +60,29 @@ export class TestService {
     tests?: string,
     classnames?: string
   ): Promise<SyncTestConfiguration> {
-    let payload: SyncTestConfiguration;
-    if (tests) {
-      payload = await this.buildTestPayload(tests);
-      const classes = payload.tests?.map(testItem => {
-        if (testItem.className) {
-          return testItem.className;
+    try {
+      let payload: SyncTestConfiguration;
+      if (tests) {
+        payload = await this.buildTestPayload(tests);
+        const classes = payload.tests?.map(testItem => {
+          if (testItem.className) {
+            return testItem.className;
+          }
+        });
+        if (new Set(classes).size !== 1) {
+          return Promise.reject(new Error(nls.localize('syncClassErr')));
         }
-      });
-      if (new Set(classes).size !== 1) {
-        return Promise.reject(new Error(nls.localize('syncClassErr')));
+      } else {
+        const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
+        payload = {
+          tests: [{ [prop]: classnames }],
+          testLevel
+        };
       }
-    } else {
-      const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
-      payload = {
-        tests: [{ [prop]: classnames }],
-        testLevel
-      };
+      return payload;
+    } catch (e) {
+      throw formatTestErrors(e);
     }
-    return payload;
   }
 
   public async buildAsyncPayload(
@@ -85,17 +91,21 @@ export class TestService {
     classNames?: string,
     suiteNames?: string
   ): Promise<AsyncTestConfiguration | AsyncTestArrayConfiguration> {
-    if (tests) {
-      return (await this.buildTestPayload(
-        tests
-      )) as AsyncTestArrayConfiguration;
-    } else if (classNames) {
-      return await this.buildAsyncClassPayload(classNames);
-    } else {
-      return {
-        suiteNames,
-        testLevel
-      };
+    try {
+      if (tests) {
+        return (await this.buildTestPayload(
+          tests
+        )) as AsyncTestArrayConfiguration;
+      } else if (classNames) {
+        return await this.buildAsyncClassPayload(classNames);
+      } else {
+        return {
+          suiteNames,
+          testLevel
+        };
+      }
+    } catch (e) {
+      throw formatTestErrors(e);
     }
   }
 
@@ -183,26 +193,34 @@ export class TestService {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult> {
-    const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
-    const request = {
-      method: 'POST',
-      url,
-      body: JSON.stringify(options),
-      headers: { 'content-type': 'application/json' }
-    };
+    try {
+      const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
+      const request = {
+        method: 'POST',
+        url,
+        body: JSON.stringify(options),
+        headers: { 'content-type': 'application/json' }
+      };
 
-    const testRun = (await this.connection.tooling.request(
-      request
-    )) as SyncTestResult;
+      const testRun = (await this.connection.tooling.request(
+        request
+      )) as SyncTestResult;
 
-    if (token && token.isCancellationRequested) {
-      return null;
+      if (token && token.isCancellationRequested) {
+        return null;
+      }
+
+      return await this.formatSyncResults(
+        testRun,
+        getCurrentTime(),
+        codeCoverage
+      );
+    } catch (e) {
+      throw formatTestErrors(e);
     }
-
-    return this.formatSyncResults(testRun, getCurrentTime(), codeCoverage);
   }
 
-  private async formatSyncResults(
+  public async formatSyncResults(
     apiTestResult: SyncTestResult,
     startTime: number,
     codeCoverage = false
@@ -314,7 +332,7 @@ export class TestService {
       const nms = item.namespace ? `${item.namespace}__` : '';
       apexTestClassIdSet.add(item.id);
       const diagnostic =
-        item.message || item.stackTrace ? this.getSyncDiagnostic(item) : null;
+        item.message || item.stackTrace ? getSyncDiagnostic(item) : null;
 
       testResults.push({
         id: '',
@@ -341,30 +359,6 @@ export class TestService {
     return { apexTestClassIdSet, testResults };
   }
 
-  private getSyncDiagnostic(syncRecord: SyncTestFailure): ApexDiagnostic {
-    const diagnostic: ApexDiagnostic = {
-      exceptionMessage: syncRecord.message,
-      exceptionStackTrace: syncRecord.stackTrace,
-      className: syncRecord.stackTrace
-        ? syncRecord.stackTrace.split('.')[1]
-        : undefined,
-      compileProblem: ''
-    };
-
-    const matches =
-      syncRecord.stackTrace &&
-      syncRecord.stackTrace.match(/(line (\d+), column (\d+))/);
-    if (matches) {
-      if (matches[2]) {
-        diagnostic.lineNumber = Number(matches[2]);
-      }
-      if (matches[3]) {
-        diagnostic.columnNumber = Number(matches[3]);
-      }
-    }
-    return diagnostic;
-  }
-
   /**
    * Asynchronous Test Runs
    * @param options test options
@@ -378,32 +372,36 @@ export class TestService {
     progress?: Progress<ApexTestProgressValue>,
     token?: CancellationToken
   ): Promise<TestResult> {
-    const sClient = new StreamingClient(this.connection, progress);
-    await sClient.init();
-    await sClient.handshake();
+    try {
+      const sClient = new StreamingClient(this.connection, progress);
+      await sClient.init();
+      await sClient.handshake();
 
-    token &&
-      token.onCancellationRequested(async () => {
-        const testRunId = await sClient.subscribedTestRunIdPromise;
-        await this.abortTestRun(testRunId, progress);
-        sClient.disconnect();
-      });
+      token &&
+        token.onCancellationRequested(async () => {
+          const testRunId = await sClient.subscribedTestRunIdPromise;
+          await this.abortTestRun(testRunId, progress);
+          sClient.disconnect();
+        });
 
-    const asyncRunResult = await sClient.subscribe(
-      this.getTestRunRequestAction(options)
-    );
+      const asyncRunResult = await sClient.subscribe(
+        this.getTestRunRequestAction(options)
+      );
 
-    if (token && token.isCancellationRequested) {
-      return null;
+      if (token && token.isCancellationRequested) {
+        return null;
+      }
+
+      return await this.formatAsyncResults(
+        asyncRunResult.queueItem,
+        asyncRunResult.runId,
+        getCurrentTime(),
+        codeCoverage,
+        progress
+      );
+    } catch (e) {
+      throw formatTestErrors(e);
     }
-
-    return await this.formatAsyncResults(
-      asyncRunResult.queueItem,
-      asyncRunResult.runId,
-      getCurrentTime(),
-      codeCoverage,
-      progress
-    );
   }
 
   /**
@@ -636,9 +634,7 @@ export class TestService {
           : item.ApexClass.Name;
 
         const diagnostic =
-          item.Message || item.StackTrace
-            ? this.getAsyncDiagnostic(item)
-            : null;
+          item.Message || item.StackTrace ? getAsyncDiagnostic(item) : null;
 
         testResults.push({
           id: item.Id,
@@ -668,30 +664,6 @@ export class TestService {
       testResults,
       globalTests: { passed, failed, skipped }
     };
-  }
-
-  public getAsyncDiagnostic(asyncRecord: ApexTestResultRecord): ApexDiagnostic {
-    const diagnostic: ApexDiagnostic = {
-      exceptionMessage: asyncRecord.Message,
-      exceptionStackTrace: asyncRecord.StackTrace,
-      className: asyncRecord.StackTrace
-        ? asyncRecord.StackTrace.split('.')[1]
-        : undefined,
-      compileProblem: ''
-    };
-
-    const matches =
-      asyncRecord.StackTrace &&
-      asyncRecord.StackTrace.match(/(line (\d+), column (\d+))/);
-    if (matches) {
-      if (matches[2]) {
-        diagnostic.lineNumber = Number(matches[2]);
-      }
-      if (matches[3]) {
-        diagnostic.columnNumber = Number(matches[3]);
-      }
-    }
-    return diagnostic;
   }
 
   public async getOrgWideCoverage(): Promise<string> {
