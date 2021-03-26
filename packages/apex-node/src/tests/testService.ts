@@ -27,26 +27,28 @@ import {
   NamespaceInfo
 } from './types';
 import * as util from 'util';
+import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { StreamingClient } from '../streaming';
-import { formatStartTime, getCurrentTime } from '../utils';
-import { join } from 'path';
 import { JUnitReporter, TapReporter } from '../reporters';
-import { createFiles } from '../utils/fileSystemHandler';
-import {
-  calculatePercentage,
-  isValidApexClassID,
-  isValidTestRunID,
-  queryNamespaces
-} from './utils';
-import { QUERY_CHAR_LIMIT } from './constants';
 import {
   formatTestErrors,
   getAsyncDiagnostic,
   getSyncDiagnostic
 } from './diagnosticUtil';
+import {
+  addIdToQuery,
+  calculatePercentage,
+  isValidApexClassID,
+  isValidTestRunID,
+  queryNamespaces,
+  stringify
+} from './utils';
+import { formatStartTime, getCurrentTime } from '../utils';
+import { createFiles } from '../utils/fileSystemHandler';
 import { CodeCoverage } from './codeCoverage';
+import { QUERY_CHAR_LIMIT } from './constants';
 
 export class TestService {
   public readonly connection: Connection;
@@ -571,14 +573,14 @@ export class TestService {
 
     // iterate thru ids, create query with id, & compare query length to char limit
     for (const id of apexResultIds) {
-      const newIds = this.addIdToQuery(formattedIds, id);
+      const newIds = addIdToQuery(formattedIds, id);
       const query = util.format(apexTestResultQuery, `'${newIds}'`);
 
       if (query.length > QUERY_CHAR_LIMIT) {
         queries.push(util.format(apexTestResultQuery, `'${formattedIds}'`));
         formattedIds = '';
       }
-      formattedIds = this.addIdToQuery(formattedIds, id);
+      formattedIds = addIdToQuery(formattedIds, id);
     }
 
     if (formattedIds.length > 0) {
@@ -692,7 +694,7 @@ export class TestService {
                   ? `test-result-${result.summary.testRunId}.json`
                   : `test-result.json`
               ),
-              content: this.stringify(result)
+              content: stringify(result)
             });
             break;
           case ResultFormat.tap:
@@ -730,7 +732,7 @@ export class TestService {
           dirPath,
           `test-result-${result.summary.testRunId}-codecoverage.json`
         ),
-        content: this.stringify(coverageRecords)
+        content: stringify(coverageRecords)
       });
     }
 
@@ -739,7 +741,7 @@ export class TestService {
         path: join(dirPath, fileInfo.filename),
         content:
           typeof fileInfo.content !== 'string'
-            ? this.stringify(fileInfo.content)
+            ? stringify(fileInfo.content)
             : fileInfo.content
       });
     });
@@ -782,14 +784,6 @@ export class TestService {
       message: nls.localize('abortingTestRunRequested', testRunId),
       testRunId
     });
-  }
-
-  private addIdToQuery(formattedIds: string, id: string): string {
-    return formattedIds.length === 0 ? id : `${formattedIds}','${id}`;
-  }
-
-  public stringify(jsonObj: object): string {
-    return JSON.stringify(jsonObj, null, 2);
   }
 
   private getTestRunRequestAction(
