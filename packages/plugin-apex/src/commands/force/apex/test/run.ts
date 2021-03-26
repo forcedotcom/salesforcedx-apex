@@ -110,6 +110,10 @@ export default class Run extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     await this.validateFlags();
+    if (this.flags.outputdir) {
+      this.ux.warn(messages.getMessage('warningMessage'));
+    }
+
     // add listener for errors
     process.on('uncaughtException', err => {
       const formattedErr = this.formatError(
