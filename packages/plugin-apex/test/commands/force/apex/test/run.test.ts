@@ -456,6 +456,35 @@ describe('force:apex:test:run', () => {
       ctx => {
         expect((ctx.mySpy as SinonSpy).calledWith(TestLevel.RunLocalTests)).to
           .be.true;
+        expect(ctx.stderr).to.contain(
+          'Must specify test class or test methods'
+        );
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .do(ctx => {
+      ctx.myStub = sandboxStub
+        .stub(TestService.prototype, 'runTestAsynchronous')
+        // @ts-ignore
+        .resolves(testRunSimple);
+      ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildAsyncPayload');
+    })
+    .stdout()
+    .stderr()
+    .command(['force:apex:test:run'])
+    .it(
+      'should format request with correct properties and display correct info for async run with no tests or classname parameters specified',
+      ctx => {
+        expect((ctx.mySpy as SinonSpy).calledWith(TestLevel.RunLocalTests)).to
+          .be.true;
+        expect(ctx.stdout).to.not.be.empty;
+        expect(ctx.stdout).to.contain('Run "sfdx force:apex:test:report');
       }
     );
 
