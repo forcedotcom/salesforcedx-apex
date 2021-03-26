@@ -457,7 +457,7 @@ describe('force:apex:test:run', () => {
         expect((ctx.mySpy as SinonSpy).calledWith(TestLevel.RunLocalTests)).to
           .be.true;
         expect(ctx.stderr).to.contain(
-          'Must specify test class or test methods'
+          'Specify a test class or test methods when running tests synchronously'
         );
       }
     );
