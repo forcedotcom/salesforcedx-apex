@@ -9,6 +9,7 @@ import {
   HumanReporter,
   JUnitReporter,
   ResultFormat,
+  TestLevel,
   TestService
 } from '@salesforce/apex-node';
 import { expect, test } from '@salesforce/command/lib/test';
@@ -16,7 +17,7 @@ import { Messages, SfdxProject } from '@salesforce/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as stream from 'stream';
-import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
+import { createSandbox, SinonSandbox, SinonSpy, SinonStub } from 'sinon';
 import {
   testRunSimple,
   runWithCoverage,
@@ -431,6 +432,30 @@ describe('force:apex:test:run', () => {
             testLevel: 'RunSpecifiedTests'
           })
         ).to.be.true;
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .do(ctx => {
+      ctx.myStub = sandboxStub.stub(
+        TestService.prototype,
+        'runTestSynchronous'
+      );
+      ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildSyncPayload');
+    })
+    .stdout()
+    .stderr()
+    .command(['force:apex:test:run', '--synchronous'])
+    .it(
+      'should format request with correct properties for sync run with no tests or classname parameters specified',
+      ctx => {
+        expect((ctx.mySpy as SinonSpy).calledWith(TestLevel.RunLocalTests)).to
+          .be.true;
       }
     );
 
