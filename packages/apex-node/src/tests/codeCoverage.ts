@@ -23,6 +23,10 @@ export class CodeCoverage {
     this.connection = connection;
   }
 
+  /**
+   * Returns the string representation of the org wide coverage percentage for a given username connection from OrgWideCoverage entity
+   * @returns Org wide coverage percentage for a given username connection
+   */
   public async getOrgWideCoverage(): Promise<string> {
     const orgWideCoverageResult = (await this.connection.tooling.query(
       'SELECT PercentCovered FROM ApexOrgWideCoverage'
@@ -34,7 +38,12 @@ export class CodeCoverage {
     return `${orgWideCoverageResult.records[0].PercentCovered}%`;
   }
 
-  //NOTE: a test could cover more than one class, map should contain a record for each covered class
+  /**
+   * Returns the code coverage information for each Apex class covered by each Apex test method from ApexCodeCoverage entity
+   * @param apexTestClassSet Set of Apex test classes
+   * @returns The code coverage information associated with each Apex test class
+   * NOTE: a test could cover more than one class, result map should contain a record for each covered class
+   */
   public async getPerClassCodeCoverage(
     apexTestClassSet: Set<string>
   ): Promise<Map<string, PerClassCoverage[]>> {
@@ -92,6 +101,11 @@ export class CodeCoverage {
     return perClassCodeCovResuls;
   }
 
+  /**
+   * Returns the aggregate code coverage information from ApexCodeCoverageAggregate entity for a given set of Apex classes
+   * @param apexClassIdSet Set of ids for Apex classes
+   * @returns The aggregate code coverage information for the given set of Apex classes
+   */
   public async getAggregateCodeCoverage(
     apexClassIdSet: Set<string>
   ): Promise<{
