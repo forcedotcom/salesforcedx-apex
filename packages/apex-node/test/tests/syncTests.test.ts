@@ -302,6 +302,16 @@ describe('Run Apex tests synchronously', () => {
         expect(e.message).to.equal(nls.localize('syncClassErr'));
       }
     });
+
+    it('should throw an error if no tests or classes are specified', async () => {
+      const testSrv = new TestService(mockConnection);
+      try {
+        await testSrv.buildSyncPayload(TestLevel.RunLocalTests);
+        assert.fail();
+      } catch (e) {
+        expect(e.message).to.equal(nls.localize('payloadErr'));
+      }
+    });
   });
 
   describe('Create Synchronous Result Files', async () => {

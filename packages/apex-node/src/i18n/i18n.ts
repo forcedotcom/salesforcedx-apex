@@ -71,5 +71,7 @@ export const messages = {
   resultFormatErr:
     'Specified result formats must be of type json, junit, or tap',
   invalidTestRunIdErr: `The test run id %s isn't in the correct format for "id." The ID is a 15- or 18-character string in the format "707xxxxxxxxxxxx"`,
-  invalidsObjectErr: `You don't have permissions to access sObject of type %s. Ask your Salesforce admin to give you permissions to access Apex code and the Streaming API. \nError: %s`
+  invalidsObjectErr: `You don't have permissions to access sObject of type %s. Ask your Salesforce admin to give you permissions to access Apex code and the Streaming API. \nError: %s`,
+  payloadErr:
+    'Specify a test class or test methods when running tests synchronously'
 };
