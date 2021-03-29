@@ -66,25 +66,25 @@ export class TestService {
     classnames?: string
   ): Promise<SyncTestConfiguration> {
     try {
-      let payload: SyncTestConfiguration;
       if (tests) {
-        payload = await this.buildTestPayload(tests);
+        const payload = await this.buildTestPayload(tests);
         const classes = payload.tests?.map(testItem => {
           if (testItem.className) {
             return testItem.className;
           }
         });
         if (new Set(classes).size !== 1) {
-          return Promise.reject(new Error(nls.localize('syncClassErr')));
+          throw new Error(nls.localize('syncClassErr'));
         }
-      } else {
+        return payload;
+      } else if (classnames) {
         const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
-        payload = {
+        return {
           tests: [{ [prop]: classnames }],
           testLevel
         };
       }
-      return payload;
+      throw new Error(nls.localize('payloadErr'));
     } catch (e) {
       throw formatTestErrors(e);
     }

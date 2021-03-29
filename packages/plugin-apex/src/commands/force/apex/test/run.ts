@@ -10,7 +10,8 @@ import {
   TestService,
   JUnitReporter,
   HumanReporter,
-  TestResult
+  TestResult,
+  TestLevel
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org, SfdxError } from '@salesforce/core';
@@ -25,7 +26,7 @@ import { buildDescription, logLevels, resultFormat } from '../../../../utils';
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'run');
 
-export const TestLevel = [
+export const TestLevelValues = [
   'RunLocalTests',
   'RunAllTestsInOrg',
   'RunSpecifiedTests'
@@ -43,6 +44,7 @@ export default class Run extends SfdxCommand {
 
   public static longDescription = messages.getMessage('longDescription');
   public static examples = [
+    `$ sfdx force:apex:test:run`,
     `$ sfdx force:apex:test:run -n "MyClassTest,MyOtherClassTest" -r human`,
     `$ sfdx force:apex:test:run -s "MySuite,MyOtherSuite" -c -v --json`,
     `$ sfdx force:apex:test:run -t "MyClassTest.testCoolFeature,MyClassTest.testAwesomeFeature,AnotherClassTest,namespace.TheirClassTest.testThis" -r human`,
@@ -71,7 +73,7 @@ export default class Run extends SfdxCommand {
     testlevel: flags.enum({
       char: 'l',
       description: messages.getMessage('testLevelDescription'),
-      options: TestLevel
+      options: TestLevelValues
     }),
     classnames: flags.string({
       char: 'n',
@@ -132,9 +134,7 @@ export default class Run extends SfdxCommand {
     process.on('SIGINT', exitHandler);
     process.on('SIGTERM', exitHandler);
 
-    const testLevel = this.flags.testlevel
-      ? this.flags.testlevel
-      : 'RunSpecifiedTests';
+    const testLevel = this.getTestLevelfromFlags();
 
     const conn = this.org.getConnection();
     const testService = new TestService(conn);
@@ -262,6 +262,23 @@ export default class Run extends SfdxCommand {
     ) {
       return Promise.reject(new Error(messages.getMessage('testLevelErr')));
     }
+  }
+
+  private getTestLevelfromFlags(): TestLevel {
+    let testLevel: TestLevel;
+    if (this.flags.testlevel) {
+      testLevel = this.flags.testlevel;
+    } else if (
+      this.flags.classnames ||
+      this.flags.suitenames ||
+      this.flags.tests
+    ) {
+      testLevel = TestLevel.RunSpecifiedTests;
+    } else {
+      testLevel = TestLevel.RunLocalTests;
+    }
+
+    return testLevel;
   }
 
   private logHuman(
