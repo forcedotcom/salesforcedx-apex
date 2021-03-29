@@ -1018,7 +1018,7 @@ describe('Run Apex tests asynchronously', () => {
       createStreamStub.returns(new stream.PassThrough() as any);
       sandboxStub1.stub(fs, 'closeSync');
       sandboxStub1.stub(fs, 'openSync');
-      stringifySpy = sandboxStub1.spy(TestService.prototype, 'stringify');
+      stringifySpy = sandboxStub1.spy(utils, 'stringify');
       junitSpy = sandboxStub1.spy(JUnitReporter.prototype, 'format');
       tapSpy = sandboxStub1.spy(TapReporter.prototype, 'format');
     });
