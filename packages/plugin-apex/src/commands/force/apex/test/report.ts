@@ -117,7 +117,10 @@ export default class Report extends SfdxCommand {
           this.logJUnit(result);
           break;
         case 'json':
-          this.ux.logJson(jsonOutput);
+          // when --json flag is specified, we should log CLI json format
+          if (!this.flags.json) {
+            this.ux.logJson(jsonOutput);
+          }
           break;
         default:
           this.logHuman(result, true, this.flags.outputdir);
