@@ -90,7 +90,7 @@ export default class Report extends SfdxCommand {
       this.flags.testrunid,
       this.flags.codecoverage
     );
-    const jsonOutput = this.logJson(result);
+    const jsonOutput = this.formatResultInJson(result);
 
     if (this.flags.outputdir) {
       const outputDirConfig = buildOutputDirConfig(
@@ -158,7 +158,7 @@ export default class Report extends SfdxCommand {
     this.ux.log(reporter.format(result));
   }
 
-  private logJson(result: TestResult): CliJsonFormat {
+  private formatResultInJson(result: TestResult): CliJsonFormat {
     try {
       const reporter = new JsonReporter();
       return reporter.format(result);
