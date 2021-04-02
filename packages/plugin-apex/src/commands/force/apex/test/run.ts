@@ -242,10 +242,7 @@ export default class Run extends SfdxCommand {
         case 'json':
           // when --json flag is specified, we should log CLI json format
           if (!this.flags.json) {
-            this.ux.logJson({
-              status: process.exitCode,
-              result: this.formatResultInJson(result)
-            });
+            this.ux.logJson(this.formatResultInJson(result));
           }
           break;
         default:
@@ -348,9 +345,7 @@ export default class Run extends SfdxCommand {
     this.ux.log(reporter.format(result));
   }
 
-  private formatResultInJson(
-    result: TestResult | TestRunIdResult
-  ): CliJsonFormat | TestRunIdResult {
+  private formatResultInJson(result: TestResult): CliJsonFormat {
     try {
       const reporter = new JsonReporter();
       return result.hasOwnProperty('summary')

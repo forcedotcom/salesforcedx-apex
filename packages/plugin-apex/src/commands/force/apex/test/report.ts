@@ -137,10 +137,7 @@ export default class Report extends SfdxCommand {
         case 'json':
           // when --json flag is specified, we should log CLI json format
           if (!this.flags.json) {
-            this.ux.logJson({
-              status: process.exitCode,
-              result: jsonOutput
-            });
+            this.ux.logJson(jsonOutput);
           }
           break;
         default:
