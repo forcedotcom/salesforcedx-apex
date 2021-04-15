@@ -468,11 +468,11 @@ describe('force:apex:test:run', () => {
     })
     .stub(process, 'cwd', () => projectPath)
     .do(ctx => {
-      ctx.myStub = sandboxStub.stub(
-        TestService.prototype,
-        'runTestSynchronous'
-      );
-      ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildSyncPayload');
+      ctx.myStub = sandboxStub
+        .stub(TestService.prototype, 'runTestAsynchronous')
+        // @ts-ignore
+        .resolves(testRunSimple);
+      ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildAsyncPayload');
     })
     .stdout()
     .stderr()
@@ -482,8 +482,10 @@ describe('force:apex:test:run', () => {
       ctx => {
         expect((ctx.mySpy as SinonSpy).calledWith(TestLevel.RunLocalTests)).to
           .be.true;
-        expect(ctx.stderr).to.contain(
-          'Specify a test class or test methods when running tests synchronously'
+        expect(ctx.stdout).to.not.be.empty;
+        expect(ctx.stdout).to.contain(
+          // @ts-ignore
+          new HumanReporter().format(testRunSimple, false)
         );
       }
     );
