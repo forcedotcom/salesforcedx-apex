@@ -470,7 +470,6 @@ describe('force:apex:test:run', () => {
     .do(ctx => {
       ctx.myStub = sandboxStub
         .stub(TestService.prototype, 'runTestAsynchronous')
-        // @ts-ignore
         .resolves(testRunSimple);
       ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildAsyncPayload');
     })
@@ -484,7 +483,6 @@ describe('force:apex:test:run', () => {
           .be.true;
         expect(ctx.stdout).to.not.be.empty;
         expect(ctx.stdout).to.contain(
-          // @ts-ignore
           new HumanReporter().format(testRunSimple, false)
         );
       }
@@ -499,7 +497,6 @@ describe('force:apex:test:run', () => {
     .do(ctx => {
       ctx.myStub = sandboxStub
         .stub(TestService.prototype, 'runTestAsynchronous')
-        // @ts-ignore
         .resolves(testRunSimple);
       ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildAsyncPayload');
     })
@@ -518,7 +515,6 @@ describe('force:apex:test:run', () => {
           .to.be.true;
         expect(ctx.stdout).to.not.be.empty;
         expect(ctx.stdout).to.contain(
-          // @ts-ignore
           new HumanReporter().format(testRunSimple, false)
         );
       }
@@ -533,7 +529,6 @@ describe('force:apex:test:run', () => {
     .do(ctx => {
       ctx.myStub = sandboxStub
         .stub(TestService.prototype, 'runTestAsynchronous')
-        // @ts-ignore
         .resolves(testRunSimple);
       ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildAsyncPayload');
     })

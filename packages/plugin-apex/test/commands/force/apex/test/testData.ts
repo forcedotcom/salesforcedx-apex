@@ -5,7 +5,11 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { ApexTestResultOutcome } from '@salesforce/apex-node';
+import {
+  ApexTestResultOutcome,
+  ApexTestRunResultStatus,
+  TestResult
+} from '@salesforce/apex-node';
 
 export const rawSyncResult = {
   summary: {
@@ -89,13 +93,13 @@ export const jsonSyncResult = {
   ]
 };
 
-export const testRunSimple = {
+export const testRunSimple: TestResult = {
   summary: {
     failRate: '0%',
     testsRan: 1,
     orgId: '00D4xx00000FH4IEAW',
-    outcome: 'Passed',
-    passing: 10,
+    outcome: ApexTestRunResultStatus.Passed,
+    passing: 1,
     failing: 0,
     skipped: 0,
     passRate: '100%',
@@ -113,8 +117,8 @@ export const testRunSimple = {
     {
       id: '07Mxx00000ErgiHUAR',
       queueItemId: '709xx000001IlUMQA0',
-      stackTrace: null,
-      message: null,
+      stackTrace: '',
+      message: '',
       asyncApexJobId: '707xx0000AUS2gHQQT',
       methodName: 'testConfig',
       outcome: ApexTestResultOutcome.Pass,
@@ -122,7 +126,7 @@ export const testRunSimple = {
       apexClass: {
         id: '01pxx00000NWwb3AAD',
         name: 'MyApexTests',
-        namespacePrefix: null,
+        namespacePrefix: '',
         fullName: 'MyApexTests'
       },
       runTime: 53,
@@ -372,7 +376,7 @@ export const jsonResult = {
     commandTime: '60 ms',
     failing: 0,
     hostname: 'https://na139.salesforce.com',
-    passing: 10,
+    passing: 1,
     skipped: 0,
     testTotalTime: '53 ms',
     failRate: '0%',
@@ -390,15 +394,15 @@ export const jsonResult = {
     {
       Id: '07Mxx00000ErgiHUAR',
       QueueItemId: '709xx000001IlUMQA0',
-      StackTrace: null,
-      Message: null,
+      StackTrace: '',
+      Message: '',
       AsyncApexJobId: '707xx0000AUS2gHQQT',
       MethodName: 'testConfig',
       Outcome: 'Pass',
       ApexClass: {
         Id: '01pxx00000NWwb3AAD',
         Name: 'MyApexTests',
-        NamespacePrefix: null
+        NamespacePrefix: ''
       },
       RunTime: 53,
       FullName: 'MyApexTests.testConfig'
