@@ -140,7 +140,7 @@ export default class Run extends SfdxCommand {
     const testService = new TestService(conn);
     let result: TestResult;
 
-    if (this.flags.synchronous && testLevel !== TestLevel.RunLocalTests) {
+    if (this.flags.synchronous && testLevel === TestLevel.RunSpecifiedTests) {
       const payload = await testService.buildSyncPayload(
         testLevel,
         this.flags.tests,

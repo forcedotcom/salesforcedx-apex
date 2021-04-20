@@ -505,6 +505,40 @@ describe('force:apex:test:run', () => {
     })
     .stdout()
     .stderr()
+    .command([
+      'force:apex:test:run',
+      '--synchronous',
+      '--testlevel',
+      'RunAllTestsInOrg'
+    ])
+    .it(
+      'should format request with correct properties for sync run with RunAllTestsInOrg test level specified',
+      ctx => {
+        expect((ctx.mySpy as SinonSpy).calledWith(TestLevel.RunAllTestsInOrg))
+          .to.be.true;
+        expect(ctx.stdout).to.not.be.empty;
+        expect(ctx.stdout).to.contain(
+          // @ts-ignore
+          new HumanReporter().format(testRunSimple, false)
+        );
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .do(ctx => {
+      ctx.myStub = sandboxStub
+        .stub(TestService.prototype, 'runTestAsynchronous')
+        // @ts-ignore
+        .resolves(testRunSimple);
+      ctx.mySpy = sandboxStub.spy(TestService.prototype, 'buildAsyncPayload');
+    })
+    .stdout()
+    .stderr()
     .command(['force:apex:test:run'])
     .it(
       'should format request with correct properties and display correct info for async run with no tests or classname parameters specified',

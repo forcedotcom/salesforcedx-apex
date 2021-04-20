@@ -5,6 +5,8 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { ApexTestResultOutcome } from '@salesforce/apex-node';
+
 export const rawSyncResult = {
   summary: {
     failRate: '0%',
@@ -115,7 +117,7 @@ export const testRunSimple = {
       message: null,
       asyncApexJobId: '707xx0000AUS2gHQQT',
       methodName: 'testConfig',
-      outcome: 'Pass',
+      outcome: ApexTestResultOutcome.Pass,
       apexLogId: null,
       apexClass: {
         id: '01pxx00000NWwb3AAD',
