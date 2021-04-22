@@ -9,7 +9,8 @@ import {
   HumanReporter,
   TapReporter,
   TestService,
-  TestResult
+  TestResult,
+  ApexTestRunResultStatus
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org } from '@salesforce/core';
@@ -131,6 +132,9 @@ export default class Report extends SfdxCommand {
       this.ux.error(msg);
     }
 
+    if (result.summary.outcome === ApexTestRunResultStatus.Failed) {
+      process.exitCode = 100;
+    }
     return jsonOutput as AnyJson;
   }
 

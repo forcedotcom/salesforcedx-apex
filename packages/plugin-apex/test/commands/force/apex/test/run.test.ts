@@ -26,7 +26,8 @@ import {
   jsonResult,
   jsonWithCoverage,
   jsonSyncResult,
-  rawSyncResult
+  rawSyncResult,
+  runWithFailures
 } from './testData';
 
 Messages.importMessagesDirectory(__dirname);
@@ -1166,4 +1167,46 @@ describe('force:apex:test:run', () => {
         expect(ctx.stderr).to.include(messages.getMessage('warningMessage'));
       }
     );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => runWithFailures)
+    .stdout()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexClass.testInsertTrigger',
+      '--outputdir',
+      'my/path/to/dir',
+      '-r',
+      'human'
+    ])
+    .it('should set exit code as 100 for run with failures', () => {
+      expect(process.exitCode).to.eql(100);
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexClass.testInsertTrigger',
+      '--outputdir',
+      'my/path/to/dir',
+      '-r',
+      'human'
+    ])
+    .it('should set exit code as 0 for passing run', () => {
+      expect(process.exitCode).to.eql(0);
+    });
 });

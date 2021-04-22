@@ -11,7 +11,8 @@ import {
   JUnitReporter,
   HumanReporter,
   TestResult,
-  TestLevel
+  TestLevel,
+  ApexTestRunResultStatus
 } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, Org, SfdxError } from '@salesforce/core';
@@ -192,6 +193,9 @@ export default class Run extends SfdxCommand {
       );
     }
 
+    if (result.summary.outcome === ApexTestRunResultStatus.Failed) {
+      process.exitCode = 100;
+    }
     try {
       switch (this.flags.resultformat) {
         case 'human':

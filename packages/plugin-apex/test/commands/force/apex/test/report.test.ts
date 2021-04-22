@@ -23,7 +23,8 @@ import {
   cliWithCoverage,
   runWithCoverage,
   jsonWithCoverage,
-  jsonResult
+  jsonResult,
+  runWithFailures
 } from './testData';
 
 Messages.importMessagesDirectory(__dirname);
@@ -307,6 +308,48 @@ describe('force:apex:test:report', () => {
       expect(result).to.not.be.empty;
       const resultJSON = JSON.parse(result);
       expect(resultJSON).to.deep.equal(cliWithCoverage);
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'reportAsyncResults', () => runWithFailures)
+    .stdout()
+    .command([
+      'force:apex:test:report',
+      '-i',
+      '01pxx00000NWwb3',
+      '--json',
+      '--resultformat',
+      'junit',
+      '-c'
+    ])
+    .it('should set exit code as 100 for run with failures', () => {
+      expect(process.exitCode).to.eql(100);
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'reportAsyncResults', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:report',
+      '-i',
+      '01pxx00000NWwb3',
+      '--json',
+      '--resultformat',
+      'junit',
+      '-c'
+    ])
+    .it('should set exit code as 0 for passing run', () => {
+      expect(process.exitCode).to.eql(0);
     });
 
   test

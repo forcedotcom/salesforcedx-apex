@@ -18,6 +18,7 @@ export {
   ApexTestRunResultStatus,
   ApexTestResultData,
   ApexTestResultOutcome,
+  ApexTestRunResultStatus,
   AsyncTestArrayConfiguration,
   AsyncTestConfiguration,
   CodeCoverageResult,
