@@ -110,6 +110,9 @@ export default class Report extends SfdxCommand {
     }
 
     try {
+      if (result.summary.outcome === ApexTestRunResultStatus.Failed) {
+        process.exitCode = 100;
+      }
       switch (this.flags.resultformat) {
         case 'tap':
           this.logTap(result);
@@ -120,7 +123,7 @@ export default class Report extends SfdxCommand {
         case 'json':
           // when --json flag is specified, we should log CLI json format
           if (!this.flags.json) {
-            this.ux.logJson(jsonOutput);
+            this.ux.logJson({ status: process.exitCode, result: jsonOutput });
           }
           break;
         default:

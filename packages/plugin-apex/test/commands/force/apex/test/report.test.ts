@@ -292,6 +292,31 @@ describe('force:apex:test:report', () => {
       root: __dirname
     })
     .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'reportAsyncResults', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:report',
+      '-i',
+      '01pxx00000NWwb3',
+      '--resultformat',
+      'json'
+    ])
+    .it(
+      'should return a CLI json result with json result flag are specified',
+      ctx => {
+        const result = ctx.stdout;
+        expect(result).to.not.be.empty;
+        const resultJSON = JSON.parse(result);
+        expect(resultJSON).to.deep.equal(cliJsonResult);
+      }
+    );
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'reportAsyncResults', () => runWithCoverage)
     .stdout()
     .command([

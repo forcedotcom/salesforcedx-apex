@@ -23,7 +23,6 @@ import {
   runWithCoverage,
   cliJsonResult,
   cliWithCoverage,
-  jsonResult,
   jsonWithCoverage,
   jsonSyncResult,
   rawSyncResult,
@@ -127,7 +126,7 @@ describe('force:apex:test:run', () => {
       expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
       expect(ctx.stderr).to.contain(
         messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testRunId' of undefined"
+          "TypeError: Cannot read property 'outcome' of undefined"
         ])
       );
     });
@@ -178,7 +177,7 @@ describe('force:apex:test:run', () => {
       expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
       expect(ctx.stderr).to.contain(
         messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testStartTime' of undefined"
+          "TypeError: Cannot read property 'outcome' of undefined"
         ])
       );
     });
@@ -280,7 +279,7 @@ describe('force:apex:test:run', () => {
         const result = ctx.stdout;
         expect(result).to.not.be.empty;
         const resultJSON = JSON.parse(result);
-        expect(resultJSON).to.deep.equal(jsonResult);
+        expect(resultJSON).to.deep.equal(cliJsonResult);
       }
     );
 
