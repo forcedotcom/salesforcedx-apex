@@ -77,10 +77,9 @@ export class TestService {
       const suiteId = await this.retrieveSuiteId(suite);
 
       if (suiteId === undefined) {
-        const result = await this.connection.tooling.create('ApexTestSuite', {
+        const result = (await this.connection.tooling.create('ApexTestSuite', {
           TestSuiteName: suite
-        });
-        //@ts-ignore
+        })) as { id: string };
         return result.id;
       }
       return suiteId;
@@ -99,15 +98,13 @@ export class TestService {
     suiteId?: string
   ): Promise<TestSuiteMembershipRecord[]> {
     if (suitename === undefined && suiteId === undefined) {
-      throw new Error(
-        'Must provide a suite name or suite id to retrieve test classes in suite'
-      );
+      throw new Error(nls.localize('suitenameErr'));
     }
 
     if (suitename) {
       const suiteId = await this.retrieveSuiteId(suitename);
       if (suiteId === undefined) {
-        throw new Error('Suite does not exist');
+        throw new Error(nls.localize('missingSuiteErr'));
       }
     }
     const classRecords = (await this.connection.tooling.query(
@@ -128,7 +125,7 @@ export class TestService {
         `SELECT id, name FROM ApexClass WHERE Name = '${testClass}'`
       )) as QueryResult;
       if (apexClass.records.length === 0) {
-        throw new Error(`Apex class ${testClass} does not exist in the org`);
+        throw new Error(nls.localize('missingTestClassErr', testClass));
       }
       return apexClass.records[0].Id;
     });
@@ -156,7 +153,7 @@ export class TestService {
 
       if (existingClass.length > 0) {
         console.log(
-          `Apex test class ${testClasses[count]} already exists in Apex test suite ${suitename}`
+          nls.localize('testSuiteMsg', [testClasses[count], suitename])
         );
       } else {
         await this.connection.tooling.create('TestSuiteMembership', {
@@ -164,7 +161,7 @@ export class TestService {
           ApexTestSuiteId: testSuiteId
         });
         console.log(
-          `Added Apex class ${testClasses[count]} to your Apex test suite ${suitename}`
+          nls.localize('classSuiteMsg', [testClasses[count], suitename])
         );
       }
       count++;
