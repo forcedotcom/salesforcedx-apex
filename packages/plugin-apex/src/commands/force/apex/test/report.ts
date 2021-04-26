@@ -134,10 +134,6 @@ export default class Report extends SfdxCommand {
       const msg = messages.getMessage('testResultProcessErr', [e]);
       this.ux.error(msg);
     }
-
-    if (result.summary.outcome === ApexTestRunResultStatus.Failed) {
-      process.exitCode = 100;
-    }
     return jsonOutput as AnyJson;
   }
 
