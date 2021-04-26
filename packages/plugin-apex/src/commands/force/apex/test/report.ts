@@ -20,7 +20,12 @@ import {
   CliJsonFormat,
   buildOutputDirConfig
 } from '../../../../reporters';
-import { buildDescription, logLevels, resultFormat } from '../../../../utils';
+import {
+  buildDescription,
+  logLevels,
+  resultFormat,
+  FAILURE_EXIT_CODE
+} from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'report');
@@ -111,7 +116,7 @@ export default class Report extends SfdxCommand {
 
     try {
       if (result.summary.outcome === ApexTestRunResultStatus.Failed) {
-        process.exitCode = 100;
+        process.exitCode = FAILURE_EXIT_CODE;
       }
       switch (this.flags.resultformat) {
         case 'tap':
