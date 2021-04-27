@@ -146,26 +146,29 @@ export class TestService {
     const classesInSuite = await this.getTestsInSuite(undefined, testSuiteId);
     const testClassIds = await this.getApexClassIds(testClasses);
     let count = 0;
-    for (const classId of testClassIds) {
-      const existingClass = classesInSuite.filter(
-        rec => rec.ApexClassId === classId
-      );
 
-      if (existingClass.length > 0) {
-        console.log(
-          nls.localize('testSuiteMsg', [testClasses[count], suitename])
+    await Promise.all(
+      testClassIds.map(async classId => {
+        const existingClass = classesInSuite.filter(
+          rec => rec.ApexClassId === classId
         );
-      } else {
-        await this.connection.tooling.create('TestSuiteMembership', {
-          ApexClassId: classId,
-          ApexTestSuiteId: testSuiteId
-        });
-        console.log(
-          nls.localize('classSuiteMsg', [testClasses[count], suitename])
-        );
-      }
-      count++;
-    }
+
+        if (existingClass.length > 0) {
+          console.log(
+            nls.localize('testSuiteMsg', [testClasses[count], suitename])
+          );
+        } else {
+          await this.connection.tooling.create('TestSuiteMembership', {
+            ApexClassId: classId,
+            ApexTestSuiteId: testSuiteId
+          });
+          console.log(
+            nls.localize('classSuiteMsg', [testClasses[count], suitename])
+          );
+        }
+        count++;
+      })
+    );
   }
 
   /**
