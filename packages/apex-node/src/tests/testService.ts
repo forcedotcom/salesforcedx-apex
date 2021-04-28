@@ -145,7 +145,6 @@ export class TestService {
 
     const classesInSuite = await this.getTestsInSuite(undefined, testSuiteId);
     const testClassIds = await this.getApexClassIds(testClasses);
-    let count = 0;
 
     await Promise.all(
       testClassIds.map(async classId => {
@@ -153,20 +152,16 @@ export class TestService {
           rec => rec.ApexClassId === classId
         );
 
+        const testClass = testClasses[testClassIds.indexOf(classId)];
         if (existingClass.length > 0) {
-          console.log(
-            nls.localize('testSuiteMsg', [testClasses[count], suitename])
-          );
+          console.log(nls.localize('testSuiteMsg', [testClass, suitename]));
         } else {
           await this.connection.tooling.create('TestSuiteMembership', {
             ApexClassId: classId,
             ApexTestSuiteId: testSuiteId
           });
-          console.log(
-            nls.localize('classSuiteMsg', [testClasses[count], suitename])
-          );
+          console.log(nls.localize('classSuiteMsg', [testClass, suitename]));
         }
-        count++;
       })
     );
   }
