@@ -241,11 +241,6 @@ jobs:
       - run: *gh-config
       - checkout
       - run:
-          name: 'Port version bump to sh/postPublishPort'
-          command: |
-#            git checkout sh/postPublishPort
-            git pull
-      - run:
           name: 'Get latest commit'
           command: |
             LAST_COMMIT=`git log -n 1 --pretty=format:"%h" sh/playBranch`
