@@ -84,6 +84,13 @@ commands:
             PKG_TAG="v$(cat package.json | jq -r .version)"
             git tag -a $PKG_TAG -m "Releasing ${PKG_TAG}"
             git push origin $PKG_TAG
+  port-latest-bump:
+    steps:
+      - git checkout develop
+      - git pull
+      - LAST_COMMIT=`git log -n 1 --pretty=format:"%h" main`
+      - git cherry-pick $LAST_COMMIT
+      - git push origin develop
   build-artifact:
     steps: 
       - run:
@@ -102,6 +109,9 @@ parameters:
   publish-type:
     type: string
     default: patch
+  causeican:
+    type: boolean
+    default: false
 
 jobs:
   node-latest: &node-test
@@ -205,6 +215,38 @@ jobs:
       - slack/status:
           channel: 'pdt_releases'
           fail_only: true
+  postpublish:
+    <<: *defaults
+    steps:
+      - slack/notify:
+          channel: 'pdt_releases'
+          color: '#9bcd9b'
+          message: 'Apex Plugin & Library v${RELEASE_VERSION} - Starting port of version bump to develop'
+      - run:
+          name: 'Port version bump to develop'
+          command: |
+            git checkout develop
+            git pull
+            LAST_COMMIT=`git log -n 1 --pretty=format:"%h" main`
+            git cherry-pick $LAST_COMMIT
+            git push origin develop
+
+  my-test-job:
+    <<: *defaults
+    steps:
+      - slack/notify:
+          channel: 'shelbys-test-channel'
+          color: '#9bcd9b'
+          message: 'Apex Plugin & Library v${RELEASE_VERSION} - Starting port of version bump to sh/postPublishPort'
+      - run:
+          name: 'Port version bump to sh/postPublishPort'
+          command: |
+            git checkout sh/postPublishPort
+            git pull
+            LAST_COMMIT=`git log -n 1 --pretty=format:"%h" sh/playBranch`
+            git cherry-pick $LAST_COMMIT
+            git push origin sh/postPublishPort
+
 
 workflows:
   version: 2.1
@@ -223,6 +265,11 @@ workflows:
               ignore: /.*/
       - run-win-tests
   
+  poc-workflow:
+    when: << pipeline.parameters.causeican >>
+    jobs:
+      - my-test-job
+
   publish-workflow:
     when: << pipeline.parameters.publish >>
     jobs:
@@ -267,3 +314,19 @@ workflows:
               - hold
               - prepublish
               - publish-apex-node
+      - postpublish:
+          context: pdt-publish-restricted-context
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+              - run-win-tests
+              - node-latest
+              - node-12
+              - node-10
+              - hold
+              - prepublish
+              - publish-apex-node
+              - publish-plugin-apex
+
