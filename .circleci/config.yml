@@ -245,6 +245,9 @@ jobs:
           command: |
             git checkout sh/postPublishPort
             git pull
+      - run:
+          name: 'Get latest commit'
+          command: |
             LAST_COMMIT=`git log -n 1 --pretty=format:"%h" sh/playBranch`
             git cherry-pick $LAST_COMMIT
             git push origin sh/postPublishPort
