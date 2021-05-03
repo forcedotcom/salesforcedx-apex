@@ -41,7 +41,7 @@ Alternatively, you can also run the command from the `plugin-apex` package direc
 ```
 $ NODE_OPTIONS=--inspect-brk bin/run force:apex:log:list -u myOrg@example.com
 ```
-
+<br />
 ### Running the Test Suite
 
 Run the test suite locally by building the project first and then running the tests.
