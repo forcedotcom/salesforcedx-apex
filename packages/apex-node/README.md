@@ -52,10 +52,11 @@ You can use the same pattern for the `Test Service` and `Execute Service` as wel
 
 ### Running the Test Suite
 
+Run the test suite locally by building the project first and then running the tests.
+
 ```
+$ yarn build
 $ yarn test
 ```
-
-> When running tests, code changes don't need to be built with `yarn build` first because the test suite uses ts-node as its runtime environment. Otherwise, run `yarn build` before manually testing changes.
 
 

@@ -44,11 +44,12 @@ $ NODE_OPTIONS=--inspect-brk bin/run force:apex:log:list -u myOrg@example.com
 
 ### Running the Test Suite
 
+Run the test suite locally by building the project first and then running the tests.
+
 ```
+$ yarn build
 $ yarn test
 ```
-
-> When running tests, code changes don't need to be built with `yarn build` first because the test suite uses ts-node as its runtime environment. Otherwise, run `yarn build` before manually testing changes.
 
 <br />
 
