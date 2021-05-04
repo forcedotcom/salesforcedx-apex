@@ -245,8 +245,10 @@ jobs:
           command: |
             LAST_COMMIT="`git log -n 1 --pretty=format:"%h" origin main`"
             echo "Latest commit was: ${LAST_COMMIT}"
-            git cherry-pick $LAST_COMMIT
-            git push origin sh/postPublishPort
+
+
+# git cherry-pick $LAST_COMMIT
+# git push origin sh/postPublishPort
 
 
 workflows:
