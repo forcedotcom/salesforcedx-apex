@@ -1,0 +1,18 @@
+=== Test Summary
+NAME                 VALUE             
+───────────────────  ──────────────────
+Outcome              Passed            
+Tests Ran            1                 
+Pass Rate            100%              
+Fail Rate            0%                
+Skip Rate            0%                
+Test Run Id          707xx0000AUS2gH   
+Test Execution Time  53 ms             
+Org Id               00D4xx00000FH4IEAW
+Username             test@example.com  
+
+
+=== Test Results
+TEST NAME               OUTCOME  MESSAGE  RUNTIME (MS)
+──────────────────────  ───────  ───────  ────────────
+MyApexTests.testConfig  Pass              53          
