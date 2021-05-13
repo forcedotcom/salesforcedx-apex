@@ -38,7 +38,6 @@ const $$ = testSetup();
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingRequestStub: SinonStub;
-// let toolingQueryStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Run Apex tests synchronously', () => {
