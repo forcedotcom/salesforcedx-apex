@@ -66,7 +66,6 @@ describe('Run Apex tests synchronously', () => {
       })
     });
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
-    // toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
     testRequest = {
       method: 'POST',
       url: `${mockConnection.tooling._baseUrl()}/runTestsSynchronous`,
