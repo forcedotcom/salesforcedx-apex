@@ -1273,6 +1273,7 @@ describe('Run Apex tests asynchronously', () => {
         requestOptions,
         false,
         undefined,
+        undefined,
         cancellationTokenSource.token
       );
 

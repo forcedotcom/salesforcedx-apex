@@ -16,7 +16,8 @@ import {
   TestLevel,
   TestItem,
   NamespaceInfo,
-  TestSuiteMembershipRecord
+  TestSuiteMembershipRecord,
+  TestRunIdResult
 } from './types';
 import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
@@ -176,7 +177,7 @@ export class TestService {
     options: SyncTestConfiguration,
     codeCoverage = false,
     token?: CancellationToken
-  ): Promise<TestResult> {
+  ): Promise<TestResult | TestRunIdResult> {
     return await this.syncService.runTests(options, codeCoverage, token);
   }
 
@@ -190,12 +191,14 @@ export class TestService {
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false,
+    exitEarly = false,
     progress?: Progress<ApexTestProgressValue>,
     token?: CancellationToken
-  ): Promise<TestResult> {
+  ): Promise<TestResult | TestRunIdResult> {
     return await this.asyncService.runTests(
       options,
       codeCoverage,
+      exitEarly,
       progress,
       token
     );
@@ -227,7 +230,7 @@ export class TestService {
    * @returns list of result files created
    */
   public async writeResultFiles(
-    result: TestResult,
+    result: TestResult | TestRunIdResult,
     outputDirConfig: OutputDirConfig,
     codeCoverage = false
   ): Promise<string[]> {
@@ -236,64 +239,70 @@ export class TestService {
 
     fileMap.push({
       path: join(dirPath, 'test-run-id.txt'),
-      content: result.summary.testRunId
+      content: result.hasOwnProperty('summary')
+        ? (result as TestResult).summary.testRunId
+        : (result as TestRunIdResult).testRunId
     });
 
-    if (resultFormats) {
-      for (const format of resultFormats) {
-        if (!(format in ResultFormat)) {
-          throw new Error(nls.localize('resultFormatErr'));
-        }
+    if (result.hasOwnProperty('summary')) {
+      result = result as TestResult;
+      if (resultFormats) {
+        result = result as TestResult;
+        for (const format of resultFormats) {
+          if (!(format in ResultFormat)) {
+            throw new Error(nls.localize('resultFormatErr'));
+          }
 
-        switch (format) {
-          case ResultFormat.json:
-            fileMap.push({
-              path: join(
-                dirPath,
-                result.summary.testRunId
-                  ? `test-result-${result.summary.testRunId}.json`
-                  : `test-result.json`
-              ),
-              content: stringify(result)
-            });
-            break;
-          case ResultFormat.tap:
-            const tapResult = new TapReporter().format(result);
-            fileMap.push({
-              path: join(
-                dirPath,
-                `test-result-${result.summary.testRunId}-tap.txt`
-              ),
-              content: tapResult
-            });
-            break;
-          case ResultFormat.junit:
-            const junitResult = new JUnitReporter().format(result);
-            fileMap.push({
-              path: join(
-                dirPath,
-                result.summary.testRunId
-                  ? `test-result-${result.summary.testRunId}-junit.xml`
-                  : `test-result-junit.xml`
-              ),
-              content: junitResult
-            });
-            break;
+          switch (format) {
+            case ResultFormat.json:
+              fileMap.push({
+                path: join(
+                  dirPath,
+                  result.summary.testRunId
+                    ? `test-result-${result.summary.testRunId}.json`
+                    : `test-result.json`
+                ),
+                content: stringify(result)
+              });
+              break;
+            case ResultFormat.tap:
+              const tapResult = new TapReporter().format(result);
+              fileMap.push({
+                path: join(
+                  dirPath,
+                  `test-result-${result.summary.testRunId}-tap.txt`
+                ),
+                content: tapResult
+              });
+              break;
+            case ResultFormat.junit:
+              const junitResult = new JUnitReporter().format(result);
+              fileMap.push({
+                path: join(
+                  dirPath,
+                  result.summary.testRunId
+                    ? `test-result-${result.summary.testRunId}-junit.xml`
+                    : `test-result-junit.xml`
+                ),
+                content: junitResult
+              });
+              break;
+          }
         }
       }
-    }
 
-    if (codeCoverage) {
-      const coverageRecords = result.tests.map(record => {
-        return record.perClassCoverage;
-      });
-      fileMap.push({
-        path: join(
-          dirPath,
-          `test-result-${result.summary.testRunId}-codecoverage.json`
-        ),
-        content: stringify(coverageRecords)
-      });
+      if (codeCoverage) {
+        const coverageRecords = result.tests.map(record => {
+          return record.perClassCoverage;
+        });
+        fileMap.push({
+          path: join(
+            dirPath,
+            `test-result-${result.summary.testRunId}-codecoverage.json`
+          ),
+          content: stringify(coverageRecords)
+        });
+      }
     }
 
     fileInfos?.forEach(fileInfo => {
