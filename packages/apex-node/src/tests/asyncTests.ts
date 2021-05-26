@@ -126,6 +126,10 @@ export class AsyncTests {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
 
+    if (testQueueResult === null) {
+      throw new Error(`Test run ${testRunId} is not yet complete.`);
+    }
+
     let testRunSummaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
     testRunSummaryQuery +=
