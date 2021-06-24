@@ -158,14 +158,14 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.tests[0].apexClass.id).to.equal('01pxx00000NWwb3AAD');
     expect(testResult.tests[0].apexClass.name).to.equal('TestSample');
     expect(testResult.tests[0].apexClass.namespacePrefix).to.equal('tr');
-    expect(testResult.tests[0].apexClass.fullName).to.equal('tr__TestSample');
+    expect(testResult.tests[0].apexClass.fullName).to.equal('tr.TestSample');
     expect(testResult.tests[0].runTime).to.equal(68);
     expect(testResult.tests[0].testTimestamp).to.equal('');
-    expect(testResult.tests[0].fullName).to.equal('tr__TestSample.testOne');
+    expect(testResult.tests[0].fullName).to.equal('tr.TestSample.testOne');
     expect(testResult.tests[0].diagnostic.lineNumber).to.equal(27);
     expect(testResult.tests[0].diagnostic.columnNumber).to.equal(1);
 
-    expect(testResult.tests[3].apexClass.fullName).to.equal('tr__TestSample4');
+    expect(testResult.tests[3].apexClass.fullName).to.equal('tr.TestSample4');
     expect(testResult.tests[3].stackTrace).to.equal('TestSample4: line 30');
     expect(testResult.tests[3].diagnostic.lineNumber).to.equal(undefined);
     expect(testResult.tests[3].diagnostic.columnNumber).to.equal(undefined);

@@ -204,7 +204,7 @@ describe('Run Apex tests asynchronously', () => {
             Id: '01pxx00000O6tXZQAZ',
             Name: 'TestLogger',
             NamespacePrefix: 't3st',
-            FullName: 't3st__TestLogger'
+            FullName: 't3st.TestLogger'
           },
           RunTime: null,
           TestTimestamp: '3'
@@ -271,7 +271,7 @@ describe('Run Apex tests asynchronously', () => {
             Id: '01pxx00000O6tXZQAZ',
             Name: 'TestLogger',
             NamespacePrefix: 't3st',
-            FullName: 't3st__TestLogger'
+            FullName: 't3st.TestLogger'
           },
           RunTime: null,
           TestTimestamp: '3'
@@ -332,7 +332,7 @@ describe('Run Apex tests asynchronously', () => {
             Id: '01pxx00000O6tXZQAZ',
             Name: 'TestLogger',
             NamespacePrefix: 't3st',
-            FullName: 't3st__TestLogger'
+            FullName: 't3st.TestLogger'
           },
           RunTime: null,
           TestTimestamp: '3'
@@ -403,7 +403,7 @@ describe('Run Apex tests asynchronously', () => {
             Id: '01pxx00000O6tXZQAZ',
             Name: 'TestLogger',
             NamespacePrefix: 't3st',
-            FullName: 't3st__TestLogger'
+            FullName: 't3st.TestLogger'
           },
           RunTime: null,
           TestTimestamp: '3'
@@ -464,7 +464,7 @@ describe('Run Apex tests asynchronously', () => {
             Id: '01pxx00000O6tXZQAZ',
             Name: 'TestLogger',
             NamespacePrefix: 't3st',
-            FullName: 't3st__TestLogger'
+            FullName: 't3st.TestLogger'
           },
           RunTime: null,
           TestTimestamp: '3'
@@ -756,7 +756,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -780,7 +780,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -817,7 +817,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -865,7 +865,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -889,7 +889,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -944,7 +944,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -968,7 +968,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'
@@ -1008,7 +1008,7 @@ describe('Run Apex tests asynchronously', () => {
               Id: '01pxx00000O6tXZQAZ',
               Name: 'TestLogger',
               NamespacePrefix: 't3st',
-              FullName: 't3st__TestLogger'
+              FullName: 't3st.TestLogger'
             },
             RunTime: 8,
             TestTimestamp: '3'

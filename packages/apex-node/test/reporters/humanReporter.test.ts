@@ -20,10 +20,23 @@ describe('Human Reporter Tests', () => {
     const result = reporter.format(testResults, false);
     expect(result).to.not.be.empty;
     expect(result).to.contain(
-      'AnimalLocatorTest.testMissingAnimal                   Fail     System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:'
+      'AnimalLocatorTest.testMissingAnimal                  Fail     System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:'
     );
     expect(result).to.contain(
       'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1'
+    );
+    expect(result).to.contain('=== Test Results');
+    expect(result).to.contain('=== Test Summary');
+  });
+
+  it('should format test results with + without namespace', () => {
+    const result = reporter.format(testResults, false);
+    expect(result).to.not.be.empty;
+    expect(result).to.contain(
+      'AccountServiceTest.should_create_account             Pass                                                                                                           86'
+    );
+    expect(result).to.contain(
+      'trlhdtips.tt_UtilControllerTest.testResetMyPassword  Pass                                                                                                           179'
     );
     expect(result).to.contain('=== Test Results');
     expect(result).to.contain('=== Test Summary');

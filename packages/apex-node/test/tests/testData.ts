@@ -126,11 +126,11 @@ export const syncResult: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestApexClass',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestApexClass'
+        fullName: 't3st.TestApexClass'
       },
       runTime: 8,
       testTimestamp: '',
-      fullName: `t3st__TestApexClass.testMethod`
+      fullName: `t3st.TestApexClass.testMethod`
     }
   ]
 };
@@ -168,11 +168,11 @@ export const testResultData: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st.TestLogger'
       },
       runTime: 8,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog'
+      fullName: 't3st.TestLogger.testLoggerLog'
     }
   ]
 };
@@ -210,11 +210,11 @@ export const missingTimeTestData: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st.TestLogger'
       },
       runTime: 0,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog'
+      fullName: 't3st.TestLogger.testLoggerLog'
     }
   ]
 };
@@ -252,11 +252,11 @@ export const skippedTestData: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st.TestLogger'
       },
       runTime: 0,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog'
+      fullName: 't3st.TestLogger.testLoggerLog'
     }
   ]
 };
@@ -296,11 +296,11 @@ export const diagnosticResult: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st.TestLogger'
       },
       runTime: 0,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog',
+      fullName: 't3st.TestLogger.testLoggerLog',
       diagnostic: {
         className: 'LIFXControllerTest',
         columnNumber: 1,
@@ -331,11 +331,11 @@ export const diagnosticFailure: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st.TestLogger'
       },
       runTime: 0,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog',
+      fullName: 't3st.TestLogger.testLoggerLog',
       diagnostic: {
         className: 'LIFXControllerTest',
         compileProblem: '',
