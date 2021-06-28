@@ -193,7 +193,7 @@ export const testResults: TestResult = {
     failRate: '13%',
     testsRan: 16,
     orgId: '00D3t000001vIruEAE',
-    outcome: 'Completed',
+    outcome: 'Failed',
     passRate: '88%',
     skipRate: '0%',
     testStartTime: localStartTime,
@@ -527,7 +527,7 @@ export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
             <property name="failRate" value="13%"/>
             <property name="testsRan" value="16"/>
             <property name="orgId" value="00D3t000001vIruEAE"/>
-            <property name="outcome" value="Completed"/>
+            <property name="outcome" value="Failed"/>
             <property name="passRate" value="88%"/>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>

@@ -13,19 +13,34 @@ import {
   TestResult
 } from '../tests';
 import { nls } from '../i18n';
+import chalk from 'chalk';
 
+const PASS = chalk.inverse.bold.green(' Pass ');
 export class HumanReporter {
   public format(testResult: TestResult, detailedCoverage: boolean): string {
-    let tbResult = this.formatSummary(testResult);
+    let tbResult = '';
     if (!testResult.codecoverage || !detailedCoverage) {
-      tbResult += this.formatTestResults(testResult.tests);
+      tbResult += this.formatTestResults(
+        testResult.tests,
+        nls.localize('testResultsHeader')
+      );
     }
 
     if (testResult.codecoverage) {
       if (detailedCoverage) {
-        tbResult += this.formatDetailedCov(testResult);
+        tbResult += this.formatAllDetailedCov(testResult);
       }
       tbResult += this.formatCodeCov(testResult.codecoverage);
+    }
+
+    tbResult += this.formatSummary(testResult);
+
+    if (!testResult.codecoverage || !detailedCoverage) {
+      tbResult += this.formatFailed(testResult.tests);
+    }
+
+    if (testResult.codecoverage && detailedCoverage) {
+      tbResult += this.formatFailedCov(testResult);
     }
     return tbResult;
   }
@@ -33,27 +48,42 @@ export class HumanReporter {
   private formatSummary(testResult: TestResult): string {
     const tb = new Table();
 
+    const succesful = testResult.summary.outcome === 'Passed';
     // Summary Table
     const summaryRowArray: Row[] = [
       {
         name: nls.localize('outcome'),
-        value: testResult.summary.outcome
+        value: succesful
+          ? chalk.inverse.bold.green(` ${testResult.summary.outcome} `)
+          : chalk.inverse.bold.red(` ${testResult.summary.outcome} `)
       },
       {
         name: nls.localize('testsRan'),
         value: String(testResult.summary.testsRan)
       },
       {
-        name: nls.localize('passRate'),
-        value: testResult.summary.passRate
+        name: nls.localize('passedSummary'),
+        value: chalk.bold.green(
+          `${testResult.summary.passing} ${nls.localize('passed')} (${
+            testResult.summary.passRate
+          })`
+        )
       },
       {
-        name: nls.localize('failRate'),
-        value: testResult.summary.failRate
+        name: nls.localize('failedSummary'),
+        value: chalk.bold.red(
+          `${testResult.summary.failing} ${nls.localize('failed')} (${
+            testResult.summary.failRate
+          })`
+        )
       },
       {
-        name: nls.localize('skipRate'),
-        value: testResult.summary.skipRate
+        name: nls.localize('skippedSummary'),
+        value: chalk.bold.yellow(
+          `${testResult.summary.skipped} ${nls.localize('skipped')} (${
+            testResult.summary.skipRate
+          })`
+        )
       },
       {
         name: nls.localize('testRunId'),
@@ -75,13 +105,17 @@ export class HumanReporter {
         ? [
             {
               name: nls.localize('orgWideCoverage'),
-              value: String(testResult.summary.orgWideCoverage)
+              value:
+                parseInt(testResult.summary.orgWideCoverage) >= 75
+                  ? chalk.bold.green(testResult.summary.orgWideCoverage)
+                  : chalk.bold.red(testResult.summary.orgWideCoverage)
             }
           ]
         : [])
     ];
 
-    const summaryTable = tb.createTable(
+    let summaryTable = '\n\n';
+    summaryTable += tb.createTable(
       summaryRowArray,
       [
         {
@@ -95,9 +129,24 @@ export class HumanReporter {
     return summaryTable;
   }
 
-  private formatTestResults(tests: ApexTestResultData[]): string {
+  private formatFailed(tests: ApexTestResultData[]): string {
+    const failedTests = tests.filter(
+      test => test.outcome === ApexTestResultOutcome.Fail
+    );
+    return this.formatTestResults(failedTests, 'Failed Tests');
+  }
+
+  private formatTestResults(
+    tests: ApexTestResultData[],
+    tableHeader: string
+  ): string {
+    if (tests.length === 0) {
+      return '';
+    }
+
     const tb = new Table();
     const testRowArray: Row[] = [];
+
     tests.forEach(
       (elem: {
         fullName: string;
@@ -111,11 +160,15 @@ export class HumanReporter {
           : elem.message;
 
         testRowArray.push({
-          name: elem.fullName,
-          outcome: elem.outcome,
-          msg: elem.message ? msg : '',
+          name: msg ? `${elem.fullName}\n\n${msg}\n` : elem.fullName,
+          outcome:
+            elem.outcome === ApexTestResultOutcome.Pass
+              ? PASS
+              : chalk.inverse.bold.red(` ${elem.outcome} `),
           runtime:
-            elem.outcome !== ApexTestResultOutcome.Fail ? `${elem.runTime}` : ''
+            elem.outcome !== ApexTestResultOutcome.Fail
+              ? `${elem.runTime} ms`
+              : ''
         });
       }
     );
@@ -124,23 +177,43 @@ export class HumanReporter {
     testResultTable += tb.createTable(
       testRowArray,
       [
+        { key: 'outcome', label: nls.localize('outcomeColHeader') },
         {
           key: 'name',
           label: nls.localize('testNameColHeader')
         },
-        { key: 'outcome', label: nls.localize('outcomeColHeader') },
-        { key: 'msg', label: nls.localize('msgColHeader') },
         { key: 'runtime', label: nls.localize('runtimeColHeader') }
       ],
-      nls.localize('testResultsHeader')
+      tableHeader
     );
     return testResultTable;
   }
 
-  private formatDetailedCov(testResult: TestResult): string {
+  private formatFailedCov(testResult: TestResult): string {
+    const failedTests = testResult.tests.filter(
+      test => test.outcome === ApexTestResultOutcome.Fail
+    );
+
+    return this.formatDetailedCov(
+      failedTests,
+      'Apex Code Coverage Failed Tests'
+    );
+  }
+
+  private formatAllDetailedCov(testResult: TestResult): string {
+    return this.formatDetailedCov(
+      testResult.tests,
+      nls.localize('detailedCodeCovHeader', [testResult.summary.testRunId])
+    );
+  }
+
+  private formatDetailedCov(
+    tests: ApexTestResultData[],
+    tableTitle: string
+  ): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
-    testResult.tests.forEach((elem: ApexTestResultData) => {
+    tests.forEach((elem: ApexTestResultData) => {
       const msg = elem.stackTrace
         ? `${elem.message}\n${elem.stackTrace}`
         : elem.message;
@@ -148,22 +221,26 @@ export class HumanReporter {
       if (elem.perClassCoverage) {
         elem.perClassCoverage.forEach(perClassCov => {
           testRowArray.push({
-            name: elem.fullName,
+            name: msg ? `${elem.fullName}\n\n${msg}\n` : elem.fullName,
             coveredClassName: perClassCov.apexClassOrTriggerName,
-            outcome: elem.outcome,
+            outcome:
+              elem.outcome === ApexTestResultOutcome.Pass
+                ? PASS
+                : chalk.inverse.bold.red(` ${elem.outcome} `),
             coveredClassPercentage: perClassCov.percentage,
-            msg: elem.message ? msg : '',
-            runtime: `${elem.runTime}`
+            runtime: `${elem.runTime} ms`
           });
         });
       } else {
         testRowArray.push({
-          name: elem.fullName,
+          name: msg ? `${elem.fullName}\n\n${msg}\n` : elem.fullName,
           coveredClassName: '',
-          outcome: elem.outcome,
+          outcome:
+            elem.outcome === ApexTestResultOutcome.Pass
+              ? PASS
+              : chalk.inverse.bold.red(` ${elem.outcome} `),
           coveredClassPercentage: '',
-          msg: elem.message ? msg : '',
-          runtime: `${elem.runTime}`
+          runtime: `${elem.runTime} ms`
         });
       }
     });
@@ -173,6 +250,10 @@ export class HumanReporter {
       testRowArray,
       [
         {
+          key: 'outcome',
+          label: nls.localize('outcomeColHeader')
+        },
+        {
           key: 'name',
           label: nls.localize('testNameColHeader')
         },
@@ -181,17 +262,12 @@ export class HumanReporter {
           label: nls.localize('classTestedHeader')
         },
         {
-          key: 'outcome',
-          label: nls.localize('outcomeColHeader')
-        },
-        {
           key: 'coveredClassPercentage',
           label: nls.localize('percentColHeader')
         },
-        { key: 'msg', label: nls.localize('msgColHeader') },
         { key: 'runtime', label: nls.localize('runtimeColHeader') }
       ],
-      nls.localize('detailedCodeCovHeader', [testResult.summary.testRunId])
+      tableTitle
     );
     return detailedCovTable;
   }
@@ -207,7 +283,10 @@ export class HumanReporter {
       }) => {
         codeCovRowArray.push({
           name: elem.name,
-          percent: elem.percentage,
+          percent:
+            parseInt(elem.percentage) >= 75
+              ? chalk.bold.green(` ${elem.percentage} `)
+              : chalk.bold.red(` ${elem.percentage} `),
           uncoveredLines: this.formatUncoveredLines(elem.uncoveredLines)
         });
       }

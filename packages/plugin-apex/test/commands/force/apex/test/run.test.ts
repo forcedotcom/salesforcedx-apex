@@ -28,6 +28,8 @@ import {
   rawSyncResult,
   runWithFailures
 } from './testData';
+import chalk from 'chalk';
+chalk.level = 3;
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'run');
