@@ -76,8 +76,8 @@ describe('Table Utils', () => {
     const expectedTable =
       'Column 1  Column 2                    Column 3\n' +
       '────────  ──────────────────────────  ────────\n' +
-      'test1     first line which is longer  \n' +
-      '          second line                 value1  \n' +
+      'test1     first line which is longer  value1  \n' +
+      '          second line                         \n' +
       'test2     test3                       value2  \n';
     const rows = [
       {
