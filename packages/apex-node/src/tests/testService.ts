@@ -370,9 +370,8 @@ export class TestService {
   private async buildAsyncClassPayload(
     classNames: string
   ): Promise<AsyncTestArrayConfiguration> {
-    const classNameArray = classNames.split(',') as string[];
-    const classItems = classNameArray.map(item => {
-      const classParts = item.split('.');
+    const classItems = classNames.split(',').map(item => {
+      const classParts = item.trim().split('.');
       if (classParts.length > 1) {
         return {
           className: `${classParts[0]}.${classParts[1]}`
@@ -387,7 +386,9 @@ export class TestService {
   private async buildTestPayload(
     testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
-    const testNameArray = testNames.split(',');
+    const testNameArray = testNames.split(',').map(testName => {
+      return testName.trim();
+    });
     const testItems: TestItem[] = [];
     let namespaceInfos: NamespaceInfo[];
 

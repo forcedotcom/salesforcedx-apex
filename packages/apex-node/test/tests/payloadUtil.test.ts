@@ -60,6 +60,46 @@ describe('Build async payload', async () => {
     expect(namespaceStub.calledOnce).to.be.true;
   });
 
+  it('should build async payload for multiple tests with spaces between tests in string', async () => {
+    const namespaceStub = sandboxStub
+      .stub(utils, 'queryNamespaces')
+      .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
+    const payload = await testService.buildAsyncPayload(
+      TestLevel.RunSpecifiedTests,
+      ' myClass, mySecondClass, myThirdClass '
+    );
+
+    expect(payload).to.deep.equal({
+      tests: [
+        { className: 'myClass' },
+        { className: 'mySecondClass' },
+        { className: 'myThirdClass' }
+      ],
+      testLevel: TestLevel.RunSpecifiedTests
+    });
+    expect(namespaceStub.notCalled).to.be.true;
+  });
+
+  it('should build async payload for multiple tests without spaces between tests in string', async () => {
+    const namespaceStub = sandboxStub
+      .stub(utils, 'queryNamespaces')
+      .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
+    const payload = await testService.buildAsyncPayload(
+      TestLevel.RunSpecifiedTests,
+      'myClass,mySecondClass,myThirdClass'
+    );
+
+    expect(payload).to.deep.equal({
+      tests: [
+        { className: 'myClass' },
+        { className: 'mySecondClass' },
+        { className: 'myThirdClass' }
+      ],
+      testLevel: TestLevel.RunSpecifiedTests
+    });
+    expect(namespaceStub.notCalled).to.be.true;
+  });
+
   it('should build async payload for test with namespace when org returns 0 namespaces', async () => {
     const namespaceStub = sandboxStub
       .stub(utils, 'queryNamespaces')
@@ -363,7 +403,19 @@ describe('Build sync payload', async () => {
     try {
       await testSrv.buildSyncPayload(
         TestLevel.RunSpecifiedTests,
-        'myNamespace.myClass.myTest, myNamespace.otherClass.otherTest'
+        'myNamespace.myClass.myTest,myNamespace.otherClass.otherTest'
+      );
+      assert.fail();
+    } catch (e) {
+      expect(e.message).to.equal(nls.localize('syncClassErr'));
+    }
+  });
+
+  it('should throw an error if multiple classes are specified with spaces', async () => {
+    try {
+      await testSrv.buildSyncPayload(
+        TestLevel.RunSpecifiedTests,
+        ' MyClass.myTest, OtherClass.otherTest, ThirdClass.test '
       );
       assert.fail();
     } catch (e) {
