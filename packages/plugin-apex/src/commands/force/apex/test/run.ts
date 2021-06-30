@@ -130,6 +130,17 @@ export default class Run extends SfdxCommand {
       process.exit();
     });
 
+    // add listener for errors
+    process.on('unhandledRejection', err => {
+      const formattedErr = this.formatError(
+        new SfdxError(
+          messages.getMessage('apexLibErr', [JSON.stringify(err, null, 2)])
+        )
+      );
+      this.ux.error(...formattedErr);
+      process.exit();
+    });
+
     // graceful shutdown
     const exitHandler = async (): Promise<void> => {
       await this.cancellationTokenSource.asyncCancel();
@@ -251,7 +262,7 @@ export default class Run extends SfdxCommand {
             this.ux.log(
               messages.getMessage('runTestReportCommand', [
                 id,
-                this.org.getUsername()
+                this.org!.getUsername()
               ])
             );
           }

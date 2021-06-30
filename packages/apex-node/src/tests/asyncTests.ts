@@ -68,19 +68,17 @@ export class AsyncTests {
           sClient.disconnect();
         });
 
-      const subscribedTestRun = sClient.subscribe(
-        this.getTestRunRequestAction(options)
-      );
+      const testRunId = await this.getTestRunRequestAction(options)();
+
       if (exitEarly) {
-        const id = await sClient.subscribedTestRunIdPromise;
-        return { testRunId: id };
+        return { testRunId };
       }
 
       if (token && token.isCancellationRequested) {
         return null;
       }
 
-      const asyncRunResult = await subscribedTestRun;
+      const asyncRunResult = await sClient.subscribe(undefined, testRunId);
       const testRunSummary = await this.checkRunStatus(asyncRunResult.runId);
       return await this.formatAsyncResults(
         asyncRunResult,
@@ -90,6 +88,7 @@ export class AsyncTests {
         progress
       );
     } catch (e) {
+      console.log('hello');
       throw formatTestErrors(e);
     }
   }
