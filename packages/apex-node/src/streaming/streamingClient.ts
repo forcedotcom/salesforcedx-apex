@@ -7,7 +7,7 @@
 
 import { Client as FayeClient } from 'faye';
 import { Connection } from '@salesforce/core';
-import { StreamMessage, TestResultMessage } from './types';
+import { HttpStatusCode, StreamMessage, TestResultMessage } from './types';
 import { Progress } from '../common';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
@@ -85,7 +85,7 @@ export class StreamingClient {
     });
 
     this.client.addExtension({
-      incoming: (
+      incoming: async (
         message: StreamMessage,
         callback: (message: StreamMessage) => void
       ) => {
@@ -95,6 +95,17 @@ export class StreamingClient {
             throw new Error(
               nls.localize('streamingHandshakeFail', message.error)
             );
+          }
+
+          if (message.error.includes(HttpStatusCode.UNAUTHORIZED.toString())) {
+            await this.init();
+            callback(message);
+            return;
+          }
+
+          if (message.advice && message.advice.reconnect === 'handshake') {
+            callback(message);
+            return;
           }
 
           this.client.disconnect();

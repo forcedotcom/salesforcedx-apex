@@ -25,4 +25,14 @@ export type StreamMessage = {
   id?: string;
   data?: TestResultMessage;
   error?: string;
+  advice: {
+    reconnect: string;
+    interval: number;
+    timeout: number;
+  };
 };
+
+export const enum HttpStatusCode {
+  UNAUTHORIZED = 401,
+  FORBIDDEN = 403
+}
