@@ -483,4 +483,60 @@ describe('Streaming API Client', () => {
     await deferred.promise;
     assert.calledOnce(stubCallback);
   });
+
+  it('should call query test queue items at an interval', async () => {
+    sandboxStub.stub(FayeClient.prototype, 'subscribe');
+    const mockToolingQuery = sandboxStub.stub(
+      mockConnection.tooling,
+      'autoFetchQuery'
+    );
+
+    const setIntervalStub = sandboxStub.stub(global, 'setInterval');
+    setIntervalStub.callsFake((callback: Function) => callback.call(null));
+
+    const streamClient = new StreamingClient(mockConnection);
+    streamClient.subscribe(() => Promise.resolve('707xx0000AGQ3jbQQD'));
+
+    await Promise.resolve();
+    assert.calledOnce(mockToolingQuery);
+  });
+
+  it('should return the results, disconnect and clear interval on test completion', async () => {
+    sandboxStub.stub(FayeClient.prototype, 'subscribe');
+    const disconnectStub = sandboxStub.stub(FayeClient.prototype, 'disconnect');
+    const mockRunId = '707xx0000AGQ3jbQQD';
+    const queryResponse = {
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          Id: '7092M000000Vt94QAC',
+          Status: ApexTestQueueItemStatus.Completed,
+          ApexClassId: '01p2M00000O6tXZQAZ',
+          TestRunResultId: '05m2M000000TgYuQAK'
+        }
+      ]
+    };
+    const mockToolingQuery = sandboxStub.stub(
+      mockConnection.tooling,
+      'autoFetchQuery'
+    );
+    mockToolingQuery.resolves(queryResponse);
+    const setIntervalStub = sandboxStub.stub(global, 'setInterval');
+    setIntervalStub.callsFake((callback: Function) => callback.call(null));
+    const clearIntervalStub = sandboxStub.stub(global, 'clearInterval');
+
+    const streamClient = new StreamingClient(mockConnection);
+    const result = await streamClient.subscribe(() =>
+      Promise.resolve(mockRunId)
+    );
+
+    expect(result).to.eql({
+      runId: mockRunId,
+      queueItem: queryResponse
+    });
+    assert.calledOnce(mockToolingQuery);
+    assert.calledOnce(disconnectStub);
+    assert.calledOnce(clearIntervalStub);
+  });
 });
