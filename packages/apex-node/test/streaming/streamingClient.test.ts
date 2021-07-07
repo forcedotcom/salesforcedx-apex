@@ -9,11 +9,12 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { assert, createSandbox, SinonSandbox } from 'sinon';
 import { StreamingClient } from '../../src/streaming';
+import { Deferred } from '../../src/streaming/streamingClient';
 import { expect } from 'chai';
 import { Client as FayeClient, Subscription } from 'faye';
 import { fail } from 'assert';
 import { Progress } from '../../src';
-import { TestResultMessage } from '../../src/streaming/types';
+import { StreamMessage, TestResultMessage } from '../../src/streaming/types';
 import {
   ApexTestQueueItemStatus,
   ApexTestProgressValue
@@ -364,5 +365,122 @@ describe('Streaming API Client', () => {
         ]
       }
     });
+  });
+
+  it('should handle 401::Authentication invalid error', async () => {
+    const deferred = new Deferred();
+    const mockFayeClient = new EventEmitter();
+    const stubOn = sandboxStub.stub(FayeClient.prototype, 'on');
+    const stubInit = sandboxStub.stub(StreamingClient.prototype, 'init');
+    stubOn.callsFake(mockFayeClient.on.bind(mockFayeClient));
+
+    const mockFayeIncomingMessage = new EventEmitter();
+    const stubAddExtension = sandboxStub.stub(
+      FayeClient.prototype,
+      'addExtension'
+    );
+    const stubCallback = sandboxStub.stub();
+    stubAddExtension.callsFake(
+      (extension: {
+        incoming: (
+          message: StreamMessage,
+          callback: (message: StreamMessage) => void
+        ) => Promise<void>;
+      }) => {
+        mockFayeIncomingMessage.on('incoming', async message => {
+          await extension.incoming(message, stubCallback);
+          deferred.resolve();
+        });
+      }
+    );
+
+    new StreamingClient(mockConnection);
+    mockFayeIncomingMessage.emit('incoming', {
+      error: '401::Authentication invalid',
+      successful: false
+    });
+
+    await deferred.promise;
+    assert.calledOnce(stubInit);
+    assert.calledOnce(stubCallback);
+  });
+
+  it('should handle handshake advice', async () => {
+    const deferred = new Deferred();
+    const mockFayeClient = new EventEmitter();
+    const stubOn = sandboxStub.stub(FayeClient.prototype, 'on');
+    stubOn.callsFake(mockFayeClient.on.bind(mockFayeClient));
+
+    const mockFayeIncomingMessage = new EventEmitter();
+    const stubAddExtension = sandboxStub.stub(
+      FayeClient.prototype,
+      'addExtension'
+    );
+    const stubCallback = sandboxStub.stub();
+    stubAddExtension.callsFake(
+      (extension: {
+        incoming: (
+          message: StreamMessage,
+          callback: (message: StreamMessage) => void
+        ) => Promise<void>;
+      }) => {
+        mockFayeIncomingMessage.on('incoming', async message => {
+          await extension.incoming(message, stubCallback);
+          deferred.resolve();
+        });
+      }
+    );
+
+    new StreamingClient(mockConnection);
+    mockFayeIncomingMessage.emit('incoming', {
+      channel: '/meta/connect',
+      clientId: 'mockClientId',
+      advice: {
+        reconnect: 'handshake',
+        interval: 500
+      },
+      error: '403::Unknown client',
+      successful: false,
+      id: 'b'
+    });
+
+    await deferred.promise;
+    assert.calledOnce(stubCallback);
+  });
+
+  it('should handle other 403 errors', async () => {
+    const deferred = new Deferred();
+    const mockFayeClient = new EventEmitter();
+    const stubOn = sandboxStub.stub(FayeClient.prototype, 'on');
+    stubOn.callsFake(mockFayeClient.on.bind(mockFayeClient));
+
+    const mockFayeIncomingMessage = new EventEmitter();
+    const stubAddExtension = sandboxStub.stub(
+      FayeClient.prototype,
+      'addExtension'
+    );
+    const stubCallback = sandboxStub.stub();
+    stubAddExtension.callsFake(
+      (extension: {
+        incoming: (
+          message: StreamMessage,
+          callback: (message: StreamMessage) => void
+        ) => Promise<void>;
+      }) => {
+        mockFayeIncomingMessage.on('incoming', async message => {
+          await extension.incoming(message, stubCallback);
+          deferred.resolve();
+        });
+      }
+    );
+
+    new StreamingClient(mockConnection);
+    mockFayeIncomingMessage.emit('incoming', {
+      error: '403::Unknown client',
+      successful: false
+    });
+
+    await deferred.promise;
+    assert.calledOnce(stubCallback);
   });
 });

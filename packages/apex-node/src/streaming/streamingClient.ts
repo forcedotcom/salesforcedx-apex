@@ -30,7 +30,7 @@ export interface AsyncTestRun {
   queueItem: ApexTestQueueItem;
 }
 
-class Deferred<T> {
+export class Deferred<T> {
   public promise: Promise<T>;
   public resolve: Function;
   constructor() {
