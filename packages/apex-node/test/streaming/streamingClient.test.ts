@@ -486,10 +486,23 @@ describe('Streaming API Client', () => {
 
   it('should call query test queue items at an interval', async () => {
     sandboxStub.stub(FayeClient.prototype, 'subscribe');
+    const queryResponse = {
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          Id: '7092M000000Vt94QAC',
+          Status: ApexTestQueueItemStatus.Processing,
+          ApexClassId: '01p2M00000O6tXZQAZ',
+          TestRunResultId: '05m2M000000TgYuQAK'
+        }
+      ]
+    };
     const mockToolingQuery = sandboxStub.stub(
       mockConnection.tooling,
       'autoFetchQuery'
     );
+    mockToolingQuery.resolves(queryResponse);
 
     const setIntervalStub = sandboxStub.stub(global, 'setInterval');
     setIntervalStub.callsFake((callback: Function) => callback.call(null));
