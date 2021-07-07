@@ -7,7 +7,12 @@
 
 import { Client as FayeClient } from 'faye';
 import { Connection } from '@salesforce/core';
-import { HttpStatusCode, StreamMessage, TestResultMessage } from './types';
+import {
+  RetreiveResultsInterval,
+  StreamMessage,
+  StreamingErrors,
+  TestResultMessage
+} from './types';
 import { Progress } from '../common';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
@@ -91,13 +96,13 @@ export class StreamingClient {
       ) => {
         if (message && message.error) {
           if (message.channel === '/meta/handshake') {
-            this.client.disconnect();
+            this.disconnect();
             throw new Error(
               nls.localize('streamingHandshakeFail', message.error)
             );
           }
 
-          if (message.error.includes(HttpStatusCode.UNAUTHORIZED.toString())) {
+          if (message.error === StreamingErrors.ERROR_AUTH_INVALID) {
             await this.init();
             callback(message);
             return;
@@ -108,7 +113,12 @@ export class StreamingClient {
             return;
           }
 
-          this.client.disconnect();
+          if (message.error === StreamingErrors.ERROR_UNKNOWN_CLIENT_ID) {
+            callback(message);
+            return;
+          }
+
+          this.disconnect();
           throw new Error(message.error);
         }
         callback(message);
@@ -139,13 +149,17 @@ export class StreamingClient {
 
   public disconnect(): void {
     this.client.disconnect();
+    this.hasDisconnected = true;
   }
+
+  public hasDisconnected = false;
 
   public async subscribe(
     action?: () => Promise<string>,
     testRunId?: string
   ): Promise<AsyncTestRun> {
     return new Promise((subscriptionResolve, subscriptionReject) => {
+      let intervalId: NodeJS.Timeout;
       try {
         this.client.subscribe(
           TEST_RESULT_CHANNEL,
@@ -153,7 +167,8 @@ export class StreamingClient {
             const result = await this.handler(message);
 
             if (result) {
-              this.client.disconnect();
+              this.disconnect();
+              clearInterval(intervalId);
               subscriptionResolve({
                 runId: this.subscribedTestRunId,
                 queueItem: result
@@ -167,9 +182,24 @@ export class StreamingClient {
             .then(id => {
               this.subscribedTestRunId = id;
               this.subscribedTestRunIdDeferred.resolve(id);
+
+              if (!this.hasDisconnected) {
+                intervalId = setInterval(async () => {
+                  const result = await this.getCompletedTestRun(id);
+                  if (result) {
+                    this.disconnect();
+                    clearInterval(intervalId);
+                    subscriptionResolve({
+                      runId: this.subscribedTestRunId,
+                      queueItem: result
+                    });
+                  }
+                }, RetreiveResultsInterval);
+              }
             })
             .catch(e => {
-              this.client.disconnect();
+              this.disconnect();
+              clearInterval(intervalId);
               subscriptionReject(e);
             });
         } else {
@@ -177,7 +207,8 @@ export class StreamingClient {
           this.subscribedTestRunIdDeferred.resolve(testRunId);
         }
       } catch (e) {
-        this.client.disconnect();
+        this.disconnect();
+        clearInterval(intervalId);
         subscriptionReject(e);
       }
     });

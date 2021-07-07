@@ -32,7 +32,9 @@ export type StreamMessage = {
   };
 };
 
-export const enum HttpStatusCode {
-  UNAUTHORIZED = 401,
-  FORBIDDEN = 403
+export const enum StreamingErrors {
+  ERROR_AUTH_INVALID = '401::Authentication invalid',
+  ERROR_UNKNOWN_CLIENT_ID = '403::Unknown client'
 }
+
+export const RetreiveResultsInterval = 60 * 1000;
