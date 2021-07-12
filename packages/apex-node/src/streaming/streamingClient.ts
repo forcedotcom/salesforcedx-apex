@@ -95,6 +95,7 @@ export class StreamingClient {
         callback: (message: StreamMessage) => void
       ) => {
         if (message && message.error) {
+          // throw errors on handshake errors
           if (message.channel === '/meta/handshake') {
             this.disconnect();
             throw new Error(
@@ -102,22 +103,26 @@ export class StreamingClient {
             );
           }
 
+          // refresh auth on 401 errors
           if (message.error === StreamingErrors.ERROR_AUTH_INVALID) {
             await this.init();
             callback(message);
             return;
           }
 
+          // call faye callback on handshake advice
           if (message.advice && message.advice.reconnect === 'handshake') {
             callback(message);
             return;
           }
 
+          // call faye callback on 403 unknown client errors
           if (message.error === StreamingErrors.ERROR_UNKNOWN_CLIENT_ID) {
             callback(message);
             return;
           }
 
+          // default: disconnect and throw error
           this.disconnect();
           throw new Error(message.error);
         }
