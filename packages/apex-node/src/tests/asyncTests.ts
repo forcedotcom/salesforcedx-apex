@@ -88,7 +88,6 @@ export class AsyncTests {
         progress
       );
     } catch (e) {
-      console.log('hello');
       throw formatTestErrors(e);
     }
   }

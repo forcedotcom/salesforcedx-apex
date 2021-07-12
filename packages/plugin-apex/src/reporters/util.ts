@@ -37,7 +37,6 @@ export function buildOutputDirConfig(
     dirPath: outputDir
   };
 
-  // check if this really works
   if (result.hasOwnProperty('summary')) {
     result = result as TestResult;
     jsonOutput = jsonOutput as CliJsonFormat;

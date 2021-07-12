@@ -236,73 +236,71 @@ export class TestService {
   ): Promise<string[]> {
     const { dirPath, resultFormats, fileInfos } = outputDirConfig;
     const fileMap: { path: string; content: string }[] = [];
+    const testRunId = result.hasOwnProperty('summary')
+      ? (result as TestResult).summary.testRunId
+      : (result as TestRunIdResult).testRunId;
 
     fileMap.push({
       path: join(dirPath, 'test-run-id.txt'),
-      content: result.hasOwnProperty('summary')
-        ? (result as TestResult).summary.testRunId
-        : (result as TestRunIdResult).testRunId
+      content: testRunId
     });
 
-    if (result.hasOwnProperty('summary')) {
+    if (resultFormats) {
+      if (!result.hasOwnProperty('summary')) {
+        throw new Error(nls.localize('runIdFormatErr'));
+      }
       result = result as TestResult;
-      if (resultFormats) {
-        result = result as TestResult;
-        for (const format of resultFormats) {
-          if (!(format in ResultFormat)) {
-            throw new Error(nls.localize('resultFormatErr'));
-          }
 
-          switch (format) {
-            case ResultFormat.json:
-              fileMap.push({
-                path: join(
-                  dirPath,
-                  result.summary.testRunId
-                    ? `test-result-${result.summary.testRunId}.json`
-                    : `test-result.json`
-                ),
-                content: stringify(result)
-              });
-              break;
-            case ResultFormat.tap:
-              const tapResult = new TapReporter().format(result);
-              fileMap.push({
-                path: join(
-                  dirPath,
-                  `test-result-${result.summary.testRunId}-tap.txt`
-                ),
-                content: tapResult
-              });
-              break;
-            case ResultFormat.junit:
-              const junitResult = new JUnitReporter().format(result);
-              fileMap.push({
-                path: join(
-                  dirPath,
-                  result.summary.testRunId
-                    ? `test-result-${result.summary.testRunId}-junit.xml`
-                    : `test-result-junit.xml`
-                ),
-                content: junitResult
-              });
-              break;
-          }
+      for (const format of resultFormats) {
+        if (!(format in ResultFormat)) {
+          throw new Error(nls.localize('resultFormatErr'));
+        }
+
+        switch (format) {
+          case ResultFormat.json:
+            fileMap.push({
+              path: join(
+                dirPath,
+                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
+              ),
+              content: stringify(result)
+            });
+            break;
+          case ResultFormat.tap:
+            const tapResult = new TapReporter().format(result);
+            fileMap.push({
+              path: join(dirPath, `test-result-${testRunId}-tap.txt`),
+              content: tapResult
+            });
+            break;
+          case ResultFormat.junit:
+            const junitResult = new JUnitReporter().format(result);
+            fileMap.push({
+              path: join(
+                dirPath,
+                testRunId
+                  ? `test-result-${testRunId}-junit.xml`
+                  : `test-result-junit.xml`
+              ),
+              content: junitResult
+            });
+            break;
         }
       }
+    }
 
-      if (codeCoverage) {
-        const coverageRecords = result.tests.map(record => {
-          return record.perClassCoverage;
-        });
-        fileMap.push({
-          path: join(
-            dirPath,
-            `test-result-${result.summary.testRunId}-codecoverage.json`
-          ),
-          content: stringify(coverageRecords)
-        });
+    if (codeCoverage) {
+      if (!result.hasOwnProperty('summary')) {
+        throw new Error(nls.localize('covIdFormatErr'));
       }
+      result = result as TestResult;
+      const coverageRecords = result.tests.map(record => {
+        return record.perClassCoverage;
+      });
+      fileMap.push({
+        path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
+        content: stringify(coverageRecords)
+      });
     }
 
     fileInfos?.forEach(fileInfo => {
