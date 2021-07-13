@@ -1293,7 +1293,6 @@ describe('Run Apex tests asynchronously', () => {
 
       sandboxStub
         .stub(StreamingClient.prototype, 'subscribe')
-        // @ts-ignore
         .callsFake(function() {
           // eslint-disable-next-line
           const that = this;
