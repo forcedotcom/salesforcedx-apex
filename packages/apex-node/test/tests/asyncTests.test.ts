@@ -1287,18 +1287,18 @@ describe('Run Apex tests asynchronously', () => {
         }
       };
       toolingRequestStub.withArgs(testAsyncRequest).returns(testRunId);
-      const action: () => Promise<{ runId: string }> = () => {
+      const actionf: () => Promise<{ runId: string }> = () => {
         return Promise.resolve({ runId: testRunId });
       };
 
       sandboxStub
         .stub(StreamingClient.prototype, 'subscribe')
         // @ts-ignore
-        .callsFake(function(action: () => Promise<{ runId: string }>) {
+        .callsFake(function() {
           // eslint-disable-next-line
           const that = this;
           return new Promise(function() {
-            action().then(function(id) {
+            actionf().then(function(id) {
               that.subscribedTestRunId = id;
               that.subscribedTestRunIdDeferred.resolve(id);
             });

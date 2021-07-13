@@ -210,6 +210,12 @@ export default class Run extends SfdxCommand {
     }
 
     try {
+      if (
+        (result as TestResult).summary.outcome ===
+        ApexTestRunResultStatus.Failed
+      ) {
+        process.exitCode = FAILURE_EXIT_CODE;
+      }
       switch (this.flags.resultformat) {
         case 'human':
           this.logHuman(
@@ -227,12 +233,6 @@ export default class Run extends SfdxCommand {
         case 'json':
           // when --json flag is specified, we should log CLI json format
           if (!this.flags.json) {
-            if (
-              (result as TestResult).summary.outcome ===
-              ApexTestRunResultStatus.Failed
-            ) {
-              process.exitCode = FAILURE_EXIT_CODE;
-            }
             this.ux.logJson({
               status: process.exitCode,
               result: this.formatResultInJson(result)
