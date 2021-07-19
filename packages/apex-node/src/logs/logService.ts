@@ -6,6 +6,12 @@
  */
 import { Connection, SfdxError } from '@salesforce/core';
 import {
+  DEFAULT_DEBUG_LEVEL_NAME,
+  LOG_TYPE,
+  MAX_NUM_LOGS,
+  TAIL_LISTEN_TIMEOUT_MIN
+} from './constants';
+import {
   ApexLogGetOptions,
   LogQueryResult,
   LogRecord,
@@ -18,10 +24,6 @@ import * as dayjs from 'dayjs';
 import { AnyJson } from '@salesforce/ts-types';
 import { QueryResult } from '../utils/types';
 
-const DEFAULT_DEBUG_LEVEL_NAME = 'SFDC_DevConsole';
-const LOG_TYPE = 'DEVELOPER_LOG';
-const MAX_NUM_LOGS = 25;
-const TAIL_LISTEN_TIMEOUT_MIN = 30;
 export class LogService {
   public readonly connection: Connection;
 
