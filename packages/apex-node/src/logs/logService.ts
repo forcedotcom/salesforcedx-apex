@@ -5,11 +5,16 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Connection, SfdxError } from '@salesforce/core';
+import { AnyJson } from '@salesforce/ts-types';
 import {
+  APEX_LOG_QUERY,
+  DEBUG_LEVEL_QUERY,
   DEFAULT_DEBUG_LEVEL_NAME,
   LOG_TYPE,
   MAX_NUM_LOGS,
-  TAIL_LISTEN_TIMEOUT_MIN
+  TAIL_LISTEN_TIMEOUT_MIN,
+  TRACE_FLAG_QUERY,
+  USERNAME_QUERY
 } from './constants';
 import {
   ApexLogGetOptions,
@@ -17,11 +22,11 @@ import {
   LogRecord,
   LogResult
 } from './types';
-import { createFile } from '../utils';
-import { nls } from '../i18n';
-import * as path from 'path';
 import * as dayjs from 'dayjs';
-import { AnyJson } from '@salesforce/ts-types';
+import * as path from 'path';
+import * as util from 'util';
+import { nls } from '../i18n';
+import { createFile } from '../utils';
 import { QueryResult } from '../utils/types';
 
 export class LogService {
@@ -85,10 +90,7 @@ export class LogService {
   }
 
   public async getLogRecords(numberOfLogs?: number): Promise<LogRecord[]> {
-    let query = 'Select Id, Application, DurationMilliseconds, Location, ';
-    query +=
-      'LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime DESC';
-
+    let query = APEX_LOG_QUERY;
     if (typeof numberOfLogs === 'number') {
       if (numberOfLogs <= 0) {
         throw new Error(nls.localize('numLogsError'));
@@ -121,11 +123,12 @@ export class LogService {
   }
 
   private async getDebugLevelId(debugLevel: string): Promise<string> {
+    const debugQuery = util.format(DEBUG_LEVEL_QUERY, debugLevel);
     const debugLevelResult = await this.connection.tooling.query<{
       Id: string;
-    }>(`SELECT Id FROM DebugLevel WHERE DeveloperName = '${debugLevel}'`);
+    }>(debugQuery);
     if (!this.hasRecords(debugLevelResult)) {
-      throw new SfdxError(`Debug Level not found for '${debugLevel}'`);
+      throw new SfdxError(nls.localize('debugLevelNotFound', debugLevel));
     }
 
     return debugLevelResult.records[0].Id;
@@ -134,7 +137,7 @@ export class LogService {
   private async usernameToUserId(username: string): Promise<string> {
     return (
       await this.connection.singleRecordQuery<{ Id: string }>(
-        `SELECT Id FROM User WHERE Username = '${username}'`
+        util.format(USERNAME_QUERY, username)
       )
     ).Id;
   }
@@ -148,10 +151,7 @@ export class LogService {
       DebugLevelId: string;
     }>
   > {
-    let traceQuery =
-      'SELECT Id, DebugLevelId, StartDate, ExpirationDate FROM TraceFlag ';
-    traceQuery += `WHERE TracedEntityId = '${userId}' AND LogType = '${LOG_TYPE}'`;
-    traceQuery += `ORDER BY CreatedDate DESC LIMIT 1'`;
+    const traceQuery = util.format(TRACE_FLAG_QUERY, userId, LOG_TYPE);
     return await this.connection.tooling.query(traceQuery);
   }
 
@@ -160,8 +160,7 @@ export class LogService {
     return log;
   }
 
-  // eslint-disable-next-line
-  private hasRecords(result: any): boolean {
+  private hasRecords(result: QueryResult): boolean {
     return result?.records?.length > 0;
   }
 }

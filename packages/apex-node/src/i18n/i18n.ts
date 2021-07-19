@@ -79,5 +79,6 @@ export const messages = {
   missingSuiteErr: 'Suite does not exist',
   missingTestClassErr: 'Apex class %s does not exist in the org',
   testSuiteMsg: 'Apex test class %s already exists in Apex test suite %s',
-  classSuiteMsg: `Added Apex class %s to your Apex test suite %s`
+  classSuiteMsg: `Added Apex class %s to your Apex test suite %s`,
+  debugLevelNotFound: `Debug Level not found for %s`
 };
