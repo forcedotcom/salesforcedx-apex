@@ -102,6 +102,45 @@ export class LogService {
     return response.records as LogRecord[];
   }
 
+  public async prepareTraceFlag(
+    requestedDebugLevel: string,
+    username: string
+  ): Promise<void> {
+    const userId = await this.usernameToUserId(username);
+    const traceResult = await this.getTraceFlag(userId);
+
+    if (this.hasRecords(traceResult)) {
+      let doUpdate = false;
+      const traceFlag = traceResult.records[0];
+      const tailTimeout = dayjs().add(TAIL_LISTEN_TIMEOUT_MIN, 'minutes');
+
+      if (this.isFlagTooOld(traceFlag.StartDate, tailTimeout)) {
+        return this.createTraceFlag(userId);
+      }
+
+      if (requestedDebugLevel) {
+        const requestedDebugLevelId = await this.getDebugLevelId(
+          requestedDebugLevel
+        );
+        if (traceFlag.DebugLevelId !== requestedDebugLevelId) {
+          traceFlag.DebugLevelId = requestedDebugLevelId;
+          doUpdate = true;
+        }
+      }
+
+      if (this.doesFlagExpirationNeedExtension(traceFlag.ExpirationDate)) {
+        traceFlag.ExpirationDate = tailTimeout.format();
+        doUpdate = true;
+      }
+
+      if (doUpdate) {
+        await this.connection.tooling.update('TraceFlag', traceFlag);
+      }
+    } else {
+      return await this.createTraceFlag(userId);
+    }
+  }
+
   private async createTraceFlag(userId: string): Promise<void> {
     const DebugLevelId = await this.getDebugLevelId(DEFAULT_DEBUG_LEVEL_NAME);
     const startDate = new Date();
@@ -157,6 +196,20 @@ export class LogService {
       'LIMIT 1';
     const traceQuery = util.format(TRACE_FLAG_QUERY, userId, LOG_TYPE);
     return await this.connection.tooling.query(traceQuery);
+  }
+
+  private isFlagTooOld(
+    flagStartDate: string,
+    tailTimeoutDate: dayjs.Dayjs
+  ): boolean {
+    const MAX_FLAG_AGE = 24;
+    const flagExpirationDate = dayjs(flagStartDate).add(MAX_FLAG_AGE, 'hours');
+    return flagExpirationDate.isBefore(tailTimeoutDate);
+  }
+
+  private doesFlagExpirationNeedExtension(flagExpirationDate: string): boolean {
+    const tailExpirationDate = dayjs().add(TAIL_LISTEN_TIMEOUT_MIN, 'minutes');
+    return tailExpirationDate.isAfter(dayjs(flagExpirationDate), 'minutes');
   }
 
   public async toolingRequest(url: string): Promise<AnyJson> {
