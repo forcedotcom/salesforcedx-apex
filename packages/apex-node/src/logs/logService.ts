@@ -7,14 +7,10 @@
 import { Connection, SfdxError } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
 import {
-  APEX_LOG_QUERY,
-  DEBUG_LEVEL_QUERY,
   DEFAULT_DEBUG_LEVEL_NAME,
   LOG_TYPE,
   MAX_NUM_LOGS,
-  TAIL_LISTEN_TIMEOUT_MIN,
-  TRACE_FLAG_QUERY,
-  USERNAME_QUERY
+  TAIL_LISTEN_TIMEOUT_MIN
 } from './constants';
 import {
   ApexLogGetOptions,
@@ -22,7 +18,6 @@ import {
   LogRecord,
   LogResult
 } from './types';
-import * as dayjs from 'dayjs';
 import * as path from 'path';
 import * as util from 'util';
 import { nls } from '../i18n';
@@ -90,32 +85,33 @@ export class LogService {
   }
 
   public async getLogRecords(numberOfLogs?: number): Promise<LogRecord[]> {
-    let query = APEX_LOG_QUERY;
+    let apexLogQuery =
+      'Select Id, Application, DurationMilliseconds, Location, LogLength, LogUser.Name, ' +
+      'Operation, Request, StartTime, Status from ApexLog Order By StartTime DESC';
     if (typeof numberOfLogs === 'number') {
       if (numberOfLogs <= 0) {
         throw new Error(nls.localize('numLogsError'));
       }
       numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
-      query += ` LIMIT ${numberOfLogs}`;
+      apexLogQuery += ` LIMIT ${numberOfLogs}`;
     }
 
     const response = (await this.connection.tooling.query(
-      query
+      apexLogQuery
     )) as LogQueryResult;
     return response.records as LogRecord[];
   }
 
   private async createTraceFlag(userId: string): Promise<void> {
     const DebugLevelId = await this.getDebugLevelId(DEFAULT_DEBUG_LEVEL_NAME);
-    const traceFlagDate = dayjs();
+    const startDate = new Date();
+    const expirationDate = new Date(startDate);
+    expirationDate.setMinutes(startDate.getMinutes() + TAIL_LISTEN_TIMEOUT_MIN);
     const traceFlag = {
       LogType: LOG_TYPE,
       TracedEntityId: userId,
-      StartDate: traceFlagDate.format(),
-      ExpirationDate: traceFlagDate
-        .clone()
-        .add(TAIL_LISTEN_TIMEOUT_MIN, 'minutes')
-        .format(),
+      StartDate: startDate,
+      ExpirationDate: expirationDate,
       DebugLevelId
     };
 
@@ -123,6 +119,8 @@ export class LogService {
   }
 
   private async getDebugLevelId(debugLevel: string): Promise<string> {
+    const DEBUG_LEVEL_QUERY =
+      "SELECT Id FROM DebugLevel WHERE DeveloperName = '%s'";
     const debugQuery = util.format(DEBUG_LEVEL_QUERY, debugLevel);
     const debugLevelResult = await this.connection.tooling.query<{
       Id: string;
@@ -135,6 +133,7 @@ export class LogService {
   }
 
   private async usernameToUserId(username: string): Promise<string> {
+    const USERNAME_QUERY = "SELECT Id FROM User WHERE Username = '%s'";
     return (
       await this.connection.singleRecordQuery<{ Id: string }>(
         util.format(USERNAME_QUERY, username)
@@ -151,6 +150,11 @@ export class LogService {
       DebugLevelId: string;
     }>
   > {
+    const TRACE_FLAG_QUERY =
+      'SELECT Id, DebugLevelId, StartDate, ExpirationDate FROM TraceFlag ' +
+      "WHERE TracedEntityId = '%s' AND LogType = '%s'" +
+      'ORDER BY CreatedDate DESC ' +
+      'LIMIT 1';
     const traceQuery = util.format(TRACE_FLAG_QUERY, userId, LOG_TYPE);
     return await this.connection.tooling.query(traceQuery);
   }
