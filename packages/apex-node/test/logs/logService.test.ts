@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, salesforce.com, inc.
+ * Copyright (c) 2021, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -14,6 +14,7 @@ import { LogService } from '../../src/logs/logService';
 import * as path from 'path';
 import * as stream from 'stream';
 import { LogQueryResult, LogRecord, LogResult } from '../../src/logs/types';
+import { QueryResult } from '../../src/utils/types';
 
 const $$ = testSetup();
 
@@ -308,6 +309,79 @@ describe('Apex Log Service Tests', () => {
       const records = await logService.getLogRecords();
       expect(records).to.deep.equal(logRecords);
       expect(queryStub.calledWith(query)).to.be.true;
+    });
+  });
+
+  describe('prepareTraceFlag', async () => {
+    it('creates a trace flag when there is a default debugLevel', async () => {
+      const debugLevel: QueryResult = {
+        records: [
+          {
+            Id: '7dl5tgg0005PGdTnFUL'
+          }
+        ]
+      };
+      const queryStub = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        //@ts-ignore
+        .resolves(debugLevel);
+      const createStub = sandboxStub
+        .stub(mockConnection.tooling, 'create')
+        //@ts-ignore
+        .resolves();
+
+      const logService = new LogService(mockConnection);
+      await logService.createTraceFlag('005000000000000abc');
+      assert(queryStub.calledOnce);
+      assert(createStub.calledOnce);
+      //todo: test what's created - additional stub/callFake?
+      //https://github.com/salesforcecli/toolbelt/pull/64/files
+    });
+
+    it('throws an error when creating a trace flag if there is no default debugLevel', async () => {
+      const logService = new LogService(mockConnection);
+      try {
+        await logService.createTraceFlag('005000000000000abc');
+        assert.fail();
+      } catch (e) {
+        expect(e.message).to.include('Debug Level not found');
+      }
+    });
+
+    // it('returns a username for a given user ID', async () => {
+    //   const userResult = { Id: '0035tgg0005PGdTnXUI' };
+    //   //you can't stub out this way silly
+    //   const queryStub = sandboxStub
+    //     .stub(mockConnection.singleRecordQuery)
+    //     //@ts-ignore
+    //     .resolves(userResult);
+
+    //   const logService = new LogService(mockConnection);
+    //   const result = await logService.usernameToUserId(testData.username);
+    //   assert(queryStub.calledOnce);
+    //   expect(result).to.be.equal(userResult.Id);
+    // });
+
+    it('returns a trace flag', async () => {
+      const exampleDate = new Date().toDateString();
+      const traceFlagResult = {
+        records: [
+          {
+            ExpirationDate: exampleDate,
+            StartDate: exampleDate,
+            DebugLevelId: 'SFDC_DevConsole'
+          }
+        ]
+      };
+      const queryStub = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        //@ts-ignore
+        .resolves(traceFlagResult);
+
+      const logService = new LogService(mockConnection);
+      const result = await logService.getTraceFlag('0035tgg0005PGdTnXUI');
+      assert(queryStub.calledOnce);
+      expect(result).to.equal(traceFlagResult);
     });
   });
 });
