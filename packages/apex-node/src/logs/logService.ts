@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, salesforce.com, inc.
+ * Copyright (c) 2021, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -141,7 +141,7 @@ export class LogService {
     }
   }
 
-  private async createTraceFlag(userId: string): Promise<void> {
+  async createTraceFlag(userId: string): Promise<void> {
     const DebugLevelId = await this.getDebugLevelId(DEFAULT_DEBUG_LEVEL_NAME);
     const startDate = new Date();
     const expirationDate = new Date(startDate);
@@ -171,7 +171,7 @@ export class LogService {
     return debugLevelResult.records[0].Id;
   }
 
-  private async usernameToUserId(username: string): Promise<string> {
+  async usernameToUserId(username: string): Promise<string> {
     const USERNAME_QUERY = "SELECT Id FROM User WHERE Username = '%s'";
     return (
       await this.connection.singleRecordQuery<{ Id: string }>(
@@ -180,7 +180,7 @@ export class LogService {
     ).Id;
   }
 
-  private async getTraceFlag(
+  async getTraceFlag(
     userId: string
   ): Promise<
     QueryResult<{
