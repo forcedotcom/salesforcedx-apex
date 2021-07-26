@@ -52,7 +52,7 @@ export type AsyncTestConfiguration = {
   /**
    * Does not wait for test run to complete and returns the test run id immediately
    */
-  exitEarly?: boolean;
+  exitOnTestRunId?: boolean;
 };
 
 export enum ResultFormat {
@@ -105,7 +105,7 @@ export type AsyncTestArrayConfiguration = {
   /**
    * Does not wait for test run to complete and returns the test run id immediately
    */
-  exitEarly?: boolean;
+  exitOnTestRunId?: boolean;
 };
 
 export type SyncTestConfiguration = {

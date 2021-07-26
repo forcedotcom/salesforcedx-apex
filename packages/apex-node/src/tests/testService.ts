@@ -191,14 +191,14 @@ export class TestService {
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false,
-    exitEarly = false,
+    exitOnTestRunId = false,
     progress?: Progress<ApexTestProgressValue>,
     token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
     return await this.asyncService.runTests(
       options,
       codeCoverage,
-      exitEarly,
+      exitOnTestRunId,
       progress,
       token
     );

@@ -45,14 +45,14 @@ export class AsyncTests {
    * Asynchronous Test Runs
    * @param options test options
    * @param codeCoverage should report code coverage
-   * @param exitEarly should not wait for test run to complete, return test run id immediately
+   * @param exitOnTestRunId should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
    */
   public async runTests(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false,
-    exitEarly = false,
+    exitOnTestRunId = false,
     progress?: Progress<ApexTestProgressValue>,
     token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
@@ -70,7 +70,7 @@ export class AsyncTests {
 
       const testRunId = await this.getTestRunRequestAction(options)();
 
-      if (exitEarly) {
+      if (exitOnTestRunId) {
         return { testRunId };
       }
 
