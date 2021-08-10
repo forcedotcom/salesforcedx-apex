@@ -159,6 +159,13 @@ export class StreamingClient {
 
   public hasDisconnected = false;
 
+  public async subscribeToTopic(
+    topic: string,
+    callback: (message: {}) => Promise<void>
+  ): Promise<void> {
+    this.client.subscribe(topic, callback);
+  }
+
   public async subscribe(
     action?: () => Promise<string>,
     testRunId?: string
