@@ -15,7 +15,7 @@ import { Duration } from '@salesforce/kit';
 import { AnyJson } from '@salesforce/ts-types';
 import {
   MAX_NUM_LOGS,
-  TAIL_LISTEN_TIMEOUT_MIN,
+  LOG_TIMER_LENGTH_MINUTES,
   LISTENER_ABORTED_ERROR_NAME
 } from './constants';
 import {
@@ -132,7 +132,7 @@ export class LogService {
       STREAMING_LOG_TOPIC,
       this.streamingCallback.bind(this)
     );
-    options.setSubscribeTimeout(Duration.minutes(TAIL_LISTEN_TIMEOUT_MIN));
+    options.setSubscribeTimeout(Duration.minutes(LOG_TIMER_LENGTH_MINUTES));
 
     const stream = await StreamingClient.create(options);
 
@@ -140,7 +140,6 @@ export class LogService {
     await stream.handshake();
     this.logger.debug('Finished StreamingClient handshake');
 
-    // eslint-disable-next-line @typescript-eslint/require-await
     await stream.subscribe(async () => {
       this.logger.debug('Subscribing to ApexLog events');
     });
@@ -156,18 +155,14 @@ export class LogService {
   }
 
   private streamingCallback(message: any): StatusResult {
-    // handle when stream listener aborts
     if (message.errorName === LISTENER_ABORTED_ERROR_NAME) {
-      // this is okay, but terminate listening
       return { completed: true };
     }
 
     if (message.sobject?.Id) {
-      // don't resolve so we keep listening
       this.logCallback(message);
     }
 
-    // Something we're not interested in but we don't want to resolve the promise yet.
     return { completed: false };
   }
 

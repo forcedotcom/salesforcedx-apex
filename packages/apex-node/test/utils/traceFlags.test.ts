@@ -46,7 +46,7 @@ describe('Trace Flags', () => {
   });
 
   it('should validate an existing trace flag', async () => {
-    const currDate = new Date().valueOf();
+    const currDate = Date.now();
     flags = new TraceFlags(mockConnection);
     queryStub = sb.stub(mockConnection, 'query');
     toolingCreateStub = sb.stub(mockConnection.tooling, 'create');
@@ -103,7 +103,7 @@ describe('Trace Flags', () => {
   });
 
   it('should create a new trace flag', async () => {
-    const currDate = new Date().valueOf();
+    const currDate = Date.now();
     flags = new TraceFlags(mockConnection);
     queryStub = sb.stub(mockConnection, 'query');
     toolingCreateStub = sb.stub(mockConnection.tooling, 'create');
@@ -196,6 +196,31 @@ describe('Trace Flags', () => {
     } catch (err) {
       expect(err.message).to.equal(
         nls.localize('trace_flags_failed_to_create_debug_level')
+      );
+    }
+  });
+
+  it('should raise error on failure to find debug level', async () => {
+    flags = new TraceFlags(mockConnection);
+    queryStub = sb.stub(mockConnection, 'query');
+    toolingQueryStub = sb.stub(mockConnection.tooling, 'query');
+    const debugLevelName = 'SFDC_Test';
+
+    queryStub
+      .onFirstCall()
+      .resolves({ done: true, totalSize: 1, records: [{ Id: USER_ID }] });
+    toolingQueryStub
+      .onFirstCall()
+      .resolves({ done: true, totalSize: 0, records: [] })
+      .onSecondCall()
+      .resolves({ done: true, totalSize: 0, records: [] });
+
+    try {
+      await flags.ensureTraceFlags(debugLevelName);
+      fail('Expected to raise an error');
+    } catch (err) {
+      expect(err.message).to.equal(
+        nls.localize('trace_flags_failed_to_find_debug_level', debugLevelName)
       );
     }
   });
