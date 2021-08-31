@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import * as dateformat from 'dateformat';
 import { LogRecord, LogService, Table, Row } from '@salesforce/apex-node';
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages } from '@salesforce/core';
@@ -135,10 +136,7 @@ export default class List extends SfdxCommand {
   }
 
   private formatTime(time: string): string {
-    const milliIndex = time.indexOf('.');
-    if (milliIndex !== -1) {
-      return time.substring(0, milliIndex) + time.substring(milliIndex + 4);
-    }
+    time = dateformat(time, 'isoDateTime');
     return time;
   }
 }
