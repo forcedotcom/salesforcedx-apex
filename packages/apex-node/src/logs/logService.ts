@@ -104,11 +104,11 @@ export class LogService {
 
   public async getLogRecords(numberOfLogs?: number): Promise<LogRecord[]> {
     let apexLogQuery = `
-      SELECT Id, Application, DurationMilliseconds, Location, LogLength, LogUser.Name,
-        Operation, Request, StartTime, Status
-      FROM ApexLog
-      ORDER BY StartTime DESC
-    `;
+        SELECT Id, Application, DurationMilliseconds, Location, LogLength, LogUser.Name,
+          Operation, Request, StartTime, Status
+        FROM ApexLog
+        ORDER BY StartTime DESC
+      `;
 
     if (typeof numberOfLogs === 'number') {
       if (numberOfLogs <= 0) {
