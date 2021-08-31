@@ -102,6 +102,36 @@ describe('Trace Flags', () => {
     expect(toolingCreateStub.called).to.equal(false);
   });
 
+  it('should return false if updating the debug level fails', async () => {
+    flags = new TraceFlags(mockConnection);
+    queryStub = sb.stub(mockConnection, 'query');
+    toolingQueryStub = sb.stub(mockConnection.tooling, 'query');
+    toolingUpdateStub = sb.stub(mockConnection.tooling, 'update');
+
+    queryStub
+      .onFirstCall()
+      .resolves({ done: true, totalSize: 1, records: [{ Id: USER_ID }] });
+    toolingQueryStub.onFirstCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          Id: '1234',
+          DebugLevelId: '00A123456',
+          LogType: 'developer_log',
+          StartDate: null,
+          ExpirationDate: null,
+          DebugLevel: { ApexCode: '', VisualForce: '' }
+        }
+      ]
+    });
+    toolingUpdateStub.onFirstCall().resolves({ success: false });
+
+    const ensure = await flags.ensureTraceFlags();
+
+    expect(ensure).to.equal(false);
+  });
+
   it('should create a new trace flag', async () => {
     const currDate = Date.now();
     flags = new TraceFlags(mockConnection);
@@ -146,6 +176,32 @@ describe('Trace Flags', () => {
     expect(createArgs[1].StartDate).to.equal('');
     const expDate = new Date(createArgs[1].ExpirationDate);
     expect(expDate.getTime() - currDate).to.be.greaterThan(60000 * 29);
+  });
+
+  it('should return false if creating trace flag fails', async () => {
+    flags = new TraceFlags(mockConnection);
+    queryStub = sb.stub(mockConnection, 'query');
+    toolingCreateStub = sb.stub(mockConnection.tooling, 'create');
+    toolingQueryStub = sb.stub(mockConnection.tooling, 'query');
+
+    queryStub
+      .onFirstCall()
+      .resolves({ done: true, totalSize: 1, records: [{ Id: USER_ID }] });
+    toolingQueryStub.onFirstCall().resolves({
+      done: true,
+      totalSize: 0,
+      records: []
+    });
+
+    toolingCreateStub
+      .onFirstCall()
+      .resolves({ success: true, id: 'debug123' })
+      .onSecondCall()
+      .resolves({ success: false });
+
+    const ensure = await flags.ensureTraceFlags();
+
+    expect(ensure).to.equal(false);
   });
 
   it('should raise error for missing username', async () => {
