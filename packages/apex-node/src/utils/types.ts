@@ -14,6 +14,14 @@ enum logLevel {
   fatal = 'fatal'
 }
 
+export const xmlCharMap: { [index: string]: string } = {
+  '<': '&lt;',
+  '>': '&gt;',
+  '&': '&amp;',
+  '"': '&quot;',
+  "'": '&apos;'
+};
+
 export type CommonOptions = {
   json?: boolean;
   loglevel?: logLevel;

@@ -260,7 +260,7 @@ describe('Trace Flags', () => {
     flags = new TraceFlags(mockConnection);
     queryStub = sb.stub(mockConnection, 'query');
     toolingQueryStub = sb.stub(mockConnection.tooling, 'query');
-    const debugLevelName = 'SFDC_Test';
+    const debugLevelName = "'" + 'SFDC_Test';
 
     queryStub
       .onFirstCall()

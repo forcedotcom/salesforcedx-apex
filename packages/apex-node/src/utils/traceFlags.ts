@@ -17,6 +17,7 @@ import {
   QueryRecords,
   TraceFlagRecord
 } from './types';
+import { escapeXml } from './authUtil';
 
 export class TraceFlags {
   private readonly MILLISECONDS_PER_MINUTE = 60000;
@@ -84,7 +85,8 @@ export class TraceFlags {
   private async findDebugLevel(
     debugLevelName: string
   ): Promise<string | undefined> {
-    const query = `SELECT Id FROM DebugLevel WHERE DeveloperName = '${debugLevelName}'`;
+    const escapedDebugLevel = escapeXml(debugLevelName);
+    const query = `SELECT Id FROM DebugLevel WHERE DeveloperName = '${escapedDebugLevel}'`;
     const result = (await this.connection.tooling.query(query)) as QueryRecords;
     return result.totalSize && result.totalSize > 0 && result.records
       ? result.records[0].Id
@@ -175,7 +177,8 @@ export class TraceFlags {
   }
 
   private async getUserIdOrThrow(username: string): Promise<IdRecord> {
-    const userQuery = `SELECT Id FROM User WHERE username='${username}'`;
+    const escapedUsername = escapeXml(username);
+    const userQuery = `SELECT Id FROM User WHERE username='${escapedUsername}'`;
     const userResult = await this.connection.query<IdRecord>(userQuery);
 
     if (userResult.totalSize === 0) {
