@@ -121,6 +121,14 @@ export default class Run extends SfdxCommand {
       this.ux.warn(messages.getMessage('warningMessage'));
     }
 
+    // W-9346875.  When the wait flag is present, display
+    // the results in the human readable format.
+    if(this.flags.hasOwnProperty('wait')) {
+      if(!this.flags.hasOwnProperty('resultformat')) {
+        this.flags.resultformat = 'human';
+      }
+    }
+
     // add listener for errors
     process.on('uncaughtException', err => {
       const formattedErr = this.formatError(

@@ -1208,4 +1208,29 @@ describe('force:apex:test:run', () => {
     .it('should set exit code as 0 for passing run', () => {
       expect(process.exitCode).to.eql(0);
     });
+
+
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests',
+      '--wait',
+      '20'
+    ])
+    .it('should pass and return human-readable results when the wait argument is passed', ctx => {
+      const result = ctx.stdout;
+      expect(result).to.not.be.empty;
+      expect(result).to.contain('Test Summary');
+      expect(result).to.contain('Test Results');
+      expect(result).to.not.contain('to retrieve test results');
+    });
 });
