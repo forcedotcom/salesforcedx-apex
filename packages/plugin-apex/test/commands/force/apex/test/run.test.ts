@@ -1209,8 +1209,6 @@ describe('force:apex:test:run', () => {
       expect(process.exitCode).to.eql(0);
     });
 
-
-
   test
     .withOrg({ username: TEST_USERNAME }, true)
     .loadConfig({
@@ -1226,11 +1224,37 @@ describe('force:apex:test:run', () => {
       '--wait',
       '20'
     ])
-    .it('should pass and return human-readable results when the wait argument is passed', ctx => {
+    .it('should return human-readable results when the wait argument is passed', ctx => {
       const result = ctx.stdout;
       expect(result).to.not.be.empty;
       expect(result).to.contain('Test Summary');
       expect(result).to.contain('Test Results');
       expect(result).to.not.contain('to retrieve test results');
+    });
+
+  test
+    .withOrg({ username: TEST_USERNAME }, true)
+    .loadConfig({
+      root: __dirname
+    })
+    .stub(process, 'cwd', () => projectPath)
+    .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
+    .stdout()
+    .command([
+      'force:apex:test:run',
+      '--tests',
+      'MyApexTests',
+      '--wait',
+      '20',
+      '--resultformat',
+      'json'
+    ])
+    .it('should return JSON results when the wait argument is passed and the resultformat is JSON', ctx => {
+      const result = ctx.stdout;
+      expect(result).to.not.be.empty;
+      expect(result).to.not.contain('to retrieve test results');
+
+      const obj = JSON.parse(result);
+      expect(obj).to.exist;
     });
 });
