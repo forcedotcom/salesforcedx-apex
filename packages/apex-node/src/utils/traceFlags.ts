@@ -10,7 +10,7 @@ import {
   DEFAULT_DEBUG_LEVEL_NAME,
   LOG_TIMER_LENGTH_MINUTES,
   LOG_TYPE
-} from '../logs/constants';
+} from '../logs';
 import {
   IdRecord,
   DataRecordResult,

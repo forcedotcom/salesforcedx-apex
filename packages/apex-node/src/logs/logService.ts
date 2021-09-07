@@ -38,15 +38,10 @@ const STREAMING_LOG_TOPIC = '/systemTopic/Logging';
 export class LogService {
   public readonly connection: Connection;
   private logger: Logger;
-  private org: Org;
   private logTailer?: (log: string) => void;
 
   constructor(connection: Connection) {
     this.connection = connection;
-  }
-
-  public setOrg(org: Org): void {
-    this.org = org;
   }
 
   public async getLogIds(options: ApexLogGetOptions): Promise<string[]> {
@@ -124,11 +119,11 @@ export class LogService {
     return response.records as LogRecord[];
   }
 
-  public async tail(tailer?: (log: string) => void): Promise<void> {
+  public async tail(org: Org, tailer?: (log: string) => void): Promise<void> {
     this.logger = await Logger.child('apexLogApi', { tag: 'tail' });
     this.logTailer = tailer;
     const options = new StreamingClient.DefaultOptions(
-      this.org,
+      org,
       STREAMING_LOG_TOPIC,
       this.streamingCallback.bind(this)
     );
