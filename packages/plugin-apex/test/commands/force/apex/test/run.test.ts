@@ -1217,20 +1217,17 @@ describe('force:apex:test:run', () => {
     .stub(process, 'cwd', () => projectPath)
     .stub(TestService.prototype, 'runTestAsynchronous', () => testRunSimple)
     .stdout()
-    .command([
-      'force:apex:test:run',
-      '--tests',
-      'MyApexTests',
-      '--wait',
-      '20'
-    ])
-    .it('should return human-readable results when the wait argument is passed', ctx => {
-      const result = ctx.stdout;
-      expect(result).to.not.be.empty;
-      expect(result).to.contain('Test Summary');
-      expect(result).to.contain('Test Results');
-      expect(result).to.not.contain('to retrieve test results');
-    });
+    .command(['force:apex:test:run', '--tests', 'MyApexTests', '--wait', '20'])
+    .it(
+      'should return human-readable results when the wait argument is passed',
+      ctx => {
+        const result = ctx.stdout;
+        expect(result).to.not.be.empty;
+        expect(result).to.contain('Test Summary');
+        expect(result).to.contain('Test Results');
+        expect(result).to.not.contain('to retrieve test results');
+      }
+    );
 
   test
     .withOrg({ username: TEST_USERNAME }, true)
@@ -1249,14 +1246,17 @@ describe('force:apex:test:run', () => {
       '--resultformat',
       'json'
     ])
-    .it('should return JSON result when the wait argument is passed and the resultformat is JSON', ctx => {
-      const result = ctx.stdout;
-      expect(result).to.not.be.empty;
-      expect(result).to.not.contain('to retrieve test results');
+    .it(
+      'should return JSON result when the wait argument is passed and the resultformat is JSON',
+      ctx => {
+        const result = ctx.stdout;
+        expect(result).to.not.be.empty;
+        expect(result).to.not.contain('to retrieve test results');
 
-      const obj = JSON.parse(result);
-      expect(obj).to.exist;
-    });
+        const obj = JSON.parse(result);
+        expect(obj).to.exist;
+      }
+    );
 
   test
     .withOrg({ username: TEST_USERNAME }, true)
@@ -1274,14 +1274,17 @@ describe('force:apex:test:run', () => {
       '20',
       '--json'
     ])
-    .it('should return successful JSON result when the wait argument is passed and the output format is set to JSON', ctx => {
-      const result = ctx.stdout;
-      expect(result).to.not.be.empty;
-      expect(result).to.not.contain('to retrieve test results');
+    .it(
+      'should return successful JSON result when the wait argument is passed and the output format is set to JSON',
+      ctx => {
+        const result = ctx.stdout;
+        expect(result).to.not.be.empty;
+        expect(result).to.not.contain('to retrieve test results');
 
-      const obj = JSON.parse(result);
-      expect(obj).to.exist;
+        const obj = JSON.parse(result);
+        expect(obj).to.exist;
 
-      expect(result).to.contain('"Outcome": "Pass"');
-    });
+        expect(result).to.contain('"Outcome": "Pass"');
+      }
+    );
 });

@@ -122,7 +122,10 @@ export default class Run extends SfdxCommand {
     }
 
     // W-9346875 - default to human-readable result format for --wait flag
-    if (this.flags.hasOwnProperty('wait') && !this.flags.hasOwnProperty('resultformat')) {
+    if (
+      this.flags.hasOwnProperty('wait') &&
+      !this.flags.hasOwnProperty('resultformat')
+    ) {
       this.flags.resultformat = 'human';
     }
 
