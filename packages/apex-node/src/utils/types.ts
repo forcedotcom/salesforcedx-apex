@@ -59,8 +59,7 @@ export type TraceFlagRecord = {
 
 export type DataRecordResult = {
   id?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  errors?: any[];
+  errors?: string[];
   success: boolean;
 };
 
