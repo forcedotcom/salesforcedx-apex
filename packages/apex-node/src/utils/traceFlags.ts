@@ -17,10 +17,10 @@ import {
   QueryRecords,
   TraceFlagRecord
 } from './types';
+import { MILLISECONDS_PER_MINUTE } from './dateUtil';
 import { escapeXml } from './authUtil';
 
 export class TraceFlags {
-  private readonly MILLISECONDS_PER_MINUTE = 60000;
   private connection: Connection;
 
   constructor(connection: Connection) {
@@ -163,14 +163,14 @@ export class TraceFlags {
     const currDate = Date.now();
     return (
       expirationDate.getTime() - currDate >
-      LOG_TIMER_LENGTH_MINUTES * this.MILLISECONDS_PER_MINUTE
+      LOG_TIMER_LENGTH_MINUTES * MILLISECONDS_PER_MINUTE
     );
   }
 
   private calculateExpirationDate(expirationDate: Date): Date {
     if (!this.isValidDateLength(expirationDate)) {
       expirationDate = new Date(
-        Date.now() + LOG_TIMER_LENGTH_MINUTES * this.MILLISECONDS_PER_MINUTE
+        Date.now() + LOG_TIMER_LENGTH_MINUTES * MILLISECONDS_PER_MINUTE
       );
     }
     return expirationDate;
