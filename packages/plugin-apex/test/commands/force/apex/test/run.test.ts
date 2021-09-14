@@ -125,10 +125,9 @@ describe('force:apex:test:run', () => {
     .it('should handle a tap format parsing error', ctx => {
       expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
       expect(ctx.stderr).to.contain(
-        messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testRunId' of undefined"
-        ])
+        messages.getMessage('testResultProcessErr', ['TypeError: '])
       );
+      expect(ctx.stderr).to.contain('testRunId');
     });
 
   test
@@ -176,10 +175,9 @@ describe('force:apex:test:run', () => {
     .it('should handle a junit format parsing error', ctx => {
       expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
       expect(ctx.stderr).to.contain(
-        messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testStartTime' of undefined"
-        ])
+        messages.getMessage('testResultProcessErr', ['TypeError: '])
       );
+      expect(ctx.stderr).to.contain('testStartTime');
     });
 
   test
