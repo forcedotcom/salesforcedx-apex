@@ -126,7 +126,7 @@ describe('force:apex:test:run', () => {
       expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
       expect(ctx.stderr).to.contain(
         messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testRunId' of undefined"
+          "TypeError: Cannot read properties of undefined (reading 'testRunId')"
         ])
       );
     });
@@ -177,7 +177,7 @@ describe('force:apex:test:run', () => {
       expect(ctx.stdout).to.contain('{\n  "tests": []\n}\n');
       expect(ctx.stderr).to.contain(
         messages.getMessage('testResultProcessErr', [
-          "TypeError: Cannot read property 'testStartTime' of undefined"
+          "TypeError: Cannot read properties of undefined (reading 'testStartTime')"
         ])
       );
     });
