@@ -302,7 +302,7 @@ export class AsyncTests {
       const recordSet: string[] = apexResultIds
         .slice(i, i + QUERY_RECORD_LIMIT)
         .map(id => `'${id}'`);
-      const query: string = util.format(apexTestResultQuery, recordSet.join());
+      const query: string = util.format(apexTestResultQuery, recordSet.join(','));
       queries.push(query);
     }
 

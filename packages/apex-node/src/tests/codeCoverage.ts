@@ -188,7 +188,7 @@ export class CodeCoverage {
         .slice(i, i + QUERY_RECORD_LIMIT)
         .map(id => `'${id}'`);
 
-      const query: string = util.format(selectQuery, recordSet.join());
+      const query: string = util.format(selectQuery, recordSet.join(','));
       queries.push(query);
     }
 
