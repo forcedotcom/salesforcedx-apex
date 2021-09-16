@@ -814,7 +814,7 @@ describe('Run Apex tests asynchronously', () => {
       );
     });
 
-    it('should split the queue into chunks of 640 records', async () => {
+    it('should split the queue into chunks of 500 records', async () => {
       const queryStart =
         'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
       const queryStartSeparatorCount = queryStart.split(',').length - 1;
@@ -827,7 +827,7 @@ describe('Run Apex tests asynchronously', () => {
       const queueItemRecord: ApexTestQueueItemRecord[] = [];
 
       let count = 0;
-      while (count < 2000) {
+      while (count < 1800) {
         const record = {
           Id: `7092M000000Vt94QAC-${count}`,
           Status: ApexTestQueueItemStatus.Completed,
@@ -840,7 +840,7 @@ describe('Run Apex tests asynchronously', () => {
 
       const testQueueItems5: ApexTestQueueItem = {
         done: true,
-        totalSize: 2000,
+        totalSize: 1800,
         records: queueItemRecord
       };
 
@@ -867,11 +867,11 @@ describe('Run Apex tests asynchronously', () => {
       const callFourIdCount =
         mockToolingQuery.getCall(3).args[0].split(',').length -
         queryStartSeparatorCount;
-      expect(callFourIdCount).to.equal(80);
+      expect(callFourIdCount).to.equal(300);
 
       expect(
         callOneIdCount + callTwoIdCount + callThreeIdCount + callFourIdCount
-      ).to.equal(2000);
+      ).to.equal(1800);
     });
 
     it('should format single query correctly', async () => {
