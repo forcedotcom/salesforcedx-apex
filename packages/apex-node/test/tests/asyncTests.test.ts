@@ -838,14 +838,14 @@ describe('Run Apex tests asynchronously', () => {
         count++;
       }
 
-      const testQueueItems5: ApexTestQueueItem = {
+      const testQueueItems: ApexTestQueueItem = {
         done: true,
         totalSize: 1800,
         records: queueItemRecord
       };
 
       const asyncTestSrv = new AsyncTests(mockConnection);
-      await asyncTestSrv.getAsyncTestResults(testQueueItems5);
+      await asyncTestSrv.getAsyncTestResults(testQueueItems);
 
       expect(mockToolingQuery.args.length).to.equal(4);
 
