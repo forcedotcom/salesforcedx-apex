@@ -6,44 +6,21 @@
  */
 import { expect, test } from '@salesforce/command/lib/test';
 import { LogService } from '@salesforce/apex-node';
-//import { StreamingClient } from '@salesforce/core';
+import Tail from '../../../../../src/commands/force/apex/log/tail';
+
+const logString =
+  '52.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG';
 
 describe('force:apex:log:tail', () => {
   test
     .withOrg({ username: 'test@username.com' }, true)
     .stub(LogService.prototype, 'prepareTraceFlag', () => undefined)
-    .stub(LogService.prototype, 'tail', () => '')
-    //TODO: this stubbing feels off - consider approach from asyncTests.test.ts
-    // .stub(
-    //   LogService.prototype,
-    //   'createStreamingClient',
-    //   () => new StreamingClient()
-    // )
-    // .stub(StreamingClient.prototype, 'handshake', undefined)
-    // .stub(StreamingClient.prototype, 'subscribe', undefined)
+    .stub(LogService.prototype, 'tail', () => Tail.prototype.logTailer('52.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG')
     .stdout()
     .command(['force:apex:log:tail'])
     .it('runs default command with default output', ctx => {
-      expect(ctx.stdout).to.contain('');
-      //'48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG'
-      //);
+      expect(ctx.stdout).to.contain(
+        '52.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG'
+      );
     });
-
-  // test
-  //   .withOrg({ username: 'test@username.com' }, true)
-  //   //.stub(LogService.prototype, 'prepareTraceFlag', () => undefined)
-  //   .stub(
-  //     LogService.prototype,
-  //     'createStreamingClient',
-  //     () => new StreamingClient()
-  //   )
-  //   .stub(StreamingClient.prototype, 'handshake', undefined)
-  //   .stub(StreamingClient.prototype, 'subscribe', undefined)
-  //   .stdout()
-  //   .command(['force:apex:log:tail'])
-  //   .it('does not prepare trace flag if skip specified', ctx => {
-  //     expect(ctx.stdout).to.contain(
-  //       '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG'
-  //     );
-  //   });
 });

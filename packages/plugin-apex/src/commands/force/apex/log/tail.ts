@@ -71,7 +71,7 @@ export default class Tail extends SfdxCommand {
     }
   }
 
-  private async logTailer(fullLog: string): Promise<void> {
+  public async logTailer(fullLog: string): Promise<void> {
     if (fullLog) {
       if (this.flags.json) {
         this.ux.logJson({
