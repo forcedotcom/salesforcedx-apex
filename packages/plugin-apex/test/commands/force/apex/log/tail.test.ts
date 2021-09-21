@@ -6,7 +6,7 @@
  */
 import { expect, test } from '@salesforce/command/lib/test';
 import { LogService } from '@salesforce/apex-node';
-import Tail from '../../../../../src/commands/force/apex/log/tail';
+import { StreamingClient } from '@salesforce/core';
 
 const logString =
   '52.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG';
@@ -14,8 +14,13 @@ const logString =
 describe('force:apex:log:tail', () => {
   test
     .withOrg({ username: 'test@username.com' }, true)
+    .stub(StreamingClient.prototype, 'handshake', async () => '')
+    .stub(StreamingClient.prototype, 'subscribe', async () => '')
     .stub(LogService.prototype, 'prepareTraceFlag', () => undefined)
-    .stub(LogService.prototype, 'tail', () => Tail.prototype.logTailer('52.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG')
+    .stub(LogService.prototype, 'getLogById', async () => logString)
+    .stub(LogService.prototype, 'createStreamingClient', async () => {
+      await LogService.prototype.logCallback({ sobject: { Id: 'xxxxxx' } });
+    })
     .stdout()
     .command(['force:apex:log:tail'])
     .it('runs default command with default output', ctx => {

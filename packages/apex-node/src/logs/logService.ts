@@ -126,24 +126,23 @@ export class LogService {
     this.logger.debug('Attempting StreamingClient handshake');
     await stream.handshake();
     this.logger.debug('Finished StreamingClient handshake');
-
     await stream.subscribe(async () => {
       this.logger.debug('Subscribing to ApexLog events');
     });
   }
 
-  private async createStreamingClient(org: Org): Promise<StreamingClient> {
+  public async createStreamingClient(org: Org): Promise<StreamingClient> {
     const options = new StreamingClient.DefaultOptions(
       org,
       STREAMING_LOG_TOPIC,
-      this.streamingCallback.bind(this)
+      this.streamingCallback
     );
     options.setSubscribeTimeout(Duration.minutes(LOG_TIMER_LENGTH_MINUTES));
 
     return await StreamingClient.create(options);
   }
 
-  private async logCallback(message: StreamingLogMessage): Promise<void> {
+  public async logCallback(message: StreamingLogMessage): Promise<void> {
     if (message.sobject && message.sobject.Id) {
       const log = await this.getLogById(message.sobject.Id);
       if (log && this.logTailer) {
