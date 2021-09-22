@@ -135,7 +135,7 @@ export class LogService {
     const options = new StreamingClient.DefaultOptions(
       org,
       STREAMING_LOG_TOPIC,
-      this.streamingCallback
+      this.streamingCallback.bind(this)
     );
     options.setSubscribeTimeout(Duration.minutes(LOG_TIMER_LENGTH_MINUTES));
 

@@ -60,7 +60,7 @@ export default class Tail extends SfdxCommand {
         const conn = this.org.getConnection();
         const logService = new LogService(conn);
 
-        if (!this.flags.skipTraceFlag) {
+        if (!this.flags.skiptraceflag) {
           await logService.prepareTraceFlag(this.flags.debuglevel);
         }
         await logService.tail(this.org, this.logTailer.bind(this));

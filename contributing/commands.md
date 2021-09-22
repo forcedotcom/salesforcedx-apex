@@ -115,6 +115,7 @@ OPTIONS
 
 DESCRIPTION
   Activates debug logging and displays logs in the terminal. You can also pipe the logs to a file.
+  To exit logging early, type Ctrl+C into the terminal.
 
 EXAMPLES
   $ sfdx force:apex:log:tail
