@@ -249,14 +249,6 @@
   dependencies:
     fancy-test "^1.4.3"
 
-"@salesforce/apex-node@0.2.8":
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/@salesforce/apex-node/-/apex-node-0.2.8.tgz#c948357a5817e674b7546f89d51b28f1b714c462"
-  integrity sha512-VyzmcVKxkbzGebzCrjmbEOAWB6kBhdcDBoBDPgzMxL8WJ+Qc3OpDJsoV08gIbUKOTpc8hNQTzWZ09mtAny/BJQ==
-  dependencies:
-    "@salesforce/core" "2.25.1"
-    faye "1.1.3"
-
 "@salesforce/bunyan@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@salesforce/bunyan/-/bunyan-2.0.0.tgz#8dbe377f2cf7d35348a23260416fee15adba5f97"

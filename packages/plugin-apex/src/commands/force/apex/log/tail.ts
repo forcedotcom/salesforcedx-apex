@@ -64,7 +64,7 @@ export default class Tail extends SfdxCommand {
           await logService.prepareTraceFlag(this.flags.debuglevel);
         }
         await logService.tail(this.org, this.logTailer.bind(this));
-        this.ux.log('Finished tailing logs');
+        this.ux.log(messages.getMessage('finishedTailing'));
       }
     } catch (e) {
       return Promise.reject(e);
@@ -79,10 +79,7 @@ export default class Tail extends SfdxCommand {
           result: fullLog
         });
       } else {
-        let output = fullLog;
-        if (this.flags.color) {
-          output = await colorizeLog(fullLog);
-        }
+        const output = this.flags.color ? await colorizeLog(fullLog) : fullLog;
         this.ux.log(output);
       }
     }

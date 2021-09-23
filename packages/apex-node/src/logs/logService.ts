@@ -123,11 +123,11 @@ export class LogService {
     this.logTailer = tailer;
     const stream = await this.createStreamingClient(org);
 
-    this.logger.debug('Attempting StreamingClient handshake');
+    this.logger.debug(nls.localize('startHandshake'));
     await stream.handshake();
-    this.logger.debug('Finished StreamingClient handshake');
+    this.logger.debug(nls.localize('finishHandshake'));
     await stream.subscribe(async () => {
-      this.logger.debug('Subscribing to ApexLog events');
+      this.logger.debug(nls.localize('subscribeStarted'));
     });
   }
 
