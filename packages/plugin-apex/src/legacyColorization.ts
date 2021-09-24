@@ -15,7 +15,7 @@ const DEFAULT_COLOR_MAP = {
   METHOD_: 'blue',
   SOQL_: 'yellow',
   USER_: 'green',
-  VARIABLE_: 'cyan'
+  VARIABLE_: 'darkcyan'
 };
 
 /**
