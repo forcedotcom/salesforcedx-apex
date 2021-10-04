@@ -1,0 +1,14 @@
+{
+  "orgName": "nutPluginUser",
+  "edition": "Developer",
+  "description": "nuts for plugin-apex",
+  "adminEmail": "admin@apex-nuts.org",
+  "features": [
+    "EnableSetPasswordInApi"
+  ],
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    }
+  }
+}

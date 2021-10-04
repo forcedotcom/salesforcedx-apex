@@ -14,21 +14,25 @@ describe('verifies all commands run successfully', () => {
   before(async () => {
     session = await TestSession.create({
       project: {
-        sourceDir: path.join('test', 'apexLibraryTests')
+        name: 'apexNut',
+        sourceDir: path.join('test', 'apexTestApp', 'TestApp')
       },
       setupCommands: [
-        `sfdx force:org:create -d 1 -s -f ${path.join(
-          'config',
-          'project-scratch-def.json'
-        )}`,
+        'sfdx force:org:create -d 1 -s -f config/project-scratch-def.json',
         'sfdx force:source:push'
       ]
     });
   });
 
   //tail
-  it('tails logs', () => {
+  /*it('tails logs', () => {
     execCmd('force:apex:log:tail', { ensureExitCode: 0 });
+  });
+  it('reports tests', () => {
+    execCmd('force:apex:test:report', { ensureExitCode: 0 });
+  });*/
+  it('runs tests', () => {
+    execCmd('force:apex:test:run', { ensureExitCode: 0 });
   });
   /*it('executes apex', () => {
     execCmd('force:apex:execute', { ensureExitCode: 0 });
@@ -47,7 +51,7 @@ describe('verifies all commands run successfully', () => {
   });*/
 
   after(async () => {
-    await session.zip(undefined, 'artifacts');
-    await session.clean();
+    await session?.zip(undefined, 'artifacts');
+    await session?.clean();
   });
 });
