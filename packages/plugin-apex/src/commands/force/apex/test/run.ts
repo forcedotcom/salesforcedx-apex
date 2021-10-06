@@ -345,7 +345,9 @@ export default class Run extends SfdxCommand {
     this.ux.log(reporter.format(result));
   }
 
-  private formatResultInJson(result: TestResult): CliJsonFormat {
+  private formatResultInJson(
+    result: TestResult | TestRunIdResult
+  ): CliJsonFormat | TestRunIdResult {
     try {
       const reporter = new JsonReporter();
       return result.hasOwnProperty('summary')
