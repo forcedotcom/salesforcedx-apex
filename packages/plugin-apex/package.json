@@ -40,7 +40,7 @@
     "typescript": "3.7.5"
   },
   "resolutions": {
-    "**/@salesforce/core": "2.28.0"
+    "**/@salesforce/core": ">=2.28.0"
   },
   "engines": {
     "node": ">=10.17.0"
@@ -106,7 +106,7 @@
     "manifest:generate": "yarn build && oclif-dev manifest",
     "postpack": "shx rm -f oclif.manifest.json",
     "test": "cross-env FORCE_COLOR=true mocha --recursive \"./test/**/*.test.ts\" --full-trace",
-    "test:nuts": "nyc mocha \"./test/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
+    "test:nuts": "nyc mocha \"./test/nuts/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
     "version": "oclif-dev readme && git add README.md",
     "test:deprecation-policy": "./bin/run snapshot:compare",
     "test:command-reference": "./bin/run commandreference:generate -p apex --erroronwarnings",
