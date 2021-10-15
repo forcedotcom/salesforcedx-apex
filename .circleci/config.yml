@@ -226,7 +226,6 @@ workflows:
   version: 2.1
   
   commit-workflow:
-    when: << pipeline.parameters.publish >>
     jobs:
       - slack/approval-notification:
           message: Pending Approval for Publish of Apex Plugin
