@@ -67,6 +67,8 @@ After the publish has succeeded, port the version bump in main back to develop.
 
 ### Steps
 
+1. Switch local branch to main: `git checkout main`.
+1. Perform a git pull: `git pull`.
 1. Grab the latest version bump commit from main: `git log -n 1 --pretty=format:"%h" main`.
 1. Create a new branch to port the change to develop: `git checkout -b portToDevelop-<versionNumber> develop`.
 1. Cherry-pick the latest commit number from step 1: `git cherry-pick <hash>`.
