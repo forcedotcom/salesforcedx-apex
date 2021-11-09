@@ -1,25 +1,43 @@
 /*
- * Copyright (c) 2020, salesforce.com, inc.
+ * Copyright (c) 2021, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { Connection } from '@salesforce/core';
+import {
+  Connection,
+  Logger,
+  Org,
+  StatusResult,
+  StreamingClient
+} from '@salesforce/core';
+import { Duration } from '@salesforce/kit';
+import { AnyJson } from '@salesforce/ts-types';
+import {
+  LOG_TIMER_LENGTH_MINUTES,
+  LISTENER_ABORTED_ERROR_NAME,
+  MAX_NUM_LOGS,
+  STREAMING_LOG_TOPIC
+} from './constants';
 import {
   ApexLogGetOptions,
   LogQueryResult,
   LogRecord,
   LogResult
 } from './types';
-import { createFile } from '../utils';
-import { nls } from '../i18n';
 import * as path from 'path';
-import { AnyJson } from '@salesforce/ts-types';
+import { nls } from '../i18n';
+import { createFile } from '../utils';
+import { TraceFlags } from '../utils/traceFlags';
 
-const MAX_NUM_LOGS = 25;
+type StreamingLogMessage = {
+  sobject: { Id: string };
+};
 
 export class LogService {
   public readonly connection: Connection;
+  private logger: Logger;
+  private logTailer?: (log: string) => void;
 
   constructor(connection: Connection) {
     this.connection = connection;
@@ -71,23 +89,83 @@ export class LogService {
     });
   }
 
+  public async getLogById(logId: string): Promise<LogResult> {
+    const baseUrl = this.connection.tooling._baseUrl();
+    const url = `${baseUrl}/sobjects/ApexLog/${logId}/Body`;
+    const response = (await this.connection.tooling.request(url)) as AnyJson;
+    return { log: response.toString() || '' };
+  }
+
   public async getLogRecords(numberOfLogs?: number): Promise<LogRecord[]> {
-    let query = 'Select Id, Application, DurationMilliseconds, Location, ';
-    query +=
-      'LogLength, LogUser.Name, Operation, Request, StartTime, Status from ApexLog Order By StartTime DESC';
+    let apexLogQuery = `
+        SELECT Id, Application, DurationMilliseconds, Location, LogLength, LogUser.Name,
+          Operation, Request, StartTime, Status
+        FROM ApexLog
+        ORDER BY StartTime DESC
+      `;
 
     if (typeof numberOfLogs === 'number') {
       if (numberOfLogs <= 0) {
         throw new Error(nls.localize('numLogsError'));
       }
       numberOfLogs = Math.min(numberOfLogs, MAX_NUM_LOGS);
-      query += ` LIMIT ${numberOfLogs}`;
+      apexLogQuery += ` LIMIT ${numberOfLogs}`;
     }
 
     const response = (await this.connection.tooling.query(
-      query
+      apexLogQuery
     )) as LogQueryResult;
     return response.records as LogRecord[];
+  }
+
+  public async tail(org: Org, tailer?: (log: string) => void): Promise<void> {
+    this.logger = await Logger.child('apexLogApi', { tag: 'tail' });
+    this.logTailer = tailer;
+    const stream = await this.createStreamingClient(org);
+
+    this.logger.debug(nls.localize('startHandshake'));
+    await stream.handshake();
+    this.logger.debug(nls.localize('finishHandshake'));
+    await stream.subscribe(async () => {
+      this.logger.debug(nls.localize('subscribeStarted'));
+    });
+  }
+
+  public async createStreamingClient(org: Org): Promise<StreamingClient> {
+    const options = new StreamingClient.DefaultOptions(
+      org,
+      STREAMING_LOG_TOPIC,
+      this.streamingCallback.bind(this)
+    );
+    options.setSubscribeTimeout(Duration.minutes(LOG_TIMER_LENGTH_MINUTES));
+
+    return await StreamingClient.create(options);
+  }
+
+  public async logCallback(message: StreamingLogMessage): Promise<void> {
+    if (message.sobject && message.sobject.Id) {
+      const log = await this.getLogById(message.sobject.Id);
+      if (log && this.logTailer) {
+        this.logTailer(log.log);
+      }
+    }
+  }
+
+  private streamingCallback(message: any): StatusResult {
+    if (message.errorName === LISTENER_ABORTED_ERROR_NAME) {
+      return { completed: true };
+    }
+
+    if (message.sobject?.Id) {
+      this.logCallback(message);
+    }
+
+    return { completed: false };
+  }
+
+  public async prepareTraceFlag(requestedDebugLevel: string): Promise<void> {
+    const flags = new TraceFlags(this.connection);
+    await flags.ensureTraceFlags(requestedDebugLevel);
   }
 
   public async toolingRequest(url: string): Promise<AnyJson> {
