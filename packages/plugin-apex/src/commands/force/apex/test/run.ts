@@ -56,7 +56,7 @@ export default class Run extends SfdxCommand {
     `$ sfdx force:apex:test:run -l RunLocalTests -d <path to outputdir> -u me@my.org`
   ];
 
-  protected static flagsConfig = {
+  public static readonly flagsConfig = {
     json: flags.boolean({
       description: messages.getMessage('jsonDescription')
     }),
@@ -221,7 +221,7 @@ export default class Run extends SfdxCommand {
       if (
         result.hasOwnProperty('summary') &&
         (result as TestResult).summary.outcome ===
-          ApexTestRunResultStatus.Failed
+        ApexTestRunResultStatus.Failed
       ) {
         process.exitCode = FAILURE_EXIT_CODE;
       }
