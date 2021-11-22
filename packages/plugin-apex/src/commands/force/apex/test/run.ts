@@ -221,7 +221,7 @@ export default class Run extends SfdxCommand {
       if (
         result.hasOwnProperty('summary') &&
         (result as TestResult).summary.outcome ===
-        ApexTestRunResultStatus.Failed
+          ApexTestRunResultStatus.Failed
       ) {
         process.exitCode = FAILURE_EXIT_CODE;
       }
