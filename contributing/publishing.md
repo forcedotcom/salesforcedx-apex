@@ -4,7 +4,7 @@ This is a guide for publishing the Apex Plugin & Library to npm. Most contributo
 
 ## Prerequisites
 
-1. Every merge to 'main' automatically gets published with a minor version upgrade. These release process detailed here applies only for the case where a major version or a patch version upgrade is required.
+1. Every merge to 'main' automatically gets published with a minor version upgrade. The release process detailed here applies only for the case where a major version or a patch version upgrade is required.
 1. Publisher has a valid CircleCI token for the forcedotcom organization. More info on CircleCI's doc [Create a Personal API token](https://circleci.com/docs/2.0/managing-api-tokens/#creating-a-personal-api-token).
 1. Publisher is a part of the GitHub team 'PDT'.
 
