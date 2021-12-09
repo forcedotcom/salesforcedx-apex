@@ -1,7 +1,7 @@
 {
   "name": "@salesforce/plugin-apex",
   "description": "Apex commands",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/salesforcedx-apex/issues",
   "dependencies": {
