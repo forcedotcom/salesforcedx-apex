@@ -19,6 +19,7 @@
     "@oclif/plugin-command-snapshot": "^1.0.0",
     "@oclif/plugin-help": "^2",
     "@oclif/test": "^1",
+    "@salesforce/cli-plugins-testkit": "salesforcecli/cli-plugins-testkit",
     "@salesforce/dev-config": "1.4.1",
     "@salesforce/plugin-command-reference": "1.1.0",
     "@salesforce/ts-sinon": "^1.1.2",
@@ -105,6 +106,7 @@
     "postpack": "shx rm -f oclif.manifest.json",
     "test": "cross-env FORCE_COLOR=true mocha --recursive \"./test/**/*.test.ts\" --full-trace",
     "version": "oclif-dev readme && git add README.md",
+    "test:nuts": "nyc mocha \"./test/nuts/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
     "test:deprecation-policy": "./bin/run snapshot:compare",
     "test:command-reference": "./bin/run commandreference:generate -p apex --erroronwarnings",
     "package": "npm pack"
