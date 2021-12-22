@@ -10,7 +10,7 @@ import { ApexTestResultOutcome, TestResult } from '../../src/tests/types';
 
 const testStartTime = '2020-11-09T18:02:50.000+0000';
 const date = new Date(testStartTime);
-const localStartTime = `${date.toDateString()} ${date.toLocaleTimeString()}`;
+const localStartTime = date.toISOString();
 
 export const coverageResult: TestResult = {
   summary: {
@@ -614,7 +614,7 @@ const codeCovProperties = `${missingValProperties}\n            <property name="
 
 const successTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000Z" hostname="https://na139.salesforce.com" tests="2" failures="0"  errors="0"  time="5.46">
+    <testsuite name="force.apex" timestamp="${testStartTime}" hostname="https://na139.salesforce.com" tests="2" failures="0"  errors="0"  time="5.46">
         <properties>
 %s
         </properties>
