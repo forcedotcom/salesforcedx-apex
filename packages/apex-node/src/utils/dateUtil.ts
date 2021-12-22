@@ -12,13 +12,12 @@ export function getCurrentTime(): number {
 }
 
 /**
- * Returns the formatted date and time given the milliseconds in numbers or UTC formatted string
+ * Returns ISO formatted date and time given the milliseconds in numbers or UTC formatted string
  * @param startTime start time in millisecond numbers or UTC format string
- * @returns date and time formatted for locale
+ * @returns date and time formatted to ISO format
  */
 export function formatStartTime(startTime: string | number): string {
-  const date = new Date(startTime);
-  return `${date.toDateString()} ${date.toLocaleTimeString()}`;
+  return new Date(startTime).toISOString();
 }
 
 export function msToSecond(timestamp: string | number): string {

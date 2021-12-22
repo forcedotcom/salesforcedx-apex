@@ -29,7 +29,7 @@ export class JUnitReporter {
     let output = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     output += `<testsuites>\n`;
     output += `${tab}<testsuite name="force.apex" `;
-    output += `timestamp="${new Date(summary.testStartTime).toISOString()}" `;
+    output += `timestamp="${summary.testStartTime}" `;
     output += `hostname="${summary.hostname}" `;
     output += `tests="${summary.testsRan}" `;
     output += `failures="${summary.failing}"  `;
