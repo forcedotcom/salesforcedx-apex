@@ -14,6 +14,7 @@ import {
   SyncTestResult,
   TestResult
 } from '../../src/tests/types';
+import { formatStartTime } from '../../src/utils';
 
 export const syncTestResultSimple: SyncTestResult = {
   apexLogId: '07Lxx00000cxy6YUAQ',
@@ -89,9 +90,8 @@ export const syncTestResultWithFailures: SyncTestResult = {
   totalTime: 87
 };
 
-export const testStartTime = '2020-11-09T18:02:50.000+0000';
-const date = new Date(testStartTime);
-const localStartTime = `${date.toDateString()} ${date.toLocaleTimeString()}`;
+export const testStartTime = '2020-11-09T18:02:50.000Z';
+export const localStartTime = formatStartTime(testStartTime);
 export const testRunId = '707xx0000AGQ3jbQQD';
 
 export const syncResult: TestResult = {

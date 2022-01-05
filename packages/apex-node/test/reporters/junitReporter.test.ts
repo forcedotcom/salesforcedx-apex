@@ -6,7 +6,7 @@
  */
 import { expect } from 'chai';
 import { JUnitReporter } from '../../src';
-import { formatStartTime, getCurrentTime } from '../../src/utils';
+import { formatStartTime } from '../../src/utils';
 import {
   testResults,
   junitResult,
@@ -65,13 +65,12 @@ describe('JUnit Reporter Tests', () => {
   });
 
   it('should format start time even when custom locale is used', () => {
-    // set process.env LC_ALL=en_CA
-    process.env.LC_ALL = 'en_CA';
+    process.env.LC_ALL = 'en_CA'; // TODO: clear/restore after test
     const date = new Date();
     const testStartTime = `${date.toDateString()} ${date.toLocaleTimeString()}`;
     // TODO: add regex check for presence of a.m / pm. in testStartTime
     // expect(new RegExp(/.*[a|p]\.m\.$/g).test(testStartTime)).to.equal(true);
-    const timestamp = new Date(testStartTime).toISOString();
+    const timestamp = formatStartTime(testStartTime);
     // Date value should be the same after formatting with locale
     // Ignore the loss of precision (last field of milliseconds) in formatting conversion
     expect(timestamp.split('.')[0]).to.equal(date.toISOString().split('.')[0]);

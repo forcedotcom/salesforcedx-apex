@@ -7,10 +7,7 @@
 
 import * as util from 'util';
 import { ApexTestResultOutcome, TestResult } from '../../src/tests/types';
-
-const testStartTime = '2020-11-09T18:02:50.000+0000';
-const date = new Date(testStartTime);
-const localStartTime = date.toISOString();
+import { testStartTime, localStartTime } from '../tests/testData';
 
 export const coverageResult: TestResult = {
   summary: {
@@ -522,7 +519,7 @@ export const testResults: TestResult = {
 
 export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000Z" hostname="https://na139.salesforce.com" tests="16" failures="4"  errors="0"  time="5.46">
+    <testsuite name="force.apex" timestamp="${testStartTime}" hostname="https://na139.salesforce.com" tests="16" failures="4"  errors="0"  time="5.46">
         <properties>
             <property name="failRate" value="13%"/>
             <property name="testsRan" value="16"/>
