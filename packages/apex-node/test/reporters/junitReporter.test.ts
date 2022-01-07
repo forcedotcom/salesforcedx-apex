@@ -78,7 +78,7 @@ describe('JUnit Reporter Tests', () => {
 
     let formatError = '';
     try {
-      formatStartTime(testLocaleStartTime); 
+      formatStartTime(testLocaleStartTime);
     } catch (error) {
       formatError = error;
     }
