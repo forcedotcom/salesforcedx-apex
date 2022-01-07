@@ -65,14 +65,23 @@ describe('JUnit Reporter Tests', () => {
   });
 
   it('should format start time even when custom locale is used', () => {
-    process.env.LC_ALL = 'en_CA'; // TODO: clear/restore after test
     const date = new Date();
-    const testStartTime = `${date.toDateString()} ${date.toLocaleTimeString()}`;
-    // TODO: add regex check for presence of a.m / pm. in testStartTime
-    // expect(new RegExp(/.*[a|p]\.m\.$/g).test(testStartTime)).to.equal(true);
-    const timestamp = formatStartTime(testStartTime);
-    // Date value should be the same after formatting with locale
-    // Ignore the loss of precision (last field of milliseconds) in formatting conversion
-    expect(timestamp.split('.')[0]).to.equal(date.toISOString().split('.')[0]);
+    // Use locale that produces time with a.m./p.m. that results in
+    // "Invalid time value" error with node v14 (Issue #213)
+    const testLocaleStartTime = date.toLocaleString('en-CA');
+    console.log('testLocaleStartTime', testLocaleStartTime);
+
+    // check for presence of a.m./p.m. in locale time
+    expect(new RegExp(`.*[a|p]\.m\.$`).test(testLocaleStartTime)).to.equal(
+      true
+    );
+
+    let formatError = '';
+    try {
+      formatStartTime(testLocaleStartTime); 
+    } catch (error) {
+      formatError = error;
+    }
+    expect(formatError.toString()).to.contain('Invalid time value');
   });
 });
