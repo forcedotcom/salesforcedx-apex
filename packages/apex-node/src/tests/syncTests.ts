@@ -116,7 +116,7 @@ export class SyncTests {
         apexTestClassIdSet
       );
 
-      if (perClassCovMap.entries.length > 0) {
+      if (perClassCovMap.size > 0) {
         result.tests.forEach(item => {
           const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
           const perClassCov = perClassCovMap.get(keyCodeCov);
