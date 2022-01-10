@@ -116,30 +116,34 @@ export class SyncTests {
         apexTestClassIdSet
       );
 
-      result.tests.forEach(item => {
-        const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
-        const perClassCov = perClassCovMap.get(keyCodeCov);
-        perClassCov.forEach(classCov =>
-          coveredApexClassIdSet.add(classCov.apexClassOrTriggerId)
-        );
-        item.perClassCoverage = perClassCov;
-      });
+      if (perClassCovMap.entries.length > 0) {
+        result.tests.forEach(item => {
+          const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
+          const perClassCov = perClassCovMap.get(keyCodeCov);
+          if (perClassCov) {
+            perClassCov.forEach(classCov =>
+              coveredApexClassIdSet.add(classCov.apexClassOrTriggerId)
+            );
+            item.perClassCoverage = perClassCov;
+          }
+        });
 
-      const {
-        codeCoverageResults,
-        totalLines,
-        coveredLines
-      } = await this.codecoverage.getAggregateCodeCoverage(
-        coveredApexClassIdSet
-      );
-      result.codecoverage = codeCoverageResults;
-      result.summary.totalLines = totalLines;
-      result.summary.coveredLines = coveredLines;
-      result.summary.testRunCoverage = calculatePercentage(
-        coveredLines,
-        totalLines
-      );
-      result.summary.orgWideCoverage = await this.codecoverage.getOrgWideCoverage();
+        const {
+          codeCoverageResults,
+          totalLines,
+          coveredLines
+        } = await this.codecoverage.getAggregateCodeCoverage(
+          coveredApexClassIdSet
+        );
+        result.codecoverage = codeCoverageResults;
+        result.summary.totalLines = totalLines;
+        result.summary.coveredLines = coveredLines;
+        result.summary.testRunCoverage = calculatePercentage(
+          coveredLines,
+          totalLines
+        );
+        result.summary.orgWideCoverage = await this.codecoverage.getOrgWideCoverage();
+      }
     }
     return result;
   }
