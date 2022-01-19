@@ -63,25 +63,4 @@ describe('JUnit Reporter Tests', () => {
     expect(result).to.eql(junitCodeCov);
     expect(result).to.contain('orgWideCoverage');
   });
-
-  it('should format start time even when custom locale is used', () => {
-    const date = new Date();
-    // Use locale that produces time with a.m./p.m. that results in
-    // "Invalid time value" error with node v14 (Issue #213)
-    const testLocaleStartTime = date.toLocaleString('en-CA');
-    console.log('testLocaleStartTime', testLocaleStartTime);
-
-    // check for presence of a.m./p.m. in locale time
-    expect(new RegExp(`.*[a|p]\.m\.$`).test(testLocaleStartTime)).to.equal(
-      true
-    );
-
-    let formatError = '';
-    try {
-      formatStartTime(testLocaleStartTime);
-    } catch (error) {
-      formatError = error;
-    }
-    expect(formatError.toString()).to.contain('Invalid time value');
-  });
 });
