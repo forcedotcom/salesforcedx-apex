@@ -236,9 +236,13 @@ workflows:
             branches:
               only: main
       - node-latest
+          context: IEAT_keys
       - node-12
+          context: IEAT_keys
       - node-14
+          context: IEAT_keys
       - cache:
+          context: IEAT_keys
           filters:
             tags:
               only: /^v.*/
