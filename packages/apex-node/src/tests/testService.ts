@@ -185,6 +185,7 @@ export class TestService {
    * Asynchronous Test Runs
    * @param options test options
    * @param codeCoverage should report code coverage
+   * @param exitOnTestRunId should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
    */
