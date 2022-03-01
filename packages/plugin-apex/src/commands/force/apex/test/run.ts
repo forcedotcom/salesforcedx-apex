@@ -174,7 +174,7 @@ export default class Run extends SfdxCommand {
       result = await testService.runTestAsynchronous(
         payload,
         this.flags.codecoverage,
-        this.shouldExitEarly(),
+        this.shouldImmediatelyReturn(),
         reporter,
         this.cancellationTokenSource.token
       );
@@ -358,19 +358,21 @@ export default class Run extends SfdxCommand {
     return hint;
   }
 
-  /** Handles special exceptions where we don't want to return early
-   * with the testRunId.*/
-  private shouldExitEarly(): boolean {
+  /**
+   * Handles special exceptions where we don't want to return early
+   * with the testRunId.
+   * */
+  private shouldImmediatelyReturn(): boolean {
     if (this.flags.resultformat !== undefined) {
       return false;
     }
 
-    //W-9346875
+    //when the user has explictly asked to wait for results, but didn't give a format
     if (this.flags.wait) {
       return false;
     }
 
-    //W-10340992
+    //historical expectation to wait for results from a synchronous test run
     if (this.flags.synchronous && !this.flags.json) {
       return false;
     }
