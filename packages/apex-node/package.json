@@ -1,12 +1,12 @@
 {
   "name": "@salesforce/apex-node",
   "description": "Salesforce js library for Apex",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/salesforcedx-apex/issues",
   "main": "lib/src/index.js",
   "dependencies": {
-    "@salesforce/core": "2.33.1",
+    "@salesforce/core": "^2.35.0",
     "faye": "1.4.0"
   },
   "devDependencies": {
