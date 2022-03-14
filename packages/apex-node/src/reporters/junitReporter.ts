@@ -82,7 +82,8 @@ export class JUnitReporter {
         testCase.outcome === ApexTestResultOutcome.Fail ||
         testCase.outcome === ApexTestResultOutcome.CompileFail
       ) {
-        junitTests += `${tab}${tab}${tab}<failure message="${testCase.message}">`;
+        let message = this.xmlEscape(testCase.message);
+        junitTests += `${tab}${tab}${tab}<failure message="${message}">`;
         if (testCase.stackTrace) {
           junitTests += `<![CDATA[${testCase.stackTrace}]]>`;
         }
@@ -92,6 +93,14 @@ export class JUnitReporter {
       junitTests += `${tab}${tab}</testcase>\n`;
     }
     return junitTests;
+  }
+
+  private xmlEscape(value: string): string {
+    return value.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&apos;');
   }
 
   private isEmpty(value: string | number): boolean {
