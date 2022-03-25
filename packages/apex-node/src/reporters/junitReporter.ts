@@ -72,8 +72,9 @@ export class JUnitReporter {
     let junitTests = '';
 
     for (const testCase of tests) {
+      let methodName = this.xmlEscape(testCase.methodName);
       junitTests += `${tab}${tab}<testcase name="${
-        testCase.methodName
+        methodName
       }" classname="${testCase.apexClass.fullName}" time="${msToSecond(
         testCase.runTime
       )}">\n`;
