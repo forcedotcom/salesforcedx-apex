@@ -72,7 +72,7 @@ export class JUnitReporter {
     let junitTests = '';
 
     for (const testCase of tests) {
-      let methodName = this.xmlEscape(testCase.methodName);
+      const methodName = this.xmlEscape(testCase.methodName);
       junitTests += `${tab}${tab}<testcase name="${
         methodName
       }" classname="${testCase.apexClass.fullName}" time="${msToSecond(
@@ -83,7 +83,7 @@ export class JUnitReporter {
         testCase.outcome === ApexTestResultOutcome.Fail ||
         testCase.outcome === ApexTestResultOutcome.CompileFail
       ) {
-        let message = this.xmlEscape(testCase.message);
+        const message = this.xmlEscape(testCase.message);
         junitTests += `${tab}${tab}${tab}<failure message="${message}">`;
         if (testCase.stackTrace) {
           junitTests += `<![CDATA[${testCase.stackTrace}]]>`;
@@ -98,10 +98,10 @@ export class JUnitReporter {
 
   private xmlEscape(value: string): string {
     return value.replace(/&/g, '&amp;')
-               .replace(/</g, '&lt;')
-               .replace(/>/g, '&gt;')
-               .replace(/"/g, '&quot;')
-               .replace(/'/g, '&apos;');
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 
   private isEmpty(value: string | number): boolean {
