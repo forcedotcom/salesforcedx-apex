@@ -445,7 +445,8 @@ export const testResults: TestResult = {
       id: '07M3t000003bQwREAU',
       queueItemId: '7093t000000c0eiAAA',
       stackTrace: null,
-      message: 'Weird characters <>&"\'\r\n\r\nSurrounded by newlines.\r\n  and whitespace.\r\n\r\n',
+      message:
+        'Weird characters <>&"\'\r\n\r\nSurrounded by newlines.\r\n  and whitespace.\r\n\r\n',
       asyncApexJobId: '7073t000061uwZIAAY',
       methodName: 'testGetCallout',
       outcome: ApexTestResultOutcome.Fail,

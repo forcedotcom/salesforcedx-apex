@@ -73,11 +73,9 @@ export class JUnitReporter {
 
     for (const testCase of tests) {
       const methodName = this.xmlEscape(testCase.methodName);
-      junitTests += `${tab}${tab}<testcase name="${
-        methodName
-      }" classname="${testCase.apexClass.fullName}" time="${msToSecond(
-        testCase.runTime
-      )}">\n`;
+      junitTests += `${tab}${tab}<testcase name="${methodName}" classname="${
+        testCase.apexClass.fullName
+      }" time="${msToSecond(testCase.runTime)}">\n`;
 
       if (
         testCase.outcome === ApexTestResultOutcome.Fail ||
@@ -97,7 +95,8 @@ export class JUnitReporter {
   }
 
   private xmlEscape(value: string): string {
-    return value.replace(/&/g, '&amp;')
+    return value
+      .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
