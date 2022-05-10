@@ -41,7 +41,7 @@
     "**/@salesforce/core": "^2.35.0"
   },
   "engines": {
-    "node": ">=10.17.0"
+    "node": ">=14.0.0"
   },
   "files": [
     "yarn.lock",
