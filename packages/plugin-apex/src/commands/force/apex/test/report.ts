@@ -15,17 +15,8 @@ import {
 import { flags, SfdxCommand } from '@salesforce/command';
 import { Messages, SfdxError } from '@salesforce/core';
 import { AnyJson } from '@salesforce/ts-types';
-import {
-  JsonReporter,
-  CliJsonFormat,
-  buildOutputDirConfig
-} from '../../../../reporters';
-import {
-  buildDescription,
-  logLevels,
-  resultFormat,
-  FAILURE_EXIT_CODE
-} from '../../../../utils';
+import { JsonReporter, CliJsonFormat, buildOutputDirConfig } from '../../../../reporters';
+import { buildDescription, logLevels, resultFormat, FAILURE_EXIT_CODE } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
 const messages = Messages.loadMessages('@salesforce/plugin-apex', 'report');
@@ -91,9 +82,7 @@ export default class Report extends SfdxCommand {
 
     // add listener for errors
     process.on('uncaughtException', err => {
-      const formattedErr = this.formatError(
-        new SfdxError(messages.getMessage('apexLibErr', [err.message]))
-      );
+      const formattedErr = this.formatError(new SfdxError(messages.getMessage('apexLibErr', [err.message])));
       this.ux.error(...formattedErr);
       process.exit();
     });
@@ -101,10 +90,7 @@ export default class Report extends SfdxCommand {
     // org is guaranteed by requiresUsername field
     const conn = this.org!.getConnection();
     const testService = new TestService(conn);
-    const result = await testService.reportAsyncResults(
-      this.flags.testrunid,
-      this.flags.codecoverage
-    );
+    const result = await testService.reportAsyncResults(this.flags.testrunid, this.flags.codecoverage);
     const jsonOutput = this.formatResultInJson(result);
 
     if (this.flags.outputdir) {
@@ -116,11 +102,7 @@ export default class Report extends SfdxCommand {
         true
       );
 
-      await testService.writeResultFiles(
-        result,
-        outputDirConfig,
-        this.flags.codecoverage
-      );
+      await testService.writeResultFiles(result, outputDirConfig, this.flags.codecoverage);
     }
 
     try {
@@ -148,17 +130,13 @@ export default class Report extends SfdxCommand {
       }
     } catch (e) {
       this.ux.logJson(jsonOutput);
-      const msg = messages.getMessage('testResultProcessErr', [e]);
+      const msg = messages.getMessage('testResultProcessErr', [(e as Error).message]);
       this.ux.error(msg);
     }
     return jsonOutput as AnyJson;
   }
 
-  private logHuman(
-    result: TestResult,
-    detailedCoverage: boolean,
-    outputDir: string
-  ): void {
+  private logHuman(result: TestResult, detailedCoverage: boolean, outputDir: string): void {
     if (outputDir) {
       this.ux.log(messages.getMessage('outputDirHint', [outputDir]));
     }
@@ -184,7 +162,7 @@ export default class Report extends SfdxCommand {
       return reporter.format(result);
     } catch (e) {
       this.ux.logJson(result);
-      const msg = messages.getMessage('testResultProcessErr', [e]);
+      const msg = messages.getMessage('testResultProcessErr', [(e as Error).message]);
       this.ux.error(msg);
       throw e;
     }

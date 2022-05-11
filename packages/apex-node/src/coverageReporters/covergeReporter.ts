@@ -30,17 +30,39 @@ const endOfSource = (source: string): number => {
   return 0;
 };
 
-interface coverageReporterOptions {
+export interface CoverageReporterOptions {
   reportFormats?: reports.ReportType[];
-  reportOptions?: reports.ReportOptions;
+  reportOptions?: Partial<reports.ReportOptions>;
   watermark?: libReport.Watermarks;
 }
 
-const defaultWatermarks: libReport.Watermarks = {
+export const DefaultWatermarks: libReport.Watermarks = {
   statements: [50, 75],
   functions: [50, 75],
   branches: [50, 75],
   lines: [50, 75]
+};
+
+export const DefaultReportOptions: reports.ReportOptions = {
+  clover: { file: 'clover.xml', projectRoot: '.' },
+  cobertura: { file: 'cobertura.xml', projectRoot: '.' },
+  'html-spa': {
+    verbose: false,
+    skipEmpty: false,
+    subdir: 'coverage',
+    linkMapper: undefined,
+    metricsToShow: ['lines', 'statements', 'branches']
+  },
+  html: { verbose: false, skipEmpty: false, subdir: 'coverage', linkMapper: undefined },
+  json: { file: 'coverage.json' },
+  'json-summary': { file: 'coverage-summary.json' },
+  lcov: { file: 'lcov.info', projectRoot: '.' },
+  lcovonly: { file: 'lcovonly.info', projectRoot: '.' },
+  none: {} as never,
+  teamcity: { file: 'teamcity.txt', blockName: 'coverage' },
+  text: { file: 'text.txt', maxCols: 80, skipEmpty: false, skipFull: false },
+  'text-lcov': { projectRoot: '.' },
+  'text-summary': { file: 'text-summary.txt' }
 };
 
 export class CoverageReporter {
@@ -49,7 +71,7 @@ export class CoverageReporter {
     private readonly coverage: ApexCodeCoverageAggregate | ApexCodeCoverage,
     private readonly reportDir: string,
     private readonly sourceDir: string,
-    private readonly options?: coverageReporterOptions
+    private readonly options?: CoverageReporterOptions
   ) {
     this.coverageMap = this.buildCoverageMap();
   }
@@ -58,35 +80,42 @@ export class CoverageReporter {
     const context = libReport.createContext({
       dir: this.reportDir,
       defaultSummarizer: 'nested',
-      watermarks: this.options?.watermark || defaultWatermarks,
+      watermarks: this.options?.watermark || DefaultWatermarks,
       coverageMap: this.coverageMap
     });
     const formats = this.options?.reportFormats || ['text-summary'];
-    this.options?.reportFormats.forEach(format => {
-      const report = reports.create(format, this.options?.reportOptions[format]);
+    formats.forEach(format => {
+      const report = reports.create(format, this.options?.reportOptions[format] || DefaultReportOptions[format]);
       report.execute(context);
     });
   }
 
-  private buildCoverageMap() {
+  private buildCoverageMap(): libCoverage.CoverageMap {
     const coverageMap = libCoverage.createCoverageMap();
     this.coverage.records.forEach((record: ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord) => {
       const fileCoverageData: libCoverage.FileCoverageData = {} as libCoverage.FileCoverageData;
-      const classOrTriggerSuffix = record.ApexClassOrTrigger.Id.startsWith('01p') ? '.cls' : '.trigger';
       fileCoverageData.fnMap = {};
       fileCoverageData.branchMap = {};
       fileCoverageData.path = path.join(this.sourceDir, this.findFullPathToClass(record.ApexClassOrTrigger.Name));
-      fileCoverageData.s = record.Coverage.coveredLines
-        .map(line => [new Number(line).toString(10), 1])
+      fileCoverageData.f = {};
+      fileCoverageData.b = {};
+      fileCoverageData.s = [
+        ...record.Coverage.coveredLines.map(line => [line, 1]),
+        ...record.Coverage.uncoveredLines.map(line => [line, 0])
+      ]
+        .map(([line, covered]) => [Number(line).toString(10), covered])
         .reduce((acc, [line, value]) => {
           return Object.assign(acc, { [line]: value });
         }, {});
-      // what happens if source file cannot be read?
-      const sourceLines = fs.readFileSync(fileCoverageData.path, 'utf8').split('\n');
+      let sourceLines: string[] = [];
+      try {
+        sourceLines = fs.readFileSync(fileCoverageData.path, 'utf8').split('\n');
+      } catch {
+        // file not found
+      }
       fileCoverageData.statementMap = [...record.Coverage.coveredLines, ...record.Coverage.uncoveredLines]
         .sort()
         .map(line => {
-          const startColumn = sourceLines[line - 1] || 0;
           const statement: libCoverage.Range = {
             start: {
               line,
@@ -98,10 +127,10 @@ export class CoverageReporter {
             }
           };
 
-          return [new Number(line).toString(10), statement];
+          return [Number(line).toString(10), statement];
         })
         .reduce((acc, [line, value]) => {
-          return Object.assign(acc, { [new Number(line).toString()]: value });
+          return Object.assign(acc, { [Number(line).toString()]: value });
         }, {});
       coverageMap.addFileCoverage(fileCoverageData);
     });
