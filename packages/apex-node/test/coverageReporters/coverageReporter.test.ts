@@ -18,12 +18,14 @@ const multipleCoverageAggregate = {
     {
       attributes: {
         type: 'ApexCodeCoverageAggregate',
-        url: '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7kAAA'
+        url:
+          '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7kAAA'
       },
       ApexClassOrTrigger: {
         attributes: {
           type: 'Name',
-          url: '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm6AAF'
+          url:
+            '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm6AAF'
         },
         Id: '01p1100000TqGm6AAF',
         Name: 'PagedResult'
@@ -38,12 +40,14 @@ const multipleCoverageAggregate = {
     {
       attributes: {
         type: 'ApexCodeCoverageAggregate',
-        url: '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7lAAA'
+        url:
+          '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7lAAA'
       },
       ApexClassOrTrigger: {
         attributes: {
           type: 'Name',
-          url: '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm8AAF'
+          url:
+            '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm8AAF'
         },
         Id: '01p1100000TqGm8AAF',
         Name: 'SampleDataController'
@@ -93,12 +97,14 @@ const multipleCoverageAggregate = {
     {
       attributes: {
         type: 'ApexCodeCoverageAggregate',
-        url: '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7mAAA'
+        url:
+          '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7mAAA'
       },
       ApexClassOrTrigger: {
         attributes: {
           type: 'Name',
-          url: '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm7AAF'
+          url:
+            '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm7AAF'
         },
         Id: '01p1100000TqGm7AAF',
         Name: 'PropertyController'
@@ -155,12 +161,14 @@ const multipleCoverageAggregate = {
     {
       attributes: {
         type: 'ApexCodeCoverageAggregate',
-        url: '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7nAAA'
+        url:
+          '/services/data/v54.0/tooling/sobjects/ApexCodeCoverageAggregate/71511000006fb7nAAA'
       },
       ApexClassOrTrigger: {
         attributes: {
           type: 'Name',
-          url: '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm4AAF'
+          url:
+            '/services/data/v54.0/tooling/sobjects/ApexClass/01p1100000TqGm4AAF'
         },
         Id: '01p1100000TqGm4AAF',
         Name: 'GeocodingService'
@@ -216,7 +224,10 @@ describe('coverageReports', async () => {
   let testResultsDir: string;
 
   before(() => {
-    testResultsDir = path.join(tmpdir(), crypto.randomBytes(10).toString('hex'));
+    testResultsDir = path.join(
+      tmpdir(),
+      crypto.randomBytes(10).toString('hex')
+    );
   });
   after(async () => {
     try {
@@ -233,7 +244,8 @@ describe('coverageReports', async () => {
         reportOptions: {
           clover: {
             file: 'clover.xml',
-            projectRoot: 'packages/apex-node/test/coverageReporters/testResources'
+            projectRoot:
+              'packages/apex-node/test/coverageReporters/testResources'
           }
         }
       }

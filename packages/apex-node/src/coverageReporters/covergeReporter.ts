@@ -53,7 +53,12 @@ export const DefaultReportOptions: reports.ReportOptions = {
     linkMapper: undefined,
     metricsToShow: ['lines', 'statements', 'branches']
   },
-  html: { verbose: false, skipEmpty: false, subdir: 'coverage', linkMapper: undefined },
+  html: {
+    verbose: false,
+    skipEmpty: false,
+    subdir: 'coverage',
+    linkMapper: undefined
+  },
   json: { file: 'coverage.json' },
   'json-summary': { file: 'coverage-summary.json' },
   lcov: { file: 'lcov.info', projectRoot: '.' },
@@ -85,55 +90,68 @@ export class CoverageReporter {
     });
     const formats = this.options?.reportFormats || ['text-summary'];
     formats.forEach(format => {
-      const report = reports.create(format, this.options?.reportOptions[format] || DefaultReportOptions[format]);
+      const report = reports.create(
+        format,
+        this.options?.reportOptions[format] || DefaultReportOptions[format]
+      );
       report.execute(context);
     });
   }
 
   private buildCoverageMap(): libCoverage.CoverageMap {
     const coverageMap = libCoverage.createCoverageMap();
-    this.coverage.records.forEach((record: ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord) => {
-      const fileCoverageData: libCoverage.FileCoverageData = {} as libCoverage.FileCoverageData;
-      fileCoverageData.fnMap = {};
-      fileCoverageData.branchMap = {};
-      fileCoverageData.path = path.join(this.sourceDir, this.findFullPathToClass(record.ApexClassOrTrigger.Name));
-      fileCoverageData.f = {};
-      fileCoverageData.b = {};
-      fileCoverageData.s = [
-        ...record.Coverage.coveredLines.map(line => [line, 1]),
-        ...record.Coverage.uncoveredLines.map(line => [line, 0])
-      ]
-        .map(([line, covered]) => [Number(line).toString(10), covered])
-        .reduce((acc, [line, value]) => {
-          return Object.assign(acc, { [line]: value });
-        }, {});
-      let sourceLines: string[] = [];
-      try {
-        sourceLines = fs.readFileSync(fileCoverageData.path, 'utf8').split('\n');
-      } catch {
-        // file not found
-      }
-      fileCoverageData.statementMap = [...record.Coverage.coveredLines, ...record.Coverage.uncoveredLines]
-        .sort()
-        .map(line => {
-          const statement: libCoverage.Range = {
-            start: {
-              line,
-              column: startOfSource(sourceLines[line - 1])
-            },
-            end: {
-              line,
-              column: endOfSource(sourceLines[line - 1])
-            }
-          };
+    this.coverage.records.forEach(
+      (record: ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord) => {
+        const fileCoverageData: libCoverage.FileCoverageData = {} as libCoverage.FileCoverageData;
+        fileCoverageData.fnMap = {};
+        fileCoverageData.branchMap = {};
+        fileCoverageData.path = path.join(
+          this.sourceDir,
+          this.findFullPathToClass(record.ApexClassOrTrigger.Name)
+        );
+        fileCoverageData.f = {};
+        fileCoverageData.b = {};
+        fileCoverageData.s = [
+          ...record.Coverage.coveredLines.map(line => [line, 1]),
+          ...record.Coverage.uncoveredLines.map(line => [line, 0])
+        ]
+          .map(([line, covered]) => [Number(line).toString(10), covered])
+          .reduce((acc, [line, value]) => {
+            return Object.assign(acc, { [line]: value });
+          }, {});
+        let sourceLines: string[] = [];
+        try {
+          sourceLines = fs
+            .readFileSync(fileCoverageData.path, 'utf8')
+            .split('\n');
+        } catch {
+          // file not found
+        }
+        fileCoverageData.statementMap = [
+          ...record.Coverage.coveredLines,
+          ...record.Coverage.uncoveredLines
+        ]
+          .sort()
+          .map(line => {
+            const statement: libCoverage.Range = {
+              start: {
+                line,
+                column: startOfSource(sourceLines[line - 1])
+              },
+              end: {
+                line,
+                column: endOfSource(sourceLines[line - 1])
+              }
+            };
 
-          return [Number(line).toString(10), statement];
-        })
-        .reduce((acc, [line, value]) => {
-          return Object.assign(acc, { [Number(line).toString()]: value });
-        }, {});
-      coverageMap.addFileCoverage(fileCoverageData);
-    });
+            return [Number(line).toString(10), statement];
+          })
+          .reduce((acc, [line, value]) => {
+            return Object.assign(acc, { [Number(line).toString()]: value });
+          }, {});
+        coverageMap.addFileCoverage(fileCoverageData);
+      }
+    );
     return coverageMap;
   }
 

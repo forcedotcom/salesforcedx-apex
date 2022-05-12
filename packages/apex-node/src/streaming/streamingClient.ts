@@ -7,11 +7,20 @@
 
 import { Client as FayeClient } from 'faye';
 import { Connection } from '@salesforce/core';
-import { RetreiveResultsInterval, StreamMessage, StreamingErrors, TestResultMessage } from './types';
+import {
+  RetreiveResultsInterval,
+  StreamMessage,
+  StreamingErrors,
+  TestResultMessage
+} from './types';
 import { Progress } from '../common';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
-import { ApexTestProgressValue, ApexTestQueueItem, ApexTestQueueItemStatus } from '../tests/types';
+import {
+  ApexTestProgressValue,
+  ApexTestQueueItem,
+  ApexTestQueueItemStatus
+} from '../tests/types';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
@@ -45,11 +54,18 @@ export class StreamingClient {
   }
 
   public getStreamURL(instanceUrl: string): string {
-    const urlElements = [this.removeTrailingSlashURL(instanceUrl), 'cometd', this.apiVersion];
+    const urlElements = [
+      this.removeTrailingSlashURL(instanceUrl),
+      'cometd',
+      this.apiVersion
+    ];
     return urlElements.join('/');
   }
 
-  public constructor(connection: Connection, progress?: Progress<ApexTestProgressValue>) {
+  public constructor(
+    connection: Connection,
+    progress?: Progress<ApexTestProgressValue>
+  ) {
     this.conn = connection;
     this.progress = progress;
     const streamUrl = this.getStreamURL(this.conn.instanceUrl);
@@ -74,12 +90,17 @@ export class StreamingClient {
     });
 
     this.client.addExtension({
-      incoming: async (message: StreamMessage, callback: (message: StreamMessage) => void) => {
+      incoming: async (
+        message: StreamMessage,
+        callback: (message: StreamMessage) => void
+      ) => {
         if (message && message.error) {
           // throw errors on handshake errors
           if (message.channel === '/meta/handshake') {
             this.disconnect();
-            throw new Error(nls.localize('streamingHandshakeFail', message.error));
+            throw new Error(
+              nls.localize('streamingHandshakeFail', message.error)
+            );
           }
 
           // refresh auth on 401 errors
@@ -138,22 +159,28 @@ export class StreamingClient {
 
   public hasDisconnected = false;
 
-  public async subscribe(action?: () => Promise<string>, testRunId?: string): Promise<AsyncTestRun> {
+  public async subscribe(
+    action?: () => Promise<string>,
+    testRunId?: string
+  ): Promise<AsyncTestRun> {
     return new Promise((subscriptionResolve, subscriptionReject) => {
       let intervalId: NodeJS.Timeout;
       try {
-        this.client.subscribe(TEST_RESULT_CHANNEL, async (message: TestResultMessage) => {
-          const result = await this.handler(message);
+        this.client.subscribe(
+          TEST_RESULT_CHANNEL,
+          async (message: TestResultMessage) => {
+            const result = await this.handler(message);
 
-          if (result) {
-            this.disconnect();
-            clearInterval(intervalId);
-            subscriptionResolve({
-              runId: this.subscribedTestRunId,
-              queueItem: result
-            });
+            if (result) {
+              this.disconnect();
+              clearInterval(intervalId);
+              subscriptionResolve({
+                runId: this.subscribedTestRunId,
+                queueItem: result
+              });
+            }
           }
-        });
+        );
 
         if (action) {
           action()
@@ -219,7 +246,10 @@ export class StreamingClient {
     return true;
   }
 
-  public async handler(message?: TestResultMessage, runId?: string): Promise<ApexTestQueueItem> {
+  public async handler(
+    message?: TestResultMessage,
+    runId?: string
+  ): Promise<ApexTestQueueItem> {
     const testRunId = runId || message.sobject.Id;
     if (!this.isValidTestRunID(testRunId, this.subscribedTestRunId)) {
       return null;
@@ -239,9 +269,13 @@ export class StreamingClient {
     return null;
   }
 
-  private async getCompletedTestRun(testRunId: string): Promise<ApexTestQueueItem> {
+  private async getCompletedTestRun(
+    testRunId: string
+  ): Promise<ApexTestQueueItem> {
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
-    const result = (await this.conn.tooling.autoFetchQuery(queryApexTestQueueItem)) as ApexTestQueueItem;
+    const result = (await this.conn.tooling.autoFetchQuery(
+      queryApexTestQueueItem
+    )) as ApexTestQueueItem;
 
     if (result.records.length === 0) {
       throw new Error(nls.localize('noTestQueueResults', testRunId));
