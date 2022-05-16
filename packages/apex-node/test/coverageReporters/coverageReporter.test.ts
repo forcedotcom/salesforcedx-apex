@@ -252,11 +252,10 @@ describe('coverageReports', async () => {
     );
     coverageReport.generateReports();
     const cloverFile = path.join(testResultsDir, 'clover.xml');
-    const htmlFile = path.join(testResultsDir, 'coverage', 'index.html');
+    const htmlFile = path.join(testResultsDir, 'html', 'index.html');
     const cloverFileStat = await fs.promises.stat(cloverFile);
     const htmlFileStat = await fs.promises.stat(htmlFile);
     expect(cloverFileStat.isFile()).to.be.true;
-    expect(htmlFileStat.isFile()).to.be.true;
     expect(htmlFileStat.isFile()).to.be.true;
   });
 });
