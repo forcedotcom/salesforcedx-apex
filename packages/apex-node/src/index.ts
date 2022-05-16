@@ -14,6 +14,15 @@ export {
 export { LogService, ApexLogGetOptions, LogRecord, LogResult } from './logs';
 export { JUnitReporter, TapReporter, HumanReporter } from './reporters';
 export {
+  CoverageReporterOptions,
+  CoverageReporter,
+  CoverageReportFormats,
+  DefaultReportOptions,
+  DefaultWatermarks
+} from './coverageReporters';
+export {
+  ApexCodeCoverageAggregate,
+  ApexCodeCoverageAggregateRecord,
   ApexTestProgressValue,
   ApexTestResultData,
   ApexTestResultOutcome,

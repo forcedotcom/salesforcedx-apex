@@ -250,7 +250,7 @@ describe('coverageReports', async () => {
         }
       }
     );
-    await coverageReport.generateReports();
+    coverageReport.generateReports();
     const cloverFile = path.join(testResultsDir, 'clover.xml');
     const htmlFile = path.join(testResultsDir, 'coverage', 'index.html');
     const cloverFileStat = await fs.promises.stat(cloverFile);

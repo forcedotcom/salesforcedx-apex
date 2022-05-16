@@ -30,11 +30,7 @@ const endOfSource = (source: string): number => {
   return 0;
 };
 
-export interface CoverageReporterOptions {
-  reportFormats?: reports.ReportType[];
-  reportOptions?: Partial<reports.ReportOptions>;
-  watermark?: libReport.Watermarks;
-}
+export type CoverageReportFormats = reports.ReportType;
 
 export const DefaultWatermarks: libReport.Watermarks = {
   statements: [50, 75],
@@ -43,32 +39,36 @@ export const DefaultWatermarks: libReport.Watermarks = {
   lines: [50, 75]
 };
 
-export const DefaultReportOptions: reports.ReportOptions = {
+export const DefaultReportOptions: Partial<reports.ReportOptions> = {
   clover: { file: 'clover.xml', projectRoot: '.' },
   cobertura: { file: 'cobertura.xml', projectRoot: '.' },
   'html-spa': {
     verbose: false,
     skipEmpty: false,
-    subdir: 'coverage',
+    subdir: 'html-spa',
     linkMapper: undefined,
     metricsToShow: ['lines', 'statements', 'branches']
   },
   html: {
     verbose: false,
     skipEmpty: false,
-    subdir: 'coverage',
+    subdir: 'html',
     linkMapper: undefined
   },
   json: { file: 'coverage.json' },
   'json-summary': { file: 'coverage-summary.json' },
-  lcov: { file: 'lcov.info', projectRoot: '.' },
   lcovonly: { file: 'lcovonly.info', projectRoot: '.' },
   none: {} as never,
   teamcity: { file: 'teamcity.txt', blockName: 'coverage' },
-  text: { file: 'text.txt', maxCols: 80, skipEmpty: false, skipFull: false },
-  'text-lcov': { projectRoot: '.' },
+  text: { file: 'text.txt', maxCols: 160, skipEmpty: false, skipFull: false },
   'text-summary': { file: 'text-summary.txt' }
 };
+
+export interface CoverageReporterOptions {
+  reportFormats?: CoverageReportFormats[];
+  reportOptions?: Partial<typeof DefaultReportOptions>;
+  watermark?: typeof DefaultWatermarks;
+}
 
 export class CoverageReporter {
   private readonly coverageMap: libCoverage.CoverageMap;
@@ -81,7 +81,7 @@ export class CoverageReporter {
     this.coverageMap = this.buildCoverageMap();
   }
 
-  public async generateReports(): Promise<void> {
+  public generateReports(): void {
     const context = libReport.createContext({
       dir: this.reportDir,
       defaultSummarizer: 'nested',
