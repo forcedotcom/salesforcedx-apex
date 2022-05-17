@@ -70,8 +70,19 @@ export interface CoverageReporterOptions {
   watermark?: typeof DefaultWatermarks;
 }
 
+/**
+ * Utility class to produce various well-known code coverage reports from Apex test coverage results.
+ */
 export class CoverageReporter {
   private readonly coverageMap: libCoverage.CoverageMap;
+
+  /**
+   *
+   * @param coverage - instance of either a ApexCodeCoverageAggregate or ApexCodeCoverage object
+   * @param reportDir - Directory to where the requested coverage reports will be written
+   * @param sourceDir - Source directory for those Apex classes or triggers included in coverage data
+   * @param options - CoverageReporterOptions
+   */
   constructor(
     private readonly coverage: ApexCodeCoverageAggregate | ApexCodeCoverage,
     private readonly reportDir: string,
