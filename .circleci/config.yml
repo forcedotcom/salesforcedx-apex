@@ -236,7 +236,7 @@ workflows:
             branches:
               only: main
       - node-latest
-      - node-12
+      - node-16
       - node-14
       - cache:
           filters:
@@ -267,7 +267,7 @@ workflows:
           requires:
               - run-win-tests
               - node-latest
-              - node-12
+              - node-16
               - node-14
               - hold
               - prepublish
@@ -281,7 +281,7 @@ workflows:
           requires:
               - run-win-tests
               - node-latest
-              - node-12
+              - node-16
               - node-14
               - hold
               - prepublish
