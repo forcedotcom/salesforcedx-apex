@@ -9,7 +9,7 @@ import { CoverageReporter } from '../../src/coverageReporters/coverageReporter';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 
 const multipleCoverageAggregate = {
   done: true,
@@ -231,7 +231,7 @@ describe('coverageReports', async () => {
   });
   after(async () => {
     try {
-      await fs.remove(testResultsDir);
+      await fs.promises.rmdir(testResultsDir, { recursive: true });
     } catch (err) {}
   });
   it('should produce coverage report', async () => {
