@@ -10,6 +10,7 @@ import { tmpdir } from 'os';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import mkdirp = require('mkdirp');
 
 const multipleCoverageAggregate = {
   done: true,
@@ -220,16 +221,17 @@ const multipleCoverageAggregate = {
   ]
 };
 
-describe('coverageReports', async () => {
+describe('coverageReports', () => {
   let testResultsDir: string;
 
-  before(() => {
+  beforeEach(async () => {
     testResultsDir = path.join(
       tmpdir(),
       crypto.randomBytes(10).toString('hex')
     );
+    await fs.promises.mkdir(testResultsDir, { recursive: true });
   });
-  after(async () => {
+  afterEach(async () => {
     try {
       await fs.promises.rmdir(testResultsDir, { recursive: true });
     } catch (err) {}
@@ -257,5 +259,88 @@ describe('coverageReports', async () => {
     const htmlFileStat = await fs.promises.stat(htmlFile);
     expect(cloverFileStat.isFile()).to.be.true;
     expect(htmlFileStat.isFile()).to.be.true;
+    // ensure no other coverage reports were created
+    const dirEntries = await fs.promises.readdir(testResultsDir);
+    expect(dirEntries).to.have.lengthOf(2);
+  });
+  it('should produce coverage report using default options', async () => {
+    const coverageReport = new CoverageReporter(
+      multipleCoverageAggregate,
+      testResultsDir,
+      'packages/apex-node/test/coverageReporters/testResources'
+    );
+    coverageReport.generateReports();
+    const textSummaryFile = path.join(testResultsDir, 'text-summary.txt');
+    const textSummaryFileStat = await fs.promises.stat(textSummaryFile);
+    expect(textSummaryFileStat.isFile()).to.be.true;
+    // ensure no other coverage reports were created
+    const dirEntries = await fs.promises.readdir(testResultsDir);
+    expect(dirEntries).to.have.lengthOf(1);
+  });
+  it('should handle aggregate object with no coverage entries', async () => {
+    const coverageAggregate = JSON.parse(
+      JSON.stringify(multipleCoverageAggregate)
+    );
+    coverageAggregate.totalSize = 0;
+    coverageAggregate.records = [];
+    const coverageReport = new CoverageReporter(
+      coverageAggregate,
+      testResultsDir,
+      'packages/apex-node/test/coverageReporters/testResources'
+    );
+    coverageReport.generateReports();
+    const textSummaryFile = path.join(testResultsDir, 'text-summary.txt');
+    const textSummaryFileStat = await fs.promises.stat(textSummaryFile);
+    expect(textSummaryFileStat.isFile()).to.be.true;
+    const textSummaryContents = await fs.promises.readFile(
+      textSummaryFile,
+      'utf8'
+    );
+    expect(textSummaryContents).to.include('Unknown%');
+    // ensure no other coverage reports were created
+    const dirEntries = await fs.promises.readdir(testResultsDir);
+    expect(dirEntries).to.have.lengthOf(1);
+  });
+  it('should handle non-existent sourceDir', async () => {
+    const coverageAggregate = JSON.parse(
+      JSON.stringify(multipleCoverageAggregate)
+    );
+    coverageAggregate.totalSize = 0;
+    coverageAggregate.records = [];
+    const coverageReport = new CoverageReporter(
+      coverageAggregate,
+      testResultsDir,
+      'foo/bar/baz'
+    );
+    coverageReport.generateReports();
+    const textSummaryFile = path.join(testResultsDir, 'text-summary.txt');
+    const textSummaryFileStat = await fs.promises.stat(textSummaryFile);
+    expect(textSummaryFileStat.isFile()).to.be.true;
+    const textSummaryContents = await fs.promises.readFile(
+      textSummaryFile,
+      'utf8'
+    );
+    expect(textSummaryContents).to.include('Unknown%');
+    // ensure no other coverage reports were created
+    const dirEntries = await fs.promises.readdir(testResultsDir);
+    expect(dirEntries).to.have.lengthOf(1);
+  });
+  it('should handle inaccessible testResultsDir', async () => {
+    const inaccessibleReportDir = path.join(testResultsDir, 'canttouchthis');
+    await fs.promises.mkdir(inaccessibleReportDir, { recursive: true });
+    await fs.promises.chmod(inaccessibleReportDir, 0o400);
+    const coverageAggregate = JSON.parse(
+      JSON.stringify(multipleCoverageAggregate)
+    );
+    coverageAggregate.totalSize = 0;
+    coverageAggregate.records = [];
+    const coverageReport = new CoverageReporter(
+      coverageAggregate,
+      inaccessibleReportDir,
+      'foo/bar/baz'
+    );
+    expect(() => coverageReport.generateReports()).to.throw(
+      'Unexpected error occurred while creating coverage reports. EACCES: permission denied'
+    );
   });
 });

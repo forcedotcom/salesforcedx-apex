@@ -16,6 +16,7 @@ import * as libCoverage from 'istanbul-lib-coverage';
 import * as path from 'path';
 import { glob } from 'glob';
 import * as fs from 'fs';
+import { nls } from '../i18n';
 
 const startOfSource = (source: string): number => {
   if (source) {
@@ -93,20 +94,25 @@ export class CoverageReporter {
   }
 
   public generateReports(): void {
-    const context = libReport.createContext({
-      dir: this.reportDir,
-      defaultSummarizer: 'nested',
-      watermarks: this.options?.watermark || DefaultWatermarks,
-      coverageMap: this.coverageMap
-    });
-    const formats = this.options?.reportFormats || ['text-summary'];
-    formats.forEach(format => {
-      const report = reports.create(
-        format,
-        this.options?.reportOptions[format] || DefaultReportOptions[format]
-      );
-      report.execute(context);
-    });
+    try {
+      const reportDirStat = fs.statSync(this.reportDir);
+      const context = libReport.createContext({
+        dir: this.reportDir,
+        defaultSummarizer: 'nested',
+        watermarks: this.options?.watermark || DefaultWatermarks,
+        coverageMap: this.coverageMap
+      });
+      const formats = this.options?.reportFormats || ['text-summary'];
+      formats.forEach(format => {
+        const report = reports.create(
+          format,
+          this.options?.reportOptions[format] || DefaultReportOptions[format]
+        );
+        report.execute(context);
+      });
+    } catch (e) {
+      throw new Error(nls.localize('coverageReportCreationError', e.message));
+    }
   }
 
   private buildCoverageMap(): libCoverage.CoverageMap {
