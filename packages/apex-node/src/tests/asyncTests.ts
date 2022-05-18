@@ -31,6 +31,7 @@ import { calculatePercentage, isValidTestRunID } from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
+import { HttpRequest } from 'jsforce';
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -157,7 +158,7 @@ export class AsyncTests {
       message: nls.localize('retrievingTestRunSummary')
     });
 
-    const testRunSummaryResults = (await this.connection.tooling.autoFetchQuery(
+    const testRunSummaryResults = (await this.connection.tooling.query(
       testRunSummaryQuery
     )) as ApexTestRunResult;
 
@@ -310,12 +311,10 @@ export class AsyncTests {
     }
 
     const queryPromises = queries.map(query => {
-      return this.connection.tooling.autoFetchQuery(query) as Promise<
-        ApexTestResult
-      >;
+      return this.connection.tooling.query<ApexTestResult>(query);
     });
     const apexTestResults = await Promise.all(queryPromises);
-    return apexTestResults;
+    return (apexTestResults as unknown) as ApexTestResult[];
   }
 
   private async buildAsyncTestResults(
@@ -405,7 +404,7 @@ export class AsyncTests {
       testRunId
     });
 
-    const testQueueItems = await this.connection.tooling.autoFetchQuery<
+    const testQueueItems = await this.connection.tooling.query<
       ApexTestQueueItemRecord
     >(
       `SELECT Id, Status FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`
@@ -414,7 +413,10 @@ export class AsyncTests {
     for (const record of testQueueItems.records) {
       record.Status = ApexTestQueueItemStatus.Aborted;
     }
-    await this.connection.tooling.update(testQueueItems.records);
+    await this.connection.tooling.update(
+      'ApexTestQueueItem',
+      testQueueItems.records
+    );
 
     progress?.report({
       type: 'AbortTestRunProgress',
@@ -429,7 +431,7 @@ export class AsyncTests {
   ): () => Promise<string> {
     const requestTestRun = async (): Promise<string> => {
       const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
-      const request = {
+      const request: HttpRequest = {
         method: 'POST',
         url,
         body: JSON.stringify(options),

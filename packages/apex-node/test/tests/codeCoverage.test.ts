@@ -42,10 +42,7 @@ describe('Get code coverage results', () => {
       })
     });
     toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
-    toolingAutoQueryStub = sandboxStub.stub(
-      mockConnection.tooling,
-      'autoFetchQuery'
-    );
+    toolingAutoQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
   });
 
   afterEach(() => {

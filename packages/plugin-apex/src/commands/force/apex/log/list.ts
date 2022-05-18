@@ -11,7 +11,24 @@ import { Messages } from '@salesforce/core';
 import { buildDescription, logLevels } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('@salesforce/plugin-apex', 'list');
+const messages = Messages.load('@salesforce/plugin-apex', 'list', [
+  'appColHeader',
+  'commandDescription',
+  'durationColHeader',
+  'idColHeader',
+  'jsonDescription',
+  'locationColHeader',
+  'logLevelDescription',
+  'logLevelLongDescription',
+  'longDescription',
+  'noDebugLogsFound',
+  'operationColHeader',
+  'requestColHeader',
+  'sizeColHeader',
+  'statusColHeader',
+  'timeColHeader',
+  'userColHeader'
+]);
 
 export default class List extends SfdxCommand {
   protected static requiresUsername = true;

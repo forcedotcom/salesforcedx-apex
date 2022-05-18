@@ -174,7 +174,9 @@ export class CodeCoverage {
     const queries = this.createQueries(selectQuery, idSet);
 
     const queryPromises = queries.map(query => {
-      return this.connection.tooling.autoFetchQuery(query) as Promise<T>;
+      return (this.connection.tooling.query(query, {
+        autoFetch: true
+      }) as unknown) as T;
     });
 
     return await Promise.all(queryPromises);

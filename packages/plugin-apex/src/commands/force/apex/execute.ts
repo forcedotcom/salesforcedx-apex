@@ -20,7 +20,15 @@ import {
 } from '../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('@salesforce/plugin-apex', 'execute');
+const messages = Messages.load('@salesforce/plugin-apex', 'execute', [
+  'apexCodeFileDescription',
+  'commandDescription',
+  'executeCompileSuccess',
+  'executeRuntimeSuccess',
+  'logLevelDescription',
+  'logLevelLongDescription',
+  'longDescription'
+]);
 
 export default class Execute extends SfdxCommand {
   public static description = buildDescription(

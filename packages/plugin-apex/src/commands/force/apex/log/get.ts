@@ -12,7 +12,18 @@ import { AnyJson } from '@salesforce/ts-types';
 import { buildDescription, colorLogs, logLevels } from '../../../../utils';
 
 Messages.importMessagesDirectory(__dirname);
-const messages = Messages.loadMessages('@salesforce/plugin-apex', 'get');
+const messages = Messages.load('@salesforce/plugin-apex', 'get', [
+  'commandDescription',
+  'jsonDescription',
+  'logIDDescription',
+  'logLevelDescription',
+  'logLevelLongDescription',
+  'longDescription',
+  'noResultsFound',
+  'numberDescription',
+  'outputDirDescription',
+  'outputDirLongDescription'
+]);
 
 export default class Get extends SfdxCommand {
   protected static requiresUsername = true;

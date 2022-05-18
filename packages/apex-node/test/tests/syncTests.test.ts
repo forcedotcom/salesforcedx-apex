@@ -189,7 +189,7 @@ describe('Run Apex tests synchronously', () => {
     } as ApexOrgWideCoverage);
     const toolingAutoQueryStub = sandboxStub.stub(
       mockConnection.tooling,
-      'autoFetchQuery'
+      'query'
     );
     toolingAutoQueryStub.onCall(0).resolves({
       done: true,
