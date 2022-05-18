@@ -318,7 +318,7 @@ describe('coverageReports', () => {
   it('should handle readonly testResultsDir', async () => {
     const readonlyReportDir = path.join(testResultsDir, 'canttouchthis');
     await fs.promises.mkdir(readonlyReportDir, { recursive: true });
-    await fs.promises.chmod(readonlyReportDir, 0o444);
+    await fs.promises.chmod(readonlyReportDir, 0o000);
     const stat = await fs.promises.stat(readonlyReportDir);
     expect(stat.isDirectory()).to.be.true;
     console.log(`
@@ -327,7 +327,7 @@ describe('coverageReports', () => {
     expect(
       stat.mode &
         (fs.constants.S_IRUSR | fs.constants.S_IRGRP | fs.constants.S_IROTH)
-    ).to.be.equal(0o444);
+    ).to.be.equal(0o000);
     const coverageReport = new CoverageReporter(
       multipleCoverageAggregate,
       readonlyReportDir,
