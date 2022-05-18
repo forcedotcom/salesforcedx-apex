@@ -5335,17 +5335,10 @@ node-gyp@^5.0.2, node-gyp@^5.1.0:
     tar "^4.4.12"
     which "^1.3.1"
 
-<<<<<<< HEAD
-node@^14.14.0:
+node@^14.15.0:
   version "14.19.1"
   resolved "https://registry.yarnpkg.com/node/-/node-14.19.1.tgz#99862d5846cd9e7a1208e37ac64cc039b2ae0a77"
   integrity sha512-v0l0rw07F0J9oMgiHRyI2wJegrXdNzio7FPV0vd1FahfvIz3fVU0RED0tDSeeytKn+uQX1QxgFyw9qNAaHqXHg==
-=======
-node@12.20.0:
-  version "12.20.0"
-  resolved "https://registry.yarnpkg.com/node/-/node-12.20.0.tgz#4d554e7be3bfd1683a39fb6f45a6edaa7929953a"
-  integrity sha512-+6Js2pw8ojaxWLjD91NAceSkMuIKPitf+fhQh+UVeVfGRqrY2w8oS65/VEIU3/EK1CWSDUlui5YXxy3+Id2Gjw==
->>>>>>> 853d4f7 (chore: update to core v3 and jsforce 2. Update required node version)
   dependencies:
     node-bin-setup "^1.0.0"
 
@@ -7623,17 +7616,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-<<<<<<< HEAD
 typescript@4.6.4:
   version "4.6.4"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.6.4.tgz#caa78bbc3a59e6a5c510d35703f6a09877ce45e9"
   integrity sha512-9ia/jWHIEbo49HfjrLGfKbZSuWo9iTMwXO+Ca3pRsSpbsMbc7/IU8NKdCZVRRBafVPGnoJeFL76ZOAA84I9fEg==
-=======
-typescript@3.7.5:
-  version "3.7.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.5.tgz#0692e21f65fd4108b9330238aac11dd2e177a1ae"
-  integrity sha512-/P5lkRXkWHNAbcJIiHPfRoKqyd7bsyCma1hZNUGfn20qm64T6ZBlrzprymeu918H+mB/0rIg2gGK/BXkhhYgBw==
->>>>>>> 853d4f7 (chore: update to core v3 and jsforce 2. Update required node version)
 
 uglify-js@^3.1.4:
   version "3.15.5"

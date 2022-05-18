@@ -280,14 +280,9 @@ export default class Run extends SfdxCommand {
       }
     } catch (e) {
       this.ux.logJson(result);
-<<<<<<< HEAD
       const msg = messages.getMessage('testResultProcessErr', [
         (e as Error).message
       ]);
-=======
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const msg = messages.getMessage('testResultProcessErr', [e as any]);
->>>>>>> 853d4f7 (chore: update to core v3 and jsforce 2. Update required node version)
       this.ux.error(msg);
     }
 
@@ -378,13 +373,9 @@ export default class Run extends SfdxCommand {
         : (result as TestRunIdResult);
     } catch (e) {
       this.ux.logJson(result);
-<<<<<<< HEAD
       const msg = messages.getMessage('testResultProcessErr', [
         (e as Error).message
       ]);
-=======
-      const msg = messages.getMessage('testResultProcessErr', [e as string]);
->>>>>>> 853d4f7 (chore: update to core v3 and jsforce 2. Update required node version)
       this.ux.error(msg);
       throw e;
     }
