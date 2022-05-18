@@ -328,7 +328,7 @@ describe('coverageReports', () => {
   it('should handle inaccessible testResultsDir', async () => {
     const inaccessibleReportDir = path.join(testResultsDir, 'canttouchthis');
     await fs.promises.mkdir(inaccessibleReportDir, { recursive: true });
-    await fs.promises.chmod(inaccessibleReportDir, 0o400);
+    await fs.promises.chmod(inaccessibleReportDir, 0o444);
     const coverageAggregate = JSON.parse(
       JSON.stringify(multipleCoverageAggregate)
     );
