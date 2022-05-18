@@ -315,26 +315,4 @@ describe('coverageReports', () => {
     const dirEntries = await fs.promises.readdir(testResultsDir);
     expect(dirEntries).to.have.lengthOf(1);
   });
-  it('should handle readonly testResultsDir', async () => {
-    const readonlyReportDir = path.join(testResultsDir, 'canttouchthis');
-    await fs.promises.mkdir(readonlyReportDir, { recursive: true });
-    await fs.promises.chmod(readonlyReportDir, 0o000);
-    const stat = await fs.promises.stat(readonlyReportDir);
-    expect(stat.isDirectory()).to.be.true;
-    console.log(`
-      ${stat.mode &
-        (fs.constants.S_IRUSR | fs.constants.S_IRGRP | fs.constants.S_IROTH)}`);
-    expect(
-      stat.mode &
-        (fs.constants.S_IRUSR | fs.constants.S_IRGRP | fs.constants.S_IROTH)
-    ).to.be.equal(0o000);
-    const coverageReport = new CoverageReporter(
-      multipleCoverageAggregate,
-      readonlyReportDir,
-      'packages/apex-node/test/coverageReporters/testResources'
-    );
-    expect(() => coverageReport.generateReports()).to.throw(
-      'Unexpected error occurred while creating coverage reports. EACCES: permission denied'
-    );
-  });
 });
