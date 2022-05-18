@@ -302,13 +302,8 @@ describe('coverageReports', () => {
     expect(dirEntries).to.have.lengthOf(1);
   });
   it('should handle non-existent sourceDir', async () => {
-    const coverageAggregate = JSON.parse(
-      JSON.stringify(multipleCoverageAggregate)
-    );
-    coverageAggregate.totalSize = 0;
-    coverageAggregate.records = [];
     const coverageReport = new CoverageReporter(
-      coverageAggregate,
+      multipleCoverageAggregate,
       testResultsDir,
       'foo/bar/baz'
     );
@@ -316,28 +311,18 @@ describe('coverageReports', () => {
     const textSummaryFile = path.join(testResultsDir, 'text-summary.txt');
     const textSummaryFileStat = await fs.promises.stat(textSummaryFile);
     expect(textSummaryFileStat.isFile()).to.be.true;
-    const textSummaryContents = await fs.promises.readFile(
-      textSummaryFile,
-      'utf8'
-    );
-    expect(textSummaryContents).to.include('Unknown%');
     // ensure no other coverage reports were created
     const dirEntries = await fs.promises.readdir(testResultsDir);
     expect(dirEntries).to.have.lengthOf(1);
   });
-  it('should handle inaccessible testResultsDir', async () => {
-    const inaccessibleReportDir = path.join(testResultsDir, 'canttouchthis');
-    await fs.promises.mkdir(inaccessibleReportDir, { recursive: true });
-    await fs.promises.chmod(inaccessibleReportDir, 0o444);
-    const coverageAggregate = JSON.parse(
-      JSON.stringify(multipleCoverageAggregate)
-    );
-    coverageAggregate.totalSize = 0;
-    coverageAggregate.records = [];
+  it('should handle readonly testResultsDir', async () => {
+    const readonlyReportDir = path.join(testResultsDir, 'canttouchthis');
+    await fs.promises.mkdir(readonlyReportDir, { recursive: true });
+    await fs.promises.chmod(readonlyReportDir, 0o444);
     const coverageReport = new CoverageReporter(
-      coverageAggregate,
-      inaccessibleReportDir,
-      'foo/bar/baz'
+      multipleCoverageAggregate,
+      readonlyReportDir,
+      'packages/apex-node/test/coverageReporters/testResources'
     );
     expect(() => coverageReport.generateReports()).to.throw(
       'Unexpected error occurred while creating coverage reports. EACCES: permission denied'
