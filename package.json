@@ -2,8 +2,7 @@
   "name": "salesforcedx-apex",
   "dependencies": {
     "node": "^14.15.0",
-    "npm": "^6.9.0",
-    "ts-node": "^10.7.0"
+    "npm": "^6.9.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^7",

@@ -159,7 +159,10 @@ export class AsyncTests {
     });
 
     const testRunSummaryResults = (await this.connection.tooling.query(
-      testRunSummaryQuery
+      testRunSummaryQuery,
+      {
+        autoFetch: true
+      }
     )) as ApexTestRunResult;
 
     if (testRunSummaryResults.records.length === 0) {
@@ -311,7 +314,9 @@ export class AsyncTests {
     }
 
     const queryPromises = queries.map(query => {
-      return this.connection.tooling.query<ApexTestResult>(query);
+      return this.connection.tooling.query<ApexTestResult>(query, {
+        autoFetch: true
+      });
     });
     const apexTestResults = await Promise.all(queryPromises);
     return (apexTestResults as unknown) as ApexTestResult[];

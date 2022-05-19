@@ -23,7 +23,6 @@ const $$ = testSetup();
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingQueryStub: SinonStub;
-// let toolingQueryStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Get code coverage results', () => {
@@ -46,7 +45,6 @@ describe('Get code coverage results', () => {
       })
     });
     toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
-    // toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
   });
 
   afterEach(() => {

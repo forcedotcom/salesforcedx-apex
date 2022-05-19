@@ -55,9 +55,6 @@ export class CodeCoverage {
     const perClassCodeCovResults = await this.queryPerClassCodeCov(
       apexTestClassSet
     );
-    console.log('GORDON 2', {
-      perClassCodeCovResults: JSON.stringify(perClassCodeCovResults)
-    });
 
     const perClassCoverageMap = new Map<string, PerClassCoverage[]>();
 
