@@ -85,8 +85,12 @@ describe('Run Apex tests asynchronously', () => {
 
   beforeEach(async () => {
     sandboxStub = createSandbox();
-    $$.setConfigStubContents('AuthInfoConfig', {
-      contents: await testData.getConfig()
+    $$.setConfigStubContents('GlobalInfo', {
+      contents: {
+        orgs: {
+          [testData.username]: await testData.getConfig()
+        }
+      }
     });
     // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
     sandboxStub
@@ -543,15 +547,7 @@ describe('Run Apex tests asynchronously', () => {
       mockConnection.tooling,
       'query'
     );
-    sandboxStub.stub(mockConnection.tooling, 'query').resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          PercentCovered: '57'
-        }
-      ]
-    } as ApexOrgWideCoverage);
+
     mockToolingAutoQuery.onCall(0).resolves({
       done: true,
       totalSize: 1,
@@ -584,6 +580,16 @@ describe('Run Apex tests asynchronously', () => {
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
 
+    mockToolingAutoQuery.onCall(4).resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          PercentCovered: '57'
+        }
+      ]
+    } as ApexOrgWideCoverage);
+
     const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
@@ -610,80 +616,78 @@ describe('Run Apex tests asynchronously', () => {
     expect(getTestResultData.codecoverage.length).to.equal(3);
   });
 
-  it('should report progress for aggregating code coverage', () => {
-    it('should return formatted test results with code coverage', async () => {
-      const asyncTestSrv = new AsyncTests(mockConnection);
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
-      mockToolingQuery.onCall(0).resolves({
-        done: true,
-        totalSize: 1,
-        records: [
-          {
-            AsyncApexJobId: testRunId,
-            Status: ApexTestRunResultStatus.Completed,
-            StartTime: '2020-07-12T02:54:47.000+0000',
-            TestTime: 1765,
-            UserId: '005xx000000abcDAAU'
-          }
-        ]
-      } as ApexTestRunResult);
+  it('should report progress for aggregating code coverage', async () => {
+    const asyncTestSrv = new AsyncTests(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Completed,
+          StartTime: '2020-07-12T02:54:47.000+0000',
+          TestTime: 1765,
+          UserId: '005xx000000abcDAAU'
+        }
+      ]
+    } as ApexTestRunResult);
 
-      mockToolingQuery.onCall(1).resolves({
-        done: true,
-        totalSize: 6,
-        records: mixedTestResults
-      } as ApexTestResult);
+    mockToolingQuery.onCall(1).resolves({
+      done: true,
+      totalSize: 6,
+      records: mixedTestResults
+    } as ApexTestResult);
 
-      mockToolingQuery.onCall(2).resolves({
-        done: true,
-        totalSize: 3,
-        records: mixedPerClassCodeCoverage
-      } as ApexCodeCoverage);
+    mockToolingQuery.onCall(2).resolves({
+      done: true,
+      totalSize: 3,
+      records: mixedPerClassCodeCoverage
+    } as ApexCodeCoverage);
 
-      mockToolingQuery.onCall(3).resolves({
-        done: true,
-        totalSize: 3,
-        records: codeCoverageQueryResult
-      } as ApexCodeCoverageAggregate);
+    mockToolingQuery.onCall(3).resolves({
+      done: true,
+      totalSize: 3,
+      records: codeCoverageQueryResult
+    } as ApexCodeCoverageAggregate);
 
-      mockToolingQuery.onCall(4).resolves({
-        done: true,
-        totalSize: 1,
-        records: [
-          {
-            PercentCovered: '57'
-          }
-        ]
-      } as ApexOrgWideCoverage);
+    mockToolingQuery.onCall(4).resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          PercentCovered: '57'
+        }
+      ]
+    } as ApexOrgWideCoverage);
 
-      const reportStub = sandboxStub.stub();
-      const progressReporter: Progress<ApexTestProgressValue> = {
-        report: reportStub
-      };
+    const reportStub = sandboxStub.stub();
+    const progressReporter: Progress<ApexTestProgressValue> = {
+      report: reportStub
+    };
 
-      const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
-      await asyncTestSrv.formatAsyncResults(
-        { queueItem: pollResponse, runId: testRunId },
-        new Date().getTime(),
-        true,
-        testRunSummary,
-        progressReporter
-      );
+    const testRunSummary = await asyncTestSrv.checkRunStatus(
+      testRunId,
+      progressReporter
+    );
+    await asyncTestSrv.formatAsyncResults(
+      { queueItem: pollResponse, runId: testRunId },
+      new Date().getTime(),
+      true,
+      testRunSummary,
+      progressReporter
+    );
 
-      sinonAssert.calledTwice(reportStub);
-      sinonAssert.calledWith(reportStub, {
-        type: 'FormatTestResultProgress',
-        value: 'retrievingTestRunSummary',
-        message: nls.localize('retrievingTestRunSummary')
-      });
-      sinonAssert.calledWith(reportStub, {
-        type: 'FormatTestResultProgress',
-        value: 'queryingForAggregateCodeCoverage',
-        message: nls.localize('queryingForAggregateCodeCoverage')
-      });
+    sinonAssert.calledTwice(reportStub);
+    sinonAssert.calledWith(reportStub, {
+      type: 'FormatTestResultProgress',
+      value: 'retrievingTestRunSummary',
+      message: nls.localize('retrievingTestRunSummary')
+    });
+    sinonAssert.calledWith(reportStub, {
+      type: 'FormatTestResultProgress',
+      value: 'queryingForAggregateCodeCoverage',
+      message: nls.localize('queryingForAggregateCodeCoverage')
     });
   });
 

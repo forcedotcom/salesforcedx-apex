@@ -11,8 +11,7 @@ import { assert, createSandbox, SinonSandbox } from 'sinon';
 import { StreamingClient } from '../../src/streaming';
 import { Deferred } from '../../src/streaming/streamingClient';
 import { expect } from 'chai';
-import { Subscription } from 'faye';
-import { ApexFayeClient } from '../../typings/modules/faye';
+import { Client, Subscription } from 'faye';
 import { fail } from 'assert';
 import { Progress } from '../../src';
 import { StreamMessage, TestResultMessage } from '../../src/streaming/types';
@@ -22,6 +21,9 @@ import {
 } from '../../src/tests/types';
 import { nls } from '../../src/i18n';
 import { EventEmitter } from 'events';
+
+// The type defined in jsforce doesn't have all Faye client methods.
+const ApexFayeClient: any = Client;
 
 const $$ = testSetup();
 let mockConnection: Connection;
@@ -39,8 +41,12 @@ const testResultMsg: TestResultMessage = {
 describe('Streaming API Client', () => {
   beforeEach(async () => {
     sandboxStub = createSandbox();
-    $$.setConfigStubContents('AuthInfoConfig', {
-      contents: await testData.getConfig()
+    $$.setConfigStubContents('GlobalInfo', {
+      contents: {
+        orgs: {
+          [testData.username]: await testData.getConfig()
+        }
+      }
     });
     // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
     sandboxStub

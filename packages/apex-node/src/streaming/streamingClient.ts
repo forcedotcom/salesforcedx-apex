@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { ApexFayeClient } from '../../typings/modules/faye';
+import { Client } from 'faye';
 import { Connection } from '@salesforce/core';
 import {
   RetreiveResultsInterval,
@@ -40,7 +40,9 @@ export class Deferred<T> {
 }
 
 export class StreamingClient {
-  private client: ApexFayeClient;
+  // This should be a Client from Faye, but I'm not sure how to get around the type
+  // that is exported from jsforce.
+  private client: any;
   private conn: Connection;
   private progress?: Progress<ApexTestProgressValue>;
   private apiVersion = '36.0';
@@ -70,7 +72,7 @@ export class StreamingClient {
     this.conn = connection;
     this.progress = progress;
     const streamUrl = this.getStreamURL(this.conn.instanceUrl);
-    this.client = new ApexFayeClient(streamUrl, {
+    this.client = new Client(streamUrl, {
       timeout: DEFAULT_STREAMING_TIMEOUT_MS
     });
 
