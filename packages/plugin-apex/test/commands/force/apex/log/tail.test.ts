@@ -6,6 +6,8 @@
  */
 import { expect, test } from '@salesforce/command/lib/test';
 import { LogService } from '@salesforce/apex-node';
+import { createSandbox, SinonSandbox } from 'sinon';
+import { Connection, Org } from '@salesforce/core';
 
 const logString = {
   log:
@@ -15,8 +17,25 @@ const streamingClient = {
   handshake: async () => Promise.resolve(),
   subscribe: async () => Promise.resolve()
 };
+const TEST_USERNAME = 'test@username.com';
 
 describe('force:apex:log:tail', () => {
+  let sandboxStub: SinonSandbox;
+
+  beforeEach(() => {
+    sandboxStub = createSandbox();
+
+    sandboxStub.stub(Org, 'create').resolves(Org.prototype);
+    sandboxStub
+      .stub(Org.prototype, 'getConnection')
+      .returns(Connection.prototype);
+    sandboxStub.stub(Org.prototype, 'getUsername').returns(TEST_USERNAME);
+    sandboxStub.stub(Org.prototype, 'getOrgId').returns('abc123');
+  });
+
+  afterEach(() => {
+    sandboxStub.restore();
+  });
   test
     .withOrg({ username: 'test@username.com' }, true)
     .stub(LogService.prototype, 'prepareTraceFlag', () => undefined)

@@ -12,7 +12,7 @@ import {
   TestService
 } from '@salesforce/apex-node';
 import { expect, test } from '@salesforce/command/lib/test';
-import { Messages, SfProject } from '@salesforce/core';
+import { Connection, Messages, Org, SfProject } from '@salesforce/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as stream from 'stream';
@@ -68,6 +68,12 @@ describe('force:apex:test:report', () => {
         resolveProjectConfig: () => sfdxProjectJson
       } as unknown) as SfProject)
     );
+    sandboxStub.stub(Org, 'create').resolves(Org.prototype);
+    sandboxStub
+      .stub(Org.prototype, 'getConnection')
+      .returns(Connection.prototype);
+    sandboxStub.stub(Org.prototype, 'getUsername').returns(TEST_USERNAME);
+    sandboxStub.stub(Org.prototype, 'getOrgId').returns('abc123');
   });
 
   afterEach(() => {
