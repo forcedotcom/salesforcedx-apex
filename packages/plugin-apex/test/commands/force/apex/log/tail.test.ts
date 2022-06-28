@@ -14,8 +14,8 @@ const logString = {
     '52.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT,INFO;DB,INFO;NBA,INFO;SYSTEM,DEBUG'
 };
 const streamingClient = {
-  handshake: async () => Promise.resolve(),
-  subscribe: async () => Promise.resolve()
+  handshake: async (): Promise<void> => Promise.resolve(),
+  subscribe: async (): Promise<void> => Promise.resolve()
 };
 const TEST_USERNAME = 'test@username.com';
 

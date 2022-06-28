@@ -59,8 +59,11 @@ export default class List extends SfdxCommand {
 
   public async run(): Promise<LogRecord[]> {
     try {
+      if (!this.org) {
+        throw Error('Unable to get connection from Org.');
+      }
       // org is guaranteed by requiresUsername field
-      const conn = this.org!.getConnection();
+      const conn = this.org.getConnection();
       const logService = new LogService(conn);
       const logRecords = await logService.getLogRecords();
 

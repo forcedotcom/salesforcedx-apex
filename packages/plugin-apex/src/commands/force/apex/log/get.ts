@@ -71,8 +71,11 @@ export default class Get extends SfdxCommand {
 
   public async run(): Promise<AnyJson> {
     try {
+      if (!this.org) {
+        throw Error('Unable to get connection from Org.');
+      }
       // org is guaranteed by requiresUsername field
-      const conn = this.org!.getConnection();
+      const conn = this.org.getConnection();
       const logService = new LogService(conn);
 
       if (!this.flags.logid && !this.flags.number) {

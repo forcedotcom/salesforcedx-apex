@@ -42,6 +42,7 @@ export class Deferred<T> {
 export class StreamingClient {
   // This should be a Client from Faye, but I'm not sure how to get around the type
   // that is exported from jsforce.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private client: any;
   private conn: Connection;
   private progress?: Progress<ApexTestProgressValue>;

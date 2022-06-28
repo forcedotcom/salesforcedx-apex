@@ -115,8 +115,11 @@ export default class Report extends SfdxCommand {
       process.exit();
     });
 
+    if (!this.org) {
+      throw Error('Unable to get connection from Org.');
+    }
     // org is guaranteed by requiresUsername field
-    const conn = this.org!.getConnection();
+    const conn = this.org.getConnection();
     const testService = new TestService(conn);
     const result = await testService.reportAsyncResults(
       this.flags.testrunid,

@@ -23,6 +23,7 @@ import { nls } from '../../src/i18n';
 import { EventEmitter } from 'events';
 
 // The type defined in jsforce doesn't have all Faye client methods.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ApexFayeClient: any = Client;
 
 const $$ = testSetup();
