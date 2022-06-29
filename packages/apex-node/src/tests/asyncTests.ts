@@ -19,6 +19,7 @@ import {
   ApexTestResult,
   ApexTestResultData,
   ApexTestResultOutcome,
+  ApexTestResultRecord,
   ApexTestRunResult,
   ApexTestRunResultRecord,
   ApexTestRunResultStatus,
@@ -314,12 +315,12 @@ export class AsyncTests {
     }
 
     const queryPromises = queries.map(query => {
-      return this.connection.tooling.query<ApexTestResult>(query, {
+      return this.connection.tooling.query<ApexTestResultRecord>(query, {
         autoFetch: true
       });
     });
     const apexTestResults = await Promise.all(queryPromises);
-    return (apexTestResults as unknown) as ApexTestResult[];
+    return apexTestResults as ApexTestResult[];
   }
 
   private async buildAsyncTestResults(
