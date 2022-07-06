@@ -30,13 +30,6 @@ describe('Apex Execute Tests', async () => {
   beforeEach(async () => {
     sandboxStub = createSandbox();
 
-    $$.setConfigStubContents('AuthInfoConfig', {
-      contents: {
-        orgs: {
-          [testData.username]: await testData.getConfig()
-        }
-      }
-    });
     // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
     sandboxStub
       .stub(Connection.prototype, 'retrieveMaxApiVersion')

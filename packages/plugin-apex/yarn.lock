@@ -652,18 +652,6 @@
   dependencies:
     "@octokit/openapi-types" "^11.2.0"
 
-"@salesforce/apex-node@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@salesforce/apex-node/-/apex-node-1.0.0.tgz#95c99c6d18ed34f42741b505555da4ca10bfe60f"
-  integrity sha512-ZuR53tDq+/mVnhzjN+XwKeR6fzCWq2jjm2Tnsjzp36w9K9i8zZaqQfDb8vMaae7IezgnCX+yuyu8cN98MxZy0w==
-  dependencies:
-    "@salesforce/core" "^3.13.0"
-    faye "1.4.0"
-    glob "^8.0.3"
-    istanbul-lib-coverage "^3.2.0"
-    istanbul-lib-report "^3.0.0"
-    istanbul-reports "^3.1.4"
-
 "@salesforce/bunyan@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@salesforce/bunyan/-/bunyan-2.0.0.tgz#8dbe377f2cf7d35348a23260416fee15adba5f97"
@@ -726,31 +714,6 @@
     jsonwebtoken "8.5.0"
     mkdirp "1.0.4"
     semver "^7.3.5"
-    ts-retry-promise "^0.6.0"
-
-"@salesforce/core@^3.13.0":
-  version "3.18.2"
-  resolved "https://registry.yarnpkg.com/@salesforce/core/-/core-3.18.2.tgz#2e11dce0ecdc3028e6f8e69f673d6ee293ba2e9e"
-  integrity sha512-dbNZYHWLgV5ejP6F0dnQk2DPO3W3Q1deta/1S2N1bvJzb925lUxJdI4klKw/K2YwPbiUulhJE8phMkSGWR41NQ==
-  dependencies:
-    "@salesforce/bunyan" "^2.0.0"
-    "@salesforce/kit" "^1.5.34"
-    "@salesforce/schemas" "^1.1.0"
-    "@salesforce/ts-types" "^1.5.20"
-    "@types/graceful-fs" "^4.1.5"
-    "@types/mkdirp" "^1.0.2"
-    "@types/semver" "^7.3.9"
-    ajv "^8.11.0"
-    archiver "^5.3.0"
-    change-case "^4.1.2"
-    debug "^3.2.7"
-    faye "^1.4.0"
-    form-data "^4.0.0"
-    graceful-fs "^4.2.9"
-    js2xmlparser "^4.0.1"
-    jsforce "2.0.0-beta.9"
-    jsonwebtoken "8.5.1"
-    mkdirp "1.0.4"
     ts-retry-promise "^0.6.0"
 
 "@salesforce/core@^3.20.1", "@salesforce/core@^3.23.3":
@@ -2614,7 +2577,7 @@ faye-websocket@>=0.9.1:
   dependencies:
     websocket-driver ">=0.5.1"
 
-faye@1.4.0, faye@^1.4.0:
+faye@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/faye/-/faye-1.4.0.tgz#01d3d26ed5642c1cb203eed358afb1c1444b8669"
   integrity sha512-kRrIg4be8VNYhycS2PY//hpBJSzZPr/DBbcy9VWelhZMW3KhyLkQR0HL0k0MNpmVoNFF4EdfMFkNAWjTP65g6w==
@@ -2958,7 +2921,7 @@ glob@^7.0.0, glob@^7.1.2, glob@^7.1.3, glob@^7.1.4, glob@^7.1.6, glob@^7.2.0:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^8.0.1, glob@^8.0.3:
+glob@^8.0.1:
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/glob/-/glob-8.0.3.tgz#415c6eb2deed9e502c68fa44a272e6da6eeca42e"
   integrity sha512-ull455NHSHI/Y1FqGaaYFaLGkNMMJbavMrEGFXG/PGrg6y7sutWHUHrz6gy6WEBH6akM1M414dWKCNs+IhKdiQ==
@@ -3609,11 +3572,6 @@ istanbul-lib-coverage@^2.0.5:
   resolved "https://registry.yarnpkg.com/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.5.tgz#675f0ab69503fad4b1d849f736baaca803344f49"
   integrity sha512-8aXznuEPCJvGnMSRft4udDRDtb1V3pkQkMMI5LI+6HuQz5oQ4J2UFn1H82raA3qJtyOLkkwVqICBQkjnGtn5mA==
 
-istanbul-lib-coverage@^3.0.0, istanbul-lib-coverage@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-coverage/-/istanbul-lib-coverage-3.2.0.tgz#189e7909d0a39fa5a3dfad5b03f71947770191d3"
-  integrity sha512-eOeJ5BHCmHYvQK7xt9GkdHuzuCGS1Y6g9Gvnx3Ym33fz/HpLRYxiS0wHNr+m/MBC8B647Xt608vCDEvhl9c6Mw==
-
 istanbul-lib-hook@^2.0.7:
   version "2.0.7"
   resolved "https://registry.yarnpkg.com/istanbul-lib-hook/-/istanbul-lib-hook-2.0.7.tgz#c95695f383d4f8f60df1f04252a9550e15b5b133"
@@ -3643,15 +3601,6 @@ istanbul-lib-report@^2.0.8:
     make-dir "^2.1.0"
     supports-color "^6.1.0"
 
-istanbul-lib-report@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-report/-/istanbul-lib-report-3.0.0.tgz#7518fe52ea44de372f460a76b5ecda9ffb73d8a6"
-  integrity sha512-wcdi+uAKzfiGT2abPpKZ0hSU1rGQjUQnLvtY5MpQ7QCTahD3VODhcu4wcfY1YtkGaDD5yuydOLINXsfbus9ROw==
-  dependencies:
-    istanbul-lib-coverage "^3.0.0"
-    make-dir "^3.0.0"
-    supports-color "^7.1.0"
-
 istanbul-lib-source-maps@^3.0.6:
   version "3.0.6"
   resolved "https://registry.yarnpkg.com/istanbul-lib-source-maps/-/istanbul-lib-source-maps-3.0.6.tgz#284997c48211752ec486253da97e3879defba8c8"
@@ -3669,14 +3618,6 @@ istanbul-reports@^2.2.4:
   integrity sha512-uu1F/L1o5Y6LzPVSVZXNOoD/KXpJue9aeLRd0sM9uMXfZvzomB0WxVamWb5ue8kA2vVWEmW7EG+A5n3f1kqHKg==
   dependencies:
     html-escaper "^2.0.0"
-
-istanbul-reports@^3.1.4:
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/istanbul-reports/-/istanbul-reports-3.1.4.tgz#1b6f068ecbc6c331040aab5741991273e609e40c"
-  integrity sha512-r1/DshN4KSE7xWEknZLLLLDn5CJybV3nw01VTkp6D5jzLuELlcbudfj/eSQFvrKsJuTVCGnePO7ho82Nw9zzfw==
-  dependencies:
-    html-escaper "^2.0.0"
-    istanbul-lib-report "^3.0.0"
 
 jake@^10.8.5:
   version "10.8.5"
@@ -3727,32 +3668,6 @@ jsforce@2.0.0-beta.14:
   version "2.0.0-beta.14"
   resolved "https://registry.yarnpkg.com/jsforce/-/jsforce-2.0.0-beta.14.tgz#237753bdabb7e80447b5b266eaefc4abf8b6c951"
   integrity sha512-j66PaKroshB4VZbfKBAx9+lJy8etFfGG1hGFsI7ufwxvacXxLTAxZwOEZPkYPMigiHrPlEMtIwh5NqwBsIn9HA==
-  dependencies:
-    "@babel/runtime" "^7.12.5"
-    "@babel/runtime-corejs3" "^7.12.5"
-    "@types/node" "^12.19.9"
-    abort-controller "^3.0.0"
-    base64url "^3.0.1"
-    commander "^4.0.1"
-    core-js "^3.6.4"
-    csv-parse "^4.8.2"
-    csv-stringify "^5.3.4"
-    faye "^1.4.0"
-    form-data "^4.0.0"
-    fs-extra "^8.1.0"
-    https-proxy-agent "^5.0.0"
-    inquirer "^7.0.0"
-    multistream "^3.1.0"
-    node-fetch "^2.6.1"
-    open "^7.0.0"
-    regenerator-runtime "^0.13.3"
-    strip-ansi "^6.0.0"
-    xml2js "^0.4.22"
-
-jsforce@2.0.0-beta.9:
-  version "2.0.0-beta.9"
-  resolved "https://registry.yarnpkg.com/jsforce/-/jsforce-2.0.0-beta.9.tgz#692f205151551a601cb17fc6b891ecbb230eff58"
-  integrity sha512-DsmjBiLaAL4ECmpNjwcMuYoA2o7v42cnokmTvNtnsOoABb7goIZp/PIXRHhmN44HJxNw2RpEpjMv0rJNOkrAtg==
   dependencies:
     "@babel/runtime" "^7.12.5"
     "@babel/runtime-corejs3" "^7.12.5"
