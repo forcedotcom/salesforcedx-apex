@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { AuthInfo, Connection } from '@salesforce/core';
+import { Connection } from '@salesforce/core';
 import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
 import { assert, expect } from 'chai';
 import * as fs from 'fs';
@@ -30,7 +30,7 @@ describe('Apex Execute Tests', async () => {
   beforeEach(async () => {
     sandboxStub = createSandbox();
 
-    $$.setConfigStubContents('GlobalInfo', {
+    $$.setConfigStubContents('AuthInfoConfig', {
       contents: {
         orgs: {
           [testData.username]: await testData.getConfig()
@@ -42,11 +42,8 @@ describe('Apex Execute Tests', async () => {
       .stub(Connection.prototype, 'retrieveMaxApiVersion')
       .resolves('50.0');
 
-    mockConnection = await Connection.create({
-      authInfo: await AuthInfo.create({
-        username: testData.username
-      })
-    });
+    await $$.stubAuths(testData);
+    mockConnection = await testData.getConnection();
 
     sandboxStub.stub(fs, 'readFileSync').returns('System.assert(true);');
     fsStub = sandboxStub.stub(fs, 'existsSync').returns(true);
