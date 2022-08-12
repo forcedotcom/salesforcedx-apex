@@ -73,7 +73,7 @@ export const DefaultReportOptions: Omit<
 
 export interface CoverageReporterOptions {
   reportFormats?: CoverageReportFormats[];
-  reportOptions?: typeof DefaultReportOptions;
+  reportOptions?: Partial<typeof DefaultReportOptions>;
   watermark?: typeof DefaultWatermarks;
 }
 
