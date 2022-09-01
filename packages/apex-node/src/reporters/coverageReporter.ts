@@ -31,7 +31,10 @@ const endOfSource = (source: string): number => {
   return 0;
 };
 
-export type CoverageReportFormats = reports.ReportType;
+export type CoverageReportFormats = Exclude<
+  reports.ReportType,
+  'lcov' | 'text-lcov'
+>;
 
 export const DefaultWatermarks: libReport.Watermarks = {
   statements: [50, 75],
@@ -40,7 +43,10 @@ export const DefaultWatermarks: libReport.Watermarks = {
   lines: [50, 75]
 };
 
-export const DefaultReportOptions: Partial<reports.ReportOptions> = {
+export const DefaultReportOptions: Omit<
+  reports.ReportOptions,
+  'lcov' | 'text-lcov'
+> = {
   clover: { file: 'clover.xml', projectRoot: '.' },
   cobertura: { file: 'cobertura.xml', projectRoot: '.' },
   'html-spa': {
@@ -75,7 +81,7 @@ export interface CoverageReporterOptions {
  * Utility class to produce various well-known code coverage reports from Apex test coverage results.
  */
 export class CoverageReporter {
-  private readonly coverageMap: libCoverage.CoverageMap;
+  private coverageMap: libCoverage.CoverageMap;
 
   /**
    *
@@ -89,13 +95,12 @@ export class CoverageReporter {
     private readonly reportDir: string,
     private readonly sourceDir: string,
     private readonly options?: CoverageReporterOptions
-  ) {
-    this.coverageMap = this.buildCoverageMap();
-  }
+  ) {}
 
   public generateReports(): void {
     try {
-      const reportDirStat = fs.statSync(this.reportDir);
+      this.coverageMap = this.buildCoverageMap();
+      fs.statSync(this.reportDir);
       const context = libReport.createContext({
         dir: this.reportDir,
         defaultSummarizer: 'nested',
@@ -116,15 +121,20 @@ export class CoverageReporter {
   }
 
   private buildCoverageMap(): libCoverage.CoverageMap {
+    const pathsToFiles = this.findFullPathToClass(['cls', 'trigger']);
     const coverageMap = libCoverage.createCoverageMap();
     this.coverage.records.forEach(
       (record: ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord) => {
         const fileCoverageData: libCoverage.FileCoverageData = {} as libCoverage.FileCoverageData;
+        const fileRegEx = new RegExp(
+          `${record.ApexClassOrTrigger.Name}\.(cls|trigger)`
+        );
         fileCoverageData.fnMap = {};
         fileCoverageData.branchMap = {};
         fileCoverageData.path = path.join(
           this.sourceDir,
-          this.findFullPathToClass(record.ApexClassOrTrigger.Name)
+          pathsToFiles.find(file => fileRegEx.test(file)) ||
+            record.ApexClassOrTrigger.Name
         );
         fileCoverageData.f = {};
         fileCoverageData.b = {};
@@ -172,9 +182,8 @@ export class CoverageReporter {
     return coverageMap;
   }
 
-  private findFullPathToClass(classOrTriggerName: string): string {
-    const searchPattern = `**/${classOrTriggerName}.{cls,trigger}`;
-    const files = glob.sync(searchPattern, { cwd: this.sourceDir });
-    return files[0] ? files[0] : classOrTriggerName;
+  private findFullPathToClass(listOfExtensions: string[]): string[] {
+    const searchPattern = `**/*.{${listOfExtensions.join(',')}}`;
+    return glob.sync(searchPattern, { cwd: this.sourceDir });
   }
 }

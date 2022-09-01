@@ -18,9 +18,7 @@ const testData = new MockTestOrgData();
 describe('Query Namespaces', async () => {
   beforeEach(async () => {
     sandboxStub = createSandbox();
-    $$.setConfigStubContents('AuthInfoConfig', {
-      contents: await testData.getConfig()
-    });
+    await $$.stubAuths(testData);
     // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
     sandboxStub
       .stub(Connection.prototype, 'retrieveMaxApiVersion')
