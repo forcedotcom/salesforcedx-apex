@@ -81,7 +81,8 @@ export class JUnitReporter {
         testCase.outcome === ApexTestResultOutcome.Fail ||
         testCase.outcome === ApexTestResultOutcome.CompileFail
       ) {
-        const message = this.xmlEscape(testCase.message);
+        let message = this.isEmpty(testCase.message) ? '' : testCase.message;
+        message = this.xmlEscape(message);
         junitTests += `${tab}${tab}${tab}<failure message="${message}">`;
         if (testCase.stackTrace) {
           junitTests += `<![CDATA[${testCase.stackTrace}]]>`;
