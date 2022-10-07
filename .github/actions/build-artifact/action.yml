@@ -1,0 +1,13 @@
+name: build-artifact
+runs:
+  using: composite
+  steps:
+  - name: Archiving tarball
+    run: |-
+      yarn package
+      mkdir artifact
+      find . -name "*.tgz" -type f -exec cp {} ./artifact \;
+    shell: bash
+  - uses: actions/upload-artifact@v2
+    with:
+      path: "./artifact"
