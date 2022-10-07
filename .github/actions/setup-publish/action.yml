@@ -1,0 +1,55 @@
+name: setup-publish
+runs:
+  using: composite
+  steps:
+  - uses: "./.github/actions/slack_notify"
+    continue-on-error: true
+    if: always()
+    with:
+      slack_webhook: "${{ secrets.SLACK_WEBHOOK }}"
+      slack_channel: pdt_releases
+  # Ensure parameter if_key_exists is set correctly
+  - name: Install SSH key
+    uses: shimataro/ssh-key-action@v2
+    with:
+      key: "${{ secrets.CIRCLE_CI_SSH_KEY }}"
+      name: circle_ci_id_rsa
+      known_hosts: "${{ secrets.CIRCLE_CI_KNOWN_HOSTS }}"
+      if_key_exists: fail
+  - uses: actions/checkout@v2
+  - name: restore_cache
+    uses: actions/cache@v2
+    with:
+      key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+      restore-keys: |-
+        v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+        v1-npm-{{checksum ".circleci/config.yml"}}
+  - name: Configuring GitHub
+    run: |-
+      git config --global credential.helper 'cache --timeout=120'
+      git config --global user.email "$GH_EMAIL"
+      git config --global user.name "Release Bot"
+    shell: bash
+  - name: Install dependencies
+    run: |-
+      yarn --version
+      node --version
+      yarn
+    shell: bash
+  - name: Bump package version
+    run: |-
+      yarn bump-versions << pipeline.parameters.publish-type >>
+      git add .
+      export RELEASE_TAG="$(node -pe "require('./lerna.json').version")"
+      echo "export RELEASE_VERSION=$RELEASE_TAG" >> $BASH_ENV
+      source $BASH_ENV
+      git commit -m "chore: updated version $RELEASE_TAG [ci skip]"
+    shell: bash
+  - name: Build project
+    run: yarn build
+    shell: bash
+  - name: Generate plugin manifest
+    run: yarn manifest:generate
+    shell: bash
+  - run: yarn package
+    shell: bash
