@@ -1,0 +1,249 @@
+name: forcedotcom/salesforcedx-apex/commit-workflow
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        required: true
+      publish-type:
+        required: false
+        default: minor
+jobs:
+  slack_approval-notification:
+    if: contains('refs/heads/main', github.ref)
+    runs-on: sfdc-hk-ubuntu-latest
+    steps:
+#     # This item has no matching transformer
+#     - circleci_slack_job_approval_notification:
+  node-latest:
+    defaults:
+      run:
+        working-directory: "~/cli"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: restore_cache
+      uses: actions/cache@v2
+      with:
+        key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+        restore-keys: |-
+          v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+          v1-npm-{{checksum ".circleci/config.yml"}}
+    - name: Install dependencies
+      run: |-
+        yarn --version
+        node --version
+        yarn
+    - name: Lint source files
+      run: yarn lint
+    - name: Build project
+      run: yarn build
+    - name: Run tests
+      run: yarn test
+    - uses: "./.github/actions/build-artifact"
+  node-16:
+    defaults:
+      run:
+        working-directory: "~/cli"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:16
+    steps:
+    - uses: actions/checkout@v2
+    - name: restore_cache
+      uses: actions/cache@v2
+      with:
+        key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+        restore-keys: |-
+          v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+          v1-npm-{{checksum ".circleci/config.yml"}}
+    - name: Install dependencies
+      run: |-
+        yarn --version
+        node --version
+        yarn
+    - name: Lint source files
+      run: yarn lint
+    - name: Build project
+      run: yarn build
+    - name: Run tests
+      run: yarn test
+    - uses: "./.github/actions/build-artifact"
+  node-14:
+    defaults:
+      run:
+        working-directory: "~/cli"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:14
+    steps:
+    - uses: actions/checkout@v2
+    - name: restore_cache
+      uses: actions/cache@v2
+      with:
+        key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+        restore-keys: |-
+          v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+          v1-npm-{{checksum ".circleci/config.yml"}}
+    - name: Install dependencies
+      run: |-
+        yarn --version
+        node --version
+        yarn
+    - name: Lint source files
+      run: yarn lint
+    - name: Build project
+      run: yarn build
+    - name: Run tests
+      run: yarn test
+    - uses: "./.github/actions/build-artifact"
+  cache:
+    if: ${{ !contains('refs/heads/main refs/heads//.*/', github.ref) }}
+    defaults:
+      run:
+        working-directory: "~/cli"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |-
+        yarn --version
+        node --version
+        yarn
+    - name: save_cache
+      uses: actions/cache@v2
+      with:
+        path: |-
+          ~/cli/node_modules
+          /usr/local/share/.cache/yarn
+          /usr/local/share/.config/yarn
+        key: v1-npm-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+  run-win-tests:
+    runs-on: sfdc-hk-ubuntu-latest
+    steps:
+    - run: git config --global core.autocrlf false
+    - uses: actions/checkout@v2
+    - name: restore_cache
+      uses: actions/cache@v2
+      with:
+        key: dependency-cache-win1-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+        restore-keys: |-
+          dependency-cache-win1-{{checksum ".circleci/config.yml"}}-{{checksum "yarn.lock"}}
+          dependency-cache-win1-
+        path: node_modules
+    - name: Install dependencies
+      run: |-
+        yarn --version
+        node --version
+        yarn
+    - name: Lint source files
+      run: yarn lint
+    - name: Build project
+      run: yarn build
+    - name: Run tests
+      run: yarn test
+  hold:
+    environment:
+      name: approval
+    if: contains('refs/heads/main', github.ref)
+    runs-on: sfdc-hk-ubuntu-latest
+    steps:
+    - run: echo 'approved'
+  prepublish:
+    if: contains('refs/heads/main', github.ref)
+    defaults:
+      run:
+        working-directory: "~/cli"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:14
+    needs:
+    - hold
+    steps:
+    - uses: "./.github/actions/setup-publish"
+    - uses: actions/upload-artifact@v2
+      with:
+        path: |-
+          ./.git
+          ./packages/apex-node/package.json
+          ./packages/apex-node/*.tgz
+          ./packages/plugin-apex/package.json
+          ./packages/plugin-apex/bin
+          ./packages/plugin-apex/lib
+          ./packages/plugin-apex/oclif.manifest.json
+          ./packages/plugin-apex/messages
+          ./packages/plugin-apex/README.md
+          ./packages/plugin-apex/yarn.lock
+          ./packages/plugin-apex/.gitignore
+  publish-apex-node:
+    if: contains('refs/heads/main', github.ref)
+    defaults:
+      run:
+        working-directory: "~/cli/packages/apex-node"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:14
+    needs:
+    - run-win-tests
+    - node-latest
+    - node-16
+    - node-14
+    - hold
+    - prepublish
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: "~/cli"
+#     # This item has no matching transformer
+#     - salesforce_npm_release_management_publish:
+    - uses: "./.github/actions/slack_notify"
+      continue-on-error: true
+      if: always()
+      with:
+        slack_webhook: "${{ secrets.SLACK_WEBHOOK }}"
+        slack_channel: pdt_releases
+#     # This item has no matching transformer
+#     - circleci_slack_status:
+  publish-plugin-apex:
+    if: contains('refs/heads/main', github.ref)
+    defaults:
+      run:
+        working-directory: "~/cli/packages/plugin-apex"
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: node:14
+    needs:
+    - run-win-tests
+    - node-latest
+    - node-16
+    - node-14
+    - hold
+    - prepublish
+    - publish-apex-node
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: "~/cli"
+    # Ensure parameter if_key_exists is set correctly
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: "${{ secrets.CIRCLE_CI_SSH_KEY }}"
+        name: circle_ci_id_rsa
+        known_hosts: "${{ secrets.CIRCLE_CI_KNOWN_HOSTS }}"
+        if_key_exists: fail
+    - run: ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+    - uses: "./.github/actions/release-management-commands"
+    - uses: "./.github/actions/create-git-tag"
+    - run: git push origin main
+    - uses: "./.github/actions/slack_notify"
+      continue-on-error: true
+      if: always()
+      with:
+        slack_webhook: "${{ secrets.SLACK_WEBHOOK }}"
+        slack_channel: pdt_releases
+#     # This item has no matching transformer
+#     - circleci_slack_status:
