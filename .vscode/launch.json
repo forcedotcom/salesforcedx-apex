@@ -14,34 +14,12 @@
       "remoteRoot": "${workspaceFolder}"
     },
     {
-      "name": "Run All Tests",
+      "name": "Run All Tests New",
       "type": "node",
       "request": "launch",
-      "protocol": "inspector",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": ["--inspect", "--no-timeouts", "--colors", "test/**/*.test.ts"],
-      "env": {
-        "NODE_ENV": "development",
-        "SFDX_ENV": "development"
-      },
-      "sourceMaps": true,
-      "smartStep": true,
-      "internalConsoleOptions": "openOnSessionStart",
-      "preLaunchTask": "Compile"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Run Current Test",
-      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-      "args": ["--inspect", "--no-timeouts", "--colors", "${file}"],
-      "env": {
-        "NODE_ENV": "development",
-        "SFDX_ENV": "development"
-      },
-      "sourceMaps": true,
-      "smartStep": true,
-      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["test"],
       "preLaunchTask": "Compile"
     }
   ]
