@@ -14,7 +14,7 @@
       "remoteRoot": "${workspaceFolder}"
     },
     {
-      "name": "Run All Tests New",
+      "name": "Run All Tests",
       "type": "node",
       "request": "launch",
       "cwd": "${workspaceFolder}",
