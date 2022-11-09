@@ -5,11 +5,12 @@
     "ecmaVersion": 6,
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint", "jsdoc", "eslint-plugin-header", "@typescript-eslint/class-name-casing"],
+  "plugins": ["@typescript-eslint", "jsdoc", "eslint-plugin-header"],
   "extends": ["plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
   "rules": {
     "ban-ts-ignore": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "camelcase": "off",
     "@typescript-eslint/camelcase": "off",
     "constructor-super": "warn",
@@ -41,7 +42,6 @@
     "no-var": "error",
     "jsdoc/no-types": "warn",
     "@typescript-eslint/semi": "warn",
-    "@typescript-eslint/class-name-casing": "warn",
     "header/header": [
       2,
       "block",

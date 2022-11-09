@@ -24,20 +24,20 @@
     "@types/node": "^14",
     "@types/sinon": "^7.5.2",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
+    "@typescript-eslint/parser": "^5.30.7",
     "chai": "^4",
-    "cz-conventional-changelog": "3.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^7.1.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-header": "^3.0.0",
     "eslint-plugin-jsdoc": "^19.1.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "@typescript-eslint/parser": "^2.22.0",
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
     "mocha": "^5",
-    "prettier": "1.19.1",
     "mocha-junit-reporter": "^1.23.3",
     "nyc": "^14.1.1",
+    "prettier": "1.19.1",
     "shx": "^0.3.4",
     "sinon": "^7.3.1",
     "source-map-support": "^0.5.16",
@@ -57,6 +57,8 @@
   ],
   "scripts": {
     "build": "shx rm -rf lib && tsc -b",
+    "commit-init": "commitizen init cz-conventional-changelog --save-dev --save-exact --force",
+    "commit": "git-cz",
     "format": "prettier --config ../../.prettierrc --write './{src,test,scripts}/**/*.{ts,js,json}'",
     "lint": "eslint -c .eslintrc.json --ext .ts ./src ./test",
     "test": "nyc mocha",
@@ -64,7 +66,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn lint-staged"
+      "pre-commit": "yarn lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
   "lint-staged": {
