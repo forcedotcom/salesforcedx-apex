@@ -11,6 +11,7 @@
     "ban-ts-ignore": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/ban-types": "warn",
     "camelcase": "off",
     "@typescript-eslint/camelcase": "off",
     "constructor-super": "warn",
