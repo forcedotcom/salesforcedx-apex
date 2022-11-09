@@ -30,12 +30,6 @@ $ yarn build
 
 ## Development
 
-Link the plugin from the top-level project directory and then run your command:
-
-```
-$ yarn plugin:link
-$ sfdx force:apex:log:list -u myOrg@example.com
-```
 
 Install the library locally by adding this information to your project's `package.json`:
 

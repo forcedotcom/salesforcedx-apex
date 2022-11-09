@@ -20,12 +20,11 @@ $ yarn build
 
 ## Branches
 
-- We work in `develop`.
-- Our released (_production_) branch is `main`.
-- Our work happens in _topic_ branches (feature and/or bug fix).
-  - These branches are based on `develop` and can live in forks for external contributors or within this repository for authors.
-  - Be sure to prefix branches in this repository with `<developer-name>/`.
-  - Be sure to keep branches up-to-date using `rebase`.
+- Our released (_production_) branch is `main`
+- Our work happens in _topic_ branches (feature and/or bug fix)
+  - These branches are based on `main` and can live in forks for external contributors or within this repository for authors
+  - Be sure to prefix branches in this repository with `<developer-name>/`
+  - Be sure to keep branches up-to-date using `rebase`
 
 <br/>
 
@@ -70,5 +69,13 @@ $ yarn test
 ```
 
 > When running tests, code changes don't need to be built with `yarn build` first because the test suite uses ts-node as its runtime environment. Otherwise, run `yarn build` before manually testing changes.
+
+### Running Individual Tests
+
+While developing, you may temporarily edit the `test` command in the package.json of the package to limit the command to your individual test file. For instance:
+
+```
+$ "test": "cross-env FORCE_COLOR=true mocha --recursive \"./test/**/run.test.ts\" --full-trace",
+```
 
 <br />
