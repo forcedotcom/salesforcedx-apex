@@ -15,12 +15,13 @@
     "istanbul-reports": "^3.1.4"
   },
   "devDependencies": {
+    "@salesforce/ts-sinon": "^1.4.2",
     "@salesforce/ts-types": "1.2.2",
     "@types/chai": "^4",
     "@types/glob": "^8.0.0",
     "@types/istanbul-lib-coverage": "^2.0.4",
     "@types/istanbul-lib-report": "^3.0.0",
-    "@types/mocha": "^5",
+    "@types/mocha": "^10",
     "@types/node": "^14",
     "@types/sinon": "^7.5.2",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
@@ -34,7 +35,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
-    "mocha": "^5",
+    "mocha": "^10",
     "mocha-junit-reporter": "^1.23.3",
     "nyc": "^14.1.1",
     "prettier": "1.19.1",
