@@ -32,7 +32,7 @@
     },
     {
       "label": "Commit",
-      "command": "npm",
+      "command": "yarn",
       "type": "shell",
       "presentation": {
         "focus": true,
@@ -43,7 +43,7 @@
     },
     {
       "label": "Commitizen Initialization",
-      "command": "npm",
+      "command": "yarn",
       "type": "shell",
       "presentation": {
         "focus": false,
