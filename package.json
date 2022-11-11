@@ -62,7 +62,7 @@
     "build": "shx rm -rf lib && tsc -b",
     "commit-init": "commitizen init cz-conventional-changelog --save-dev --save-exact --force",
     "commit": "git-cz",
-    "format": "prettier --config ../../.prettierrc --write './{src,test,scripts}/**/*.{ts,js,json}'",
+    "format": "prettier --config ./.prettierrc --write './{src,test,scripts}/**/*.{ts,js,json}'",
     "lint": "eslint -c .eslintrc.json --ext .ts ./src ./test",
     "test": "nyc mocha",
     "package": "yarn pack"
