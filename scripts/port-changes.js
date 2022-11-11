@@ -41,7 +41,7 @@ function updateBranches(baseBranch, featureBranch) {
 
 function getReleaseVersion() {
   const releaseType = getReleaseType();
-  const currentVersion = require('../packages/apex-node/package.json').version;
+  const currentVersion = require('../package.json').version;
   var [version, major, minor, patch] = currentVersion.match(
     /^(\d+)\.?(\d+)\.?(\*|\d+)$/
   );
