@@ -80,7 +80,7 @@
   },
   "license": "BSD-3-Clause",
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=16.13.0"
   },
   "config": {
     "commitizen": {
