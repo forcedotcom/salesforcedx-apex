@@ -75,7 +75,7 @@ $ yarn test
 While developing, you may temporarily edit the `test` command in the package.json of the package to limit the command to your individual test file. For instance:
 
 ```
-$ "test": "cross-env FORCE_COLOR=true mocha --recursive \"./test/**/run.test.ts\" --full-trace",
+$ "test": "npx cross-env FORCE_COLOR=true mocha --recursive \"./test/**/run.test.ts\" --full-trace",
 ```
 
 <br />
