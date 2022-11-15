@@ -20,6 +20,22 @@
       "cwd": "${workspaceFolder}",
       "runtimeExecutable": "yarn",
       "runtimeArgs": ["test"],
+      "internalConsoleOptions": "openOnSessionStart",	
+      "preLaunchTask": "Compile"
+    },
+    {	
+      "name": "Run Current Test",	
+      "type": "node",	
+      "request": "launch",	
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",	
+      "args": ["--inspect", "--no-timeouts", "--colors", "${file}"],	
+      "env": {	
+        "NODE_ENV": "development",	
+        "SFDX_ENV": "development"	
+      },	
+      "sourceMaps": true,	
+      "smartStep": true,	
+      "internalConsoleOptions": "openOnSessionStart",	
       "preLaunchTask": "Compile"
     }
   ]

@@ -14,7 +14,9 @@
         "focus": false,
         "panel": "dedicated"
       },
-      "args": ["build"],
+      "args": [
+        "build"
+      ],
       "isBackground": false,
       "problemMatcher": {
         "owner": "typescript",
@@ -38,7 +40,10 @@
         "focus": true,
         "panel": "shared"
       },
-      "args": ["run", "commit"],
+      "args": [
+        "run",
+        "commit"
+      ],
       "isBackground": false
     },
     {
@@ -49,7 +54,10 @@
         "focus": false,
         "panel": "shared"
       },
-      "args": ["run", "commit-init"],
+      "args": [
+        "run",
+        "commit-init"
+      ],
       "isBackground": false
     },
     {
@@ -60,7 +68,10 @@
         "focus": false,
         "panel": "dedicated"
       },
-      "args": ["run", "lint"],
+      "args": [
+        "run",
+        "lint"
+      ],
       "isBackground": false,
       "problemMatcher": {
         "owner": "typescript",
@@ -74,6 +85,11 @@
           "message": 6
         }
       }
+    },
+    {
+      "command": "yarn pack",
+      "type": "shell",
+      "label": "Package",
     }
   ]
 }

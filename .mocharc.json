@@ -5,7 +5,6 @@
     ],
     "reporter": "./test/combinedTestReporter.js",
     "reporter-options": "mochaFile=./test-results/test-results.xml",
-    "spec": "./test/**/*.test.ts",
     "colors": true,
     "exit": true
 }
