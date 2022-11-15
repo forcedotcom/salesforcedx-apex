@@ -17,6 +17,7 @@
       "name": "Run All Tests",
       "type": "node",
       "request": "launch",
+      "protocol": "inspector",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": ["--inspect", "--no-timeouts", "--colors", "test/**/*.test.ts"],
       "env": {
@@ -32,6 +33,7 @@
       "name": "Run Current Test",	
       "type": "node",	
       "request": "launch",	
+      "protocol": "inspector",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",	
       "args": ["--inspect", "--no-timeouts", "--colors", "${file}"],	
       "env": {	
