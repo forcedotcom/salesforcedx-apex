@@ -10,47 +10,8 @@ Note: Please report any issues via the [Issues tab](https://github.com/forcedotc
 
 <br/>
 
-### Building the Library
+## Getting Started
 
-Clone the project and `cd` into it:
+If you're interested in contributing, take a look at the [CONTRIBUTING](./CONTRIBUTING.md) guide.
 
-```
-$ git clone git@github.com:forcedotcom/salesforcedx-apex.git
-$ cd salesforcedx-apex
-```
-
-Ensure that you have [Yarn](https://yarnpkg.com/) installed, then run:
-
-```
-$ yarn install
-$ yarn build
-```
-
-### Using the Library 
-
-Install the library locally by adding this information to your project's `package.json`:
-
-```
-"@salesforce/apex-node": "file://path/to/salesforcedx-apex/packages/apex-node"
-```
-
-Using the library directly requires access to a Salesforce [Connection](https://forcedotcom.github.io/sfdx-core/classes/authinfo.html). Create an instance of the specific Apex service to get access to the required methods. For example, to get a list of logs:
-
-```
-$ const authInfo = await AuthInfo.create({ username: myAdminUsername });
-$ const connection = await Connection.create({ authInfo });
-
-$ const logService = new LogService(connection);
-$ const logList = await logService.getLogRecords();
-```
-
-You can use the same pattern for the `Test Service` and `Execute Service` as well.
-
-### Running the Test Suite
-
-Run the test suite locally by building the project first and then running the tests.
-
-```
-$ yarn build
-$ yarn test
-```
+If you're interested in building the plugin and library locally, take a look at the [Developing](./contributing/developing.md) doc.
