@@ -399,17 +399,16 @@
     mv "~2"
     safe-json-stringify "~1"
 
-"@salesforce/core@^3.23.3":
-  version "3.23.4"
-  resolved "https://registry.npmjs.org/@salesforce/core/-/core-3.23.4.tgz"
-  integrity sha512-gJB2NbWjxcN0SqOy3GLyzwUytYR1bmXZvUi7r8j0Eeu2L7qJFoYBgtkXBfIk7F/urFqYd4VRlXCeJj6ZQEWImw==
+"@salesforce/core@^3.31.18":
+  version "3.31.19"
+  resolved "https://registry.yarnpkg.com/@salesforce/core/-/core-3.31.19.tgz#29366aee1e9e271d3bef6d0a5e60204f3885daf7"
+  integrity sha512-Qx4F7n+1eENICD9yvTrSI5+HVbjZ/B3vzNjdjZ4aNHO5MvEgg93vs1KeGujfGU4lzaEj5Wuy7delp5wJC0a1aA==
   dependencies:
     "@salesforce/bunyan" "^2.0.0"
-    "@salesforce/kit" "^1.5.41"
+    "@salesforce/kit" "^1.7.0"
     "@salesforce/schemas" "^1.1.0"
-    "@salesforce/ts-types" "^1.5.20"
+    "@salesforce/ts-types" "^1.5.21"
     "@types/graceful-fs" "^4.1.5"
-    "@types/mkdirp" "^1.0.2"
     "@types/semver" "^7.3.9"
     ajv "^8.11.0"
     archiver "^5.3.0"
@@ -419,17 +418,16 @@
     form-data "^4.0.0"
     graceful-fs "^4.2.9"
     js2xmlparser "^4.0.1"
-    jsforce "2.0.0-beta.14"
+    jsforce "^2.0.0-beta.19"
     jsonwebtoken "8.5.1"
-    mkdirp "1.0.4"
-    ts-retry-promise "^0.6.0"
+    ts-retry-promise "^0.7.0"
 
-"@salesforce/kit@^1.5.41":
-  version "1.5.44"
-  resolved "https://registry.npmjs.org/@salesforce/kit/-/kit-1.5.44.tgz"
-  integrity sha512-QHwmJFgvF0YyBAvPkSMy2opyIgKzATF8lwYHewCr2obyqDiVi9OJkYWgQETkKTpfLzSjWqdsfiVAdlnRcj+xQQ==
+"@salesforce/kit@^1.7.0":
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/@salesforce/kit/-/kit-1.8.0.tgz#d5b8d83d5b0b866cb76840dc7a18e115589d86a0"
+  integrity sha512-Pr9CWAIzVYKZRWvM76lyhEtF3CPmVdIfgbqRD7KT/YZdbLstX3KHYBxCyx3TyWZr5qROv96n+jRIBiIFI9LGGw==
   dependencies:
-    "@salesforce/ts-types" "^1.5.20"
+    "@salesforce/ts-types" "^1.7.1"
     shx "^0.3.3"
     tslib "^2.2.0"
 
@@ -454,14 +452,7 @@
   dependencies:
     tslib "^1.10.0"
 
-"@salesforce/ts-types@^1.5.20":
-  version "1.5.20"
-  resolved "https://registry.npmjs.org/@salesforce/ts-types/-/ts-types-1.5.20.tgz"
-  integrity sha512-Ov6um4CWd63EvkRavkHG0J/P9XYL55sdkDWPMr7+AIgqh5flHxDRz09/C4e9M94aX30rzJxW4TVX6EBf4Cu2BQ==
-  dependencies:
-    tslib "^2.2.0"
-
-"@salesforce/ts-types@^1.7.1":
+"@salesforce/ts-types@^1.5.21", "@salesforce/ts-types@^1.7.1":
   version "1.7.1"
   resolved "https://registry.yarnpkg.com/@salesforce/ts-types/-/ts-types-1.7.1.tgz#86b0d0c3bfd5c9b1752662a019a3d2f3bc8ff118"
   integrity sha512-jwZb8fYxbOmEckoJTxG2+5ZEJNJOFxmRJ/FioPnSu4IMFzpK3QbyujfqpHwLfPKHq0xlKRMx+F8QAVVKI/PA4w==
@@ -577,13 +568,6 @@
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
-
-"@types/mkdirp@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/@types/mkdirp/-/mkdirp-1.0.2.tgz"
-  integrity sha512-o0K1tSO0Dx5X6xlU5F1D6625FawhC3dU3iqr25lluNv/+/QIVH8RLNEiVokgIZo+mz+87w/3Mkg/VvQS+J51fQ==
-  dependencies:
-    "@types/node" "*"
 
 "@types/mocha@^10":
   version "10.0.0"
@@ -2755,10 +2739,10 @@ jsesc@^2.5.1:
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-2.5.2.tgz"
   integrity sha512-OYu7XEzjkCQ3C5Ps3QIZsQfNpqoJyZZA99wd9aWd05NCtC5pWOkShK2mkL6HXQR6/Cy2lbNdPlZBpuQHXE63gA==
 
-jsforce@2.0.0-beta.14:
-  version "2.0.0-beta.14"
-  resolved "https://registry.npmjs.org/jsforce/-/jsforce-2.0.0-beta.14.tgz"
-  integrity sha512-j66PaKroshB4VZbfKBAx9+lJy8etFfGG1hGFsI7ufwxvacXxLTAxZwOEZPkYPMigiHrPlEMtIwh5NqwBsIn9HA==
+jsforce@^2.0.0-beta.19:
+  version "2.0.0-beta.19"
+  resolved "https://registry.yarnpkg.com/jsforce/-/jsforce-2.0.0-beta.19.tgz#4a136b88d6a9f6668714c4ccbb0acd55e46ea493"
+  integrity sha512-WdF6hs7kukXNGvp/VRhu2DngldgiBBorsc2WA5us08oJGbEIPwn/itqYJWKJ+rfPXepz5JbkWQd48XHGjqmPpw==
   dependencies:
     "@babel/runtime" "^7.12.5"
     "@babel/runtime-corejs3" "^7.12.5"
@@ -3253,11 +3237,6 @@ minimist@1.2.6, minimist@^1.2.3, minimist@^1.2.6:
   version "1.2.6"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.6.tgz"
   integrity sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==
-
-mkdirp@1.0.4:
-  version "1.0.4"
-  resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
-  integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
 mkdirp@^0.5.0, mkdirp@~0.5.1:
   version "0.5.6"
@@ -4502,10 +4481,10 @@ ts-node@^10.7.0, ts-node@^10.8.1:
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
 
-ts-retry-promise@^0.6.0:
-  version "0.6.1"
-  resolved "https://registry.npmjs.org/ts-retry-promise/-/ts-retry-promise-0.6.1.tgz"
-  integrity sha512-6L9PAWahkRtZ4mG48wz3Mxk7LfW1eZKEPsCteIa5fbDE1G2kFk4ThHXbynKlIZLg0RdenDBDw6CLME5liOrBSQ==
+ts-retry-promise@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/ts-retry-promise/-/ts-retry-promise-0.7.0.tgz#08f2dcbbf5d2981495841cb63389a268324e8147"
+  integrity sha512-x6yWZXC4BfXy4UyMweOFvbS1yJ/Y5biSz/mEPiILtJZLrqD3ZxIpzVOGGgifHHdaSe3WxzFRtsRbychI6zofOg==
 
 tslib@^1.10.0, tslib@^1.8.1, tslib@^1.9.0:
   version "1.14.1"
