@@ -1,7 +1,18 @@
 # Developing
 
-## Getting Started
+## Branches
 
+- Our released (_production_) branch is `main`
+- Our work happens in _topic_ branches (feature and/or bug fix)
+  - These branches are based on `main` and can live in forks for external contributors or within this repository for authors
+  - Be sure to prefix branches in this repository with `<developer-name>/`
+  - Be sure to keep branches up-to-date using `rebase`
+
+<br/>
+
+## Development
+
+### Building the Library
 Clone the project and `cd` into it:
 
 ```
@@ -15,20 +26,7 @@ Ensure that you have [Yarn](https://yarnpkg.com/) installed, then run:
 $ yarn install
 $ yarn build
 ```
-
-<br/>
-
-## Branches
-
-- Our released (_production_) branch is `main`
-- Our work happens in _topic_ branches (feature and/or bug fix)
-  - These branches are based on `main` and can live in forks for external contributors or within this repository for authors
-  - Be sure to prefix branches in this repository with `<developer-name>/`
-  - Be sure to keep branches up-to-date using `rebase`
-
-<br/>
-
-## Development
+### Using the Library 
 
 Install the library locally by adding this information to your project's `package.json`:
 
@@ -62,6 +60,7 @@ You can use the same pattern for the `Execute Service` as well.
 <br/>
 
 ## Testing
+
 ### Running the Test Suite
 
 ```
@@ -75,7 +74,7 @@ $ yarn test
 While developing, you may temporarily edit the `test` command in the package.json of the package to limit the command to your individual test file. For instance:
 
 ```
-$ "test": "npx cross-env FORCE_COLOR=true mocha --recursive \"./test/**/run.test.ts\" --full-trace",
+$ "test": "npx cross-env FORCE_COLOR=true mocha --recursive \"./test/**/aSpecificTest.test.ts\" --full-trace",
 ```
 
 <br />
