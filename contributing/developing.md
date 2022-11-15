@@ -31,7 +31,9 @@ $ yarn build
 Install the library locally by adding this information to your project's `package.json`:
 
 ```
-"@salesforce/apex-node": "file://path/to/salesforcedx-apex/packages/apex-node"
+"@salesforce/apex-node": "file://path/to/salesforcedx-apex" (Windows)
+or 
+"@salesforce/apex-node": "/Users/myUser/myProjects/salesforcedx-apex" (MacOS)
 ```
 
 Using the library directly requires access to a Salesforce [Connection](https://forcedotcom.github.io/sfdx-core/modules/org_authInfo.html). Create an instance of the specific Apex service to get access to the required methods. For example, to get a list of logs:
