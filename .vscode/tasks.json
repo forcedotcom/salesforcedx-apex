@@ -85,11 +85,6 @@
           "message": 6
         }
       }
-    },
-    {
-      "command": "yarn pack",
-      "type": "shell",
-      "label": "Package",
     }
   ]
 }
