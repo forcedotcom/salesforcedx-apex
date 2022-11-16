@@ -13,4 +13,4 @@ jobs:
     - name: Install modules
       run: yarn
     - name: Check Format
-      run: yarn format
+      run: yarn format:check
