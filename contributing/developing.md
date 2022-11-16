@@ -13,7 +13,6 @@
 ## Development
 
 ### Building the Library
-
 Clone the project and `cd` into it:
 
 ```
@@ -27,8 +26,7 @@ Ensure that you have [Yarn](https://yarnpkg.com/) installed, then run:
 $ yarn install
 $ yarn build
 ```
-
-### Using the Library
+### Using the Library 
 
 Install the library locally by adding this information to your project's `package.json`:
 
@@ -48,7 +46,7 @@ $ const logService = new LogService(connection);
 $ const logList = await logService.getLogRecords();
 ```
 
-Similarly, to run tests using the Test Service:
+Similarly, to run tests using the Test Service: 
 
 ```
 $ const authInfo = await AuthInfo.create({ username: myAdminUsername });
@@ -64,7 +62,6 @@ You can use the same pattern for the `Execute Service` as well.
 <br/>
 
 ## Testing
-
 ### Running the Test Suite
 
 ```
