@@ -104,6 +104,50 @@ const multipleCoverageAggregate = {
         ],
         uncoveredLines: []
       }
+    },
+    {
+      attributes: {
+        type: 'ApexCodeCoverageAggregate',
+        url:
+          '/services/data/v56.0/tooling/sobjects/ApexCodeCoverageAggregate/7153M000000ADC6QAO'
+      },
+      ApexClassOrTrigger: {
+        attributes: {
+          type: 'Name',
+          url:
+            '/services/data/v56.0/tooling/sobjects/ApexTrigger/01q3M000000CzMWQA0'
+        },
+        Id: '01q3M000000CzMWQA0',
+        Name: 'Bla'
+      },
+      NumLinesCovered: 1,
+      NumLinesUncovered: 0,
+      Coverage: {
+        coveredLines: [10],
+        uncoveredLines: []
+      }
+    },
+    {
+      attributes: {
+        type: 'ApexCodeCoverageAggregate',
+        url:
+          '/services/data/v56.0/tooling/sobjects/ApexCodeCoverageAggregate/7153M000000ADBwQAO'
+      },
+      ApexClassOrTrigger: {
+        attributes: {
+          type: 'Name',
+          url:
+            '/services/data/v56.0/tooling/sobjects/ApexClass/01p3M000000MLgJQAW'
+        },
+        Id: '01p3M000000MLgJQAW',
+        Name: 'Bla'
+      },
+      NumLinesCovered: 1,
+      NumLinesUncovered: 0,
+      Coverage: {
+        coveredLines: [3],
+        uncoveredLines: []
+      }
     }
   ]
 };
@@ -127,14 +171,13 @@ describe('coverageReports', () => {
     const coverageReport = new CoverageReporter(
       multipleCoverageAggregate,
       testResultsDir,
-      'packages/apex-node/test/coverageReporters/testResources',
+      'test/reporters/testResources',
       {
         reportFormats: ['clover', 'html'],
         reportOptions: {
           clover: {
             file: 'clover.xml',
-            projectRoot:
-              'packages/apex-node/test/coverageReporters/testResources'
+            projectRoot: 'test/reporters/testResources'
           }
         }
       }
@@ -154,7 +197,7 @@ describe('coverageReports', () => {
     const coverageReport = new CoverageReporter(
       multipleCoverageAggregate,
       testResultsDir,
-      'packages/apex-node/test/coverageReporters/testResources'
+      'test/reporters/testResources'
     );
     coverageReport.generateReports();
     const textSummaryFile = path.join(testResultsDir, 'text-summary.txt');
@@ -173,7 +216,7 @@ describe('coverageReports', () => {
     const coverageReport = new CoverageReporter(
       coverageAggregate,
       testResultsDir,
-      'packages/apex-node/test/coverageReporters/testResources'
+      'test/reporters/testResources'
     );
     coverageReport.generateReports();
     const textSummaryFile = path.join(testResultsDir, 'text-summary.txt');
@@ -201,5 +244,42 @@ describe('coverageReports', () => {
     // ensure no other coverage reports were created
     const dirEntries = await fs.promises.readdir(testResultsDir);
     expect(dirEntries).to.have.lengthOf(1);
+  });
+
+  describe('code coverage report', () => {
+    it('should contain file extension', async () => {
+      const coverageReport = new CoverageReporter(
+        multipleCoverageAggregate,
+        testResultsDir,
+        'test/reporters/testResources',
+        {
+          reportFormats: ['json'],
+          reportOptions: {
+            json: {
+              file: 'coverage.json'
+            }
+          }
+        }
+      );
+      coverageReport.generateReports();
+
+      const codeCoverage = JSON.parse(
+        fs.readFileSync(path.join(testResultsDir, 'coverage.json'), {
+          encoding: 'utf-8'
+        })
+      );
+
+      const files = multipleCoverageAggregate.records
+        .map(record => {
+          return `${record.ApexClassOrTrigger.Name}.${
+            record.ApexClassOrTrigger.Id.startsWith('01p') ? 'cls' : 'trigger'
+          }`;
+        })
+        .sort();
+
+      Object.keys(codeCoverage).forEach(codeCoverageEntry => {
+        expect(files).to.include(path.basename(codeCoverageEntry));
+      });
+    });
   });
 });
