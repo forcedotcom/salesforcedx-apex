@@ -121,20 +121,23 @@ export class CoverageReporter {
   }
 
   private buildCoverageMap(): libCoverage.CoverageMap {
-    const pathsToFiles = this.findFullPathToClass(['cls', 'trigger']);
+    const pathsToFiles = glob.sync('**/*.{cls,trigger}', {
+      cwd: this.sourceDir
+    });
     const coverageMap = libCoverage.createCoverageMap();
     this.coverage.records.forEach(
       (record: ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord) => {
         const fileCoverageData: libCoverage.FileCoverageData = {} as libCoverage.FileCoverageData;
-        const fileRegEx = new RegExp(
-          `${record.ApexClassOrTrigger.Name}\.(cls|trigger)`
-        );
+        const fileNameWithExtension = `${record.ApexClassOrTrigger.Name}.${
+          record.ApexClassOrTrigger.Id?.startsWith('01p') ? 'cls' : 'trigger'
+        }`;
+
         fileCoverageData.fnMap = {};
         fileCoverageData.branchMap = {};
         fileCoverageData.path = path.join(
           this.sourceDir,
-          pathsToFiles.find(file => fileRegEx.test(file)) ||
-            record.ApexClassOrTrigger.Name
+          pathsToFiles.find(file => file === fileNameWithExtension) ||
+            fileNameWithExtension
         );
         fileCoverageData.f = {};
         fileCoverageData.b = {};
@@ -180,10 +183,5 @@ export class CoverageReporter {
       }
     );
     return coverageMap;
-  }
-
-  private findFullPathToClass(listOfExtensions: string[]): string[] {
-    const searchPattern = `**/*.{${listOfExtensions.join(',')}}`;
-    return glob.sync(searchPattern, { cwd: this.sourceDir });
   }
 }
