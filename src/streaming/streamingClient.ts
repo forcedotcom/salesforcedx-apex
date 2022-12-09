@@ -273,14 +273,23 @@ export class StreamingClient {
     return null;
   }
 
+  private async getMaxQueryLimit(): Promise<number> {
+    return 1600000;
+  }
+
   private async getCompletedTestRun(
     testRunId: string
   ): Promise<ApexTestQueueItem> {
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
+    const maxQueryLimit = await this.getMaxQueryLimit();
+    debugger;
+    console.log('maxQueryLimit set at ' + maxQueryLimit);
+
     const result = await this.conn.tooling.query<ApexTestQueueItemRecord>(
       queryApexTestQueueItem,
       {
-        autoFetch: true
+        autoFetch: true,
+        maxFetch: maxQueryLimit
       }
     );
 
