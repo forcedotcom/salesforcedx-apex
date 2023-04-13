@@ -397,6 +397,7 @@ export class TestService {
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
     const testItems: TestItem[] = [];
+    const classes: string[] = [];
     let namespaceInfos: NamespaceInfo[];
 
     for (const test of testNameArray) {
@@ -429,22 +430,17 @@ export class TestService {
               });
             }
           } else {
-            if (testItems.length > 0) {
+            if (!classes.includes(testParts[0])) {
+              testItems.push({
+                className: testParts[0],
+                testMethods: [testParts[1]]
+              });
+              classes.push(testParts[0]);
+            } else {
               testItems.forEach(element => {
                 if (element.className === testParts[0]) {
                   element.testMethods.push(testParts[1]);
                 }
-              });
-            } else if (
-              testItems.length === 0 ||
-              !testItems.includes({
-                className: testParts[0],
-                testMethods: [testParts[1]]
-              })
-            ) {
-              testItems.push({
-                className: testParts[0],
-                testMethods: [testParts[1]]
               });
             }
           }
