@@ -404,11 +404,20 @@ export class TestService {
       if (test.indexOf('.') > 0) {
         const testParts = test.split('.');
         if (testParts.length === 3) {
-          testItems.push({
-            namespace: `${testParts[0]}`,
-            className: `${testParts[1]}`,
-            testMethods: [testParts[2]]
-          });
+          if (!classes.includes(testParts[1])) {
+            testItems.push({
+              namespace: `${testParts[0]}`,
+              className: `${testParts[1]}`,
+              testMethods: [testParts[2]]
+            });
+            classes.push(testParts[1]);
+          } else {
+            testItems.forEach(element => {
+              if (element.className === `${testParts[1]}`) {
+                element.testMethods.push(`${testParts[2]}`);
+              }
+            });
+          }
         } else {
           if (typeof namespaceInfos === 'undefined') {
             namespaceInfos = await queryNamespaces(this.connection);
