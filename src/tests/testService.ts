@@ -415,7 +415,6 @@ export class TestService {
           const currentNamespace = namespaceInfos.find(
             namespaceInfo => namespaceInfo.namespace === testParts[0]
           );
-
           // NOTE: Installed packages require the namespace to be specified as part of the className field
           // The namespace field should not be used with subscriber orgs
           if (currentNamespace) {
@@ -430,10 +429,24 @@ export class TestService {
               });
             }
           } else {
-            testItems.push({
-              className: testParts[0],
-              testMethods: [testParts[1]]
-            });
+            if (testItems.length > 0) {
+              testItems.forEach(element => {
+                if (element.className === testParts[0]) {
+                  element.testMethods.push(testParts[1]);
+                }
+              });
+            } else if (
+              testItems.length === 0 ||
+              !testItems.includes({
+                className: testParts[0],
+                testMethods: [testParts[1]]
+              })
+            ) {
+              testItems.push({
+                className: testParts[0],
+                testMethods: [testParts[1]]
+              });
+            }
           }
         }
       } else {
@@ -441,7 +454,6 @@ export class TestService {
         testItems.push({ [prop]: test });
       }
     }
-
     return {
       tests: testItems,
       testLevel: TestLevel.RunSpecifiedTests
