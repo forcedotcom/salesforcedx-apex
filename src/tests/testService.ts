@@ -392,7 +392,7 @@ export class TestService {
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
   }
 
-  private async buildTestPayload(
+  public async buildTestPayload(
     testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
@@ -414,6 +414,7 @@ export class TestService {
           } else {
             testItems.forEach(element => {
               if (element.className === `${testParts[1]}`) {
+                element.namespace = `${testParts[0]}`;
                 element.testMethods.push(`${testParts[2]}`);
               }
             });
