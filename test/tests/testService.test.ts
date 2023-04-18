@@ -282,7 +282,7 @@ describe('Apex Test Suites', async () => {
         'TestClass1.method1,namespace.TestClass2.method1,TestClass2.method2';
 
       const testService = new TestService(mockConnection);
-      const result = await testService.buildTestPayload(tests);
+      const result = await (testService as any).buildTestPayload(tests);
       expect(result.tests.toString()).to.equal(testsPayload.tests.toString());
     });
   });

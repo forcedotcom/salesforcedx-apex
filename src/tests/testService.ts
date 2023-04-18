@@ -392,7 +392,7 @@ export class TestService {
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
   }
 
-  public async buildTestPayload(
+  private async buildTestPayload(
     testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
