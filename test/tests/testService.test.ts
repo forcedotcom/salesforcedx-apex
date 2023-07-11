@@ -5,13 +5,12 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { AuthInfo, Connection } from '@salesforce/core';
-import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
+import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
 import { fail } from 'assert';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox, SinonStub, spy } from 'sinon';
 import { TestService } from '../../src';
 
-const $$ = testSetup();
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingCreateStub: SinonStub;
@@ -19,6 +18,7 @@ let toolingQueryStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Apex Test Suites', async () => {
+  const $$ = new TestContext();
   beforeEach(async () => {
     sandboxStub = createSandbox();
     await $$.stubAuths(testData);
@@ -259,6 +259,31 @@ describe('Apex Test Suites', async () => {
       ]);
 
       expect(toolingCreateStub.calledTwice).to.be.true;
+    });
+  });
+
+  describe('Build Test Payload', async () => {
+    it('should add all the tests specified even when some belong to the same class', async () => {
+      const testsPayload = {
+        testLevel: 'RunSpecifiedTests',
+        tests: [
+          {
+            className: 'TestClass1',
+            testMethods: ['method1']
+          },
+          {
+            className: 'TestClass2',
+            testMethods: ['method1', 'method2'],
+            namespace: 'namespace'
+          }
+        ]
+      };
+      const tests =
+        'TestClass1.method1,namespace.TestClass2.method1,TestClass2.method2';
+
+      const testService = new TestService(mockConnection);
+      const result = await (testService as any).buildTestPayload(tests);
+      expect(result.tests.toString()).to.equal(testsPayload.tests.toString());
     });
   });
 });
