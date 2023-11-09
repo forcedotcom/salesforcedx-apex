@@ -10,7 +10,7 @@ import {
   successResult,
   testResults,
   coverageResult,
-  coverageFailResult
+  coverageFailResult,
 } from './testResults';
 
 describe('Human Reporter Tests', () => {
@@ -20,10 +20,10 @@ describe('Human Reporter Tests', () => {
     const result = reporter.format(testResults, false);
     expect(result).to.not.be.empty;
     expect(result).to.contain(
-      'AnimalLocatorTest.testMissingAnimal                   Fail     System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:'
+      'AnimalLocatorTest.testMissingAnimal                   Fail     System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:',
     );
     expect(result).to.contain(
-      'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1'
+      'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1',
     );
     expect(result).to.contain('=== Test Results');
     expect(result).to.contain('=== Test Summary');
@@ -33,10 +33,10 @@ describe('Human Reporter Tests', () => {
     const result = reporter.format(successResult, false);
     expect(result).to.not.be.empty;
     expect(result).to.contain(
-      'AccountServiceTest.should_create_account  Pass              86 '
+      'AccountServiceTest.should_create_account  Pass              86 ',
     );
     expect(result).to.contain(
-      'AwesomeCalculatorTest.testCallout         Pass              23'
+      'AwesomeCalculatorTest.testCallout         Pass              23',
     );
     expect(result).to.contain('=== Test Results');
     expect(result).to.contain('=== Test Summary');
@@ -58,10 +58,10 @@ describe('Human Reporter Tests', () => {
     expect(result).to.contain('ApexTestClass  12.5%    9,10');
     expect(result).to.not.contain('=== Test Results');
     expect(result).to.contain(
-      '=== Apex Code Coverage for Test Run 7073t000061uwZI'
+      '=== Apex Code Coverage for Test Run 7073t000061uwZI',
     );
     expect(result).to.contain(
-      'AccountServiceTest.should_create_account                      Pass                       86'
+      'AccountServiceTest.should_create_account                      Pass                       86',
     );
     expect(result).to.contain('=== Test Summary');
   });
@@ -73,16 +73,16 @@ describe('Human Reporter Tests', () => {
     expect(result).to.contain('ApexTestClass  12.5%    9,10');
     expect(result).to.not.contain('=== Test Results');
     expect(result).to.contain(
-      '=== Apex Code Coverage for Test Run 7073t000061uwZI'
+      '=== Apex Code Coverage for Test Run 7073t000061uwZI',
     );
     expect(result).to.contain(
-      'AccountServiceTest.should_create_account                      Pass                                                                                                                    86'
+      'AccountServiceTest.should_create_account                      Pass                                                                                                                    86',
     );
     expect(result).to.contain(
-      'AnimalLocatorTest.testMissingAnimal                           Fail              System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual'
+      'AnimalLocatorTest.testMissingAnimal                           Fail              System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual',
     );
     expect(result).to.contain(
-      'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1'
+      'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1',
     );
     expect(result).to.contain('=== Test Summary');
   });

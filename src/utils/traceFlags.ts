@@ -9,13 +9,13 @@ import { nls } from '../i18n';
 import {
   DEFAULT_DEBUG_LEVEL_NAME,
   LOG_TIMER_LENGTH_MINUTES,
-  LOG_TYPE
+  LOG_TYPE,
 } from '../logs';
 import {
   IdRecord,
   DataRecordResult,
   QueryRecords,
-  TraceFlagRecord
+  TraceFlagRecord,
 } from './types';
 import { MILLISECONDS_PER_MINUTE } from './dateUtil';
 import { escapeXml } from './authUtil';
@@ -44,7 +44,7 @@ export class TraceFlags {
       const expirationDate = this.calculateExpirationDate(
         traceFlag.ExpirationDate
           ? new Date(traceFlag.ExpirationDate)
-          : new Date()
+          : new Date(),
       );
       return await this.updateTraceFlag(traceFlag.Id, expirationDate);
     } else {
@@ -61,21 +61,24 @@ export class TraceFlags {
   }
 
   private async getDebugLevelId(
-    debugLevelName: string
+    debugLevelName: string,
   ): Promise<string | undefined> {
     let debugLevelId;
     if (debugLevelName) {
       debugLevelId = await this.findDebugLevel(debugLevelName);
       if (!debugLevelId) {
         throw new Error(
-          nls.localize('trace_flags_failed_to_find_debug_level', debugLevelName)
+          nls.localize(
+            'trace_flags_failed_to_find_debug_level',
+            debugLevelName,
+          ),
         );
       }
     } else {
       debugLevelId = await this.createDebugLevel(DEFAULT_DEBUG_LEVEL_NAME);
       if (!debugLevelId) {
         throw new Error(
-          nls.localize('trace_flags_failed_to_create_debug_level')
+          nls.localize('trace_flags_failed_to_create_debug_level'),
         );
       }
     }
@@ -83,7 +86,7 @@ export class TraceFlags {
   }
 
   private async findDebugLevel(
-    debugLevelName: string
+    debugLevelName: string,
   ): Promise<string | undefined> {
     const escapedDebugLevel = escapeXml(debugLevelName);
     const query = `SELECT Id FROM DebugLevel WHERE DeveloperName = '${escapedDebugLevel}'`;
@@ -97,44 +100,44 @@ export class TraceFlags {
     const debugLevel = {
       Id: id,
       ApexCode: 'FINEST',
-      Visualforce: 'FINER'
+      Visualforce: 'FINER',
     };
     const result = (await this.connection.tooling.update(
       'DebugLevel',
-      debugLevel
+      debugLevel,
     )) as DataRecordResult;
     return result.success;
   }
 
   private async createDebugLevel(
-    debugLevelName: string
+    debugLevelName: string,
   ): Promise<string | undefined> {
     const developerName = debugLevelName;
     const debugLevel = {
       developerName,
       MasterLabel: developerName,
       ApexCode: 'FINEST',
-      Visualforce: 'FINER'
+      Visualforce: 'FINER',
     };
     const result = (await this.connection.tooling.create(
       'DebugLevel',
-      debugLevel
+      debugLevel,
     )) as DataRecordResult;
     return result.success && result.id ? result.id : undefined;
   }
 
   private async updateTraceFlag(
     id: string,
-    expirationDate: Date
+    expirationDate: Date,
   ): Promise<boolean> {
     const traceFlag = {
       Id: id,
       StartDate: Date.now(),
-      ExpirationDate: expirationDate.toUTCString()
+      ExpirationDate: expirationDate.toUTCString(),
     };
     const result = (await this.connection.tooling.update(
       'TraceFlag',
-      traceFlag
+      traceFlag,
     )) as DataRecordResult;
     return result.success;
   }
@@ -142,19 +145,19 @@ export class TraceFlags {
   private async createTraceFlag(
     userId: string,
     debugLevelId: string,
-    expirationDate: Date
+    expirationDate: Date,
   ): Promise<string | undefined> {
     const traceFlag = {
       tracedentityid: userId,
       logtype: LOG_TYPE,
       debuglevelid: debugLevelId,
       StartDate: Date.now(),
-      ExpirationDate: expirationDate.toUTCString()
+      ExpirationDate: expirationDate.toUTCString(),
     };
 
     const result = (await this.connection.tooling.create(
       'TraceFlag',
-      traceFlag
+      traceFlag,
     )) as DataRecordResult;
     return result.success && result.id ? result.id : undefined;
   }
@@ -170,7 +173,7 @@ export class TraceFlags {
   private calculateExpirationDate(expirationDate: Date): Date {
     if (!this.isValidDateLength(expirationDate)) {
       expirationDate = new Date(
-        Date.now() + LOG_TIMER_LENGTH_MINUTES * MILLISECONDS_PER_MINUTE
+        Date.now() + LOG_TIMER_LENGTH_MINUTES * MILLISECONDS_PER_MINUTE,
       );
     }
     return expirationDate;
@@ -188,7 +191,7 @@ export class TraceFlags {
   }
 
   private async getTraceFlagForUser(
-    userId: string
+    userId: string,
   ): Promise<TraceFlagRecord | undefined> {
     const traceFlagQuery = `
       SELECT Id, logtype, startdate, expirationdate, debuglevelid, debuglevel.apexcode, debuglevel.visualforce
@@ -197,9 +200,8 @@ export class TraceFlags {
       ORDER BY CreatedDate DESC
       LIMIT 1
     `;
-    const traceFlagResult = await this.connection.tooling.query<
-      TraceFlagRecord
-    >(traceFlagQuery);
+    const traceFlagResult =
+      await this.connection.tooling.query<TraceFlagRecord>(traceFlagQuery);
 
     if (traceFlagResult.totalSize > 0) {
       return traceFlagResult.records[0];

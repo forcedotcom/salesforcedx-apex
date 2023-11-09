@@ -16,7 +16,7 @@ import { nls } from '../../src/i18n';
 import {
   ExecuteAnonymousResponse,
   SoapResponse,
-  ExecAnonApiResponse
+  ExecAnonApiResponse,
 } from '../../src/execute/types';
 
 describe('Apex Execute Tests', async () => {
@@ -57,26 +57,26 @@ describe('Apex Execute Tests', async () => {
       compileProblem: '',
       exceptionMessage: '',
       exceptionStackTrace: '',
-      success: 'true'
+      success: 'true',
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: { result: execAnonResult }
-        }
-      }
+          executeAnonymousResponse: { result: execAnonResult },
+        },
+      },
     };
     const expectedResult: ExecuteAnonymousResponse = {
       compiled: true,
       success: true,
-      logs: log
+      logs: log,
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
       .resolves(soapResponse);
     const response = await apexExecute.executeAnonymous({
-      apexFilePath: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file',
     });
 
     expect(response).to.eql(expectedResult);
@@ -93,15 +93,15 @@ describe('Apex Execute Tests', async () => {
       compileProblem: '',
       exceptionMessage: 'System.AssertException: Assertion Failed',
       exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
-      success: 'false'
+      success: 'false',
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: { result: execAnonResult }
-        }
-      }
+          executeAnonymousResponse: { result: execAnonResult },
+        },
+      },
     };
     const expectedResult: ExecuteAnonymousResponse = {
       compiled: true,
@@ -113,16 +113,16 @@ describe('Apex Execute Tests', async () => {
           exceptionStackTrace: 'AnonymousBlock: line 1, column 1',
           compileProblem: '',
           columnNumber: 1,
-          lineNumber: 6
-        }
-      ]
+          lineNumber: 6,
+        },
+      ],
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
       .resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
-      apexFilePath: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file',
     });
     expect(response).to.eql(expectedResult);
   });
@@ -136,15 +136,15 @@ describe('Apex Execute Tests', async () => {
       compileProblem: `Unexpected token '('.`,
       exceptionMessage: '',
       exceptionStackTrace: '',
-      success: 'false'
+      success: 'false',
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: '' } },
         'soapenv:Body': {
-          executeAnonymousResponse: { result: execAnonResult }
-        }
-      }
+          executeAnonymousResponse: { result: execAnonResult },
+        },
+      },
     };
 
     const expectedResult: ExecuteAnonymousResponse = {
@@ -157,16 +157,16 @@ describe('Apex Execute Tests', async () => {
           lineNumber: 6,
           compileProblem: `Unexpected token '('.`,
           exceptionMessage: '',
-          exceptionStackTrace: ''
-        }
-      ]
+          exceptionStackTrace: '',
+        },
+      ],
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
       .resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
-      apexFilePath: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file',
     });
     expect(response).to.eql(expectedResult);
   });
@@ -182,25 +182,25 @@ describe('Apex Execute Tests', async () => {
       compileProblem: '',
       exceptionMessage: '',
       exceptionStackTrace: '',
-      success: 'true'
+      success: 'true',
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: { result: execAnonResult }
-        }
-      }
+          executeAnonymousResponse: { result: execAnonResult },
+        },
+      },
     };
     const expectedResult: ExecuteAnonymousResponse = {
       compiled: true,
       success: true,
-      logs: log
+      logs: log,
     };
 
     const connRequestStub = sandboxStub.stub(
       ExecuteService.prototype,
-      'connectionRequest'
+      'connectionRequest',
     );
     const error = new Error('INVALID_SESSION_ID');
     error.name = 'ERROR_HTTP_500';
@@ -208,7 +208,7 @@ describe('Apex Execute Tests', async () => {
     connRequestStub.onSecondCall().resolves(soapResponse);
 
     const response = await apexExecute.executeAnonymous({
-      apexFilePath: 'filepath/to/anonApex/file'
+      apexFilePath: 'filepath/to/anonApex/file',
     });
     expect(response).to.eql(expectedResult);
     expect(connRequestStub.calledTwice);
@@ -240,26 +240,26 @@ describe('Apex Execute Tests', async () => {
       compileProblem: '',
       exceptionMessage: '',
       exceptionStackTrace: '',
-      success: 'true'
+      success: 'true',
     };
     const soapResponse: SoapResponse = {
       'soapenv:Envelope': {
         'soapenv:Header': { DebuggingInfo: { debugLog: log } },
         'soapenv:Body': {
-          executeAnonymousResponse: { result: execAnonResult }
-        }
-      }
+          executeAnonymousResponse: { result: execAnonResult },
+        },
+      },
     };
     const expectedResult: ExecuteAnonymousResponse = {
       compiled: true,
       success: true,
-      logs: log
+      logs: log,
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
       .resolves(soapResponse);
     const response = await apexExecute.executeAnonymous({
-      apexCode: bufferInput
+      apexCode: bufferInput,
     });
 
     expect(response).to.eql(expectedResult);
@@ -299,7 +299,7 @@ describe('Apex Execute Tests', async () => {
     } catch (e) {
       assert.equal(
         nls.localize('unexpectedExecAnonInputError', errorText),
-        e.message
+        e.message,
       );
     }
   });

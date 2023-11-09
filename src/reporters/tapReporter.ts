@@ -7,7 +7,7 @@
 import {
   ApexTestResultData,
   ApexTestResultOutcome,
-  TestResult
+  TestResult,
 } from '../tests/types';
 
 export interface TapResult {
@@ -24,16 +24,16 @@ export class TapReporter {
 
     let out = '';
     out = out.concat(`1..${testPointCount}\n`);
-    results.forEach(testPoint => {
+    results.forEach((testPoint) => {
       out = out.concat(
-        `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`
+        `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`,
       );
-      testPoint.diagnostics.forEach(s => {
+      testPoint.diagnostics.forEach((s) => {
         out = out.concat(`# ${s}\n`);
       });
     });
 
-    epilog?.forEach(c => {
+    epilog?.forEach((c) => {
       out = out.concat(`# ${c}\n`);
     });
     return out;
@@ -49,7 +49,7 @@ export class TapReporter {
         testNumber,
         description: test.fullName,
         diagnostics: this.buildTapDiagnostics(test),
-        outcome
+        outcome,
       });
     });
     return tapResults;
@@ -61,7 +61,7 @@ export class TapReporter {
       if (testResult.message) {
         const startsWithNewlineRegex = new RegExp(/^[/\r\n|\r|\n][\w]*/gim);
         if (startsWithNewlineRegex.test(testResult.message)) {
-          testResult.message.split(/\r\n|\r|\n/g).forEach(msg => {
+          testResult.message.split(/\r\n|\r|\n/g).forEach((msg) => {
             if (msg && msg.length > 0) {
               message.push(msg.trim());
             }
@@ -74,7 +74,7 @@ export class TapReporter {
       }
 
       if (testResult.stackTrace) {
-        testResult.stackTrace.split('\n').forEach(line => {
+        testResult.stackTrace.split('\n').forEach((line) => {
           message.push(line);
         });
       }

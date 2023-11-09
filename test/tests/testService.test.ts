@@ -28,8 +28,8 @@ describe('Apex Test Suites', async () => {
       .resolves('50.0');
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username
-      })
+        username: testData.username,
+      }),
     });
 
     toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
@@ -54,22 +54,22 @@ describe('Apex Test Suites', async () => {
     toolingQueryStub
       .onFirstCall()
       .resolves({
-        records: [{ Id: 'xxxxxxx243' }]
+        records: [{ Id: 'xxxxxxx243' }],
       })
       .onSecondCall()
       .resolves({
-        records: [{ Id: 'xxxxxxx245' }]
+        records: [{ Id: 'xxxxxxx245' }],
       })
       .onThirdCall()
       .resolves({
-        records: [{ Id: 'xxxxxxx247' }]
+        records: [{ Id: 'xxxxxxx247' }],
       });
 
     const testService = new TestService(mockConnection);
     const ids = await testService.getApexClassIds([
       'firstTestClass',
       'secondTestClass',
-      'thirdTestClass'
+      'thirdTestClass',
     ]);
 
     expect(ids).to.deep.equal(['xxxxxxx243', 'xxxxxxx245', 'xxxxxxx247']);
@@ -103,7 +103,7 @@ describe('Apex Test Suites', async () => {
       fail();
     } catch (e) {
       expect(e.message).to.eql(
-        'Must provide a suite name or suite id to retrieve test classes in suite'
+        'Must provide a suite name or suite id to retrieve test classes in suite',
       );
       expect(toolingQueryStub.notCalled).to.be.true;
     }
@@ -122,7 +122,7 @@ describe('Apex Test Suites', async () => {
     expect(tests).to.deep.equal([{ ApexClassId: 'xxxxxx55555' }]);
     expect(toolingQueryStub.calledTwice).to.be.true;
     expect(toolingQueryStub.args[1]).to.deep.include(
-      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = 'xxxxxxx243'`
+      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = 'xxxxxxx243'`,
     );
   });
 
@@ -140,14 +140,14 @@ describe('Apex Test Suites', async () => {
 
   it('should retrieve all suites associated with a given username', async () => {
     toolingQueryStub.onFirstCall().resolves({
-      records: [{ id: 'xxxxxx55555', TestSuiteName: 'testSuite' }]
+      records: [{ id: 'xxxxxx55555', TestSuiteName: 'testSuite' }],
     });
 
     const testService = new TestService(mockConnection);
     const tests = await testService.retrieveAllSuites();
 
     expect(tests).to.deep.equal([
-      { id: 'xxxxxx55555', TestSuiteName: 'testSuite' }
+      { id: 'xxxxxx55555', TestSuiteName: 'testSuite' },
     ]);
     expect(toolingQueryStub.calledOnce).to.be.true;
   });
@@ -157,7 +157,7 @@ describe('Apex Test Suites', async () => {
       toolingQueryStub
         .onFirstCall()
         .resolves({
-          records: []
+          records: [],
         })
         .onSecondCall()
         .resolves({ records: [] })
@@ -170,7 +170,7 @@ describe('Apex Test Suites', async () => {
       const testService = new TestService(mockConnection);
       await testService.buildSuite('testSuite', [
         'testClassOne',
-        'testClassTwo'
+        'testClassTwo',
       ]);
 
       expect(toolingQueryStub.callCount).to.eql(4);
@@ -181,7 +181,7 @@ describe('Apex Test Suites', async () => {
       toolingQueryStub
         .onFirstCall()
         .resolves({
-          records: [{ Id: 'xxxxxxx243' }]
+          records: [{ Id: 'xxxxxxx243' }],
         })
         .onSecondCall()
         .resolves({ records: [] })
@@ -194,7 +194,7 @@ describe('Apex Test Suites', async () => {
       const testService = new TestService(mockConnection);
       await testService.buildSuite('oldSuite', [
         'testClassOne',
-        'testClassTwo'
+        'testClassTwo',
       ]);
 
       expect(toolingQueryStub.callCount).to.eql(4);
@@ -205,14 +205,14 @@ describe('Apex Test Suites', async () => {
       toolingQueryStub
         .onFirstCall()
         .resolves({
-          records: [{ Id: 'xxxxxxx243' }]
+          records: [{ Id: 'xxxxxxx243' }],
         })
         .onSecondCall()
         .resolves({
           records: [
             { ApexClassId: 'xxxxxxx004' },
-            { ApexClassId: 'xxxxxxx006' }
-          ]
+            { ApexClassId: 'xxxxxxx006' },
+          ],
         })
         .onThirdCall()
         .resolves({ records: [{ Id: 'xxxxxxx004' }] })
@@ -224,17 +224,17 @@ describe('Apex Test Suites', async () => {
       const testService = new TestService(mockConnection);
       await testService.buildSuite('oldSuite', [
         'testClassOne',
-        'testClassTwo'
+        'testClassTwo',
       ]);
 
       expect(toolingQueryStub.callCount).to.eql(4);
       expect(toolingCreateStub.notCalled).to.be.true;
       expect(consoleSpy.callCount).to.eql(2);
       expect(consoleSpy.args[0]).to.eql([
-        'Apex test class testClassOne already exists in Apex test suite oldSuite'
+        'Apex test class testClassOne already exists in Apex test suite oldSuite',
       ]);
       expect(consoleSpy.args[1]).to.eql([
-        'Apex test class testClassTwo already exists in Apex test suite oldSuite'
+        'Apex test class testClassTwo already exists in Apex test suite oldSuite',
       ]);
     });
 
@@ -242,7 +242,7 @@ describe('Apex Test Suites', async () => {
       toolingQueryStub
         .onFirstCall()
         .resolves({
-          records: [{ Id: 'xxxxxxx243' }]
+          records: [{ Id: 'xxxxxxx243' }],
         })
         .onSecondCall()
         .resolves({ records: [] })
@@ -255,7 +255,7 @@ describe('Apex Test Suites', async () => {
       const testService = new TestService(mockConnection);
       await testService.buildSuite('oldSuite', [
         'testClassOne',
-        'testClassTwo'
+        'testClassTwo',
       ]);
 
       expect(toolingCreateStub.calledTwice).to.be.true;
@@ -269,19 +269,20 @@ describe('Apex Test Suites', async () => {
         tests: [
           {
             className: 'TestClass1',
-            testMethods: ['method1']
+            testMethods: ['method1'],
           },
           {
             className: 'TestClass2',
             testMethods: ['method1', 'method2'],
-            namespace: 'namespace'
-          }
-        ]
+            namespace: 'namespace',
+          },
+        ],
       };
       const tests =
         'TestClass1.method1,namespace.TestClass2.method1,TestClass2.method2';
 
       const testService = new TestService(mockConnection);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await (testService as any).buildTestPayload(tests);
       expect(result.tests.toString()).to.equal(testsPayload.tests.toString());
     });

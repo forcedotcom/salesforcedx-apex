@@ -11,7 +11,7 @@ import {
   RetreiveResultsInterval,
   StreamMessage,
   StreamingErrors,
-  TestResultMessage
+  TestResultMessage,
 } from './types';
 import { Progress } from '../common';
 import { nls } from '../i18n';
@@ -20,7 +20,7 @@ import {
   ApexTestProgressValue,
   ApexTestQueueItem,
   ApexTestQueueItemRecord,
-  ApexTestQueueItemStatus
+  ApexTestQueueItemStatus,
 } from '../tests/types';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
@@ -35,7 +35,7 @@ export class Deferred<T> {
   public promise: Promise<T>;
   public resolve: Function;
   constructor() {
-    this.promise = new Promise(resolve => (this.resolve = resolve));
+    this.promise = new Promise((resolve) => (this.resolve = resolve));
   }
 }
 
@@ -61,27 +61,27 @@ export class StreamingClient {
     const urlElements = [
       this.removeTrailingSlashURL(instanceUrl),
       'cometd',
-      this.apiVersion
+      this.apiVersion,
     ];
     return urlElements.join('/');
   }
 
   public constructor(
     connection: Connection,
-    progress?: Progress<ApexTestProgressValue>
+    progress?: Progress<ApexTestProgressValue>,
   ) {
     this.conn = connection;
     this.progress = progress;
     const streamUrl = this.getStreamURL(this.conn.instanceUrl);
     this.client = new Client(streamUrl, {
-      timeout: DEFAULT_STREAMING_TIMEOUT_MS
+      timeout: DEFAULT_STREAMING_TIMEOUT_MS,
     });
 
     this.client.on('transport:up', () => {
       this.progress?.report({
         type: 'StreamingClientProgress',
         value: 'streamingTransportUp',
-        message: nls.localize('streamingTransportUp')
+        message: nls.localize('streamingTransportUp'),
       });
     });
 
@@ -89,21 +89,21 @@ export class StreamingClient {
       this.progress?.report({
         type: 'StreamingClientProgress',
         value: 'streamingTransportDown',
-        message: nls.localize('streamingTransportDown')
+        message: nls.localize('streamingTransportDown'),
       });
     });
 
     this.client.addExtension({
       incoming: async (
         message: StreamMessage,
-        callback: (message: StreamMessage) => void
+        callback: (message: StreamMessage) => void,
       ) => {
         if (message && message.error) {
           // throw errors on handshake errors
           if (message.channel === '/meta/handshake') {
             this.disconnect();
             throw new Error(
-              nls.localize('streamingHandshakeFail', message.error)
+              nls.localize('streamingHandshakeFail', message.error),
             );
           }
 
@@ -131,7 +131,7 @@ export class StreamingClient {
           throw new Error(message.error);
         }
         callback(message);
-      }
+      },
     });
   }
 
@@ -149,7 +149,7 @@ export class StreamingClient {
   }
 
   public handshake(): Promise<void> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.client.handshake(() => {
         resolve();
       });
@@ -165,7 +165,7 @@ export class StreamingClient {
 
   public async subscribe(
     action?: () => Promise<string>,
-    testRunId?: string
+    testRunId?: string,
   ): Promise<AsyncTestRun> {
     return new Promise((subscriptionResolve, subscriptionReject) => {
       let intervalId: NodeJS.Timeout;
@@ -180,15 +180,15 @@ export class StreamingClient {
               clearInterval(intervalId);
               subscriptionResolve({
                 runId: this.subscribedTestRunId,
-                queueItem: result
+                queueItem: result,
               });
             }
-          }
+          },
         );
 
         if (action) {
           action()
-            .then(id => {
+            .then((id) => {
               this.subscribedTestRunId = id;
               this.subscribedTestRunIdDeferred.resolve(id);
 
@@ -200,13 +200,13 @@ export class StreamingClient {
                     clearInterval(intervalId);
                     subscriptionResolve({
                       runId: this.subscribedTestRunId,
-                      queueItem: result
+                      queueItem: result,
                     });
                   }
                 }, RetreiveResultsInterval);
               }
             })
-            .catch(e => {
+            .catch((e) => {
               this.disconnect();
               clearInterval(intervalId);
               subscriptionReject(e);
@@ -223,7 +223,7 @@ export class StreamingClient {
                 clearInterval(intervalId);
                 subscriptionResolve({
                   runId: this.subscribedTestRunId,
-                  queueItem: result
+                  queueItem: result,
                 });
               }
             }, RetreiveResultsInterval);
@@ -252,7 +252,7 @@ export class StreamingClient {
 
   public async handler(
     message?: TestResultMessage,
-    runId?: string
+    runId?: string,
   ): Promise<ApexTestQueueItem> {
     const testRunId = runId || message.sobject.Id;
     if (!this.isValidTestRunID(testRunId, this.subscribedTestRunId)) {
@@ -268,20 +268,20 @@ export class StreamingClient {
       type: 'StreamingClientProgress',
       value: 'streamingProcessingTestRun',
       message: nls.localize('streamingProcessingTestRun', testRunId),
-      testRunId
+      testRunId,
     });
     return null;
   }
 
   private async getCompletedTestRun(
-    testRunId: string
+    testRunId: string,
   ): Promise<ApexTestQueueItem> {
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
     const result = await this.conn.tooling.query<ApexTestQueueItemRecord>(
       queryApexTestQueueItem,
       {
-        autoFetch: true
-      }
+        autoFetch: true,
+      },
     );
 
     if (result.records.length === 0) {
@@ -290,7 +290,7 @@ export class StreamingClient {
 
     this.progress?.report({
       type: 'TestQueueProgress',
-      value: result
+      value: result,
     });
 
     for (let i = 0; i < result.records.length; i++) {

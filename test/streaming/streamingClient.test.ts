@@ -17,7 +17,7 @@ import { Progress } from '../../src';
 import { StreamMessage, TestResultMessage } from '../../src/streaming/types';
 import {
   ApexTestQueueItemStatus,
-  ApexTestProgressValue
+  ApexTestProgressValue,
 } from '../../src/tests/types';
 import { nls } from '../../src/i18n';
 import { EventEmitter } from 'events';
@@ -32,11 +32,11 @@ const testData = new MockTestOrgData();
 const testResultMsg: TestResultMessage = {
   event: {
     createdDate: '2020-08-03T22:58:58.000+0000',
-    type: 'updated'
+    type: 'updated',
   },
   sobject: {
-    Id: '707xx0000AGQ3jbQQD'
-  }
+    Id: '707xx0000AGQ3jbQQD',
+  },
 };
 describe('Streaming API Client', () => {
   const $$ = new TestContext();
@@ -65,7 +65,7 @@ describe('Streaming API Client', () => {
     const stubOn = sandboxStub.stub(ApexFayeClient.prototype, 'on');
     const stubAddExtension = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'addExtension'
+      'addExtension',
     );
     new StreamingClient(mockConnection);
     expect(stubOn.calledTwice).to.equal(true);
@@ -77,7 +77,7 @@ describe('Streaming API Client', () => {
   it('should initialize Faye Client header', async () => {
     const stubSetHeader = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'setHeader'
+      'setHeader',
     );
     const streamClient = new StreamingClient(mockConnection);
     await streamClient.init();
@@ -89,7 +89,7 @@ describe('Streaming API Client', () => {
 
   it('should initialize Faye Client throws authentication error', async () => {
     sandboxStub.stub(Connection.prototype, 'getConnectionOptions').returns({
-      accessToken: undefined
+      accessToken: undefined,
     });
     const streamClient = new StreamingClient(mockConnection);
     try {
@@ -116,7 +116,7 @@ describe('Streaming API Client', () => {
       .throwsException('custom subscribe error');
     const stubDisconnect = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'disconnect'
+      'disconnect',
     );
     const streamClient = new StreamingClient(mockConnection);
     try {
@@ -136,7 +136,7 @@ describe('Streaming API Client', () => {
       .returns({} as any);
     const stubDisconnect = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'disconnect'
+      'disconnect',
     );
     const streamClient = new StreamingClient(mockConnection);
 
@@ -156,16 +156,16 @@ describe('Streaming API Client', () => {
       .returns(
         new Subscription(() => {
           return;
-        })
+        }),
       );
     const stubDisconnect = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'disconnect'
+      'disconnect',
     );
     const streamClient = new StreamingClient(mockConnection);
 
     const result = await streamClient.subscribe(() =>
-      Promise.resolve('707xx0000AGQ3jbQQD')
+      Promise.resolve('707xx0000AGQ3jbQQD'),
     );
     expect(result).to.equal('707xx0000AGQ3jbQQD');
     expect(streamClient.subscribedTestRunId).to.equal('707xx0000AGQ3jbQQD');
@@ -178,7 +178,7 @@ describe('Streaming API Client', () => {
     mockToolingQuery.resolves({
       done: true,
       totalSize: 0,
-      records: []
+      records: [],
     });
     const streamClient = new StreamingClient(mockConnection);
     try {
@@ -188,10 +188,10 @@ describe('Streaming API Client', () => {
     } catch (e) {
       expect(mockToolingQuery.calledOnce).to.equal(true);
       expect(mockToolingQuery.getCall(0).args[0]).to.equal(
-        `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testResultMsg.sobject.Id}'`
+        `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testResultMsg.sobject.Id}'`,
       );
       expect(e.message).to.equal(
-        nls.localize('noTestQueueResults', testResultMsg.sobject.Id)
+        nls.localize('noTestQueueResults', testResultMsg.sobject.Id),
       );
     }
   });
@@ -214,9 +214,9 @@ describe('Streaming API Client', () => {
           Id: '7092M000000Vt94QAC',
           Status: ApexTestQueueItemStatus.Completed,
           ApexClassId: '01p2M00000O6tXZQAZ',
-          TestRunResultId: '05m2M000000TgYuQAK'
-        }
-      ]
+          TestRunResultId: '05m2M000000TgYuQAK',
+        },
+      ],
     };
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.resolves(queryResponse);
@@ -236,15 +236,15 @@ describe('Streaming API Client', () => {
           Id: '7092M000000Vt94QAC',
           Status: ApexTestQueueItemStatus.Completed,
           ApexClassId: '01p2M00000O6tXZQAZ',
-          TestRunResultId: '05m2M000000TgYuQAK'
+          TestRunResultId: '05m2M000000TgYuQAK',
         },
         {
           Id: '709xx000000Vt94QAD',
           Status: ApexTestQueueItemStatus.Processing,
           ApexClassId: '01pxx00000O6tXZQAx',
-          TestRunResultId: '05mxx000000TgYuQAw'
-        }
-      ]
+          TestRunResultId: '05mxx000000TgYuQAw',
+        },
+      ],
     };
 
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
@@ -259,7 +259,7 @@ describe('Streaming API Client', () => {
   it('should report streamingTransportUp progress', () => {
     const reportStub = sandboxStub.stub();
     const progressReporter: Progress<ApexTestProgressValue> = {
-      report: reportStub
+      report: reportStub,
     };
     const mockApexFayeClient = new EventEmitter();
     const stubOn = sandboxStub.stub(ApexFayeClient.prototype, 'on');
@@ -272,14 +272,14 @@ describe('Streaming API Client', () => {
     assert.calledWith(reportStub, {
       type: 'StreamingClientProgress',
       value: 'streamingTransportUp',
-      message: nls.localize('streamingTransportUp')
+      message: nls.localize('streamingTransportUp'),
     });
   });
 
   it('should report streamingTransportDown progress', () => {
     const reportStub = sandboxStub.stub();
     const progressReporter: Progress<ApexTestProgressValue> = {
-      report: reportStub
+      report: reportStub,
     };
     const mockApexFayeClient = new EventEmitter();
     const stubOn = sandboxStub.stub(ApexFayeClient.prototype, 'on');
@@ -292,7 +292,7 @@ describe('Streaming API Client', () => {
     assert.calledWith(reportStub, {
       type: 'StreamingClientProgress',
       value: 'streamingTransportDown',
-      message: nls.localize('streamingTransportDown')
+      message: nls.localize('streamingTransportDown'),
     });
   });
 
@@ -306,13 +306,13 @@ describe('Streaming API Client', () => {
           Id: '707xx0000AGQ3jbQQD',
           Status: ApexTestQueueItemStatus.Processing,
           ApexClassId: '01pxx00000O6tXZQAx',
-          TestRunResultId: '05mxx000000TgYuQAw'
-        }
-      ]
+          TestRunResultId: '05mxx000000TgYuQAw',
+        },
+      ],
     });
     const reportStub = sandboxStub.stub();
     const progressReporter: Progress<ApexTestProgressValue> = {
-      report: reportStub
+      report: reportStub,
     };
 
     const streamClient = new StreamingClient(mockConnection, progressReporter);
@@ -322,7 +322,7 @@ describe('Streaming API Client', () => {
       type: 'StreamingClientProgress',
       value: 'streamingProcessingTestRun',
       message: nls.localize('streamingProcessingTestRun', '707xx0000AGQ3jbQQD'),
-      testRunId: '707xx0000AGQ3jbQQD'
+      testRunId: '707xx0000AGQ3jbQQD',
     });
   });
 
@@ -336,13 +336,13 @@ describe('Streaming API Client', () => {
           Id: '707xx0000AGQ3jbQQD',
           Status: ApexTestQueueItemStatus.Processing,
           ApexClassId: '01pxx00000O6tXZQAx',
-          TestRunResultId: '05mxx000000TgYuQAw'
-        }
-      ]
+          TestRunResultId: '05mxx000000TgYuQAw',
+        },
+      ],
     });
     const reportStub = sandboxStub.stub();
     const progressReporter: Progress<ApexTestProgressValue> = {
-      report: reportStub
+      report: reportStub,
     };
 
     const streamClient = new StreamingClient(mockConnection, progressReporter);
@@ -358,10 +358,10 @@ describe('Streaming API Client', () => {
             Id: '707xx0000AGQ3jbQQD',
             Status: ApexTestQueueItemStatus.Processing,
             ApexClassId: '01pxx00000O6tXZQAx',
-            TestRunResultId: '05mxx000000TgYuQAw'
-          }
-        ]
-      }
+            TestRunResultId: '05mxx000000TgYuQAw',
+          },
+        ],
+      },
     });
   });
 
@@ -375,27 +375,27 @@ describe('Streaming API Client', () => {
     const mockFayeIncomingMessage = new EventEmitter();
     const stubAddExtension = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'addExtension'
+      'addExtension',
     );
     const stubCallback = sandboxStub.stub();
     stubAddExtension.callsFake(
       (extension: {
         incoming: (
           message: StreamMessage,
-          callback: (message: StreamMessage) => void
+          callback: (message: StreamMessage) => void,
         ) => Promise<void>;
       }) => {
-        mockFayeIncomingMessage.on('incoming', async message => {
+        mockFayeIncomingMessage.on('incoming', async (message) => {
           await extension.incoming(message, stubCallback);
           deferred.resolve();
         });
-      }
+      },
     );
 
     new StreamingClient(mockConnection);
     mockFayeIncomingMessage.emit('incoming', {
       error: '401::Authentication invalid',
-      successful: false
+      successful: false,
     });
 
     await deferred.promise;
@@ -412,21 +412,21 @@ describe('Streaming API Client', () => {
     const mockFayeIncomingMessage = new EventEmitter();
     const stubAddExtension = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'addExtension'
+      'addExtension',
     );
     const stubCallback = sandboxStub.stub();
     stubAddExtension.callsFake(
       (extension: {
         incoming: (
           message: StreamMessage,
-          callback: (message: StreamMessage) => void
+          callback: (message: StreamMessage) => void,
         ) => Promise<void>;
       }) => {
-        mockFayeIncomingMessage.on('incoming', async message => {
+        mockFayeIncomingMessage.on('incoming', async (message) => {
           await extension.incoming(message, stubCallback);
           deferred.resolve();
         });
-      }
+      },
     );
 
     new StreamingClient(mockConnection);
@@ -435,11 +435,11 @@ describe('Streaming API Client', () => {
       clientId: 'mockClientId',
       advice: {
         reconnect: 'handshake',
-        interval: 500
+        interval: 500,
       },
       error: '403::Unknown client',
       successful: false,
-      id: 'b'
+      id: 'b',
     });
 
     await deferred.promise;
@@ -455,27 +455,27 @@ describe('Streaming API Client', () => {
     const mockFayeIncomingMessage = new EventEmitter();
     const stubAddExtension = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'addExtension'
+      'addExtension',
     );
     const stubCallback = sandboxStub.stub();
     stubAddExtension.callsFake(
       (extension: {
         incoming: (
           message: StreamMessage,
-          callback: (message: StreamMessage) => void
+          callback: (message: StreamMessage) => void,
         ) => Promise<void>;
       }) => {
-        mockFayeIncomingMessage.on('incoming', async message => {
+        mockFayeIncomingMessage.on('incoming', async (message) => {
           await extension.incoming(message, stubCallback);
           deferred.resolve();
         });
-      }
+      },
     );
 
     new StreamingClient(mockConnection);
     mockFayeIncomingMessage.emit('incoming', {
       error: '403::Unknown client',
-      successful: false
+      successful: false,
     });
 
     await deferred.promise;
@@ -492,9 +492,9 @@ describe('Streaming API Client', () => {
           Id: '7092M000000Vt94QAC',
           Status: ApexTestQueueItemStatus.Processing,
           ApexClassId: '01p2M00000O6tXZQAZ',
-          TestRunResultId: '05m2M000000TgYuQAK'
-        }
-      ]
+          TestRunResultId: '05m2M000000TgYuQAK',
+        },
+      ],
     };
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.resolves(queryResponse);
@@ -513,7 +513,7 @@ describe('Streaming API Client', () => {
     sandboxStub.stub(ApexFayeClient.prototype, 'subscribe');
     const disconnectStub = sandboxStub.stub(
       ApexFayeClient.prototype,
-      'disconnect'
+      'disconnect',
     );
     const mockRunId = '707xx0000AGQ3jbQQD';
     const queryResponse = {
@@ -524,9 +524,9 @@ describe('Streaming API Client', () => {
           Id: '7092M000000Vt94QAC',
           Status: ApexTestQueueItemStatus.Completed,
           ApexClassId: '01p2M00000O6tXZQAZ',
-          TestRunResultId: '05m2M000000TgYuQAK'
-        }
-      ]
+          TestRunResultId: '05m2M000000TgYuQAK',
+        },
+      ],
     };
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.resolves(queryResponse);
@@ -536,12 +536,12 @@ describe('Streaming API Client', () => {
 
     const streamClient = new StreamingClient(mockConnection);
     const result = await streamClient.subscribe(() =>
-      Promise.resolve(mockRunId)
+      Promise.resolve(mockRunId),
     );
 
     expect(result).to.eql({
       runId: mockRunId,
-      queueItem: queryResponse
+      queueItem: queryResponse,
     });
     assert.calledOnce(mockToolingQuery);
     assert.calledOnce(disconnectStub);

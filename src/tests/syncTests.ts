@@ -16,7 +16,7 @@ import {
   ApexTestRunResultStatus,
   SyncTestConfiguration,
   SyncTestResult,
-  TestResult
+  TestResult,
 } from './types';
 import { calculatePercentage } from './utils';
 import { HttpRequest } from 'jsforce';
@@ -39,7 +39,7 @@ export class SyncTests {
   public async runTests(
     options: SyncTestConfiguration,
     codeCoverage = false,
-    token?: CancellationToken
+    token?: CancellationToken,
   ): Promise<TestResult> {
     try {
       const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
@@ -47,11 +47,11 @@ export class SyncTests {
         method: 'POST',
         url,
         body: JSON.stringify(options),
-        headers: { 'content-type': 'application/json' }
+        headers: { 'content-type': 'application/json' },
       };
 
       const testRun = (await this.connection.tooling.request(
-        request
+        request,
       )) as SyncTestResult;
 
       if (token && token.isCancellationRequested) {
@@ -61,7 +61,7 @@ export class SyncTests {
       return await this.formatSyncResults(
         testRun,
         getCurrentTime(),
-        codeCoverage
+        codeCoverage,
       );
     } catch (e) {
       throw formatTestErrors(e);
@@ -71,12 +71,11 @@ export class SyncTests {
   public async formatSyncResults(
     apiTestResult: SyncTestResult,
     startTime: number,
-    codeCoverage = false
+    codeCoverage = false,
   ): Promise<TestResult> {
     const coveredApexClassIdSet = new Set<string>();
-    const { apexTestClassIdSet, testResults } = this.buildSyncTestResults(
-      apiTestResult
-    );
+    const { apexTestClassIdSet, testResults } =
+      this.buildSyncTestResults(apiTestResult);
 
     const globalTestFailed = apiTestResult.failures.length;
     const globalTestPassed = apiTestResult.successes.length;
@@ -92,11 +91,11 @@ export class SyncTests {
         skipped: 0,
         passRate: calculatePercentage(
           globalTestPassed,
-          apiTestResult.numTestsRun
+          apiTestResult.numTestsRun,
         ),
         failRate: calculatePercentage(
           globalTestFailed,
-          apiTestResult.numTestsRun
+          apiTestResult.numTestsRun,
         ),
         skipRate: calculatePercentage(0, apiTestResult.numTestsRun),
         testStartTime: formatStartTime(startTime),
@@ -107,58 +106,51 @@ export class SyncTests {
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
         testRunId: '',
-        userId: this.connection.getConnectionOptions().userId
+        userId: this.connection.getConnectionOptions().userId,
       },
-      tests: testResults
+      tests: testResults,
     };
 
     if (codeCoverage) {
-      const perClassCovMap = await this.codecoverage.getPerClassCodeCoverage(
-        apexTestClassIdSet
-      );
+      const perClassCovMap =
+        await this.codecoverage.getPerClassCodeCoverage(apexTestClassIdSet);
 
       if (perClassCovMap.size > 0) {
-        result.tests.forEach(item => {
+        result.tests.forEach((item) => {
           const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
           const perClassCov = perClassCovMap.get(keyCodeCov);
           if (perClassCov) {
-            perClassCov.forEach(classCov =>
-              coveredApexClassIdSet.add(classCov.apexClassOrTriggerId)
+            perClassCov.forEach((classCov) =>
+              coveredApexClassIdSet.add(classCov.apexClassOrTriggerId),
             );
             item.perClassCoverage = perClassCov;
           }
         });
       }
 
-      const {
-        codeCoverageResults,
-        totalLines,
-        coveredLines
-      } = await this.codecoverage.getAggregateCodeCoverage(
-        coveredApexClassIdSet
-      );
+      const { codeCoverageResults, totalLines, coveredLines } =
+        await this.codecoverage.getAggregateCodeCoverage(coveredApexClassIdSet);
       result.codecoverage = codeCoverageResults;
       result.summary.totalLines = totalLines;
       result.summary.coveredLines = coveredLines;
       result.summary.testRunCoverage = calculatePercentage(
         coveredLines,
-        totalLines
+        totalLines,
       );
-      result.summary.orgWideCoverage = await this.codecoverage.getOrgWideCoverage();
+      result.summary.orgWideCoverage =
+        await this.codecoverage.getOrgWideCoverage();
     }
     return result;
   }
 
-  private buildSyncTestResults(
-    apiTestResult: SyncTestResult
-  ): {
+  private buildSyncTestResults(apiTestResult: SyncTestResult): {
     apexTestClassIdSet: Set<string>;
     testResults: ApexTestResultData[];
   } {
     const testResults: ApexTestResultData[] = [];
     const apexTestClassIdSet = new Set<string>();
 
-    apiTestResult.successes.forEach(item => {
+    apiTestResult.successes.forEach((item) => {
       const nms = item.namespace ? `${item.namespace}__` : '';
       apexTestClassIdSet.add(item.id);
       testResults.push({
@@ -174,15 +166,15 @@ export class SyncTests {
           id: item.id,
           name: item.name,
           namespacePrefix: item.namespace,
-          fullName: `${nms}${item.name}`
+          fullName: `${nms}${item.name}`,
         },
         runTime: item.time ?? 0,
         testTimestamp: '',
-        fullName: `${nms}${item.name}.${item.methodName}`
+        fullName: `${nms}${item.name}.${item.methodName}`,
       });
     });
 
-    apiTestResult.failures.forEach(item => {
+    apiTestResult.failures.forEach((item) => {
       const nms = item.namespace ? `${item.namespace}__` : '';
       apexTestClassIdSet.add(item.id);
       const diagnostic =
@@ -201,12 +193,12 @@ export class SyncTests {
           id: item.id,
           name: item.name,
           namespacePrefix: item.namespace,
-          fullName: `${nms}${item.name}`
+          fullName: `${nms}${item.name}`,
         },
         runTime: item.time ?? 0,
         testTimestamp: '',
         fullName: `${nms}${item.name}.${item.methodName}`,
-        ...(diagnostic ? { diagnostic } : {})
+        ...(diagnostic ? { diagnostic } : {}),
       });
     });
 

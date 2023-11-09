@@ -24,12 +24,12 @@ const logRecords: LogRecord[] = [
     LogLength: 450,
     LogUser: {
       Name: 'Test User',
-      attributes: {}
+      attributes: {},
     },
     Operation: 'API',
     Request: 'API',
     StartTime: '2020-10-13T05:39:43.000+0000',
-    Status: 'Assertion Failed'
+    Status: 'Assertion Failed',
   },
   {
     Id: '07L5tgg0005PGdTnFPL',
@@ -39,13 +39,13 @@ const logRecords: LogRecord[] = [
     LogLength: 450,
     LogUser: {
       Name: 'Test User2',
-      attributes: {}
+      attributes: {},
     },
     Operation: 'API',
     Request: 'API',
     StartTime: '2020-10-13T05:39:43.000+0000',
-    Status: 'Successful'
-  }
+    Status: 'Successful',
+  },
 ];
 
 const rawLogResult: LogQueryResult = {
@@ -58,12 +58,12 @@ const rawLogResult: LogQueryResult = {
       LogLength: 450,
       LogUser: {
         Name: 'Test User',
-        attributes: {}
+        attributes: {},
       },
       Operation: 'API',
       Request: 'API',
       StartTime: '2020-10-13T05:39:43.000+0000',
-      Status: 'Assertion Failed'
+      Status: 'Assertion Failed',
     },
     {
       Id: '07L5tgg0005PGdTnFPL',
@@ -73,14 +73,14 @@ const rawLogResult: LogQueryResult = {
       LogLength: 450,
       LogUser: {
         Name: 'Test User2',
-        attributes: {}
+        attributes: {},
       },
       Operation: 'API',
       Request: 'API',
       StartTime: '2020-10-13T05:39:43.000+0000',
-      Status: 'Successful'
-    }
-  ]
+      Status: 'Successful',
+    },
+  ],
 };
 
 describe('Apex Log Service Tests', () => {
@@ -102,12 +102,12 @@ describe('Apex Log Service Tests', () => {
       .resolves('50.0');
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username
-      })
+        username: testData.username,
+      }),
     });
     toolingRequestStub = sandboxStub.stub(
       LogService.prototype,
-      'toolingRequest'
+      'toolingRequest',
     );
   });
 
@@ -126,7 +126,7 @@ describe('Apex Log Service Tests', () => {
     //@ts-ignore
     toolingQueryStub.onFirstCall().resolves(queryRecords);
     const response = await apexLogGet.getLogs({
-      numberOfLogs: 2
+      numberOfLogs: 2,
     });
     expect(response.length).to.eql(2);
   });
@@ -136,11 +136,11 @@ describe('Apex Log Service Tests', () => {
     const log = '48.0 APEX_CODE,FINEST;APEX_PROFILING,INFO;CALLOUT..';
     const getLogIdStub = sandboxStub.stub(
       LogService.prototype,
-      'getLogRecords'
+      'getLogRecords',
     );
     toolingRequestStub.onFirstCall().resolves(log);
     const response = await apexLogGet.getLogs({
-      logId: '07L5w00005PGdTnEAL'
+      logId: '07L5w00005PGdTnEAL',
     });
     expect(response.length).to.eql(1);
     expect(getLogIdStub.callCount).to.eql(0);
@@ -173,14 +173,14 @@ describe('Apex Log Service Tests', () => {
       { Id: 'DH' },
       { Id: 'FGFD' },
       { Id: 'SFSDF' },
-      { Id: 'DSASD' }
+      { Id: 'DSASD' },
     ];
     const queryRecords = { records: ids };
     const toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
     //@ts-ignore
     toolingQueryStub.onFirstCall().resolves(queryRecords);
     const response = await apexLogGet.getLogs({
-      numberOfLogs: 27
+      numberOfLogs: 27,
     });
     expect(response.length).to.eql(25);
   });
@@ -203,7 +203,7 @@ describe('Apex Log Service Tests', () => {
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
-        'Expected number of logs to be greater than 0.'
+        'Expected number of logs to be greater than 0.',
       );
     }
   });
@@ -229,12 +229,12 @@ describe('Apex Log Service Tests', () => {
 
     const logResult: LogResult[] = [
       { log: logs[0], logPath: path.join(filePath, `${logRecords[0].Id}.log`) },
-      { log: logs[1], logPath: path.join(filePath, `${logRecords[1].Id}.log`) }
+      { log: logs[1], logPath: path.join(filePath, `${logRecords[1].Id}.log`) },
     ];
 
     const response = await apexLogGet.getLogs({
       numberOfLogs: 2,
-      outputDir: filePath
+      outputDir: filePath,
     });
 
     expect(response).to.deep.equal(logResult);
@@ -259,7 +259,7 @@ describe('Apex Log Service Tests', () => {
     toolingRequestStub.onSecondCall().resolves(logs[1]);
     await apexLogGet.getLogs({
       logId: '07WgsWfad',
-      outputDir: filePath
+      outputDir: filePath,
     });
     expect(createStreamStub.calledWith(logsPath)).to.be.true;
   });
@@ -272,7 +272,7 @@ describe('Apex Log Service Tests', () => {
       assert.fail();
     } catch (e) {
       expect(e.message).to.equal(
-        'To retrieve logs, specify the log ID or the number of logs.'
+        'To retrieve logs, specify the log ID or the number of logs.',
       );
     }
   });

@@ -9,7 +9,7 @@ import {
   Logger,
   Org,
   StatusResult,
-  StreamingClient
+  StreamingClient,
 } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
 import { AnyJson } from '@salesforce/ts-types';
@@ -17,13 +17,13 @@ import {
   LOG_TIMER_LENGTH_MINUTES,
   LISTENER_ABORTED_ERROR_NAME,
   MAX_NUM_LOGS,
-  STREAMING_LOG_TOPIC
+  STREAMING_LOG_TOPIC,
 } from './constants';
 import {
   ApexLogGetOptions,
   LogQueryResult,
   LogRecord,
-  LogResult
+  LogResult,
 } from './types';
 import * as path from 'path';
 import { nls } from '../i18n';
@@ -56,7 +56,7 @@ export class LogService {
 
     if (typeof options.numberOfLogs === 'number') {
       const logIdRecordList = await this.getLogRecords(options.numberOfLogs);
-      return logIdRecordList.map(logRecord => logRecord.Id);
+      return logIdRecordList.map((logRecord) => logRecord.Id);
     }
     return [options.logId];
   }
@@ -65,7 +65,7 @@ export class LogService {
   public async getLogs(options: ApexLogGetOptions): Promise<LogResult[]> {
     const logIdList = await this.getLogIds(options);
     const logPaths: string[] = [];
-    const connectionRequests = logIdList.map(async id => {
+    const connectionRequests = logIdList.map(async (id) => {
       const url = `${this.connection.tooling._baseUrl()}/sobjects/ApexLog/${id}/Body`;
       const logRecord = await this.toolingRequest(url);
       if (options.outputDir) {
@@ -85,7 +85,7 @@ export class LogService {
       return logMap;
     }
 
-    return logs.map(log => {
+    return logs.map((log) => {
       return { log };
     });
   }
@@ -114,7 +114,7 @@ export class LogService {
     }
 
     const response = (await this.connection.tooling.query(
-      apexLogQuery
+      apexLogQuery,
     )) as LogQueryResult;
     return response.records as LogRecord[];
   }
@@ -136,7 +136,7 @@ export class LogService {
     const options = new StreamingClient.DefaultOptions(
       org,
       STREAMING_LOG_TOPIC,
-      this.streamingCallback.bind(this)
+      this.streamingCallback.bind(this),
     );
     options.setSubscribeTimeout(Duration.minutes(LOG_TIMER_LENGTH_MINUTES));
 

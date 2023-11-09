@@ -15,7 +15,7 @@ describe('Format Test Errors', async () => {
     const invalidApexErr = new Error(invalidApexMsg);
     const formattedApex = formatTestErrors(invalidApexErr);
     expect(formattedApex.message).to.include(
-      nls.localize('invalidsObjectErr', ['ApexClass', invalidApexMsg])
+      nls.localize('invalidsObjectErr', ['ApexClass', invalidApexMsg]),
     );
   });
 
@@ -35,7 +35,7 @@ describe('Format Test Errors', async () => {
     invalidPkgErr.stack = 'STACKTRACE';
     const formattedPkg = formatTestErrors(invalidPkgErr);
     expect(formattedPkg.message).to.include(
-      nls.localize('invalidsObjectErr', ['PackageLicense', invalidPkgMsg])
+      nls.localize('invalidsObjectErr', ['PackageLicense', invalidPkgMsg]),
     );
     expect(formattedPkg.name).to.equal(invalidPkgErr.name);
     expect(formattedPkg.stack).to.equal(invalidPkgErr.stack);

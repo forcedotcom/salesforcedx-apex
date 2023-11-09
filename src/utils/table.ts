@@ -39,7 +39,7 @@ export class Table {
           col.label || col.key,
           width,
           COLUMN_FILLER,
-          isLastCol
+          isLastCol,
         );
         headerSeparator += this.fillColumn('', width, HEADER_FILLER, isLastCol);
       }
@@ -49,7 +49,7 @@ export class Table {
       table += `${title ? '\n' : ''}${columnHeader}\n${headerSeparator}\n`;
     }
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
       let outputRow = '';
       cols.forEach((col, colIndex, colArr) => {
         const cell = row[col.key];
@@ -63,7 +63,7 @@ export class Table {
                 line,
                 cellWidth,
                 COLUMN_FILLER,
-                isLastCol
+                isLastCol,
               );
             } else {
               // If the cell is multiline, add an additional line to the table
@@ -85,11 +85,11 @@ export class Table {
 
   private calculateMaxColumnWidths(
     rows: Row[],
-    cols: Column[]
+    cols: Column[],
   ): Map<string, number> {
     const maxColWidths = new Map<string, number>();
-    cols.forEach(col => {
-      rows.forEach(row => {
+    cols.forEach((col) => {
+      rows.forEach((row) => {
         const cell = row[col.key];
         if (cell === undefined) {
           throw Error(`Row is missing the key ${col.key}`);
@@ -105,7 +105,7 @@ export class Table {
         const longestLineWidth = cell
           .split('\n')
           .reduce((maxLine, line) =>
-            line.length > maxLine.length ? line : maxLine
+            line.length > maxLine.length ? line : maxLine,
           ).length;
         if (longestLineWidth > maxColWidth) {
           maxColWidths.set(col.key, longestLineWidth);
@@ -119,7 +119,7 @@ export class Table {
     label: string,
     width: number,
     filler: string,
-    isLastCol: boolean
+    isLastCol: boolean,
   ): string {
     let filled = label;
     for (let i = 0; i < width - label.length; i++) {

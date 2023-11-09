@@ -10,7 +10,7 @@ import {
   ApexTestResultData,
   ApexTestResultOutcome,
   CodeCoverageResult,
-  TestResult
+  TestResult,
 } from '../tests';
 import { nls } from '../i18n';
 
@@ -37,48 +37,48 @@ export class HumanReporter {
     const summaryRowArray: Row[] = [
       {
         name: nls.localize('outcome'),
-        value: testResult.summary.outcome
+        value: testResult.summary.outcome,
       },
       {
         name: nls.localize('testsRan'),
-        value: String(testResult.summary.testsRan)
+        value: String(testResult.summary.testsRan),
       },
       {
         name: nls.localize('passRate'),
-        value: testResult.summary.passRate
+        value: testResult.summary.passRate,
       },
       {
         name: nls.localize('failRate'),
-        value: testResult.summary.failRate
+        value: testResult.summary.failRate,
       },
       {
         name: nls.localize('skipRate'),
-        value: testResult.summary.skipRate
+        value: testResult.summary.skipRate,
       },
       {
         name: nls.localize('testRunId'),
-        value: testResult.summary.testRunId
+        value: testResult.summary.testRunId,
       },
       {
         name: nls.localize('testExecutionTime'),
-        value: `${testResult.summary.testExecutionTimeInMs} ms`
+        value: `${testResult.summary.testExecutionTimeInMs} ms`,
       },
       {
         name: nls.localize('orgId'),
-        value: testResult.summary.orgId
+        value: testResult.summary.orgId,
       },
       {
         name: nls.localize('username'),
-        value: testResult.summary.username
+        value: testResult.summary.username,
       },
       ...(testResult.summary.orgWideCoverage
         ? [
             {
               name: nls.localize('orgWideCoverage'),
-              value: String(testResult.summary.orgWideCoverage)
-            }
+              value: String(testResult.summary.orgWideCoverage),
+            },
           ]
-        : [])
+        : []),
     ];
 
     const summaryTable = tb.createTable(
@@ -86,11 +86,11 @@ export class HumanReporter {
       [
         {
           key: 'name',
-          label: nls.localize('nameColHeader')
+          label: nls.localize('nameColHeader'),
         },
-        { key: 'value', label: nls.localize('valueColHeader') }
+        { key: 'value', label: nls.localize('valueColHeader') },
       ],
-      nls.localize('testSummaryHeader')
+      nls.localize('testSummaryHeader'),
     );
     return summaryTable;
   }
@@ -115,9 +115,11 @@ export class HumanReporter {
           outcome: elem.outcome,
           msg: elem.message ? msg : '',
           runtime:
-            elem.outcome !== ApexTestResultOutcome.Fail ? `${elem.runTime}` : ''
+            elem.outcome !== ApexTestResultOutcome.Fail
+              ? `${elem.runTime}`
+              : '',
         });
-      }
+      },
     );
 
     let testResultTable = '\n\n';
@@ -126,13 +128,13 @@ export class HumanReporter {
       [
         {
           key: 'name',
-          label: nls.localize('testNameColHeader')
+          label: nls.localize('testNameColHeader'),
         },
         { key: 'outcome', label: nls.localize('outcomeColHeader') },
         { key: 'msg', label: nls.localize('msgColHeader') },
-        { key: 'runtime', label: nls.localize('runtimeColHeader') }
+        { key: 'runtime', label: nls.localize('runtimeColHeader') },
       ],
-      nls.localize('testResultsHeader')
+      nls.localize('testResultsHeader'),
     );
     return testResultTable;
   }
@@ -146,14 +148,14 @@ export class HumanReporter {
         : elem.message;
 
       if (elem.perClassCoverage) {
-        elem.perClassCoverage.forEach(perClassCov => {
+        elem.perClassCoverage.forEach((perClassCov) => {
           testRowArray.push({
             name: elem.fullName,
             coveredClassName: perClassCov.apexClassOrTriggerName,
             outcome: elem.outcome,
             coveredClassPercentage: perClassCov.percentage,
             msg: elem.message ? msg : '',
-            runtime: `${elem.runTime}`
+            runtime: `${elem.runTime}`,
           });
         });
       } else {
@@ -163,7 +165,7 @@ export class HumanReporter {
           outcome: elem.outcome,
           coveredClassPercentage: '',
           msg: elem.message ? msg : '',
-          runtime: `${elem.runTime}`
+          runtime: `${elem.runTime}`,
         });
       }
     });
@@ -174,24 +176,24 @@ export class HumanReporter {
       [
         {
           key: 'name',
-          label: nls.localize('testNameColHeader')
+          label: nls.localize('testNameColHeader'),
         },
         {
           key: 'coveredClassName',
-          label: nls.localize('classTestedHeader')
+          label: nls.localize('classTestedHeader'),
         },
         {
           key: 'outcome',
-          label: nls.localize('outcomeColHeader')
+          label: nls.localize('outcomeColHeader'),
         },
         {
           key: 'coveredClassPercentage',
-          label: nls.localize('percentColHeader')
+          label: nls.localize('percentColHeader'),
         },
         { key: 'msg', label: nls.localize('msgColHeader') },
-        { key: 'runtime', label: nls.localize('runtimeColHeader') }
+        { key: 'runtime', label: nls.localize('runtimeColHeader') },
       ],
-      nls.localize('detailedCodeCovHeader', [testResult.summary.testRunId])
+      nls.localize('detailedCodeCovHeader', [testResult.summary.testRunId]),
     );
     return detailedCovTable;
   }
@@ -208,9 +210,9 @@ export class HumanReporter {
         codeCovRowArray.push({
           name: elem.name,
           percent: elem.percentage,
-          uncoveredLines: this.formatUncoveredLines(elem.uncoveredLines)
+          uncoveredLines: this.formatUncoveredLines(elem.uncoveredLines),
         });
-      }
+      },
     );
 
     let codeCovTable = '\n\n';
@@ -219,18 +221,18 @@ export class HumanReporter {
       [
         {
           key: 'name',
-          label: nls.localize('classesColHeader')
+          label: nls.localize('classesColHeader'),
         },
         {
           key: 'percent',
-          label: nls.localize('percentColHeader')
+          label: nls.localize('percentColHeader'),
         },
         {
           key: 'uncoveredLines',
-          label: nls.localize('uncoveredLinesColHeader')
-        }
+          label: nls.localize('uncoveredLinesColHeader'),
+        },
       ],
-      nls.localize('codeCovHeader')
+      nls.localize('codeCovHeader'),
     );
     return codeCovTable;
   }

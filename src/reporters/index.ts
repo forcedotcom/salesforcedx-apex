@@ -13,5 +13,5 @@ export {
   CoverageReporterOptions,
   CoverageReportFormats,
   DefaultReportOptions,
-  DefaultWatermarks
+  DefaultWatermarks,
 } from './coverageReporter';

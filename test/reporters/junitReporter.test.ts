@@ -12,7 +12,7 @@ import {
   junitSuccess,
   junitCodeCov,
   junitMissingVal,
-  successResult
+  successResult,
 } from './testResults';
 
 describe('JUnit Reporter Tests', () => {
@@ -53,8 +53,8 @@ describe('JUnit Reporter Tests', () => {
         numLinesUncovered: 2,
         percentage: '12.5%',
         coveredLines: [1, 2, 3, 4, 5, 6, 7, 8],
-        uncoveredLines: [9, 10]
-      }
+        uncoveredLines: [9, 10],
+      },
     ];
     successResult.summary.orgWideCoverage = '85%';
     const result = reporter.format(successResult);

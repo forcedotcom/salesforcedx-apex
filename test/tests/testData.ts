@@ -12,7 +12,7 @@ import {
   ApexTestResultRecord,
   ApexTestRunResultStatus,
   SyncTestResult,
-  TestResult
+  TestResult,
 } from '../../src/tests/types';
 
 export const syncTestResultSimple: SyncTestResult = {
@@ -27,10 +27,10 @@ export const syncTestResultSimple: SyncTestResult = {
       name: 'TestSample',
       namespace: null,
       seeAllData: false,
-      time: 107
-    }
+      time: 107,
+    },
   ],
-  totalTime: 270
+  totalTime: 270,
 };
 
 export const syncTestResultWithFailures: SyncTestResult = {
@@ -49,7 +49,7 @@ export const syncTestResultWithFailures: SyncTestResult = {
       seeAllData: false,
       stackTrace: 'Class.TestSample.testOne: line 27, column 1',
       time: 68,
-      type: 'Class'
+      type: 'Class',
     },
     {
       id: '01pxx00000NWwb4AAD',
@@ -61,7 +61,7 @@ export const syncTestResultWithFailures: SyncTestResult = {
       seeAllData: false,
       stackTrace: undefined,
       time: 68,
-      type: 'Class'
+      type: 'Class',
     },
     {
       id: '01pxx00000NWwb5AAD',
@@ -72,7 +72,7 @@ export const syncTestResultWithFailures: SyncTestResult = {
       seeAllData: false,
       stackTrace: 'Class.TestSample3.testOne: line 27, column 1',
       time: 68,
-      type: 'Class'
+      type: 'Class',
     },
     {
       id: '01pxx00000NWwb6AAD',
@@ -83,10 +83,10 @@ export const syncTestResultWithFailures: SyncTestResult = {
       seeAllData: false,
       stackTrace: 'TestSample4: line 30',
       time: 68,
-      type: 'Class'
-    }
+      type: 'Class',
+    },
   ],
-  totalTime: 87
+  totalTime: 87,
 };
 
 export const testStartTime = '2020-11-09T18:02:50.000+0000';
@@ -110,7 +110,7 @@ export const syncResult: TestResult = {
     testTotalTimeInMs: 1765,
     commandTimeInMs: 2000,
     testRunId: '',
-    userId: '005xx000000abcDAAU'
+    userId: '005xx000000abcDAAU',
   },
   tests: [
     {
@@ -126,13 +126,13 @@ export const syncResult: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestApexClass',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestApexClass'
+        fullName: 't3st__TestApexClass',
       },
       runTime: 8,
       testTimestamp: '',
-      fullName: `t3st__TestApexClass.testMethod`
-    }
-  ]
+      fullName: `t3st__TestApexClass.testMethod`,
+    },
+  ],
 };
 
 export const testResultData: TestResult = {
@@ -152,7 +152,7 @@ export const testResultData: TestResult = {
     testTotalTimeInMs: 1765,
     commandTimeInMs: 2000,
     testRunId,
-    userId: '005xx000000abcDAAU'
+    userId: '005xx000000abcDAAU',
   },
   tests: [
     {
@@ -168,13 +168,13 @@ export const testResultData: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st__TestLogger',
       },
       runTime: 8,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog'
-    }
-  ]
+      fullName: 't3st__TestLogger.testLoggerLog',
+    },
+  ],
 };
 
 export const missingTimeTestData: TestResult = {
@@ -194,7 +194,7 @@ export const missingTimeTestData: TestResult = {
     testTotalTimeInMs: 0,
     commandTimeInMs: 2000,
     testRunId,
-    userId: '005xx000000abcDAAU'
+    userId: '005xx000000abcDAAU',
   },
   tests: [
     {
@@ -210,13 +210,13 @@ export const missingTimeTestData: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st__TestLogger',
       },
       runTime: 0,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog'
-    }
-  ]
+      fullName: 't3st__TestLogger.testLoggerLog',
+    },
+  ],
 };
 
 export const skippedTestData: TestResult = {
@@ -236,7 +236,7 @@ export const skippedTestData: TestResult = {
     testTotalTimeInMs: 0,
     commandTimeInMs: 2000,
     testRunId,
-    userId: '005xx000000abcDAAU'
+    userId: '005xx000000abcDAAU',
   },
   tests: [
     {
@@ -252,13 +252,13 @@ export const skippedTestData: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st__TestLogger',
       },
       runTime: 0,
       testTimestamp: '3',
-      fullName: 't3st__TestLogger.testLoggerLog'
-    }
-  ]
+      fullName: 't3st__TestLogger.testLoggerLog',
+    },
+  ],
 };
 
 const failureSummary = {
@@ -276,7 +276,7 @@ const failureSummary = {
   testTotalTimeInMs: 0,
   commandTimeInMs: 2000,
   testRunId,
-  userId: '005xx000000abcDAAU'
+  userId: '005xx000000abcDAAU',
 };
 
 export const diagnosticResult: TestResult = {
@@ -296,7 +296,7 @@ export const diagnosticResult: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st__TestLogger',
       },
       runTime: 0,
       testTimestamp: '3',
@@ -308,10 +308,10 @@ export const diagnosticResult: TestResult = {
         exceptionMessage: 'System.AssertException: Assertion Failed',
         exceptionStackTrace:
           'Class.LIFXControllerTest.makeData: line 6, column 1',
-        lineNumber: 6
-      }
-    }
-  ]
+        lineNumber: 6,
+      },
+    },
+  ],
 };
 
 export const diagnosticFailure: TestResult = {
@@ -331,7 +331,7 @@ export const diagnosticFailure: TestResult = {
         id: '01pxx00000O6tXZQAZ',
         name: 'TestLogger',
         namespacePrefix: 't3st',
-        fullName: 't3st__TestLogger'
+        fullName: 't3st__TestLogger',
       },
       runTime: 0,
       testTimestamp: '3',
@@ -340,10 +340,10 @@ export const diagnosticFailure: TestResult = {
         className: 'LIFXControllerTest',
         compileProblem: '',
         exceptionMessage: 'System.AssertException: Assertion Failed',
-        exceptionStackTrace: 'Class.LIFXControllerTest.makeData'
-      }
-    }
-  ]
+        exceptionStackTrace: 'Class.LIFXControllerTest.makeData',
+      },
+    },
+  ],
 };
 
 export const perClassCodeCoverage: ApexCodeCoverageRecord[] = [
@@ -351,91 +351,73 @@ export const perClassCodeCoverage: ApexCodeCoverageRecord[] = [
     ApexTestClassId: '01pxx00000NWwb3AAD',
     ApexClassOrTrigger: {
       Id: '01pxx00000avcNeAAL',
-      Name: 'ApexClassExample'
+      Name: 'ApexClassExample',
     },
     TestMethodName: 'testOne',
     NumLinesCovered: 1,
-    NumLinesUncovered: 62
+    NumLinesUncovered: 62,
   },
   {
     ApexTestClassId: '01pxx00000NWwb3AAD',
     ApexClassOrTrigger: {
       Id: '01pxx00000avc00AAL',
-      Name: 'ApexSampleV2'
+      Name: 'ApexSampleV2',
     },
     TestMethodName: 'testOne',
     NumLinesCovered: 45,
-    NumLinesUncovered: 2
+    NumLinesUncovered: 2,
   },
   {
     ApexTestClassId: '01pxx00000NWwb3AAD',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger'
+      Name: 'MyTestTrigger',
     },
     TestMethodName: 'testOne',
     NumLinesCovered: 5,
-    NumLinesUncovered: 2
-  }
+    NumLinesUncovered: 2,
+  },
 ];
 
 export const codeCoverageQueryResult: ApexCodeCoverageAggregateRecord[] = [
   {
     ApexClassOrTrigger: {
       Id: '01pxx00000avcNeAAL',
-      Name: 'ApexClassExample'
+      Name: 'ApexClassExample',
     },
     NumLinesCovered: 0,
     NumLinesUncovered: 9,
     Coverage: {
       coveredLines: [],
-      uncoveredLines: [3, 8, 10, 13, 16, 21, 22, 24, 28]
-    }
+      uncoveredLines: [3, 8, 10, 13, 16, 21, 22, 24, 28],
+    },
   },
   {
     ApexClassOrTrigger: {
       Id: '01pxx00000avc00AAL',
-      Name: 'ApexSampleV2'
+      Name: 'ApexSampleV2',
     },
     NumLinesCovered: 19,
     NumLinesUncovered: 1,
     Coverage: {
       coveredLines: [
-        3,
-        4,
-        6,
-        7,
-        8,
-        9,
-        15,
-        18,
-        19,
-        22,
-        23,
-        24,
-        27,
-        28,
-        29,
-        30,
-        31,
-        33,
-        34
+        3, 4, 6, 7, 8, 9, 15, 18, 19, 22, 23, 24, 27, 28, 29, 30, 31, 33, 34,
       ],
-      uncoveredLines: [35]
-    }
+      uncoveredLines: [35],
+    },
   },
   {
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger'
+      Name: 'MyTestTrigger',
     },
     NumLinesCovered: 0,
     NumLinesUncovered: 0,
     Coverage: {
       coveredLines: [],
-      uncoveredLines: []
-    }
-  }
+      uncoveredLines: [],
+    },
+  },
 ];
 
 export const mixedTestResults: ApexTestResultRecord[] = [
@@ -454,8 +436,8 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       Id: '01pxx00000NnP2KQAV',
       Name: 'TestAssignment',
       NamespacePrefix: null,
-      FullName: 'TestAssignment'
-    }
+      FullName: 'TestAssignment',
+    },
   },
   {
     Id: '07Mxx00000ErehwUAB',
@@ -472,8 +454,8 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       Id: '01pxx00000NnP2KQAV',
       Name: 'TestAssignment',
       NamespacePrefix: null,
-      FullName: 'TestAssignment'
-    }
+      FullName: 'TestAssignment',
+    },
   },
   {
     Id: '07Mxx00000ErehxUAB',
@@ -490,8 +472,8 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       Id: '01pxx00000NnP2KQAV',
       Name: 'TestAssignment',
       NamespacePrefix: null,
-      FullName: 'TestAssignment'
-    }
+      FullName: 'TestAssignment',
+    },
   },
   {
     Id: '07Mxx00000ErehyUAB',
@@ -508,8 +490,8 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       Id: '01pxx00000NnP2KQAV',
       Name: 'TestAssignment',
       NamespacePrefix: null,
-      FullName: 'TestAssignment'
-    }
+      FullName: 'TestAssignment',
+    },
   },
   {
     Id: '07Mxx00000EreiDUAR',
@@ -526,10 +508,10 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       Id: '01pxx00000NnP2KQAV',
       Name: 'TestAssignment',
       NamespacePrefix: null,
-      FullName: 'TestAssignment'
+      FullName: 'TestAssignment',
     },
     RunTime: 560,
-    TestTimestamp: '2020-08-18T02:21:30.000+0000'
+    TestTimestamp: '2020-08-18T02:21:30.000+0000',
   },
   {
     Id: '07Mxx00000EreiDUAR',
@@ -545,11 +527,11 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       Id: '01pxx00000NnP2KQAV',
       Name: 'TestAssignment',
       NamespacePrefix: null,
-      FullName: 'TestAssignment'
+      FullName: 'TestAssignment',
     },
     RunTime: 56,
-    TestTimestamp: '2020-08-18T02:21:30.000+0000'
-  }
+    TestTimestamp: '2020-08-18T02:21:30.000+0000',
+  },
 ];
 
 export const mixedPerClassCodeCoverage: ApexCodeCoverageRecord[] = [
@@ -557,60 +539,60 @@ export const mixedPerClassCodeCoverage: ApexCodeCoverageRecord[] = [
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01pxx00000avcNeAAL',
-      Name: 'ApexClassExample'
+      Name: 'ApexClassExample',
     },
     TestMethodName: 'testAssignContains',
     NumLinesCovered: 1,
-    NumLinesUncovered: 62
+    NumLinesUncovered: 62,
   },
   {
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01pxx00000avc00AAL',
-      Name: 'ApexSampleV2'
+      Name: 'ApexSampleV2',
     },
     TestMethodName: 'testAssignOnUpdate',
     NumLinesCovered: 45,
-    NumLinesUncovered: 2
+    NumLinesUncovered: 2,
   },
   {
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger'
+      Name: 'MyTestTrigger',
     },
     TestMethodName: 'testAssignOnInsert',
     NumLinesCovered: 5,
-    NumLinesUncovered: 2
+    NumLinesUncovered: 2,
   },
   {
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger'
+      Name: 'MyTestTrigger',
     },
     TestMethodName: 'testAssignRuleContainsV2',
     NumLinesCovered: 0,
-    NumLinesUncovered: 20
+    NumLinesUncovered: 20,
   },
   {
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger'
+      Name: 'MyTestTrigger',
     },
     TestMethodName: 'testAssignRuleContains',
     NumLinesCovered: 0,
-    NumLinesUncovered: 14
+    NumLinesUncovered: 14,
   },
   {
     ApexTestClassId: '01pxx00000NnP2KQAV',
     ApexClassOrTrigger: {
       Id: '01qxp00000av340AAL',
-      Name: 'MyTestTrigger'
+      Name: 'MyTestTrigger',
     },
     TestMethodName: 'testAssignOnFuture',
     NumLinesCovered: 0,
-    NumLinesUncovered: 4
-  }
+    NumLinesUncovered: 4,
+  },
 ];

@@ -19,7 +19,7 @@ export const enum TestLevel {
   /**
    * Only the tests that you specify are run
    */
-  RunSpecifiedTests = 'RunSpecifiedTests'
+  RunSpecifiedTests = 'RunSpecifiedTests',
 }
 
 export type AsyncTestConfiguration = {
@@ -62,7 +62,7 @@ export enum ResultFormat {
   junit = 'junit',
   tap = 'tap',
   json = 'json',
-  human = 'human'
+  human = 'human',
 }
 
 export type OutputDirConfig = {
@@ -181,7 +181,7 @@ export const enum ApexTestResultOutcome {
   Pass = 'Pass',
   Fail = 'Fail',
   CompileFail = 'CompileFail',
-  Skip = 'Skip'
+  Skip = 'Skip',
 }
 
 export type ApexTestResultRecord = {
@@ -252,7 +252,7 @@ export const enum ApexTestRunResultStatus {
   Passed = 'Passed',
   Failed = 'Failed',
   Completed = 'Completed',
-  Skipped = 'Skipped'
+  Skipped = 'Skipped',
 }
 
 export type ApexTestRunResultRecord = {
@@ -291,7 +291,7 @@ export const enum ApexTestQueueItemStatus {
   Processing = 'Processing',
   Aborted = 'Aborted',
   Completed = 'Completed',
-  Failed = 'Failed'
+  Failed = 'Failed',
 }
 
 export type ApexTestQueueItemRecord = {
