@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Connection } from '@salesforce/core';
+import { ConfigAggregator, Connection } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
@@ -33,6 +33,7 @@ import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
 import { HttpRequest } from 'jsforce';
+import { OrgConfigProperties } from '@salesforce/core/lib/org/orgConfigProperties';
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -292,17 +293,20 @@ export class AsyncTests {
   public async getAsyncTestResults(
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
+    const config = await ConfigAggregator.create();
     let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     apexTestResultQuery +=
       'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
     apexTestResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
-
+    const apexTestResultQueryCount =
+      'Select count(id) from ApexTestResult where QueueItemId IN (%s)';
     const apexResultIds = testQueueResult.records.map(record => record.Id);
 
     // iterate thru ids, create query with id, & compare query length to char limit
     const queries: string[] = [];
+    const countQueries: string[] = [];
     for (let i = 0; i < apexResultIds.length; i += QUERY_RECORD_LIMIT) {
       const recordSet: string[] = apexResultIds
         .slice(i, i + QUERY_RECORD_LIMIT)
@@ -311,12 +315,26 @@ export class AsyncTests {
         apexTestResultQuery,
         recordSet.join(',')
       );
+      const countQuery: string = util.format(
+        apexTestResultQueryCount,
+        recordSet.join(',')
+      );
+      countQueries.push(countQuery);
       queries.push(query);
     }
 
-    const queryPromises = queries.map(query => {
+    const countQueryPromises = countQueries.map(query => {
+      return this.connection.singleRecordQuery<{ expr0: number }>(query);
+    });
+
+    const countQueryResult = await Promise.all(countQueryPromises);
+
+    const queryPromises = queries.map((query, index) => {
       return this.connection.tooling.query<ApexTestResultRecord>(query, {
-        autoFetch: true
+        autoFetch: true,
+        maxFetch:
+          countQueryResult[index]?.expr0 ??
+          config.getPropertyValue(OrgConfigProperties.ORG_MAX_QUERY_LIMIT)
       });
     });
     const apexTestResults = await Promise.all(queryPromises);
