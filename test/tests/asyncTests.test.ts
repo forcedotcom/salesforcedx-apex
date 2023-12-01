@@ -60,6 +60,7 @@ import {
 import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
+import { QueryResult } from '../../src/utils/types';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
@@ -562,17 +563,29 @@ describe('Run Apex tests asynchronously', () => {
 
     mockToolingAutoQuery.onCall(2).resolves({
       done: true,
+      totalSize: 1,
+      records: [{ expr0: 6 }]
+    });
+
+    mockToolingAutoQuery.onCall(3).resolves({
+      done: true,
       totalSize: 3,
       records: mixedPerClassCodeCoverage
     } as ApexCodeCoverage);
 
-    mockToolingAutoQuery.onCall(3).resolves({
+    mockToolingAutoQuery.onCall(4).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 6 }]
+    });
+
+    mockToolingAutoQuery.onCall(5).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
 
-    mockToolingAutoQuery.onCall(4).resolves({
+    mockToolingAutoQuery.onCall(6).resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -633,17 +646,29 @@ describe('Run Apex tests asynchronously', () => {
 
     mockToolingQuery.onCall(2).resolves({
       done: true,
+      totalSize: 1,
+      records: [{ expr0: 6 }]
+    });
+
+    mockToolingQuery.onCall(3).resolves({
+      done: true,
       totalSize: 3,
       records: mixedPerClassCodeCoverage
     } as ApexCodeCoverage);
 
-    mockToolingQuery.onCall(3).resolves({
+    mockToolingQuery.onCall(4).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 6 }]
+    });
+
+    mockToolingQuery.onCall(5).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
 
-    mockToolingQuery.onCall(4).resolves({
+    mockToolingQuery.onCall(6).resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -652,7 +677,6 @@ describe('Run Apex tests asynchronously', () => {
         }
       ]
     } as ApexOrgWideCoverage);
-
     const reportStub = sandboxStub.stub();
     const progressReporter: Progress<ApexTestProgressValue> = {
       report: reportStub

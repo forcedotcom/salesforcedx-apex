@@ -131,7 +131,13 @@ describe('Get code coverage results', () => {
         uncoveredLines: [8, 9, 10]
       }
     ];
-    toolingQueryStub.resolves({
+    toolingQueryStub.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 3 }]
+    });
+
+    toolingQueryStub.onCall(1).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
@@ -194,7 +200,13 @@ describe('Get code coverage results', () => {
         }
       }
     ];
-    toolingQueryStub.resolves({
+    toolingQueryStub.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 3 }]
+    });
+
+    toolingQueryStub.onCall(1).resolves({
       done: true,
       totalSize: 3,
       records: perClassCodeCovResult
@@ -268,7 +280,13 @@ describe('Get code coverage results', () => {
         Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] }
       }
     ];
-    toolingQueryStub.resolves({
+    toolingQueryStub.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 2 }]
+    });
+
+    toolingQueryStub.onCall(1).resolves({
       done: true,
       totalSize: 2,
       records: perClassCodeCovResult
@@ -336,20 +354,37 @@ describe('Get code coverage results', () => {
       };
       records.push(record);
     }
+    toolingQueryStub.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 500 }]
+    });
 
-    toolingQueryStub.onFirstCall().resolves({
+    toolingQueryStub.onCall(1).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 500 }]
+    });
+
+    toolingQueryStub.onCall(2).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 400 }]
+    });
+
+    toolingQueryStub.onCall(3).resolves({
       done: true,
       totalSize: 1,
       records: records.splice(0, QUERY_RECORD_LIMIT)
     });
 
-    toolingQueryStub.onSecondCall().resolves({
+    toolingQueryStub.onCall(4).resolves({
       done: true,
       totalSize: 1,
       records: records.splice(QUERY_RECORD_LIMIT, 2 * QUERY_RECORD_LIMIT)
     });
 
-    toolingQueryStub.onThirdCall().resolves({
+    toolingQueryStub.onCall(5).resolves({
       done: true,
       totalSize: 1,
       records: records.splice(2 * QUERY_RECORD_LIMIT, recordCount)
@@ -363,20 +398,26 @@ describe('Get code coverage results', () => {
     const codeCoverage = new CodeCoverage(mockConnection);
     await codeCoverage.getPerClassCodeCoverage(apexTestClassSet);
 
-    expect(toolingQueryStub.args.length).to.equal(3);
+    expect(toolingQueryStub.args.length).to.equal(6);
 
+    const countQuery1 = toolingQueryStub.getCall(0).args;
+    expect(countQuery1.length).to.equal(1);
+    expect(countQuery1[0]).to.include('count');
+    const countQuery2 = toolingQueryStub.getCall(1).args;
+    expect(countQuery2.length).to.equal(1);
+    expect(countQuery2[0]).to.include('count');
     const idCountOfFirstCall =
-      toolingQueryStub.getCall(0).args[0].split(',').length -
+      toolingQueryStub.getCall(3).args[0].split(',').length -
       queryStartSeparatorCount;
     expect(idCountOfFirstCall).to.equal(QUERY_RECORD_LIMIT);
 
     const idCountOfSecondCall =
-      toolingQueryStub.getCall(1).args[0].split(',').length -
+      toolingQueryStub.getCall(4).args[0].split(',').length -
       queryStartSeparatorCount;
     expect(idCountOfSecondCall).to.equal(QUERY_RECORD_LIMIT);
 
     const idCountOfThirdCall =
-      toolingQueryStub.getCall(2).args[0].split(',').length -
+      toolingQueryStub.getCall(5).args[0].split(',').length -
       queryStartSeparatorCount;
     expect(idCountOfThirdCall).to.equal(400);
 
@@ -408,19 +449,37 @@ describe('Get code coverage results', () => {
       records.push(record);
     }
 
-    toolingQueryStub.onFirstCall().resolves({
+    toolingQueryStub.onCall(0).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 500 }]
+    });
+
+    toolingQueryStub.onCall(1).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 500 }]
+    });
+
+    toolingQueryStub.onCall(2).resolves({
+      done: true,
+      totalSize: 1,
+      records: [{ expr0: 300 }]
+    });
+
+    toolingQueryStub.onCall(3).resolves({
       done: true,
       totalSize: 1,
       records: records.splice(0, QUERY_RECORD_LIMIT)
     });
 
-    toolingQueryStub.onSecondCall().resolves({
+    toolingQueryStub.onCall(4).resolves({
       done: true,
       totalSize: 1,
       records: records.splice(QUERY_RECORD_LIMIT, 2 * QUERY_RECORD_LIMIT)
     });
 
-    toolingQueryStub.onThirdCall().resolves({
+    toolingQueryStub.onCall(5).resolves({
       done: true,
       totalSize: 1,
       records: records.splice(2 * QUERY_RECORD_LIMIT, recordCount)
@@ -434,20 +493,20 @@ describe('Get code coverage results', () => {
     const codeCoverage = new CodeCoverage(mockConnection);
     await codeCoverage.getAggregateCodeCoverage(apexTestClassSet);
 
-    expect(toolingQueryStub.args.length).to.equal(3);
+    expect(toolingQueryStub.args.length).to.equal(6);
 
     const idCountOfFirstCall =
-      toolingQueryStub.getCall(0).args[0].split(',').length -
+      toolingQueryStub.getCall(3).args[0].split(',').length -
       queryStartSeparatorCount;
     expect(idCountOfFirstCall).to.equal(QUERY_RECORD_LIMIT);
 
     const idCountOfSecondCall =
-      toolingQueryStub.getCall(1).args[0].split(',').length -
+      toolingQueryStub.getCall(4).args[0].split(',').length -
       queryStartSeparatorCount;
     expect(idCountOfSecondCall).to.equal(QUERY_RECORD_LIMIT);
 
     const idCountOfThirdCall =
-      toolingQueryStub.getCall(2).args[0].split(',').length -
+      toolingQueryStub.getCall(5).args[0].split(',').length -
       queryStartSeparatorCount;
     expect(idCountOfThirdCall).to.equal(300);
 

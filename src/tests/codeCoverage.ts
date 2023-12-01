@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Connection } from '@salesforce/core';
+import { ConfigAggregator, Connection } from '@salesforce/core';
 import {
   ApexCodeCoverage,
   ApexCodeCoverageAggregate,
@@ -18,6 +18,7 @@ import {
 import * as util from 'util';
 import { calculatePercentage } from './utils';
 import { QUERY_RECORD_LIMIT } from './constants';
+import { OrgConfigProperties } from '@salesforce/core/lib/org/orgConfigProperties';
 
 export class CodeCoverage {
   public readonly connection: Connection;
@@ -159,7 +160,13 @@ export class CodeCoverage {
   ): Promise<ApexCodeCoverage[]> {
     const perClassCodeCovQuery =
       'SELECT ApexTestClassId, ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, TestMethodName, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
-    return this.fetchResults(apexTestClassSet, perClassCodeCovQuery);
+    const countPerClassCodeCovQuery =
+      'SELECT count(ApexTestClassId) FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
+    return this.fetchResults(
+      apexTestClassSet,
+      perClassCodeCovQuery,
+      countPerClassCodeCovQuery
+    );
   }
 
   private async queryAggregateCodeCov(
@@ -167,15 +174,31 @@ export class CodeCoverage {
   ): Promise<ApexCodeCoverageAggregate[]> {
     const codeCoverageQuery =
       'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
-    return this.fetchResults(apexClassIdSet, codeCoverageQuery);
+    const countCodeCoverageQuery =
+      'SELECT count(ApexClassOrTrigger.Id) FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
+    return this.fetchResults(
+      apexClassIdSet,
+      codeCoverageQuery,
+      countCodeCoverageQuery
+    );
   }
 
   private async fetchResults<
     T extends ApexCodeCoverage | ApexCodeCoverageAggregate
-  >(idSet: Set<string>, selectQuery: string): Promise<T[]> {
+  >(idSet: Set<string>, selectQuery: string, countQuery: string): Promise<T[]> {
+    const config = await ConfigAggregator.create();
+    const countQueries = this.createQueries(countQuery, idSet);
     const queries = this.createQueries(selectQuery, idSet);
 
-    const queryPromises = queries.map(query => {
+    const countQueryPromises = countQueries.map(query =>
+      this.connection.singleRecordQuery<{ expr0: number }>(query, {
+        tooling: true
+      })
+    );
+
+    const countQueryResult = await Promise.all(countQueryPromises);
+
+    const queryPromises = queries.map((query, index) => {
       // The query method returns a type QueryResult from jsforce
       // that has takes a type that extends the jsforce Record.
       // ApexCodeCoverageRecord and ApexCodeCoverageAggregateRecord
@@ -183,7 +206,10 @@ export class CodeCoverage {
       return this.connection.tooling.query<
         ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord
       >(query, {
-        autoFetch: true
+        autoFetch: true,
+        maxFetch:
+          countQueryResult[index]?.expr0 ??
+          config.getPropertyValue(OrgConfigProperties.ORG_MAX_QUERY_LIMIT)
       });
     });
 
