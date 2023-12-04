@@ -16,9 +16,10 @@ import {
   PerClassCoverage
 } from './types';
 import * as util from 'util';
-import { calculatePercentage } from './utils';
+import { calculatePercentage, verifyCountQueries } from './utils';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { OrgConfigProperties } from '@salesforce/core/lib/org/orgConfigProperties';
+import { nls } from '../i18n';
 
 export class CodeCoverage {
   public readonly connection: Connection;
@@ -197,6 +198,8 @@ export class CodeCoverage {
     );
 
     const countQueryResult = await Promise.all(countQueryPromises);
+
+    verifyCountQueries(countQueryResult, countQueries);
 
     const queryPromises = queries.map((query, index) => {
       // The query method returns a type QueryResult from jsforce

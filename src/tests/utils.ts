@@ -8,6 +8,7 @@
 import { Connection } from '@salesforce/core';
 import { CLASS_ID_PREFIX, TEST_RUN_ID_PREFIX } from './constants';
 import { NamespaceInfo } from './types';
+import { nls } from '../i18n';
 
 export function isValidTestRunID(testRunId: string): boolean {
   return (
@@ -53,4 +54,24 @@ export async function queryNamespaces(
   });
 
   return [...orgNamespaces, ...installedNamespaces];
+}
+
+export function verifyCountQueries(
+  countQueryResult: { expr0: number }[],
+  countQueries: string[]
+) {
+  // check count query results to ensure that there are results that can be used to set maxFetch
+  countQueryResult.forEach((result, index) => {
+    if (!result?.expr0 || result?.expr0 <= 0) {
+      throw new Error(
+        nls.localize(
+          'invalidCountQueryResult',
+          countQueries[index].substring(
+            0,
+            countQueries[index].indexOf('IN (') + 30
+          )
+        )
+      );
+    }
+  });
 }

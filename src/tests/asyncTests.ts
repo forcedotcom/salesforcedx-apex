@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { ConfigAggregator, Connection } from '@salesforce/core';
+import { Connection } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
@@ -28,7 +28,11 @@ import {
   TestResult,
   TestRunIdResult
 } from './types';
-import { calculatePercentage, isValidTestRunID } from './utils';
+import {
+  calculatePercentage,
+  isValidTestRunID,
+  verifyCountQueries
+} from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
@@ -293,7 +297,6 @@ export class AsyncTests {
   public async getAsyncTestResults(
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
-    const config = await ConfigAggregator.create();
     let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     apexTestResultQuery +=
       'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
@@ -324,17 +327,20 @@ export class AsyncTests {
     }
 
     const countQueryPromises = countQueries.map(query => {
-      return this.connection.singleRecordQuery<{ expr0: number }>(query);
+      return this.connection.singleRecordQuery<{
+        expr0: number;
+        tooling: true;
+      }>(query);
     });
 
     const countQueryResult = await Promise.all(countQueryPromises);
 
+    verifyCountQueries(countQueryResult, countQueries);
+
     const queryPromises = queries.map((query, index) => {
       return this.connection.tooling.query<ApexTestResultRecord>(query, {
         autoFetch: true,
-        maxFetch:
-          countQueryResult[index]?.expr0 ??
-          config.getPropertyValue(OrgConfigProperties.ORG_MAX_QUERY_LIMIT)
+        maxFetch: countQueryResult[index].expr0
       });
     });
     const apexTestResults = await Promise.all(queryPromises);
