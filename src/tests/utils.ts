@@ -9,6 +9,7 @@ import { Connection } from '@salesforce/core';
 import { CLASS_ID_PREFIX, TEST_RUN_ID_PREFIX } from './constants';
 import { NamespaceInfo } from './types';
 import { nls } from '../i18n';
+import { QueryResult } from 'jsforce';
 
 export function isValidTestRunID(testRunId: string): boolean {
   return (
@@ -73,5 +74,26 @@ export function verifyCountQueries(
         )
       );
     }
+  });
+}
+
+export async function queryAll<T>(
+  connection: Connection,
+  query: string,
+  tooling = false
+): Promise<QueryResult<T>> {
+  return new Promise(async () => {
+    const allResults: T[] = [];
+    const conn = tooling ? connection.tooling : connection;
+    let result: QueryResult<T> = await conn.query<T>(query, {
+      autoFetch: true
+    });
+    allResults.push(...(result.records as T[]));
+    while (result.done === false) {
+      result = (await connection.queryMore(
+        result.nextRecordsUrl
+      )) as QueryResult<T>;
+    }
+    return { done: true, totalSize: allResults.length, records: allResults };
   });
 }
