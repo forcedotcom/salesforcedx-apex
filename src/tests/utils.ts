@@ -77,23 +77,38 @@ export function verifyCountQueries(
   });
 }
 
-export async function queryAll<T>(
+export const queryAll = async <T>(
   connection: Connection,
   query: string,
   tooling = false
-): Promise<QueryResult<T>> {
-  return new Promise(async () => {
-    const allResults: T[] = [];
-    const conn = tooling ? connection.tooling : connection;
-    let result: QueryResult<T> = await conn.query<T>(query, {
-      autoFetch: true
-    });
-    allResults.push(...(result.records as T[]));
-    while (result.done === false) {
-      result = (await connection.queryMore(
-        result.nextRecordsUrl
-      )) as QueryResult<T>;
-    }
-    return { done: true, totalSize: allResults.length, records: allResults };
+): Promise<QueryResult<T>> => {
+  const conn = tooling ? connection.tooling : connection;
+  const allRecords: T[] = [];
+  const result = await conn.query<T>(query, {
+    autoFetch: true
   });
-}
+  allRecords.push(...result.records);
+  if (!result.done) {
+    let moreResult;
+    let nextRecordsUrl = result.nextRecordsUrl;
+    let visitCount = 0;
+    while (nextRecordsUrl) {
+      console.error('Next Records URL:', nextRecordsUrl);
+      visitCount++;
+      moreResult = (await connection.queryMore(nextRecordsUrl)) as QueryResult<
+        T
+      >;
+      allRecords.push(...moreResult.records);
+      nextRecordsUrl = moreResult.nextRecordsUrl;
+      console.error('Record Count:', moreResult.records.length);
+    }
+    console.error('Visit Count:', visitCount);
+  }
+  console.error('Total Records Count:', allRecords.length);
+
+  return {
+    done: true,
+    totalSize: allRecords.length,
+    records: allRecords
+  } as QueryResult<T>;
+};

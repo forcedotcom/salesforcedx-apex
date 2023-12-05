@@ -31,12 +31,13 @@ import {
 import {
   calculatePercentage,
   isValidTestRunID,
+  queryAll,
   verifyCountQueries
 } from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
-import { HttpRequest } from 'jsforce';
+import { HttpRequest, QueryResult } from 'jsforce';
 import { OrgConfigProperties } from '@salesforce/core/lib/org/orgConfigProperties';
 
 export class AsyncTests {
