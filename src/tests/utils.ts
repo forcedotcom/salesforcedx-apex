@@ -84,27 +84,12 @@ export const queryAll = async <T>(
 ): Promise<QueryResult<T>> => {
   const conn = tooling ? connection.tooling : connection;
   const allRecords: T[] = [];
-  const result = await conn.query<T>(query, {
-    autoFetch: true
-  });
+  let result = await conn.query<T>(query);
   allRecords.push(...result.records);
-  if (!result.done) {
-    let moreResult;
-    let nextRecordsUrl = result.nextRecordsUrl;
-    let visitCount = 0;
-    while (nextRecordsUrl) {
-      console.error('Next Records URL:', nextRecordsUrl);
-      visitCount++;
-      moreResult = (await connection.queryMore(nextRecordsUrl)) as QueryResult<
-        T
-      >;
-      allRecords.push(...moreResult.records);
-      nextRecordsUrl = moreResult.nextRecordsUrl;
-      console.error('Record Count:', moreResult.records.length);
-    }
-    console.error('Visit Count:', visitCount);
+  while (!result.done) {
+    result = (await conn.queryMore(result.nextRecordsUrl)) as QueryResult<T>;
+    allRecords.push(...result.records);
   }
-  console.error('Total Records Count:', allRecords.length);
 
   return {
     done: true,

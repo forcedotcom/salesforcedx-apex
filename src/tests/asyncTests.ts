@@ -304,13 +304,10 @@ export class AsyncTests {
     apexTestResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
-    const apexTestResultQueryCount =
-      'Select count(id) from ApexTestResult where QueueItemId IN (%s)';
     const apexResultIds = testQueueResult.records.map(record => record.Id);
 
     // iterate thru ids, create query with id, & compare query length to char limit
     const queries: string[] = [];
-    const countQueries: string[] = [];
     for (let i = 0; i < apexResultIds.length; i += QUERY_RECORD_LIMIT) {
       const recordSet: string[] = apexResultIds
         .slice(i, i + QUERY_RECORD_LIMIT)
@@ -319,30 +316,11 @@ export class AsyncTests {
         apexTestResultQuery,
         recordSet.join(',')
       );
-      const countQuery: string = util.format(
-        apexTestResultQueryCount,
-        recordSet.join(',')
-      );
-      countQueries.push(countQuery);
       queries.push(query);
     }
 
-    const countQueryPromises = countQueries.map(query => {
-      return this.connection.singleRecordQuery<{
-        expr0: number;
-        tooling: true;
-      }>(query);
-    });
-
-    const countQueryResult = await Promise.all(countQueryPromises);
-
-    verifyCountQueries(countQueryResult, countQueries);
-
-    const queryPromises = queries.map((query, index) => {
-      return this.connection.tooling.query<ApexTestResultRecord>(query, {
-        autoFetch: true,
-        maxFetch: countQueryResult[index].expr0
-      });
+    const queryPromises = queries.map(query => {
+      return queryAll(this.connection, query, true);
     });
     const apexTestResults = await Promise.all(queryPromises);
     return apexTestResults as ApexTestResult[];

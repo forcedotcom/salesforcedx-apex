@@ -180,25 +180,15 @@ describe('Run Apex tests synchronously', () => {
 
     queryStub.onCall(0).resolves({
       done: true,
-      totalSize: 1,
-      records: [{ expr0: 3 }]
-    });
-    queryStub.onCall(1).resolves({
-      done: true,
       totalSize: 3,
       records: perClassCodeCoverage
     } as ApexCodeCoverage);
-    queryStub.onCall(2).resolves({
-      done: true,
-      totalSize: 1,
-      records: [{ expr0: 3 }]
-    });
-    queryStub.onCall(3).resolves({
+    queryStub.onCall(1).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
-    queryStub.onCall(4).resolves({
+    queryStub.onCall(2).resolves({
       done: true,
       totalSize: 1,
       records: [

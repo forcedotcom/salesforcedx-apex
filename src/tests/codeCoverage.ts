@@ -16,7 +16,7 @@ import {
   PerClassCoverage
 } from './types';
 import * as util from 'util';
-import { calculatePercentage, verifyCountQueries } from './utils';
+import { calculatePercentage, queryAll, verifyCountQueries } from './utils';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { OrgConfigProperties } from '@salesforce/core/lib/org/orgConfigProperties';
 import { nls } from '../i18n';
@@ -161,13 +161,7 @@ export class CodeCoverage {
   ): Promise<ApexCodeCoverage[]> {
     const perClassCodeCovQuery =
       'SELECT ApexTestClassId, ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, TestMethodName, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
-    const countPerClassCodeCovQuery =
-      'SELECT count(ApexTestClassId) FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
-    return this.fetchResults(
-      apexTestClassSet,
-      perClassCodeCovQuery,
-      countPerClassCodeCovQuery
-    );
+    return this.fetchResults(apexTestClassSet, perClassCodeCovQuery);
   }
 
   private async queryAggregateCodeCov(
@@ -175,45 +169,20 @@ export class CodeCoverage {
   ): Promise<ApexCodeCoverageAggregate[]> {
     const codeCoverageQuery =
       'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
-    const countCodeCoverageQuery =
-      'SELECT count(ApexClassOrTrigger.Id) FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
-    return this.fetchResults(
-      apexClassIdSet,
-      codeCoverageQuery,
-      countCodeCoverageQuery
-    );
+    return this.fetchResults(apexClassIdSet, codeCoverageQuery);
   }
 
   private async fetchResults<
     T extends ApexCodeCoverage | ApexCodeCoverageAggregate
-  >(idSet: Set<string>, selectQuery: string, countQuery: string): Promise<T[]> {
-    const config = await ConfigAggregator.create();
-    const countQueries = this.createQueries(countQuery, idSet);
+  >(idSet: Set<string>, selectQuery: string): Promise<T[]> {
     const queries = this.createQueries(selectQuery, idSet);
 
-    const countQueryPromises = countQueries.map(query =>
-      this.connection.singleRecordQuery<{ expr0: number }>(query, {
-        tooling: true
-      })
-    );
-
-    const countQueryResult = await Promise.all(countQueryPromises);
-
-    verifyCountQueries(countQueryResult, countQueries);
-
-    const queryPromises = queries.map((query, index) => {
+    const queryPromises = queries.map(query => {
       // The query method returns a type QueryResult from jsforce
       // that has takes a type that extends the jsforce Record.
       // ApexCodeCoverageRecord and ApexCodeCoverageAggregateRecord
       // are the Records compatible types defined in this project.
-      return this.connection.tooling.query<
-        ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord
-      >(query, {
-        autoFetch: true,
-        maxFetch:
-          countQueryResult[index]?.expr0 ??
-          config.getPropertyValue(OrgConfigProperties.ORG_MAX_QUERY_LIMIT)
-      });
+      return queryAll(this.connection, query, true);
     });
 
     // Note here the result of the .all call is of type QueryResult<ApexCodeCoverageAggregateRecord | ApexCodeCoverageRecord>[]
