@@ -30,8 +30,8 @@ describe('Build async payload', async () => {
       .resolves('50.0');
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username,
-      }),
+        username: testData.username
+      })
     });
     sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
@@ -49,12 +49,12 @@ describe('Build async payload', async () => {
       .resolves([]);
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myClass.myTest',
+      'myClass.myTest'
     );
 
     expect(payload).to.deep.equal({
       tests: [{ className: 'myClass', testMethods: ['myTest'] }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.calledOnce).to.be.true;
   });
@@ -65,12 +65,12 @@ describe('Build async payload', async () => {
       .resolves([]);
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myNamespace.myClass',
+      'myNamespace.myClass'
     );
 
     expect(payload).to.deep.equal({
       tests: [{ className: 'myNamespace', testMethods: ['myClass'] }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.calledOnce).to.be.true;
   });
@@ -81,17 +81,17 @@ describe('Build async payload', async () => {
       .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myNamespace.myClass',
+      'myNamespace.myClass'
     );
 
     expect(payload).to.deep.equal({
       tests: [
         {
           namespace: 'myNamespace',
-          className: 'myClass',
-        },
+          className: 'myClass'
+        }
       ],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.calledOnce).to.be.true;
   });
@@ -102,16 +102,16 @@ describe('Build async payload', async () => {
       .resolves([{ installedNs: true, namespace: 'myNamespace' }]);
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myNamespace.myClass',
+      'myNamespace.myClass'
     );
 
     expect(payload).to.deep.equal({
       tests: [
         {
-          className: 'myNamespace.myClass',
-        },
+          className: 'myNamespace.myClass'
+        }
       ],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.calledOnce).to.be.true;
   });
@@ -122,21 +122,21 @@ describe('Build async payload', async () => {
       .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myNamespace.myClass,myNamespace.mySecondClass',
+      'myNamespace.myClass,myNamespace.mySecondClass'
     );
 
     expect(payload).to.deep.equal({
       tests: [
         {
           namespace: 'myNamespace',
-          className: 'myClass',
+          className: 'myClass'
         },
         {
           namespace: 'myNamespace',
-          className: 'mySecondClass',
-        },
+          className: 'mySecondClass'
+        }
       ],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.calledOnce).to.be.true;
   });
@@ -145,7 +145,7 @@ describe('Build async payload', async () => {
     const namespaceStub = sandboxStub.stub(utils, 'queryNamespaces');
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myNamespace.myClass.myTest',
+      'myNamespace.myClass.myTest'
     );
 
     expect(payload).to.deep.equal({
@@ -153,10 +153,10 @@ describe('Build async payload', async () => {
         {
           namespace: 'myNamespace',
           className: 'myClass',
-          testMethods: ['myTest'],
-        },
+          testMethods: ['myTest']
+        }
       ],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -165,11 +165,11 @@ describe('Build async payload', async () => {
     const namespaceStub = sandboxStub.stub(utils, 'queryNamespaces');
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myClass',
+      'myClass'
     );
     expect(payload).to.deep.equal({
       tests: [{ className: 'myClass' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -178,11 +178,11 @@ describe('Build async payload', async () => {
     const namespaceStub = sandboxStub.stub(utils, 'queryNamespaces');
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
-      '01p4x00000KWt3T',
+      '01p4x00000KWt3T'
     );
     expect(payload).to.deep.equal({
       tests: [{ classId: '01p4x00000KWt3T' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -192,11 +192,11 @@ describe('Build async payload', async () => {
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      'myClass',
+      'myClass'
     );
     expect(payload).to.deep.equal({
       tests: [{ className: 'myClass' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -206,11 +206,11 @@ describe('Build async payload', async () => {
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      '01p4x00000KWt3TAAT',
+      '01p4x00000KWt3TAAT'
     );
     expect(payload).to.deep.equal({
       tests: [{ classId: '01p4x00000KWt3TAAT' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -220,11 +220,11 @@ describe('Build async payload', async () => {
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      '01p4x00000KWt3TAATP',
+      '01p4x00000KWt3TAATP'
     );
     expect(payload).to.deep.equal({
       tests: [{ className: '01p4x00000KWt3TAATP' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -236,11 +236,11 @@ describe('Build async payload', async () => {
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      'myNamespace.myClass',
+      'myNamespace.myClass'
     );
     expect(payload).to.deep.equal({
       tests: [{ className: 'myNamespace.myClass' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -251,11 +251,11 @@ describe('Build async payload', async () => {
       TestLevel.RunSpecifiedTests,
       undefined,
       undefined,
-      'mySuite',
+      'mySuite'
     );
     expect(payload).to.deep.equal({
       suiteNames: 'mySuite',
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -274,8 +274,8 @@ describe('Build sync payload', async () => {
       .resolves('50.0');
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username,
-      }),
+        username: testData.username
+      })
     });
     sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
@@ -293,12 +293,12 @@ describe('Build sync payload', async () => {
       .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
     const payload = await testSrv.buildSyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myClass.myTest',
+      'myClass.myTest'
     );
 
     expect(payload).to.deep.equal({
       tests: [{ className: 'myClass', testMethods: ['myTest'] }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.calledOnce).to.be.true;
   });
@@ -309,7 +309,7 @@ describe('Build sync payload', async () => {
       .resolves([{ installedNs: false, namespace: 'myNamespace' }]);
     const payload = await testSrv.buildSyncPayload(
       TestLevel.RunSpecifiedTests,
-      'myNamespace.myClass.myTest',
+      'myNamespace.myClass.myTest'
     );
 
     expect(payload).to.deep.equal({
@@ -317,10 +317,10 @@ describe('Build sync payload', async () => {
         {
           namespace: 'myNamespace',
           className: 'myClass',
-          testMethods: ['myTest'],
-        },
+          testMethods: ['myTest']
+        }
       ],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -330,12 +330,12 @@ describe('Build sync payload', async () => {
     const payload = await testSrv.buildSyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      'myClass',
+      'myClass'
     );
 
     expect(payload).to.deep.equal({
       tests: [{ className: 'myClass' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -347,12 +347,12 @@ describe('Build sync payload', async () => {
     const payload = await testSrv.buildSyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      'myNamespace.myClass',
+      'myNamespace.myClass'
     );
 
     expect(payload).to.deep.equal({
       tests: [{ className: 'myNamespace.myClass' }],
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     });
     expect(namespaceStub.notCalled).to.be.true;
   });
@@ -361,7 +361,7 @@ describe('Build sync payload', async () => {
     try {
       await testSrv.buildSyncPayload(
         TestLevel.RunSpecifiedTests,
-        'myNamespace.myClass.myTest, myNamespace.otherClass.otherTest',
+        'myNamespace.myClass.myTest, myNamespace.otherClass.otherTest'
       );
       assert.fail();
     } catch (e) {

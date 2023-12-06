@@ -19,11 +19,11 @@ describe('Table Utils', () => {
 
     const rows = [
       { col1: 'test', col2: 'test2' },
-      { col1: 'test3', col2: 'test4' },
+      { col1: 'test3', col2: 'test4' }
     ];
     const cols = [
       { key: 'col1', label: 'Column 1' },
-      { key: 'col2', label: 'Column 2' },
+      { key: 'col2', label: 'Column 2' }
     ];
 
     const table = new Table().createTable(rows, cols, 'Sample Table');
@@ -39,11 +39,11 @@ describe('Table Utils', () => {
       'test3                      test4   \n';
     const rows = [
       { col1: 'test making a long column', col2: 'test2' },
-      { col1: 'test3', col2: 'test4' },
+      { col1: 'test3', col2: 'test4' }
     ];
     const cols = [
       { key: 'col1', label: 'Column 1' },
-      { key: 'col2', label: 'Column 2' },
+      { key: 'col2', label: 'Column 2' }
     ];
 
     const table = new Table().createTable(rows, cols);
@@ -60,11 +60,11 @@ describe('Table Utils', () => {
       'test2     test3                      \n';
     const rows = [
       { col1: 'test1', col2: 'first line\nsecond line which is longer' },
-      { col1: 'test2', col2: 'test3' },
+      { col1: 'test2', col2: 'test3' }
     ];
     const cols = [
       { key: 'col1', label: 'Column 1' },
-      { key: 'col2', label: 'Column 2' },
+      { key: 'col2', label: 'Column 2' }
     ];
 
     const table = new Table().createTable(rows, cols);
@@ -83,14 +83,14 @@ describe('Table Utils', () => {
       {
         col1: 'test1',
         col2: 'first line which is longer\nsecond line',
-        col3: 'value1',
+        col3: 'value1'
       },
-      { col1: 'test2', col2: 'test3', col3: 'value2' },
+      { col1: 'test2', col2: 'test3', col3: 'value2' }
     ];
     const cols = [
       { key: 'col1', label: 'Column 1' },
       { key: 'col2', label: 'Column 2' },
-      { key: 'col3', label: 'Column 3' },
+      { key: 'col3', label: 'Column 3' }
     ];
 
     const table = new Table().createTable(rows, cols);
@@ -101,11 +101,11 @@ describe('Table Utils', () => {
   it('Should throw an error if a row is missing the key of a given column', () => {
     const rows = [
       { col1: 'test', col2: 'test2' },
-      { col1: 'test3', col2: 'test4' },
+      { col1: 'test3', col2: 'test4' }
     ];
     const cols = [
       { key: 'col1', label: 'Column 1' },
-      { key: 'col3', label: 'Column 2' },
+      { key: 'col3', label: 'Column 2' }
     ];
 
     let err;

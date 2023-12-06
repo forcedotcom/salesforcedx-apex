@@ -17,7 +17,7 @@ import {
   TestItem,
   NamespaceInfo,
   TestSuiteMembershipRecord,
-  TestRunIdResult,
+  TestRunIdResult
 } from './types';
 import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
@@ -49,17 +49,17 @@ export class TestService {
     { id: string; TestSuiteName: string }[]
   > {
     const testSuiteRecords = (await this.connection.tooling.query(
-      `SELECT id, TestSuiteName FROM ApexTestSuite`,
+      `SELECT id, TestSuiteName FROM ApexTestSuite`
     )) as QueryResult<{ id: string; TestSuiteName: string }>;
 
     return testSuiteRecords.records;
   }
 
   private async retrieveSuiteId(
-    suitename: string,
+    suitename: string
   ): Promise<string | undefined> {
     const suiteResult = (await this.connection.tooling.query(
-      `SELECT id FROM ApexTestSuite WHERE TestSuiteName = '${suitename}'`,
+      `SELECT id FROM ApexTestSuite WHERE TestSuiteName = '${suitename}'`
     )) as QueryResult;
 
     if (suiteResult.records.length === 0) {
@@ -79,7 +79,7 @@ export class TestService {
 
       if (suiteId === undefined) {
         const result = (await this.connection.tooling.create('ApexTestSuite', {
-          TestSuiteName: suite,
+          TestSuiteName: suite
         })) as { id: string };
         return result.id;
       }
@@ -96,7 +96,7 @@ export class TestService {
    */
   public async getTestsInSuite(
     suitename?: string,
-    suiteId?: string,
+    suiteId?: string
   ): Promise<TestSuiteMembershipRecord[]> {
     if (suitename === undefined && suiteId === undefined) {
       throw new Error(nls.localize('suitenameErr'));
@@ -109,7 +109,7 @@ export class TestService {
       }
     }
     const classRecords = (await this.connection.tooling.query(
-      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = '${suiteId}'`,
+      `SELECT ApexClassId FROM TestSuiteMembership WHERE ApexTestSuiteId = '${suiteId}'`
     )) as QueryResult<TestSuiteMembershipRecord>;
 
     return classRecords.records;
@@ -123,7 +123,7 @@ export class TestService {
   public async getApexClassIds(testClasses: string[]): Promise<string[]> {
     const classIds = testClasses.map(async (testClass) => {
       const apexClass = (await this.connection.tooling.query(
-        `SELECT id, name FROM ApexClass WHERE Name = '${testClass}'`,
+        `SELECT id, name FROM ApexClass WHERE Name = '${testClass}'`
       )) as QueryResult;
       if (apexClass.records.length === 0) {
         throw new Error(nls.localize('missingTestClassErr', testClass));
@@ -140,7 +140,7 @@ export class TestService {
    */
   public async buildSuite(
     suitename: string,
-    testClasses: string[],
+    testClasses: string[]
   ): Promise<void> {
     const testSuiteId = (await this.getOrCreateSuiteIds([suitename]))[0];
 
@@ -150,7 +150,7 @@ export class TestService {
     await Promise.all(
       testClassIds.map(async (classId) => {
         const existingClass = classesInSuite.filter(
-          (rec) => rec.ApexClassId === classId,
+          (rec) => rec.ApexClassId === classId
         );
 
         const testClass = testClasses[testClassIds.indexOf(classId)];
@@ -159,11 +159,11 @@ export class TestService {
         } else {
           await this.connection.tooling.create('TestSuiteMembership', {
             ApexClassId: classId,
-            ApexTestSuiteId: testSuiteId,
+            ApexTestSuiteId: testSuiteId
           });
           console.log(nls.localize('classSuiteMsg', [testClass, suitename]));
         }
-      }),
+      })
     );
   }
 
@@ -176,7 +176,7 @@ export class TestService {
   public async runTestSynchronous(
     options: SyncTestConfiguration,
     codeCoverage = false,
-    token?: CancellationToken,
+    token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
     return await this.syncService.runTests(options, codeCoverage, token);
   }
@@ -194,14 +194,14 @@ export class TestService {
     codeCoverage = false,
     immediatelyReturn = false,
     progress?: Progress<ApexTestProgressValue>,
-    token?: CancellationToken,
+    token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
     return await this.asyncService.runTests(
       options,
       codeCoverage,
       immediatelyReturn,
       progress,
-      token,
+      token
     );
   }
 
@@ -214,12 +214,12 @@ export class TestService {
   public async reportAsyncResults(
     testRunId: string,
     codeCoverage = false,
-    token?: CancellationToken,
+    token?: CancellationToken
   ): Promise<TestResult> {
     return await this.asyncService.reportAsyncResults(
       testRunId,
       codeCoverage,
-      token,
+      token
     );
   }
 
@@ -233,7 +233,7 @@ export class TestService {
   public async writeResultFiles(
     result: TestResult | TestRunIdResult,
     outputDirConfig: OutputDirConfig,
-    codeCoverage = false,
+    codeCoverage = false
   ): Promise<string[]> {
     const { dirPath, resultFormats, fileInfos } = outputDirConfig;
     const fileMap: { path: string; content: string }[] = [];
@@ -243,7 +243,7 @@ export class TestService {
 
     fileMap.push({
       path: join(dirPath, 'test-run-id.txt'),
-      content: testRunId,
+      content: testRunId
     });
 
     if (resultFormats) {
@@ -262,18 +262,16 @@ export class TestService {
             fileMap.push({
               path: join(
                 dirPath,
-                testRunId
-                  ? `test-result-${testRunId}.json`
-                  : `test-result.json`,
+                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
               ),
-              content: stringify(result),
+              content: stringify(result)
             });
             break;
           case ResultFormat.tap:
             const tapResult = new TapReporter().format(result);
             fileMap.push({
               path: join(dirPath, `test-result-${testRunId}-tap.txt`),
-              content: tapResult,
+              content: tapResult
             });
             break;
           case ResultFormat.junit:
@@ -283,9 +281,9 @@ export class TestService {
                 dirPath,
                 testRunId
                   ? `test-result-${testRunId}-junit.xml`
-                  : `test-result-junit.xml`,
+                  : `test-result-junit.xml`
               ),
-              content: junitResult,
+              content: junitResult
             });
             break;
         }
@@ -302,7 +300,7 @@ export class TestService {
       });
       fileMap.push({
         path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
-        content: stringify(coverageRecords),
+        content: stringify(coverageRecords)
       });
     }
 
@@ -312,7 +310,7 @@ export class TestService {
         content:
           typeof fileInfo.content !== 'string'
             ? stringify(fileInfo.content)
-            : fileInfo.content,
+            : fileInfo.content
       });
     });
 
@@ -326,7 +324,7 @@ export class TestService {
   public async buildSyncPayload(
     testLevel: TestLevel,
     tests?: string,
-    classnames?: string,
+    classnames?: string
   ): Promise<SyncTestConfiguration> {
     try {
       if (tests) {
@@ -344,7 +342,7 @@ export class TestService {
         const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
         return {
           tests: [{ [prop]: classnames }],
-          testLevel,
+          testLevel
         };
       }
       throw new Error(nls.localize('payloadErr'));
@@ -357,19 +355,19 @@ export class TestService {
     testLevel: TestLevel,
     tests?: string,
     classNames?: string,
-    suiteNames?: string,
+    suiteNames?: string
   ): Promise<AsyncTestConfiguration | AsyncTestArrayConfiguration> {
     try {
       if (tests) {
         return (await this.buildTestPayload(
-          tests,
+          tests
         )) as AsyncTestArrayConfiguration;
       } else if (classNames) {
         return await this.buildAsyncClassPayload(classNames);
       } else {
         return {
           suiteNames,
-          testLevel,
+          testLevel
         };
       }
     } catch (e) {
@@ -378,14 +376,14 @@ export class TestService {
   }
 
   private async buildAsyncClassPayload(
-    classNames: string,
+    classNames: string
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',') as string[];
     const classItems = classNameArray.map((item) => {
       const classParts = item.split('.');
       if (classParts.length > 1) {
         return {
-          className: `${classParts[0]}.${classParts[1]}`,
+          className: `${classParts[0]}.${classParts[1]}`
         };
       }
       const prop = isValidApexClassID(item) ? 'classId' : 'className';
@@ -395,7 +393,7 @@ export class TestService {
   }
 
   private async buildTestPayload(
-    testNames: string,
+    testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
     const testItems: TestItem[] = [];
@@ -410,7 +408,7 @@ export class TestService {
             testItems.push({
               namespace: `${testParts[0]}`,
               className: `${testParts[1]}`,
-              testMethods: [testParts[2]],
+              testMethods: [testParts[2]]
             });
             classes.push(testParts[1]);
           } else {
@@ -426,26 +424,26 @@ export class TestService {
             namespaceInfos = await queryNamespaces(this.connection);
           }
           const currentNamespace = namespaceInfos.find(
-            (namespaceInfo) => namespaceInfo.namespace === testParts[0],
+            (namespaceInfo) => namespaceInfo.namespace === testParts[0]
           );
           // NOTE: Installed packages require the namespace to be specified as part of the className field
           // The namespace field should not be used with subscriber orgs
           if (currentNamespace) {
             if (currentNamespace.installedNs) {
               testItems.push({
-                className: `${testParts[0]}.${testParts[1]}`,
+                className: `${testParts[0]}.${testParts[1]}`
               });
             } else {
               testItems.push({
                 namespace: `${testParts[0]}`,
-                className: `${testParts[1]}`,
+                className: `${testParts[1]}`
               });
             }
           } else {
             if (!classes.includes(testParts[0])) {
               testItems.push({
                 className: testParts[0],
-                testMethods: [testParts[1]],
+                testMethods: [testParts[1]]
               });
               classes.push(testParts[0]);
             } else {
@@ -464,7 +462,7 @@ export class TestService {
     }
     return {
       tests: testItems,
-      testLevel: TestLevel.RunSpecifiedTests,
+      testLevel: TestLevel.RunSpecifiedTests
     };
   }
 }

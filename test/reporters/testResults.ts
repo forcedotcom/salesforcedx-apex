@@ -32,7 +32,7 @@ export const coverageResult: TestResult = {
     skipped: 0,
     passing: 2,
     hostname: 'https://na139.salesforce.com',
-    orgWideCoverage: '85%',
+    orgWideCoverage: '85%'
   },
   tests: [
     {
@@ -48,11 +48,11 @@ export const coverageResult: TestResult = {
         id: '01p3t000000ivLzAAI',
         name: 'AccountServiceTest',
         namespacePrefix: null,
-        fullName: 'AccountServiceTest',
+        fullName: 'AccountServiceTest'
       },
       runTime: 86,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AccountServiceTest.should_create_account',
+      fullName: 'AccountServiceTest.should_create_account'
     },
     {
       id: '07M3t000003bQwgEAE',
@@ -67,12 +67,12 @@ export const coverageResult: TestResult = {
         id: '01p3t000000imbvAAA',
         name: 'AwesomeCalculatorTest',
         namespacePrefix: null,
-        fullName: 'AwesomeCalculatorTest',
+        fullName: 'AwesomeCalculatorTest'
       },
       runTime: 23,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AwesomeCalculatorTest.testCallout',
-    },
+      fullName: 'AwesomeCalculatorTest.testCallout'
+    }
   ],
   codecoverage: [
     {
@@ -83,9 +83,9 @@ export const coverageResult: TestResult = {
       numLinesUncovered: 2,
       percentage: '12.5%',
       coveredLines: [1, 2, 3, 4, 5, 6, 7, 8],
-      uncoveredLines: [9, 10],
-    },
-  ],
+      uncoveredLines: [9, 10]
+    }
+  ]
 };
 
 export const coverageFailResult: TestResult = {
@@ -95,8 +95,8 @@ export const coverageFailResult: TestResult = {
       testsRan: 3,
       failing: 1,
       failRate: '67%',
-      passRate: '33%',
-    },
+      passRate: '33%'
+    }
   },
   tests: [
     ...coverageResult.tests,
@@ -116,15 +116,15 @@ export const coverageFailResult: TestResult = {
           id: '01p3t000001ytUmAAI',
           name: 'AnimalLocatorTest',
           namespacePrefix: null,
-          fullName: 'AnimalLocatorTest',
+          fullName: 'AnimalLocatorTest'
         },
         runTime: 5,
         testTimestamp: '2020-11-09T18:02:51.000+0000',
-        fullName: 'AnimalLocatorTest.testMissingAnimal',
-      },
-    ],
+        fullName: 'AnimalLocatorTest.testMissingAnimal'
+      }
+    ]
   ],
-  codecoverage: [...coverageResult.codecoverage],
+  codecoverage: [...coverageResult.codecoverage]
 };
 
 export const successResult: TestResult = {
@@ -145,7 +145,7 @@ export const successResult: TestResult = {
     failing: 0,
     skipped: 0,
     passing: 2,
-    hostname: 'https://na139.salesforce.com',
+    hostname: 'https://na139.salesforce.com'
   },
   tests: [
     {
@@ -161,11 +161,11 @@ export const successResult: TestResult = {
         id: '01p3t000000ivLzAAI',
         name: 'AccountServiceTest',
         namespacePrefix: null,
-        fullName: 'AccountServiceTest',
+        fullName: 'AccountServiceTest'
       },
       runTime: 86,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AccountServiceTest.should_create_account',
+      fullName: 'AccountServiceTest.should_create_account'
     },
     {
       id: '07M3t000003bQwgEAE',
@@ -180,13 +180,13 @@ export const successResult: TestResult = {
         id: '01p3t000000imbvAAA',
         name: 'AwesomeCalculatorTest',
         namespacePrefix: null,
-        fullName: 'AwesomeCalculatorTest',
+        fullName: 'AwesomeCalculatorTest'
       },
       runTime: 23,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AwesomeCalculatorTest.testCallout',
-    },
-  ],
+      fullName: 'AwesomeCalculatorTest.testCallout'
+    }
+  ]
 };
 
 export const testResults: TestResult = {
@@ -207,7 +207,7 @@ export const testResults: TestResult = {
     failing: 4,
     skipped: 0,
     passing: 12,
-    hostname: 'https://na139.salesforce.com',
+    hostname: 'https://na139.salesforce.com'
   },
   tests: [
     {
@@ -223,11 +223,11 @@ export const testResults: TestResult = {
         id: '01p3t000000ivLzAAI',
         name: 'AccountServiceTest',
         namespacePrefix: null,
-        fullName: 'AccountServiceTest',
+        fullName: 'AccountServiceTest'
       },
       runTime: 86,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AccountServiceTest.should_create_account',
+      fullName: 'AccountServiceTest.should_create_account'
     },
     {
       id: '07M3t000003bQwgEAE',
@@ -242,11 +242,11 @@ export const testResults: TestResult = {
         id: '01p3t000000imbvAAA',
         name: 'AwesomeCalculatorTest',
         namespacePrefix: null,
-        fullName: 'AwesomeCalculatorTest',
+        fullName: 'AwesomeCalculatorTest'
       },
       runTime: 23,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AwesomeCalculatorTest.testCallout',
+      fullName: 'AwesomeCalculatorTest.testCallout'
     },
     {
       id: '07M3t000003bQwWEAU',
@@ -261,11 +261,11 @@ export const testResults: TestResult = {
         id: '01p3t000003qSzaAAE',
         name: 'tt_UtilControllerTest',
         namespacePrefix: 'trlhdtips',
-        fullName: 'trlhdtips__tt_UtilControllerTest',
+        fullName: 'trlhdtips__tt_UtilControllerTest'
       },
       runTime: 13,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'trlhdtips__tt_UtilControllerTest.testGetCurrentUser',
+      fullName: 'trlhdtips__tt_UtilControllerTest.testGetCurrentUser'
     },
     {
       id: '07M3t000003bQwXEAU',
@@ -280,11 +280,11 @@ export const testResults: TestResult = {
         id: '01p3t000003qSzaAAE',
         name: 'tt_UtilControllerTest',
         namespacePrefix: 'trlhdtips',
-        fullName: 'trlhdtips__tt_UtilControllerTest',
+        fullName: 'trlhdtips__tt_UtilControllerTest'
       },
       runTime: 179,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'trlhdtips__tt_UtilControllerTest.testResetMyPassword',
+      fullName: 'trlhdtips__tt_UtilControllerTest.testResetMyPassword'
     },
     {
       id: '07M3t000003bQwlEAE',
@@ -299,11 +299,11 @@ export const testResults: TestResult = {
         id: '01p3t000001ytUmAAI',
         name: 'AnimalLocatorTest',
         namespacePrefix: null,
-        fullName: 'AnimalLocatorTest',
+        fullName: 'AnimalLocatorTest'
       },
       runTime: 16,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AnimalLocatorTest.testGetCallout',
+      fullName: 'AnimalLocatorTest.testGetCallout'
     },
     {
       id: '07M3t000003bQwmEAE',
@@ -320,11 +320,11 @@ export const testResults: TestResult = {
         id: '01p3t000001ytUmAAI',
         name: 'AnimalLocatorTest',
         namespacePrefix: null,
-        fullName: 'AnimalLocatorTest',
+        fullName: 'AnimalLocatorTest'
       },
       runTime: 5,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AnimalLocatorTest.testMissingAnimal',
+      fullName: 'AnimalLocatorTest.testMissingAnimal'
     },
     {
       id: '07M3t000003bQxFEAU',
@@ -339,11 +339,11 @@ export const testResults: TestResult = {
         id: '01p3t000000i6dtAAA',
         name: 'LeadProcessorTest',
         namespacePrefix: null,
-        fullName: 'LeadProcessorTest',
+        fullName: 'LeadProcessorTest'
       },
       runTime: 2256,
       testTimestamp: '2020-11-09T18:02:52.000+0000',
-      fullName: 'LeadProcessorTest.testProcessing',
+      fullName: 'LeadProcessorTest.testProcessing'
     },
     {
       id: '07M3t000003bQwvEAE',
@@ -358,11 +358,11 @@ export const testResults: TestResult = {
         id: '01p3t000000i4L1AAI',
         name: 'DashboardPalTest',
         namespacePrefix: 'Dashboard_Pal',
-        fullName: 'Dashboard_Pal__DashboardPalTest',
+        fullName: 'Dashboard_Pal__DashboardPalTest'
       },
       runTime: 128,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'Dashboard_Pal__DashboardPalTest.testDashboardPal',
+      fullName: 'Dashboard_Pal__DashboardPalTest.testDashboardPal'
     },
     {
       id: '07M3t000003bQx0EAE',
@@ -379,11 +379,11 @@ export const testResults: TestResult = {
         id: '01p3t000001zSjkAAE',
         name: 'AccountProcessorTest',
         namespacePrefix: null,
-        fullName: 'AccountProcessorTest',
+        fullName: 'AccountProcessorTest'
       },
       runTime: 241,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AccountProcessorTest.testCountContacts',
+      fullName: 'AccountProcessorTest.testCountContacts'
     },
     {
       id: '07M3t000003bQx1EAE',
@@ -398,11 +398,11 @@ export const testResults: TestResult = {
         id: '01p3t000001zSjkAAE',
         name: 'AccountProcessorTest',
         namespacePrefix: null,
-        fullName: 'AccountProcessorTest',
+        fullName: 'AccountProcessorTest'
       },
       runTime: 10,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AccountProcessorTest.testCountContactsEmptyList',
+      fullName: 'AccountProcessorTest.testCountContactsEmptyList'
     },
     {
       id: '07M3t000003bQx2EAE',
@@ -417,11 +417,11 @@ export const testResults: TestResult = {
         id: '01p3t000001zSjkAAE',
         name: 'AccountProcessorTest',
         namespacePrefix: null,
-        fullName: 'AccountProcessorTest',
+        fullName: 'AccountProcessorTest'
       },
       runTime: 10,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AccountProcessorTest.testCountContactsNullList',
+      fullName: 'AccountProcessorTest.testCountContactsNullList'
     },
     {
       id: '07M3t000003bQwbEAE',
@@ -436,11 +436,11 @@ export const testResults: TestResult = {
         id: '01p3t000000ime6AAA',
         name: 'ParkLocatorTest',
         namespacePrefix: null,
-        fullName: 'ParkLocatorTest',
+        fullName: 'ParkLocatorTest'
       },
       runTime: 15,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'ParkLocatorTest.testCallout',
+      fullName: 'ParkLocatorTest.testCallout'
     },
     {
       id: '07M3t000003bQwREAU',
@@ -456,11 +456,11 @@ export const testResults: TestResult = {
         id: '01p3t000001ytK6AAI',
         name: 'AnimalsCalloutsTest',
         namespacePrefix: null,
-        fullName: 'AnimalsCalloutsTest',
+        fullName: 'AnimalsCalloutsTest'
       },
       runTime: 28,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AnimalsCalloutsTest.testGetCallout',
+      fullName: 'AnimalsCalloutsTest.testGetCallout'
     },
     {
       id: '07M3t000003bQwSEAU',
@@ -475,11 +475,11 @@ export const testResults: TestResult = {
         id: '01p3t000001ytK6AAI',
         name: 'AnimalsCalloutsTest',
         namespacePrefix: null,
-        fullName: 'AnimalsCalloutsTest',
+        fullName: 'AnimalsCalloutsTest'
       },
       runTime: 7,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AnimalsCalloutsTest.testPostCallout',
+      fullName: 'AnimalsCalloutsTest.testPostCallout'
     },
     {
       id: '07M3t000003bQx5EAE',
@@ -494,11 +494,11 @@ export const testResults: TestResult = {
         id: '01p3t000000iADsAAM',
         name: 'AddPrimaryContactTest',
         namespacePrefix: null,
-        fullName: 'AddPrimaryContactTest',
+        fullName: 'AddPrimaryContactTest'
       },
       runTime: 250,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'AddPrimaryContactTest.testAddContact',
+      fullName: 'AddPrimaryContactTest.testAddContact'
     },
     {
       id: '07M3t000003bQxAEAU',
@@ -513,13 +513,13 @@ export const testResults: TestResult = {
         id: '01p3t000000iAZFAA2',
         name: 'DailyLeadProcessorTest',
         namespacePrefix: null,
-        fullName: 'DailyLeadProcessorTest',
+        fullName: 'DailyLeadProcessorTest'
       },
       runTime: 2196,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
-      fullName: 'DailyLeadProcessorTest.testLeadProcessing',
-    },
-  ],
+      fullName: 'DailyLeadProcessorTest.testLeadProcessing'
+    }
+  ]
 };
 
 export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
@@ -631,5 +631,5 @@ export const junitSuccess = util.format(successTemplate, successProperties);
 export const junitCodeCov = util.format(successTemplate, codeCovProperties);
 export const junitMissingVal = util.format(
   successTemplate,
-  missingValProperties,
+  missingValProperties
 );

@@ -15,7 +15,7 @@ import {
   ApexOrgWideCoverage,
   ApexCodeCoverage,
   ApexCodeCoverageRecord,
-  ApexCodeCoverageAggregateRecord,
+  ApexCodeCoverageAggregateRecord
 } from '../../src/tests/types';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
 
@@ -49,9 +49,9 @@ describe('Get code coverage results', () => {
       totalSize: 1,
       records: [
         {
-          PercentCovered: '33',
-        },
-      ],
+          PercentCovered: '33'
+        }
+      ]
     } as ApexOrgWideCoverage);
     const codeCov = new CodeCoverage(mockConnection);
 
@@ -63,14 +63,14 @@ describe('Get code coverage results', () => {
     toolingQueryStub.onFirstCall().resolves({
       done: true,
       totalSize: 0,
-      records: [],
+      records: []
     } as ApexOrgWideCoverage);
     const codeCov = new CodeCoverage(mockConnection);
 
     const orgWideCoverageResult = await codeCov.getOrgWideCoverage();
     expect(orgWideCoverageResult).to.equal('0%');
     expect(toolingQueryStub.getCall(0).args[0]).to.equal(
-      'SELECT PercentCovered FROM ApexOrgWideCoverage',
+      'SELECT PercentCovered FROM ApexOrgWideCoverage'
     );
   });
 
@@ -80,13 +80,13 @@ describe('Get code coverage results', () => {
         ApexClassOrTrigger: { Id: '0001x05958', Name: 'ApexTrigger1' },
         NumLinesCovered: 5,
         NumLinesUncovered: 1,
-        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] },
+        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] }
       },
       {
         ApexClassOrTrigger: { Id: '0001x05959', Name: 'ApexTrigger2' },
         NumLinesCovered: 6,
         NumLinesUncovered: 2,
-        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] },
+        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] }
       },
       {
         ApexClassOrTrigger: { Id: '0001x05951', Name: 'ApexTrigger3' },
@@ -94,9 +94,9 @@ describe('Get code coverage results', () => {
         NumLinesUncovered: 3,
         Coverage: {
           coveredLines: [1, 2, 3, 4, 5, 6, 7],
-          uncoveredLines: [8, 9, 10],
-        },
-      },
+          uncoveredLines: [8, 9, 10]
+        }
+      }
     ];
 
     const expectedResult = [
@@ -108,7 +108,7 @@ describe('Get code coverage results', () => {
         numLinesUncovered: 1,
         percentage: '83%',
         type: 'ApexTrigger',
-        uncoveredLines: [6],
+        uncoveredLines: [6]
       },
       {
         apexId: '0001x05959',
@@ -118,7 +118,7 @@ describe('Get code coverage results', () => {
         numLinesUncovered: 2,
         percentage: '75%',
         type: 'ApexTrigger',
-        uncoveredLines: [7, 8],
+        uncoveredLines: [7, 8]
       },
       {
         apexId: '0001x05951',
@@ -128,18 +128,18 @@ describe('Get code coverage results', () => {
         numLinesUncovered: 3,
         percentage: '70%',
         type: 'ApexTrigger',
-        uncoveredLines: [8, 9, 10],
-      },
+        uncoveredLines: [8, 9, 10]
+      }
     ];
     toolingQueryStub.resolves({
       done: true,
       totalSize: 3,
-      records: codeCoverageQueryResult,
+      records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
     const codeCov = new CodeCoverage(mockConnection);
     const { codeCoverageResults, totalLines, coveredLines } =
       await codeCov.getAggregateCodeCoverage(
-        new Set<string>(['0001x05958', '0001x05959', '0001x05951']),
+        new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
       );
 
     expect(totalLines).to.equal(24);
@@ -166,7 +166,7 @@ describe('Get code coverage results', () => {
         ApexTestClassId: '0001x05958',
         NumLinesCovered: 5,
         NumLinesUncovered: 1,
-        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] },
+        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] }
       },
       {
         ApexClassOrTrigger: { Id: '0001x05959', Name: 'ApexTrigger2' },
@@ -174,7 +174,7 @@ describe('Get code coverage results', () => {
         TestMethodName: 'MethodTwo',
         NumLinesCovered: 6,
         NumLinesUncovered: 2,
-        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] },
+        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] }
       },
       {
         ApexClassOrTrigger: { Id: '0001x05951', Name: 'ApexTrigger3' },
@@ -184,19 +184,19 @@ describe('Get code coverage results', () => {
         NumLinesUncovered: 3,
         Coverage: {
           coveredLines: [1, 2, 3, 4, 5, 6, 7],
-          uncoveredLines: [8, 9, 10],
-        },
-      },
+          uncoveredLines: [8, 9, 10]
+        }
+      }
     ];
     toolingQueryStub.resolves({
       done: true,
       totalSize: 3,
-      records: perClassCodeCovResult,
+      records: perClassCodeCovResult
     } as ApexCodeCoverage);
 
     const codeCov = new CodeCoverage(mockConnection);
     const perClassCoverageMap = await codeCov.getPerClassCodeCoverage(
-      new Set<string>(['0001x05958', '0001x05959', '0001x05951']),
+      new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
     );
     expect(perClassCoverageMap.size).to.eql(3);
     expect(perClassCoverageMap.get('0001x05958-MethodOne')).to.deep.equal([
@@ -208,8 +208,8 @@ describe('Get code coverage results', () => {
         percentage: '83%',
         coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] },
         numLinesCovered: 5,
-        numLinesUncovered: 1,
-      },
+        numLinesUncovered: 1
+      }
     ]);
     expect(perClassCoverageMap.get('0001x05959-MethodTwo')).to.deep.equal([
       {
@@ -220,11 +220,11 @@ describe('Get code coverage results', () => {
         percentage: '75%',
         coverage: {
           coveredLines: [1, 2, 3, 4, 5, 6],
-          uncoveredLines: [7, 8],
+          uncoveredLines: [7, 8]
         },
         numLinesCovered: 6,
-        numLinesUncovered: 2,
-      },
+        numLinesUncovered: 2
+      }
     ]);
     expect(perClassCoverageMap.get('0001x05951-MethodThree')).to.deep.equal([
       {
@@ -235,11 +235,11 @@ describe('Get code coverage results', () => {
         percentage: '70%',
         coverage: {
           coveredLines: [1, 2, 3, 4, 5, 6, 7],
-          uncoveredLines: [8, 9, 10],
+          uncoveredLines: [8, 9, 10]
         },
         numLinesCovered: 7,
-        numLinesUncovered: 3,
-      },
+        numLinesUncovered: 3
+      }
     ]);
   });
 
@@ -251,7 +251,7 @@ describe('Get code coverage results', () => {
         ApexTestClassId: '0001x05958',
         NumLinesCovered: 5,
         NumLinesUncovered: 1,
-        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] },
+        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] }
       },
       {
         ApexClassOrTrigger: { Id: '0001x05959', Name: 'ApexTrigger2' },
@@ -259,18 +259,18 @@ describe('Get code coverage results', () => {
         TestMethodName: 'MethodOne',
         NumLinesCovered: 6,
         NumLinesUncovered: 2,
-        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] },
-      },
+        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] }
+      }
     ];
     toolingQueryStub.resolves({
       done: true,
       totalSize: 2,
-      records: perClassCodeCovResult,
+      records: perClassCodeCovResult
     } as ApexCodeCoverage);
 
     const codeCov = new CodeCoverage(mockConnection);
     const perClassCoverageMap = await codeCov.getPerClassCodeCoverage(
-      new Set<string>(['0001x05958']),
+      new Set<string>(['0001x05958'])
     );
     expect(perClassCoverageMap.size).to.eql(1);
     expect(perClassCoverageMap.get('0001x05958-MethodOne')).to.deep.equal([
@@ -282,7 +282,7 @@ describe('Get code coverage results', () => {
         percentage: '83%',
         coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] },
         numLinesCovered: 5,
-        numLinesUncovered: 1,
+        numLinesUncovered: 1
       },
       {
         apexClassOrTriggerName: 'ApexTrigger2',
@@ -292,11 +292,11 @@ describe('Get code coverage results', () => {
         percentage: '75%',
         coverage: {
           coveredLines: [1, 2, 3, 4, 5, 6],
-          uncoveredLines: [7, 8],
+          uncoveredLines: [7, 8]
         },
         numLinesCovered: 6,
-        numLinesUncovered: 2,
-      },
+        numLinesUncovered: 2
+      }
     ]);
   });
 
@@ -304,7 +304,7 @@ describe('Get code coverage results', () => {
     toolingQueryStub.throws('Error at Row:1;Column:1');
     const codeCov = new CodeCoverage(mockConnection);
     const perClassCoverageMap = await codeCov.getPerClassCodeCoverage(
-      new Set<string>([]),
+      new Set<string>([])
     );
 
     expect(perClassCoverageMap.size).to.equal(0);
@@ -321,12 +321,12 @@ describe('Get code coverage results', () => {
       const record = {
         ApexClassOrTrigger: {
           Id: `01p30000000DRIQAA4-${i}`,
-          Name: `apexClassName-${i}`,
+          Name: `apexClassName-${i}`
         },
         ApexTestClassId: `01p30000000DRIQAA4-${i}`,
         NumLinesCovered: 100,
         NumLinesUncovered: 0,
-        TestMethodName: `testMethodName-${i}`,
+        TestMethodName: `testMethodName-${i}`
       };
       records.push(record);
     }
@@ -334,19 +334,19 @@ describe('Get code coverage results', () => {
     toolingQueryStub.onFirstCall().resolves({
       done: true,
       totalSize: 1,
-      records: records.splice(0, QUERY_RECORD_LIMIT),
+      records: records.splice(0, QUERY_RECORD_LIMIT)
     });
 
     toolingQueryStub.onSecondCall().resolves({
       done: true,
       totalSize: 1,
-      records: records.splice(QUERY_RECORD_LIMIT, 2 * QUERY_RECORD_LIMIT),
+      records: records.splice(QUERY_RECORD_LIMIT, 2 * QUERY_RECORD_LIMIT)
     });
 
     toolingQueryStub.onThirdCall().resolves({
       done: true,
       totalSize: 1,
-      records: records.splice(2 * QUERY_RECORD_LIMIT, recordCount),
+      records: records.splice(2 * QUERY_RECORD_LIMIT, recordCount)
     });
 
     const apexTestClassSet: Set<string> = new Set<string>();
@@ -375,7 +375,7 @@ describe('Get code coverage results', () => {
     expect(idCountOfThirdCall).to.equal(400);
 
     expect(
-      idCountOfFirstCall + idCountOfSecondCall + idCountOfThirdCall,
+      idCountOfFirstCall + idCountOfSecondCall + idCountOfThirdCall
     ).to.equal(recordCount);
   });
 
@@ -392,12 +392,12 @@ describe('Get code coverage results', () => {
         NumLinesUncovered: 0,
         ApexClassOrTrigger: {
           Id: '',
-          Name: '',
+          Name: ''
         },
         Coverage: {
           coveredLines: [1, 2, 3],
-          uncoveredLines: [4, 5, 6],
-        },
+          uncoveredLines: [4, 5, 6]
+        }
       };
       records.push(record);
     }
@@ -405,19 +405,19 @@ describe('Get code coverage results', () => {
     toolingQueryStub.onFirstCall().resolves({
       done: true,
       totalSize: 1,
-      records: records.splice(0, QUERY_RECORD_LIMIT),
+      records: records.splice(0, QUERY_RECORD_LIMIT)
     });
 
     toolingQueryStub.onSecondCall().resolves({
       done: true,
       totalSize: 1,
-      records: records.splice(QUERY_RECORD_LIMIT, 2 * QUERY_RECORD_LIMIT),
+      records: records.splice(QUERY_RECORD_LIMIT, 2 * QUERY_RECORD_LIMIT)
     });
 
     toolingQueryStub.onThirdCall().resolves({
       done: true,
       totalSize: 1,
-      records: records.splice(2 * QUERY_RECORD_LIMIT, recordCount),
+      records: records.splice(2 * QUERY_RECORD_LIMIT, recordCount)
     });
 
     const apexTestClassSet: Set<string> = new Set<string>();
@@ -446,7 +446,7 @@ describe('Get code coverage results', () => {
     expect(idCountOfThirdCall).to.equal(300);
 
     expect(
-      idCountOfFirstCall + idCountOfSecondCall + idCountOfThirdCall,
+      idCountOfFirstCall + idCountOfSecondCall + idCountOfThirdCall
     ).to.equal(recordCount);
   });
 });

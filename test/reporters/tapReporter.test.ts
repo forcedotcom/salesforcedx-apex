@@ -22,7 +22,7 @@ describe('TAP Reporter Tests', () => {
     expect(result).to.contain('1..16');
     expect(result).to.contain('ok 1 AccountServiceTest.should_create_account');
     expect(result).to.contain(
-      'not ok 6 AnimalLocatorTest.testMissingAnimal\n# System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:\n# Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1\n',
+      'not ok 6 AnimalLocatorTest.testMissingAnimal\n# System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:\n# Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1\n'
     );
   });
 
@@ -33,8 +33,8 @@ describe('TAP Reporter Tests', () => {
     expect(result).to.contain('ok 1 AccountServiceTest.should_create_account');
     expect(result).to.match(
       new RegExp(
-        'ok 16 DailyLeadProcessorTest.testLeadProcessing\n# One\n# Two\n# Three\n$',
-      ),
+        'ok 16 DailyLeadProcessorTest.testLeadProcessing\n# One\n# Two\n# Three\n$'
+      )
     );
   });
 
@@ -63,16 +63,16 @@ describe('TAP Reporter Tests', () => {
     expect(result[1].diagnostics).to.eql(['Unknown error']);
     expect(result[5].diagnostics).to.eql([
       'System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:',
-      'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1',
+      'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1'
     ]);
     expect(result[8].diagnostics).to.eql([
       'System.AssertException: Assertion Failed: Incorrect count: Expected: 3, Actual: 2',
-      'Class.AccountProcessorTest.testCountContacts: line 47, column 1',
+      'Class.AccountProcessorTest.testCountContacts: line 47, column 1'
     ]);
     expect(result[12].diagnostics).to.eql([
       'Weird characters <>&"\'',
       'Surrounded by newlines.',
-      'and whitespace.',
+      'and whitespace.'
     ]);
   });
 });

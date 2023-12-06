@@ -13,7 +13,7 @@ import {
   soapEnv,
   soapBody,
   soapHeader,
-  action,
+  action
 } from './types';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
@@ -29,7 +29,7 @@ export class ExecuteService {
   }
 
   public async executeAnonymous(
-    options: ApexExecuteOptions,
+    options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
     const data = await this.getApexCode(options);
 
@@ -49,7 +49,7 @@ export class ExecuteService {
           count += 1;
         } else {
           throw new Error(
-            nls.localize('unexpectedExecuteCommandError', e.message),
+            nls.localize('unexpectedExecuteCommandError', e.message)
           );
         }
       }
@@ -80,7 +80,7 @@ export class ExecuteService {
     return new Promise<string>((resolve, reject) => {
       const readInterface = readline.createInterface(
         process.stdin,
-        process.stdout,
+        process.stdout
       );
       const timeout = setTimeout(() => {
         reject(new Error(nls.localize('execAnonInputTimeout')));
@@ -98,7 +98,7 @@ export class ExecuteService {
       });
       readInterface.on('error', (err: Error) => {
         reject(
-          new Error(nls.localize('unexpectedExecAnonInputError', err.message)),
+          new Error(nls.localize('unexpectedExecAnonInputError', err.message))
         );
       });
     });
@@ -113,13 +113,13 @@ export class ExecuteService {
     }/${this.connection.accessToken.split('!')[0]}`;
     const requestHeaders = {
       'content-type': 'text/xml',
-      soapaction: action,
+      soapaction: action
     };
     const request: HttpRequest = {
       method: 'POST',
       url: postEndpoint,
       body,
-      headers: requestHeaders,
+      headers: requestHeaders
     };
 
     return request;
@@ -132,7 +132,7 @@ export class ExecuteService {
     const formattedResponse: ExecuteAnonymousResponse = {
       compiled: execAnonResponse.compiled === 'true',
       success: execAnonResponse.success === 'true',
-      logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog,
+      logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
     };
 
     if (!formattedResponse.success) {
@@ -151,8 +151,8 @@ export class ExecuteService {
           exceptionStackTrace:
             typeof execAnonResponse.exceptionStackTrace === 'object'
               ? ''
-              : execAnonResponse.exceptionStackTrace,
-        },
+              : execAnonResponse.exceptionStackTrace
+        }
       ];
     }
 
@@ -160,7 +160,7 @@ export class ExecuteService {
   }
 
   public async connectionRequest(
-    requestData: HttpRequest,
+    requestData: HttpRequest
   ): Promise<SoapResponse> {
     return (await this.connection.request(requestData)) as SoapResponse;
   }

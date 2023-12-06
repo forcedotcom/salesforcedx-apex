@@ -37,7 +37,7 @@ export function stringify(jsonObj: object): string {
 }
 
 export async function queryNamespaces(
-  connection: Connection,
+  connection: Connection
 ): Promise<NamespaceInfo[]> {
   const installedNsQuery = 'SELECT NamespacePrefix FROM PackageLicense';
   const installedNsPromise = connection.query(installedNsQuery);

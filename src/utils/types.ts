@@ -11,7 +11,7 @@ enum logLevel {
   info = 'info',
   warn = 'warn',
   error = 'error',
-  fatal = 'fatal',
+  fatal = 'fatal'
 }
 
 export const xmlCharMap: { [index: string]: string } = {
@@ -19,7 +19,7 @@ export const xmlCharMap: { [index: string]: string } = {
   '>': '&gt;',
   '&': '&amp;',
   '"': '&quot;',
-  "'": '&apos;',
+  "'": '&apos;'
 };
 
 export type CommonOptions = {

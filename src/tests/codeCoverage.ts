@@ -13,7 +13,7 @@ import {
   ApexCodeCoverageRecord,
   ApexOrgWideCoverage,
   CodeCoverageResult,
-  PerClassCoverage,
+  PerClassCoverage
 } from './types';
 import * as util from 'util';
 import { calculatePercentage } from './utils';
@@ -32,7 +32,7 @@ export class CodeCoverage {
    */
   public async getOrgWideCoverage(): Promise<string> {
     const orgWideCoverageResult = (await this.connection.tooling.query(
-      'SELECT PercentCovered FROM ApexOrgWideCoverage',
+      'SELECT PercentCovered FROM ApexOrgWideCoverage'
     )) as ApexOrgWideCoverage;
 
     if (orgWideCoverageResult.records.length === 0) {
@@ -48,7 +48,7 @@ export class CodeCoverage {
    * NOTE: a test could cover more than one class, result map should contain a record for each covered class
    */
   public async getPerClassCodeCoverage(
-    apexTestClassSet: Set<string>,
+    apexTestClassSet: Set<string>
   ): Promise<Map<string, PerClassCoverage[]>> {
     if (apexTestClassSet.size === 0) {
       return new Map();
@@ -64,7 +64,7 @@ export class CodeCoverage {
         const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
         const percentage = calculatePercentage(
           item.NumLinesCovered,
-          totalLines,
+          totalLines
         );
 
         const value = {
@@ -75,7 +75,7 @@ export class CodeCoverage {
           numLinesCovered: item.NumLinesCovered,
           numLinesUncovered: item.NumLinesUncovered,
           percentage,
-          ...(item.Coverage ? { coverage: item.Coverage } : {}),
+          ...(item.Coverage ? { coverage: item.Coverage } : {})
         };
         const key = `${item.ApexTestClassId}-${item.TestMethodName}`;
         if (perClassCoverageMap.get(key)) {
@@ -83,7 +83,7 @@ export class CodeCoverage {
         } else {
           perClassCoverageMap.set(
             `${item.ApexTestClassId}-${item.TestMethodName}`,
-            [value],
+            [value]
           );
         }
       });
@@ -122,7 +122,7 @@ export class CodeCoverage {
           const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
           const percentage = calculatePercentage(
             item.NumLinesCovered,
-            totalLines,
+            totalLines
           );
 
           return {
@@ -135,9 +135,9 @@ export class CodeCoverage {
             numLinesUncovered: item.NumLinesUncovered,
             percentage,
             coveredLines: item.Coverage.coveredLines,
-            uncoveredLines: item.Coverage.uncoveredLines,
+            uncoveredLines: item.Coverage.uncoveredLines
           };
-        },
+        }
       );
 
       totalCodeCoverageResults.push(...codeCoverageResults);
@@ -146,12 +146,12 @@ export class CodeCoverage {
     return {
       codeCoverageResults: totalCodeCoverageResults,
       totalLines: totalLinesCovered + totalLinesUncovered,
-      coveredLines: totalLinesCovered,
+      coveredLines: totalLinesCovered
     };
   }
 
   private async queryPerClassCodeCov(
-    apexTestClassSet: Set<string>,
+    apexTestClassSet: Set<string>
   ): Promise<ApexCodeCoverage[]> {
     const perClassCodeCovQuery =
       'SELECT ApexTestClassId, ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, TestMethodName, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverage WHERE ApexTestClassId IN (%s)';
@@ -159,7 +159,7 @@ export class CodeCoverage {
   }
 
   private async queryAggregateCodeCov(
-    apexClassIdSet: Set<string>,
+    apexClassIdSet: Set<string>
   ): Promise<ApexCodeCoverageAggregate[]> {
     const codeCoverageQuery =
       'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
@@ -167,7 +167,7 @@ export class CodeCoverage {
   }
 
   private async fetchResults<
-    T extends ApexCodeCoverage | ApexCodeCoverageAggregate,
+    T extends ApexCodeCoverage | ApexCodeCoverageAggregate
   >(idSet: Set<string>, selectQuery: string): Promise<T[]> {
     const queries = this.createQueries(selectQuery, idSet);
 
@@ -179,7 +179,7 @@ export class CodeCoverage {
       return this.connection.tooling.query<
         ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord
       >(query, {
-        autoFetch: true,
+        autoFetch: true
       });
     });
 

@@ -8,7 +8,7 @@ import {
   ApexCodeCoverage,
   ApexCodeCoverageAggregate,
   ApexCodeCoverageAggregateRecord,
-  ApexCodeCoverageRecord,
+  ApexCodeCoverageRecord
 } from '../tests/types';
 import * as libReport from 'istanbul-lib-report';
 import * as reports from 'istanbul-reports';
@@ -40,7 +40,7 @@ export const DefaultWatermarks: libReport.Watermarks = {
   statements: [50, 75],
   functions: [50, 75],
   branches: [50, 75],
-  lines: [50, 75],
+  lines: [50, 75]
 };
 
 export const DefaultReportOptions: Omit<
@@ -54,13 +54,13 @@ export const DefaultReportOptions: Omit<
     skipEmpty: false,
     subdir: 'html-spa',
     linkMapper: undefined,
-    metricsToShow: ['lines', 'statements', 'branches'],
+    metricsToShow: ['lines', 'statements', 'branches']
   },
   html: {
     verbose: false,
     skipEmpty: false,
     subdir: 'html',
-    linkMapper: undefined,
+    linkMapper: undefined
   },
   json: { file: 'coverage.json' },
   'json-summary': { file: 'coverage-summary.json' },
@@ -68,7 +68,7 @@ export const DefaultReportOptions: Omit<
   none: {} as never,
   teamcity: { file: 'teamcity.txt', blockName: 'coverage' },
   text: { file: 'text.txt', maxCols: 160, skipEmpty: false, skipFull: false },
-  'text-summary': { file: 'text-summary.txt' },
+  'text-summary': { file: 'text-summary.txt' }
 };
 
 export interface CoverageReporterOptions {
@@ -94,7 +94,7 @@ export class CoverageReporter {
     private readonly coverage: ApexCodeCoverageAggregate | ApexCodeCoverage,
     private readonly reportDir: string,
     private readonly sourceDir: string,
-    private readonly options?: CoverageReporterOptions,
+    private readonly options?: CoverageReporterOptions
   ) {}
 
   public generateReports(): void {
@@ -105,13 +105,13 @@ export class CoverageReporter {
         dir: this.reportDir,
         defaultSummarizer: 'nested',
         watermarks: this.options?.watermark || DefaultWatermarks,
-        coverageMap: this.coverageMap,
+        coverageMap: this.coverageMap
       });
       const formats = this.options?.reportFormats || ['text-summary'];
       formats.forEach((format) => {
         const report = reports.create(
           format,
-          this.options?.reportOptions[format] || DefaultReportOptions[format],
+          this.options?.reportOptions[format] || DefaultReportOptions[format]
         );
         report.execute(context);
       });
@@ -128,20 +128,20 @@ export class CoverageReporter {
         const fileCoverageData: libCoverage.FileCoverageData =
           {} as libCoverage.FileCoverageData;
         const fileRegEx = new RegExp(
-          `${record.ApexClassOrTrigger.Name}\.(cls|trigger)`,
+          `${record.ApexClassOrTrigger.Name}\.(cls|trigger)`
         );
         fileCoverageData.fnMap = {};
         fileCoverageData.branchMap = {};
         fileCoverageData.path = path.join(
           this.sourceDir,
           pathsToFiles.find((file) => fileRegEx.test(file)) ||
-            record.ApexClassOrTrigger.Name,
+            record.ApexClassOrTrigger.Name
         );
         fileCoverageData.f = {};
         fileCoverageData.b = {};
         fileCoverageData.s = [
           ...record.Coverage.coveredLines.map((line) => [line, 1]),
-          ...record.Coverage.uncoveredLines.map((line) => [line, 0]),
+          ...record.Coverage.uncoveredLines.map((line) => [line, 0])
         ]
           .map(([line, covered]) => [Number(line).toString(10), covered])
           .reduce((acc, [line, value]) => {
@@ -157,19 +157,19 @@ export class CoverageReporter {
         }
         fileCoverageData.statementMap = [
           ...record.Coverage.coveredLines,
-          ...record.Coverage.uncoveredLines,
+          ...record.Coverage.uncoveredLines
         ]
           .sort()
           .map((line) => {
             const statement: libCoverage.Range = {
               start: {
                 line,
-                column: startOfSource(sourceLines[line - 1]),
+                column: startOfSource(sourceLines[line - 1])
               },
               end: {
                 line,
-                column: endOfSource(sourceLines[line - 1]),
-              },
+                column: endOfSource(sourceLines[line - 1])
+              }
             };
 
             return [Number(line).toString(10), statement];
@@ -178,7 +178,7 @@ export class CoverageReporter {
             return Object.assign(acc, { [Number(line).toString()]: value });
           }, {});
         coverageMap.addFileCoverage(fileCoverageData);
-      },
+      }
     );
     return coverageMap;
   }

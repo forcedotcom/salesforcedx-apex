@@ -26,8 +26,8 @@ describe('Query Namespaces', async () => {
       .resolves('50.0');
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username,
-      }),
+        username: testData.username
+      })
     });
     sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
@@ -55,12 +55,12 @@ describe('Query Namespaces', async () => {
       .resolves({
         records: [
           { NamespacePrefix: 'myNamespace' },
-          { NamespacePrefix: 'otherNamespace' },
-        ],
+          { NamespacePrefix: 'otherNamespace' }
+        ]
       });
     //@ts-ignore
     queryStub.onSecondCall().resolves({
-      records: [{ NamespacePrefix: 'otherNamespace' }],
+      records: [{ NamespacePrefix: 'otherNamespace' }]
     });
 
     const namespaces = await utils.queryNamespaces(mockConnection);
@@ -68,7 +68,7 @@ describe('Query Namespaces', async () => {
     expect(namespaces).to.deep.equal([
       { installedNs: false, namespace: 'otherNamespace' },
       { installedNs: true, namespace: 'myNamespace' },
-      { installedNs: true, namespace: 'otherNamespace' },
+      { installedNs: true, namespace: 'otherNamespace' }
     ]);
   });
 });

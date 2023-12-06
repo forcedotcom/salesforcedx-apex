@@ -24,7 +24,7 @@ export function encodeBody(accessToken: string, data: string): string {
     debugHeader,
     action,
     actionBody,
-    action,
+    action
   );
   return body;
 }

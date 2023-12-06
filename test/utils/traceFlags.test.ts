@@ -30,8 +30,8 @@ describe('Trace Flags', () => {
     await $$.stubAuths(testData);
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username,
-      }),
+        username: testData.username
+      })
     });
     sb.stub(ConfigAggregator.prototype, 'getPropertyValue')
       .withArgs('defaultusername')
@@ -63,9 +63,9 @@ describe('Trace Flags', () => {
           LogType: 'developer_log',
           StartDate: null,
           ExpirationDate: null,
-          DebugLevel: { ApexCode: '', VisualForce: '' },
-        },
-      ],
+          DebugLevel: { ApexCode: '', VisualForce: '' }
+        }
+      ]
     });
     toolingUpdateStub
       .onFirstCall()
@@ -118,9 +118,9 @@ describe('Trace Flags', () => {
           LogType: 'developer_log',
           StartDate: null,
           ExpirationDate: null,
-          DebugLevel: { ApexCode: '', VisualForce: '' },
-        },
-      ],
+          DebugLevel: { ApexCode: '', VisualForce: '' }
+        }
+      ]
     });
     toolingUpdateStub.onFirstCall().resolves({ success: false });
 
@@ -143,7 +143,7 @@ describe('Trace Flags', () => {
     toolingQueryStub.onFirstCall().resolves({
       done: true,
       totalSize: 0,
-      records: [],
+      records: []
     });
 
     toolingCreateStub
@@ -187,7 +187,7 @@ describe('Trace Flags', () => {
     toolingQueryStub.onFirstCall().resolves({
       done: true,
       totalSize: 0,
-      records: [],
+      records: []
     });
 
     toolingCreateStub
@@ -239,7 +239,7 @@ describe('Trace Flags', () => {
     toolingQueryStub.onFirstCall().resolves({
       done: true,
       totalSize: 0,
-      records: [],
+      records: []
     });
     toolingCreateStub.onFirstCall().resolves({ success: false, id: undefined });
 
@@ -248,7 +248,7 @@ describe('Trace Flags', () => {
       fail('Expected to raise an error');
     } catch (err) {
       expect(err.message).to.equal(
-        nls.localize('trace_flags_failed_to_create_debug_level'),
+        nls.localize('trace_flags_failed_to_create_debug_level')
       );
     }
   });
@@ -273,7 +273,7 @@ describe('Trace Flags', () => {
       fail('Expected to raise an error');
     } catch (err) {
       expect(err.message).to.equal(
-        nls.localize('trace_flags_failed_to_find_debug_level', debugLevelName),
+        nls.localize('trace_flags_failed_to_find_debug_level', debugLevelName)
       );
     }
   });

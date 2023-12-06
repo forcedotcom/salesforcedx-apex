@@ -7,7 +7,7 @@
 import {
   ApexTestResultData,
   ApexTestResultOutcome,
-  TestResult,
+  TestResult
 } from '../tests/types';
 
 export interface TapResult {
@@ -26,7 +26,7 @@ export class TapReporter {
     out = out.concat(`1..${testPointCount}\n`);
     results.forEach((testPoint) => {
       out = out.concat(
-        `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`,
+        `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`
       );
       testPoint.diagnostics.forEach((s) => {
         out = out.concat(`# ${s}\n`);
@@ -49,7 +49,7 @@ export class TapReporter {
         testNumber,
         description: test.fullName,
         diagnostics: this.buildTapDiagnostics(test),
-        outcome,
+        outcome
       });
     });
     return tapResults;

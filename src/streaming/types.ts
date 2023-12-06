@@ -34,7 +34,7 @@ export type StreamMessage = {
 
 export const enum StreamingErrors {
   ERROR_AUTH_INVALID = '401::Authentication invalid',
-  ERROR_UNKNOWN_CLIENT_ID = '403::Unknown client',
+  ERROR_UNKNOWN_CLIENT_ID = '403::Unknown client'
 }
 
-export const RetreiveResultsInterval = 60 * 1000;
+export const RetrieveResultsInterval = 60 * 1000;

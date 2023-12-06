@@ -51,7 +51,7 @@ function streamPromise(stream: fs.WriteStream): Promise<void> {
  * @param fileMap key = filePath, value = file contents
  */
 export async function createFiles(
-  fileMap: { path: string; content: string }[],
+  fileMap: { path: string; content: string }[]
 ): Promise<void> {
   const writePromises = fileMap.map((file) => {
     ensureFileExists(file.path);

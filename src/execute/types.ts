@@ -40,7 +40,7 @@ export const xmlCharMap: { [index: string]: string } = {
   '>': '&gt;',
   '&': '&amp;',
   '"': '&quot;',
-  "'": '&apos;',
+  "'": '&apos;'
 };
 
 export interface SoapResponse {

@@ -10,7 +10,7 @@ import { xmlCharMap } from './types';
 import { HttpRequest } from 'jsforce';
 
 export async function refreshAuth(
-  connection: Connection,
+  connection: Connection
 ): Promise<JsonCollection> {
   const requestInfo: HttpRequest = { url: connection.baseUrl(), method: 'GET' };
   return await connection.request(requestInfo);

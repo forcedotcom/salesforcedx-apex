@@ -11,12 +11,12 @@ import { ApexTestResultRecord, SyncTestFailure } from './types';
 
 export function formatTestErrors(error: Error): Error {
   const matches = error.message?.match(
-    /\bsObject type ["'](.*?)["'] is not supported\b/,
+    /\bsObject type ["'](.*?)["'] is not supported\b/
   );
   if (matches && matches[0] && matches[1]) {
     error.message = nls.localize('invalidsObjectErr', [
       matches[1],
-      error.message,
+      error.message
     ]);
     return error;
   }
@@ -31,7 +31,7 @@ export function getSyncDiagnostic(syncRecord: SyncTestFailure): ApexDiagnostic {
     className: syncRecord.stackTrace
       ? syncRecord.stackTrace.split('.')[1]
       : undefined,
-    compileProblem: '',
+    compileProblem: ''
   };
 
   const matches =
@@ -49,7 +49,7 @@ export function getSyncDiagnostic(syncRecord: SyncTestFailure): ApexDiagnostic {
 }
 
 export function getAsyncDiagnostic(
-  asyncRecord: ApexTestResultRecord,
+  asyncRecord: ApexTestResultRecord
 ): ApexDiagnostic {
   const diagnostic: ApexDiagnostic = {
     exceptionMessage: asyncRecord.Message,
@@ -57,7 +57,7 @@ export function getAsyncDiagnostic(
     className: asyncRecord.StackTrace
       ? asyncRecord.StackTrace.split('.')[1]
       : undefined,
-    compileProblem: '',
+    compileProblem: ''
   };
 
   const matches =

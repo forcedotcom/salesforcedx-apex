@@ -20,7 +20,7 @@ import {
   ApexCodeCoverage,
   ResultFormat,
   OutputDirConfig,
-  TestResult,
+  TestResult
 } from '../../src/tests/types';
 import { nls } from '../../src/i18n';
 import {
@@ -28,7 +28,7 @@ import {
   perClassCodeCoverage,
   syncResult,
   syncTestResultSimple,
-  syncTestResultWithFailures,
+  syncTestResultWithFailures
 } from './testData';
 import { JUnitReporter } from '../../src';
 import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
@@ -46,7 +46,7 @@ describe('Run Apex tests synchronously', () => {
   const requestOptions: SyncTestConfiguration = {
     tests: [{ className: 'TestSample' }],
     maxFailedTests: 2,
-    testLevel: 'RunSpecifiedTests',
+    testLevel: 'RunSpecifiedTests'
   };
 
   let createStreamStub: SinonStub;
@@ -61,15 +61,15 @@ describe('Run Apex tests synchronously', () => {
       .resolves('50.0');
     mockConnection = await Connection.create({
       authInfo: await AuthInfo.create({
-        username: testData.username,
-      }),
+        username: testData.username
+      })
     });
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
     testRequest = {
       method: 'POST',
       url: `${mockConnection.tooling._baseUrl()}/runTestsSynchronous`,
       body: JSON.stringify(requestOptions),
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json' }
     };
 
     createStreamStub = sandboxStub.stub(fs, 'createWriteStream');
@@ -87,7 +87,7 @@ describe('Run Apex tests synchronously', () => {
     toolingRequestStub.withArgs(testRequest).returns(syncTestResultSimple);
     const testSrv = new TestService(mockConnection);
     const testResult = (await testSrv.runTestSynchronous(
-      requestOptions,
+      requestOptions
     )) as TestResult;
     expect(testResult).to.be.a('object');
     expect(toolingRequestStub.calledOnce).to.equal(true);
@@ -95,7 +95,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.summary.failRate).to.equal('0%');
     expect(testResult.summary.testsRan).to.equal(1);
     expect(testResult.summary.orgId).to.equal(
-      mockConnection.getAuthInfoFields().orgId,
+      mockConnection.getAuthInfoFields().orgId
     );
     expect(testResult.summary.outcome).to.equal('Passed');
     expect(testResult.summary.passRate).to.equal('100%');
@@ -128,7 +128,7 @@ describe('Run Apex tests synchronously', () => {
       .returns(syncTestResultWithFailures);
     const testSrv = new TestService(mockConnection);
     const testResult = (await testSrv.runTestSynchronous(
-      requestOptions,
+      requestOptions
     )) as TestResult;
     expect(testResult).to.be.a('object');
     expect(toolingRequestStub.calledOnce).to.equal(true);
@@ -136,7 +136,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.summary.failRate).to.equal('100%');
     expect(testResult.summary.testsRan).to.equal(4);
     expect(testResult.summary.orgId).to.equal(
-      mockConnection.getAuthInfoFields().orgId,
+      mockConnection.getAuthInfoFields().orgId
     );
     expect(testResult.summary.outcome).to.equal('Failed');
     expect(testResult.summary.passRate).to.equal('0%');
@@ -148,10 +148,10 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.tests.length).to.equal(4);
     expect(testResult.tests[0].queueItemId).to.equal('');
     expect(testResult.tests[0].stackTrace).to.equal(
-      'Class.TestSample.testOne: line 27, column 1',
+      'Class.TestSample.testOne: line 27, column 1'
     );
     expect(testResult.tests[0].message).to.equal(
-      'System.AssertException: Assertion Failed: Expected: false, Actual: true',
+      'System.AssertException: Assertion Failed: Expected: false, Actual: true'
     );
     expect(testResult.tests[0].asyncApexJobId).to.equal('');
     expect(testResult.tests[0].methodName).to.equal('testOne');
@@ -181,27 +181,27 @@ describe('Run Apex tests synchronously', () => {
     queryStub.onCall(0).resolves({
       done: true,
       totalSize: 3,
-      records: perClassCodeCoverage,
+      records: perClassCodeCoverage
     } as ApexCodeCoverage);
     queryStub.onCall(1).resolves({
       done: true,
       totalSize: 3,
-      records: codeCoverageQueryResult,
+      records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
     queryStub.onCall(2).resolves({
       done: true,
       totalSize: 1,
       records: [
         {
-          PercentCovered: '35',
-        },
-      ],
+          PercentCovered: '35'
+        }
+      ]
     } as ApexOrgWideCoverage);
 
     const testSrv = new TestService(mockConnection);
     const testResult = (await testSrv.runTestSynchronous(
       requestOptions,
-      true,
+      true
     )) as TestResult;
     expect(testResult).to.be.a('object');
     expect(toolingRequestStub.calledOnce).to.equal(true);
@@ -218,13 +218,13 @@ describe('Run Apex tests synchronously', () => {
     it('should create json result file without testRunId for sync runs', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.json],
+        resultFormats: [ResultFormat.json]
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(syncResult, config);
 
       expect(
-        createStreamStub.calledWith(join(config.dirPath, `test-result.json`)),
+        createStreamStub.calledWith(join(config.dirPath, `test-result.json`))
       ).to.be.true;
       expect(createStreamStub.callCount).to.eql(2);
     });
@@ -232,15 +232,15 @@ describe('Run Apex tests synchronously', () => {
     it('should create junit result file without testRunId for sync runs', async () => {
       const config = {
         dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.junit],
+        resultFormats: [ResultFormat.junit]
       } as OutputDirConfig;
       const testSrv = new TestService(mockConnection);
       await testSrv.writeResultFiles(syncResult, config);
 
       expect(
         createStreamStub.calledWith(
-          join(config.dirPath, `test-result-junit.xml`),
-        ),
+          join(config.dirPath, `test-result-junit.xml`)
+        )
       ).to.be.true;
       expect(junitSpy.calledOnce).to.be.true;
       expect(createStreamStub.callCount).to.eql(2);
@@ -256,13 +256,13 @@ describe('Run Apex tests synchronously', () => {
         .throws(new Error(errMsg));
       try {
         await testSrv.runTestSynchronous({
-          testLevel: TestLevel.RunLocalTests,
+          testLevel: TestLevel.RunLocalTests
         });
         fail('Should have failed');
       } catch (e) {
         expect(formatSpy.calledOnce).to.be.true;
         expect(e.message).to.contain(
-          nls.localize('invalidsObjectErr', ['ApexClass', errMsg]),
+          nls.localize('invalidsObjectErr', ['ApexClass', errMsg])
         );
       }
     });

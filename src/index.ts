@@ -9,7 +9,7 @@ export { CancellationToken, CancellationTokenSource, Progress } from './common';
 export {
   ExecuteService,
   ExecuteAnonymousResponse,
-  ApexExecuteOptions,
+  ApexExecuteOptions
 } from './execute';
 export { LogService, ApexLogGetOptions, LogRecord, LogResult } from './logs';
 export {
@@ -20,7 +20,7 @@ export {
   CoverageReporter,
   CoverageReportFormats,
   DefaultReportOptions,
-  DefaultWatermarks,
+  DefaultWatermarks
 } from './reporters';
 export {
   ApexCodeCoverageAggregate,
@@ -39,6 +39,6 @@ export {
   TestLevel,
   TestResult,
   TestService,
-  TestRunIdResult,
+  TestRunIdResult
 } from './tests';
 export { Row, Table } from './utils';

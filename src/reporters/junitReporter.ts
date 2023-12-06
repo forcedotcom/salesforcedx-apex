@@ -7,7 +7,7 @@
 import {
   ApexTestResultData,
   ApexTestResultOutcome,
-  TestResult,
+  TestResult
 } from '../tests/types';
 import { formatStartTime, msToSecond } from '../utils';
 
@@ -17,7 +17,7 @@ const tab = '    ';
 const timeProperties = [
   'testExecutionTimeInMs',
   'testTotalTimeInMs',
-  'commandTimeInMs',
+  'commandTimeInMs'
 ];
 
 // properties not in cli junit spec
