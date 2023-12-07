@@ -151,7 +151,7 @@ export class SyncTests {
     const apexTestClassIdSet = new Set<string>();
 
     apiTestResult.successes.forEach((item) => {
-      const nms = item.namespace ? `${item.namespace}__` : '';
+      const nms = item.namespace ? `${item.namespace}.` : '';
       apexTestClassIdSet.add(item.id);
       testResults.push({
         id: '',
