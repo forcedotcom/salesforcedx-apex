@@ -304,6 +304,7 @@ export class AsyncTests {
     apexTestResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
+
     const apexResultIds = testQueueResult.records.map(record => record.Id);
 
     // iterate thru ids, create query with id, & compare query length to char limit

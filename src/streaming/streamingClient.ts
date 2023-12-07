@@ -8,7 +8,7 @@
 import { Client } from 'faye';
 import { Connection } from '@salesforce/core';
 import {
-  RetreiveResultsInterval,
+  RetrieveResultsInterval,
   StreamMessage,
   StreamingErrors,
   TestResultMessage
@@ -203,7 +203,7 @@ export class StreamingClient {
                       queueItem: result
                     });
                   }
-                }, RetreiveResultsInterval);
+                }, RetrieveResultsInterval);
               }
             })
             .catch(e => {
@@ -226,7 +226,7 @@ export class StreamingClient {
                   queueItem: result
                 });
               }
-            }, RetreiveResultsInterval);
+            }, RetrieveResultsInterval);
           }
         }
       } catch (e) {
