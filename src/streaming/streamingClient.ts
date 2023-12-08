@@ -35,7 +35,7 @@ export class Deferred<T> {
   public promise: Promise<T>;
   public resolve: Function;
   constructor() {
-    this.promise = new Promise(resolve => (this.resolve = resolve));
+    this.promise = new Promise((resolve) => (this.resolve = resolve));
   }
 }
 
@@ -149,7 +149,7 @@ export class StreamingClient {
   }
 
   public handshake(): Promise<void> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.client.handshake(() => {
         resolve();
       });
@@ -188,7 +188,7 @@ export class StreamingClient {
 
         if (action) {
           action()
-            .then(id => {
+            .then((id) => {
               this.subscribedTestRunId = id;
               this.subscribedTestRunIdDeferred.resolve(id);
 
@@ -206,7 +206,7 @@ export class StreamingClient {
                 }, RetrieveResultsInterval);
               }
             })
-            .catch(e => {
+            .catch((e) => {
               this.disconnect();
               clearInterval(intervalId);
               subscriptionReject(e);
