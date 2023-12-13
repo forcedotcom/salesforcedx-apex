@@ -108,7 +108,7 @@ export class CoverageReporter {
         coverageMap: this.coverageMap
       });
       const formats = this.options?.reportFormats || ['text-summary'];
-      formats.forEach(format => {
+      formats.forEach((format) => {
         const report = reports.create(
           format,
           this.options?.reportOptions[format] || DefaultReportOptions[format]
@@ -142,8 +142,8 @@ export class CoverageReporter {
         fileCoverageData.f = {};
         fileCoverageData.b = {};
         fileCoverageData.s = [
-          ...record.Coverage.coveredLines.map(line => [line, 1]),
-          ...record.Coverage.uncoveredLines.map(line => [line, 0])
+          ...record.Coverage.coveredLines.map((line) => [line, 1]),
+          ...record.Coverage.uncoveredLines.map((line) => [line, 0])
         ]
           .map(([line, covered]) => [Number(line).toString(10), covered])
           .reduce((acc, [line, value]) => {
@@ -162,7 +162,7 @@ export class CoverageReporter {
           ...record.Coverage.uncoveredLines
         ]
           .sort()
-          .map(line => {
+          .map((line) => {
             const statement: libCoverage.Range = {
               start: {
                 line,
