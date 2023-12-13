@@ -4,12 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import {
-  ApexCodeCoverage,
-  ApexCodeCoverageAggregate,
-  ApexCodeCoverageAggregateRecord,
-  ApexCodeCoverageRecord
-} from '../tests/types';
+import { ApexCodeCoverage, ApexCodeCoverageAggregate } from '../tests/types';
 import * as libReport from 'istanbul-lib-report';
 import * as reports from 'istanbul-reports';
 import * as libCoverage from 'istanbul-lib-coverage';
@@ -125,63 +120,64 @@ export class CoverageReporter {
       cwd: this.sourceDir
     });
     const coverageMap = libCoverage.createCoverageMap();
-    this.coverage.records.forEach(
-      (record: ApexCodeCoverageRecord | ApexCodeCoverageAggregateRecord) => {
-        const fileCoverageData: libCoverage.FileCoverageData = {} as libCoverage.FileCoverageData;
+
+    this.coverage.records
+      .map((record): libCoverage.FileCoverageData => {
         const fileNameWithExtension = `${record.ApexClassOrTrigger.Name}.${
           record.ApexClassOrTrigger.Id?.startsWith('01p') ? 'cls' : 'trigger'
         }`;
-
-        fileCoverageData.fnMap = {};
-        fileCoverageData.branchMap = {};
-        fileCoverageData.path = path.join(
+        const coveragePath = path.join(
           this.sourceDir,
-          pathsToFiles.find(file => file === fileNameWithExtension) ||
+          pathsToFiles.find((file) => file === fileNameWithExtension) ??
             fileNameWithExtension
         );
-        fileCoverageData.f = {};
-        fileCoverageData.b = {};
-        fileCoverageData.s = [
-          ...record.Coverage.coveredLines.map((line) => [line, 1]),
-          ...record.Coverage.uncoveredLines.map((line) => [line, 0])
-        ]
-          .map(([line, covered]) => [Number(line).toString(10), covered])
-          .reduce((acc, [line, value]) => {
-            return Object.assign(acc, { [line]: value });
-          }, {});
-        let sourceLines: string[] = [];
-        try {
-          sourceLines = fs
-            .readFileSync(fileCoverageData.path, 'utf8')
-            .split('\n');
-        } catch {
-          // file not found
-        }
-        fileCoverageData.statementMap = [
-          ...record.Coverage.coveredLines,
-          ...record.Coverage.uncoveredLines
-        ]
-          .sort()
-          .map((line) => {
-            const statement: libCoverage.Range = {
-              start: {
-                line,
-                column: startOfSource(sourceLines[line - 1])
-              },
-              end: {
-                line,
-                column: endOfSource(sourceLines[line - 1])
-              }
-            };
-
-            return [Number(line).toString(10), statement];
-          })
-          .reduce((acc, [line, value]) => {
-            return Object.assign(acc, { [Number(line).toString()]: value });
-          }, {});
-        coverageMap.addFileCoverage(fileCoverageData);
-      }
-    );
+        const sourceLines = getSourceLines(coveragePath);
+        return {
+          fnMap: {},
+          branchMap: {},
+          path: coveragePath,
+          f: {},
+          b: {},
+          s: Object.fromEntries(
+            [
+              ...record.Coverage.coveredLines.map((line) => [line, 1]),
+              ...record.Coverage.uncoveredLines.map((line) => [line, 0])
+            ].map(([line, covered]) => [Number(line).toString(10), covered])
+          ),
+          statementMap: Object.fromEntries(
+            [...record.Coverage.coveredLines, ...record.Coverage.uncoveredLines]
+              // TODO: use asSorted when node18 is no longer supported
+              .sort()
+              .map(lineToRange(sourceLines))
+          )
+        };
+      })
+      .map((fc) => coverageMap.addFileCoverage(fc));
     return coverageMap;
   }
 }
+
+const getSourceLines = (coveragePath: string): string[] => {
+  try {
+    return fs.readFileSync(coveragePath, 'utf8').split('\n');
+  } catch {
+    // file not found
+    return [];
+  }
+};
+
+const lineToRange =
+  (sourceLines: string[]) =>
+  (line: number): [string, libCoverage.Range] => [
+    Number(line).toString(10),
+    {
+      start: {
+        line,
+        column: startOfSource(sourceLines[line - 1])
+      },
+      end: {
+        line,
+        column: endOfSource(sourceLines[line - 1])
+      }
+    }
+  ];
