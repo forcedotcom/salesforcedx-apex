@@ -108,14 +108,12 @@ const multipleCoverageAggregate = {
     {
       attributes: {
         type: 'ApexCodeCoverageAggregate',
-        url:
-          '/services/data/v56.0/tooling/sobjects/ApexCodeCoverageAggregate/7153M000000ADC6QAO'
+        url: '/services/data/v56.0/tooling/sobjects/ApexCodeCoverageAggregate/7153M000000ADC6QAO'
       },
       ApexClassOrTrigger: {
         attributes: {
           type: 'Name',
-          url:
-            '/services/data/v56.0/tooling/sobjects/ApexTrigger/01q3M000000CzMWQA0'
+          url: '/services/data/v56.0/tooling/sobjects/ApexTrigger/01q3M000000CzMWQA0'
         },
         Id: '01q3M000000CzMWQA0',
         Name: 'Bla'
@@ -130,14 +128,12 @@ const multipleCoverageAggregate = {
     {
       attributes: {
         type: 'ApexCodeCoverageAggregate',
-        url:
-          '/services/data/v56.0/tooling/sobjects/ApexCodeCoverageAggregate/7153M000000ADBwQAO'
+        url: '/services/data/v56.0/tooling/sobjects/ApexCodeCoverageAggregate/7153M000000ADBwQAO'
       },
       ApexClassOrTrigger: {
         attributes: {
           type: 'Name',
-          url:
-            '/services/data/v56.0/tooling/sobjects/ApexClass/01p3M000000MLgJQAW'
+          url: '/services/data/v56.0/tooling/sobjects/ApexClass/01p3M000000MLgJQAW'
         },
         Id: '01p3M000000MLgJQAW',
         Name: 'Bla'
@@ -270,14 +266,14 @@ describe('coverageReports', () => {
       );
 
       const files = multipleCoverageAggregate.records
-        .map(record => {
+        .map((record) => {
           return `${record.ApexClassOrTrigger.Name}.${
             record.ApexClassOrTrigger.Id.startsWith('01p') ? 'cls' : 'trigger'
           }`;
         })
         .sort();
 
-      Object.keys(codeCoverage).forEach(codeCoverageEntry => {
+      Object.keys(codeCoverage).forEach((codeCoverageEntry) => {
         expect(files).to.include(path.basename(codeCoverageEntry));
       });
     });
