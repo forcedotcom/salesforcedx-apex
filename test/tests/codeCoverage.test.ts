@@ -6,7 +6,7 @@
  */
 
 import { Connection } from '@salesforce/core';
-import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
+import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { CodeCoverage } from '../../src/tests/codeCoverage';
@@ -19,13 +19,14 @@ import {
 } from '../../src/tests/types';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
 
-const $$ = testSetup();
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingQueryStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Get code coverage results', () => {
+  const $$ = new TestContext();
+
   beforeEach(async () => {
     sandboxStub = createSandbox();
 
@@ -136,13 +137,10 @@ describe('Get code coverage results', () => {
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
     const codeCov = new CodeCoverage(mockConnection);
-    const {
-      codeCoverageResults,
-      totalLines,
-      coveredLines
-    } = await codeCov.getAggregateCodeCoverage(
-      new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
-    );
+    const { codeCoverageResults, totalLines, coveredLines } =
+      await codeCov.getAggregateCodeCoverage(
+        new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
+      );
 
     expect(totalLines).to.equal(24);
     expect(coveredLines).to.equal(18);
@@ -153,11 +151,8 @@ describe('Get code coverage results', () => {
     toolingQueryStub.throws('Error at Row:1;Column:1');
 
     const codeCov = new CodeCoverage(mockConnection);
-    const {
-      codeCoverageResults,
-      totalLines,
-      coveredLines
-    } = await codeCov.getAggregateCodeCoverage(new Set([]));
+    const { codeCoverageResults, totalLines, coveredLines } =
+      await codeCov.getAggregateCodeCoverage(new Set([]));
     expect(codeCoverageResults.length).to.equal(0);
     expect(totalLines).to.equal(0);
     expect(coveredLines).to.equal(0);

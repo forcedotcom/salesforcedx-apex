@@ -1,6 +1,7 @@
 name: validate pr
 on:
   pull_request:
+    types: [opened, reopened, edited]
     branches: [main]
 
 jobs:
@@ -9,7 +10,7 @@ jobs:
   format-check: 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install modules
       run: yarn
     - name: Check Format

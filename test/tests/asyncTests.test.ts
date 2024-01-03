@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Connection } from '@salesforce/core';
-import { MockTestOrgData, testSetup } from '@salesforce/core/lib/testSetup';
+import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
 import { assert, expect } from 'chai';
 import {
   assert as sinonAssert,
@@ -61,13 +61,14 @@ import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
 
-const $$ = testSetup();
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingRequestStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Run Apex tests asynchronously', () => {
+  const $$ = new TestContext();
+
   let timeStub: SinonStub;
   let formatSpy: SinonSpy;
   const pollResponse: ApexTestQueueItem = {
@@ -163,7 +164,8 @@ describe('Run Apex tests asynchronously', () => {
   });
 
   it('should return formatted test results', async () => {
-    missingTimeTestData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
+    missingTimeTestData.summary.orgId =
+      mockConnection.getAuthInfoFields().orgId;
     missingTimeTestData.summary.username = mockConnection.getUsername();
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
@@ -708,10 +710,9 @@ describe('Run Apex tests asynchronously', () => {
     };
 
     it('should split into multiple queries if query is longer than char limit', async () => {
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
+      const mockToolingQuery = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
       const result = await asyncTestSrv.getAsyncTestResults(testQueueItems);
@@ -721,10 +722,9 @@ describe('Run Apex tests asynchronously', () => {
     });
 
     it('should make a single api call if query is under char limit', async () => {
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
+      const mockToolingQuery = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
       const result = await asyncTestSrv.getAsyncTestResults(pollResponse);
@@ -745,10 +745,9 @@ describe('Run Apex tests asynchronously', () => {
         records: queueItemRecords
       };
 
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
+      const mockToolingQuery = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
       const result = await asyncTestSrv.getAsyncTestResults(testQueueItems);
@@ -769,10 +768,9 @@ describe('Run Apex tests asynchronously', () => {
         records: queueItemRecords
       };
 
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
+      const mockToolingQuery = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
       const result = await asyncTestSrv.getAsyncTestResults(testQueueItems);
@@ -790,10 +788,9 @@ describe('Run Apex tests asynchronously', () => {
         'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
       const queryStartSeparatorCount = queryStart.split(',').length - 1;
 
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
+      const mockToolingQuery = sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        .resolves({ done: true, totalSize: 1, records: [] });
 
       const queueItemRecord: ApexTestQueueItemRecord[] = [];
 
@@ -1070,7 +1067,7 @@ describe('Run Apex tests asynchronously', () => {
 
   describe('Abort Test Runs', () => {
     it('should send requests to abort test run', async () => {
-      const mockTestQueueItemRecord: ApexTestQueueItem = ({
+      const mockTestQueueItemRecord: ApexTestQueueItem = {
         size: 2,
         totalSize: 2,
         done: true,
@@ -1080,8 +1077,7 @@ describe('Run Apex tests asynchronously', () => {
           {
             attributes: {
               type: 'ApexTestQueueItem',
-              url:
-                '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
+              url: '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
             },
             Id: testRunId,
             Status: ApexTestQueueItemStatus.Processing
@@ -1089,14 +1085,13 @@ describe('Run Apex tests asynchronously', () => {
           {
             attributes: {
               type: 'ApexTestQueueItem',
-              url:
-                '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
+              url: '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
             },
             Id: testRunId,
             Status: ApexTestQueueItemStatus.Processing
           }
         ]
-      } as unknown) as ApexTestQueueItem;
+      } as unknown as ApexTestQueueItem;
       sandboxStub
         .stub(mockConnection.tooling, 'query')
         //@ts-ignore
@@ -1110,12 +1105,11 @@ describe('Run Apex tests asynchronously', () => {
       await asyncTestSrv.abortTestRun(testRunId);
 
       sinonAssert.calledOnce(toolingUpdateStub);
-      sinonAssert.calledWith(toolingUpdateStub, 'ApexTestQueueItem', ([
+      sinonAssert.calledWith(toolingUpdateStub, 'ApexTestQueueItem', [
         {
           attributes: {
             type: 'ApexTestQueueItem',
-            url:
-              '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
+            url: '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5mAAG'
           },
           Id: testRunId,
           Status: ApexTestQueueItemStatus.Aborted
@@ -1123,13 +1117,12 @@ describe('Run Apex tests asynchronously', () => {
         {
           attributes: {
             type: 'ApexTestQueueItem',
-            url:
-              '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
+            url: '/services/data/v51.0/tooling/sobjects/ApexTestQueueItem/7095w000000JR5nAAG'
           },
           Id: testRunId,
           Status: ApexTestQueueItemStatus.Aborted
         }
-      ] as unknown) as ApexTestQueueItemRecord[]);
+      ] as unknown as ApexTestQueueItemRecord[]);
     });
 
     it('should abort test run on cancellation requested', async () => {
@@ -1152,11 +1145,11 @@ describe('Run Apex tests asynchronously', () => {
 
       sandboxStub
         .stub(StreamingClient.prototype, 'subscribe')
-        .callsFake(function() {
+        .callsFake(function () {
           // eslint-disable-next-line
           const that = this;
-          return new Promise(function() {
-            actionf().then(function(id) {
+          return new Promise(function () {
+            actionf().then(function (id) {
               that.subscribedTestRunId = id;
               that.subscribedTestRunIdDeferred.resolve(id);
             });
@@ -1181,7 +1174,7 @@ describe('Run Apex tests asynchronously', () => {
         cancellationTokenSource.token
       );
 
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         // wait for task queue
         setTimeout(async () => {
           await cancellationTokenSource.asyncCancel();

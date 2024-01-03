@@ -74,7 +74,7 @@ export class TestService {
    * @returns Ids associated with each suite
    */
   private async getOrCreateSuiteIds(suitenames: string[]): Promise<string[]> {
-    const suiteIds = suitenames.map(async suite => {
+    const suiteIds = suitenames.map(async (suite) => {
       const suiteId = await this.retrieveSuiteId(suite);
 
       if (suiteId === undefined) {
@@ -121,7 +121,7 @@ export class TestService {
    * @returns the associated ids for each Apex class
    */
   public async getApexClassIds(testClasses: string[]): Promise<string[]> {
-    const classIds = testClasses.map(async testClass => {
+    const classIds = testClasses.map(async (testClass) => {
       const apexClass = (await this.connection.tooling.query(
         `SELECT id, name FROM ApexClass WHERE Name = '${testClass}'`
       )) as QueryResult;
@@ -148,9 +148,9 @@ export class TestService {
     const testClassIds = await this.getApexClassIds(testClasses);
 
     await Promise.all(
-      testClassIds.map(async classId => {
+      testClassIds.map(async (classId) => {
         const existingClass = classesInSuite.filter(
-          rec => rec.ApexClassId === classId
+          (rec) => rec.ApexClassId === classId
         );
 
         const testClass = testClasses[testClassIds.indexOf(classId)];
@@ -295,7 +295,7 @@ export class TestService {
         throw new Error(nls.localize('covIdFormatErr'));
       }
       result = result as TestResult;
-      const coverageRecords = result.tests.map(record => {
+      const coverageRecords = result.tests.map((record) => {
         return record.perClassCoverage;
       });
       fileMap.push({
@@ -304,7 +304,7 @@ export class TestService {
       });
     }
 
-    fileInfos?.forEach(fileInfo => {
+    fileInfos?.forEach((fileInfo) => {
       fileMap.push({
         path: join(dirPath, fileInfo.filename),
         content:
@@ -315,7 +315,7 @@ export class TestService {
     });
 
     createFiles(fileMap);
-    return fileMap.map(file => {
+    return fileMap.map((file) => {
       return file.path;
     });
   }
@@ -329,7 +329,7 @@ export class TestService {
     try {
       if (tests) {
         const payload = await this.buildTestPayload(tests);
-        const classes = payload.tests?.map(testItem => {
+        const classes = payload.tests?.map((testItem) => {
           if (testItem.className) {
             return testItem.className;
           }
@@ -379,7 +379,7 @@ export class TestService {
     classNames: string
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',') as string[];
-    const classItems = classNameArray.map(item => {
+    const classItems = classNameArray.map((item) => {
       const classParts = item.split('.');
       if (classParts.length > 1) {
         return {
@@ -397,25 +397,35 @@ export class TestService {
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
     const testItems: TestItem[] = [];
+    const classes: string[] = [];
     let namespaceInfos: NamespaceInfo[];
 
     for (const test of testNameArray) {
       if (test.indexOf('.') > 0) {
         const testParts = test.split('.');
         if (testParts.length === 3) {
-          testItems.push({
-            namespace: `${testParts[0]}`,
-            className: `${testParts[1]}`,
-            testMethods: [testParts[2]]
-          });
+          if (!classes.includes(testParts[1])) {
+            testItems.push({
+              namespace: `${testParts[0]}`,
+              className: `${testParts[1]}`,
+              testMethods: [testParts[2]]
+            });
+            classes.push(testParts[1]);
+          } else {
+            testItems.forEach((element) => {
+              if (element.className === `${testParts[1]}`) {
+                element.namespace = `${testParts[0]}`;
+                element.testMethods.push(`${testParts[2]}`);
+              }
+            });
+          }
         } else {
           if (typeof namespaceInfos === 'undefined') {
             namespaceInfos = await queryNamespaces(this.connection);
           }
           const currentNamespace = namespaceInfos.find(
-            namespaceInfo => namespaceInfo.namespace === testParts[0]
+            (namespaceInfo) => namespaceInfo.namespace === testParts[0]
           );
-
           // NOTE: Installed packages require the namespace to be specified as part of the className field
           // The namespace field should not be used with subscriber orgs
           if (currentNamespace) {
@@ -430,10 +440,19 @@ export class TestService {
               });
             }
           } else {
-            testItems.push({
-              className: testParts[0],
-              testMethods: [testParts[1]]
-            });
+            if (!classes.includes(testParts[0])) {
+              testItems.push({
+                className: testParts[0],
+                testMethods: [testParts[1]]
+              });
+              classes.push(testParts[0]);
+            } else {
+              testItems.forEach((element) => {
+                if (element.className === testParts[0]) {
+                  element.testMethods.push(testParts[1]);
+                }
+              });
+            }
           }
         }
       } else {
@@ -441,7 +460,6 @@ export class TestService {
         testItems.push({ [prop]: test });
       }
     }
-
     return {
       tests: testItems,
       testLevel: TestLevel.RunSpecifiedTests

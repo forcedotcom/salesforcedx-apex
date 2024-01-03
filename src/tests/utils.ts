@@ -8,6 +8,7 @@
 import { Connection } from '@salesforce/core';
 import { CLASS_ID_PREFIX, TEST_RUN_ID_PREFIX } from './constants';
 import { NamespaceInfo } from './types';
+import { QueryResult } from 'jsforce';
 
 export function isValidTestRunID(testRunId: string): boolean {
   return (
@@ -45,12 +46,33 @@ export async function queryNamespaces(
   const orgNsPromise = connection.query(orgNsQuery);
 
   const allNamespaces = await Promise.all([installedNsPromise, orgNsPromise]);
-  const installedNamespaces = allNamespaces[0].records.map(record => {
+  const installedNamespaces = allNamespaces[0].records.map((record) => {
     return { installedNs: true, namespace: record.NamespacePrefix };
   });
-  const orgNamespaces = allNamespaces[1].records.map(record => {
+  const orgNamespaces = allNamespaces[1].records.map((record) => {
     return { installedNs: false, namespace: record.NamespacePrefix };
   });
 
   return [...orgNamespaces, ...installedNamespaces];
 }
+
+export const queryAll = async <T>(
+  connection: Connection,
+  query: string,
+  tooling = false
+): Promise<QueryResult<T>> => {
+  const conn = tooling ? connection.tooling : connection;
+  const allRecords: T[] = [];
+  let result = await conn.query<T>(query);
+  allRecords.push(...result.records);
+  while (!result.done) {
+    result = (await conn.queryMore(result.nextRecordsUrl)) as QueryResult<T>;
+    allRecords.push(...result.records);
+  }
+
+  return {
+    done: true,
+    totalSize: allRecords.length,
+    records: allRecords
+  } as QueryResult<T>;
+};
