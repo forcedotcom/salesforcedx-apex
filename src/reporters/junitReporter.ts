@@ -104,7 +104,7 @@ export class JUnitReporter {
     return junitTests;
   }
 
-  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
+  @elapsedTime(LoggerLevel.TRACE, 'elapsedTime')
   private xmlEscape(value: string): string {
     return value
       .replace(/&/g, '&amp;')

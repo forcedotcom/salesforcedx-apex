@@ -47,12 +47,12 @@ const logThis = (
  * spent in the class can be sent to telemetry.
  *
  * @returns
- * @param loggerName - name of the child logger, defaults to 'elapsedTime'
  * @param level - log level - defaults to debug
+ * @param loggerName - name of the child logger, defaults to 'elapsedTime'
  */
 export function elapsedTime(
-  loggerName: string = 'elapsedTime',
-  level: LoggerLevelValue = LoggerLevel.DEBUG
+  level: LoggerLevelValue = LoggerLevel.DEBUG,
+  loggerName: string = 'elapsedTime'
 ) {
   return function (
     target: object,

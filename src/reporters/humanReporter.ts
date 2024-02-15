@@ -242,7 +242,7 @@ export class HumanReporter {
     return codeCovTable;
   }
 
-  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
+  @elapsedTime(LoggerLevel.TRACE, 'elapsedTime')
   private formatUncoveredLines(uncoveredLines: number[]): string {
     const arrayLimit = 5;
     if (uncoveredLines.length === 0) {
