@@ -47,12 +47,12 @@ const logThis = (
  * spent in the class can be sent to telemetry.
  *
  * @returns
- * @param level - log level - defaults to debug
  * @param loggerName - name of the child logger, defaults to 'elapsedTime'
+ * @param level - log level - defaults to debug
  */
 export function elapsedTime(
-  level: LoggerLevelValue = LoggerLevel.DEBUG,
-  loggerName: string = 'elapsedTime'
+  loggerName: string = 'elapsedTime',
+  level: LoggerLevelValue = LoggerLevel.DEBUG
 ) {
   return function (
     target: object,
@@ -60,13 +60,11 @@ export function elapsedTime(
     descriptor: TypedPropertyDescriptor<any>
   ) {
     const originalMethod = descriptor.value;
-
+    const className = target.constructor.name;
     descriptor.value = function (...args: any[]) {
       const logger = Logger.childFromRoot(loggerName);
       const start = process.hrtime();
-      const className = target.constructor.name;
 
-      // Use conditional statement to call the appropriate logging method
       logThis(level, logger, `${className}.${propertyKey} - enter`);
 
       let wrappedResult;
@@ -78,28 +76,32 @@ export function elapsedTime(
         error = err;
       }
 
-      const handleResult = (r: any) => {
+      const handleResult = () => {
         const diff = process.hrtime(start);
         const elapsedTime = diff[0] * 1e3 + diff[1] / 1e6;
-
         logThis(level, logger, `${className}.${propertyKey} - exit`, {
           elapsedTime
         });
-
-        if (error) {
-          throw error;
-        }
-
-        return r;
       };
 
       if (wrappedResult instanceof Promise) {
-        return wrappedResult.then(handleResult);
+        return wrappedResult
+          .then((results) => {
+            handleResult();
+            return results;
+          })
+          .catch((e) => {
+            handleResult();
+            return Promise.reject(e);
+          });
       } else {
-        return handleResult(wrappedResult);
+        handleResult();
+        if (error) {
+          throw error;
+        }
+        return wrappedResult;
       }
     };
-
     return descriptor;
   };
 }

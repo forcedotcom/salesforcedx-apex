@@ -29,6 +29,7 @@ export class CodeCoverage {
    * Returns the string representation of the org wide coverage percentage for a given username connection from OrgWideCoverage entity
    * @returns Org wide coverage percentage for a given username connection
    */
+  @elapsedTime()
   public async getOrgWideCoverage(): Promise<string> {
     const orgWideCoverageResult = (await this.connection.tooling.query(
       'SELECT PercentCovered FROM ApexOrgWideCoverage'

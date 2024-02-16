@@ -51,6 +51,7 @@ export class AsyncTests {
    * @param progress progress reporter
    * @param token cancellation token
    */
+  @elapsedTime()
   public async runTests(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false,

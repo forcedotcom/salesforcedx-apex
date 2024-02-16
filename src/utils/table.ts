@@ -119,7 +119,7 @@ export class Table {
     return maxColWidths;
   }
 
-  @elapsedTime(LoggerLevel.TRACE, 'elapsedTime')
+  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private fillColumn(
     label: string,
     width: number,
