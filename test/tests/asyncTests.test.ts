@@ -6,7 +6,7 @@
  */
 import * as sinon from 'sinon';
 import { Logger } from '@salesforce/core';
-import { elapsedTime } from '../../src/utils/elapsedTime';
+import { elapsedTime } from '../../src/utils';
 import { expect } from 'chai';
 
 describe('elapsedTime', () => {
@@ -18,10 +18,12 @@ describe('elapsedTime', () => {
     sandbox = sinon.createSandbox();
     loggerStub = sandbox.stub(Logger.prototype);
     loggerChildStub = sandbox.stub(Logger, 'childFromRoot').returns(loggerStub);
+    loggerStub.shouldLog.returns(true);
   });
 
   afterEach(() => {
     sandbox.restore();
+    delete process.env.SF_LOG_LEVEL;
   });
 
   it('should log the entry and exit of the method', () => {
@@ -37,7 +39,7 @@ describe('elapsedTime', () => {
 
     sinon.assert.calledOnce(loggerChildStub);
     sinon.assert.calledWith(loggerChildStub, 'elapsedTime');
-    sinon.assert.callOrder(loggerStub.debug);
+    sinon.assert.callOrder(loggerStub.debug, loggerStub.debug);
     sinon.assert.calledWith(
       loggerStub.debug,
       sinon.match.has('msg', 'DummyClass.dummyMethod - enter')
