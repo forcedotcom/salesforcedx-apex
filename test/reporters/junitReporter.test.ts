@@ -13,6 +13,7 @@ const {
   junitResult,
   junitSuccess,
   junitCodeCov,
+  junitDetailedCodeCov,
   junitMissingVal,
   successResult
 } = getTestData();
@@ -63,5 +64,32 @@ describe('JUnit Reporter Tests', () => {
     expect(result).to.not.be.empty;
     expect(result).to.eql(junitCodeCov);
     expect(result).to.contain('orgWideCoverage');
+  });
+
+  it('should format test results with detailed code coverage', () => {
+    successResult.tests[0].perClassCoverage = [
+      {
+        apexClassOrTriggerName: 'ApexClass',
+        apexClassOrTriggerId: '001917xACG',
+        apexTestClassId: '001917xACG',
+        apexTestMethodName: 'testMethod',
+        numLinesCovered: 8,
+        numLinesUncovered: 2,
+        percentage: '12.5%',
+        coverage: {
+          coveredLines: [1, 2, 3, 4, 5, 6, 7, 8],
+          uncoveredLines: [9, 10]
+        }
+      }
+    ];
+    successResult.summary.orgWideCoverage = '85%';
+    const result = reporter.format(successResult);
+    expect(result).to.not.be.empty;
+    expect(result).to.eql(junitDetailedCodeCov);
+    expect(result).to.contain('numLinesCovered');
+    expect(result).to.contain('numLinesUncovered');
+    expect(result).to.contain('percentage');
+    expect(result).to.contain('coveredLines');
+    expect(result).to.contain('uncoveredLines');
   });
 });
