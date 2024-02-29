@@ -10,7 +10,7 @@
 import { Logger, LoggerLevel } from '@salesforce/core';
 import { LoggerLevelValue } from '@salesforce/core/lib/logger/logger';
 
-const logThis = (
+const log = (
   level: LoggerLevelValue,
   logger: Logger,
   msg: string,
@@ -65,7 +65,7 @@ export function elapsedTime(
       const logger = Logger.childFromRoot(loggerName);
       const start = process.hrtime();
 
-      logThis(level, logger, `${className}.${propertyKey} - enter`);
+      log(level, logger, `${className}.${propertyKey} - enter`);
 
       let wrappedResult;
       let error: any;
@@ -79,7 +79,7 @@ export function elapsedTime(
       const handleResult = () => {
         const diff = process.hrtime(start);
         const elapsedTime = diff[0] * 1e3 + diff[1] / 1e6;
-        logThis(level, logger, `${className}.${propertyKey} - exit`, {
+        log(level, logger, `${className}.${propertyKey} - exit`, {
           elapsedTime
         });
       };
