@@ -6,29 +6,40 @@
  */
 import { Connection } from '@salesforce/core';
 import {
-  SyncTestConfiguration,
-  AsyncTestConfiguration,
-  AsyncTestArrayConfiguration,
   ApexTestProgressValue,
-  TestResult,
+  AsyncTestArrayConfiguration,
+  AsyncTestConfiguration,
+  isTestResult,
+  NamespaceInfo,
   OutputDirConfig,
   ResultFormat,
-  TestLevel,
+  SyncTestConfiguration,
   TestItem,
-  NamespaceInfo,
-  TestSuiteMembershipRecord,
-  TestRunIdResult
+  TestLevel,
+  TestResult,
+  TestRunIdResult,
+  TestSuiteMembershipRecord
 } from './types';
 import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
-import { JUnitReporter, TapReporter } from '../reporters';
+import {
+  JUnitReporter,
+  TapReporter,
+  JUnitFormatTransformer,
+  TapFormatTransformer
+} from '../reporters';
 import { isValidApexClassID, queryNamespaces, stringify } from './utils';
 import { createFiles } from '../utils/fileSystemHandler';
 import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
+import { writeFile } from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { JSONReadable, TestResultStringifyStream } from '../streaming';
 
 export class TestService {
   private readonly connection: Connection;
@@ -136,7 +147,7 @@ export class TestService {
   /**
    * Builds a test suite with the given test classes. Creates the test suite if it doesn't exist already
    * @param suitename name of suite
-   * @param tests tests to be added to suite
+   * @param testClasses
    */
   public async buildSuite(
     suitename: string,
@@ -230,6 +241,118 @@ export class TestService {
    * @param codeCoverage should report code coverage
    * @returns list of result files created
    */
+  public async writeResultFilesNew(
+    result: TestResult | TestRunIdResult,
+    outputDirConfig: OutputDirConfig,
+    codeCoverage = false
+  ): Promise<string[]> {
+    const filesWritten: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { dirPath, resultFormats, fileInfos } = outputDirConfig;
+    // ensure supplied result formats are support here
+    if (!resultFormats.every((format) => format in ResultFormat)) {
+      throw new Error(nls.localize('resultFormatErr'));
+    }
+    const testRunId = isTestResult(result)
+      ? (result as TestResult).summary.testRunId
+      : (result as TestRunIdResult).testRunId;
+
+    // write test id file to disk
+    await writeFile(join(dirPath, 'test-run-id.txt'), testRunId, 'utf8');
+    filesWritten.push(join(dirPath, 'test-run-id.txt'));
+
+    const pipeThese = [];
+    // produce result formats
+    if (resultFormats) {
+      if (!isTestResult(result)) {
+        throw new Error(nls.localize('runIdFormatErr'));
+      }
+      for (const format of resultFormats) {
+        switch (format) {
+          case ResultFormat.json:
+            // Create a readable stream from the JSON object
+            const jsonFilePath = join(
+              dirPath,
+              testRunId ? `test-result-${testRunId}.json` : `test-result.json`
+            );
+            filesWritten.push(jsonFilePath);
+            pipeThese.push([
+              TestResultStringifyStream.fromTestResult(result),
+              createWriteStream(jsonFilePath)
+            ]);
+            break;
+          case ResultFormat.tap:
+            const tapFilePath = join(
+              dirPath,
+              `test-result-${testRunId}-tap.txt`
+            );
+            filesWritten.push(tapFilePath);
+            pipeThese.push([
+              new TapFormatTransformer(result),
+              createWriteStream(tapFilePath)
+            ]);
+            break;
+          case ResultFormat.junit:
+            const filePath = join(
+              dirPath,
+              testRunId
+                ? `test-result-${testRunId}-junit.xml`
+                : `test-result-junit.xml`
+            );
+            filesWritten.push(filePath);
+            pipeThese.push([
+              new JUnitFormatTransformer(result),
+              createWriteStream(filePath)
+            ]);
+            break;
+        }
+      }
+    }
+    // produce code coverage
+    if (codeCoverage) {
+      if (!isTestResult(result)) {
+        throw new Error(nls.localize('covIdFormatErr'));
+      }
+      const coverageRecords = result.tests.map((record) => {
+        return record.perClassCoverage;
+      });
+      const filePath = join(
+        dirPath,
+        `test-result-${testRunId}-codecoverage.json`
+      );
+      pipeThese.push([
+        JSONReadable.from(coverageRecords),
+        createWriteStream(filePath)
+      ]);
+      filesWritten.push(filePath);
+    }
+
+    fileInfos?.forEach((fileInfo) => {
+      const fileInfoPath = join(dirPath, fileInfo.filename);
+      if (typeof fileInfo.content === 'string') {
+        pipeThese.push([
+          Readable.from([fileInfo.content]),
+          createWriteStream(fileInfoPath)
+        ]);
+      } else {
+        pipeThese.push([
+          JSONReadable.fromJSON(fileInfo.content),
+          createWriteStream(fileInfoPath)
+        ]);
+      }
+      filesWritten.push(fileInfoPath);
+    });
+
+    await Promise.all(pipeThese.map((streams) => pipeline(streams)))
+      .then(() => console.log('All pipelines completed successfully'))
+      .catch((err) => {
+        const error = new Error('An error occurred writing files');
+        error.stack = err.stack;
+        throw error;
+      });
+    return filesWritten;
+  }
+
   public async writeResultFiles(
     result: TestResult | TestRunIdResult,
     outputDirConfig: OutputDirConfig,
@@ -237,7 +360,7 @@ export class TestService {
   ): Promise<string[]> {
     const { dirPath, resultFormats, fileInfos } = outputDirConfig;
     const fileMap: { path: string; content: string }[] = [];
-    const testRunId = result.hasOwnProperty('summary')
+    const testRunId = isTestResult(result)
       ? (result as TestResult).summary.testRunId
       : (result as TestRunIdResult).testRunId;
 
@@ -314,7 +437,7 @@ export class TestService {
       });
     });
 
-    createFiles(fileMap);
+    await createFiles(fileMap);
     return fileMap.map((file) => {
       return file.path;
     });

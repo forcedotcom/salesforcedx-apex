@@ -519,3 +519,12 @@ export type ApexTestProgressValue =
     };
 
 export type TestSuiteMembershipRecord = { ApexClassId: string };
+
+export const isTestResult = (
+  result: TestResult | TestRunIdResult
+): result is TestResult => {
+  return (
+    (result as TestResult).summary !== undefined &&
+    (result as TestResult).tests !== undefined
+  );
+};

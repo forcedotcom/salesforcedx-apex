@@ -5,3 +5,5 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 export { AsyncTestRun, StreamingClient } from './streamingClient';
+export { JSONReadable } from './jsonReadable';
+export { TestResultStringifyStream } from './testResultStringifyStream';

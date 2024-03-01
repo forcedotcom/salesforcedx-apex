@@ -22,5 +22,6 @@ export {
   TestItem,
   TestResult,
   TestLevel,
-  TestRunIdResult
+  TestRunIdResult,
+  isTestResult
 } from './types';

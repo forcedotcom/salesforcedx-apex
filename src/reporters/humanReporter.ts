@@ -81,7 +81,7 @@ export class HumanReporter {
         : [])
     ];
 
-    const summaryTable = tb.createTable(
+    return tb.createTable(
       summaryRowArray,
       [
         {
@@ -92,7 +92,6 @@ export class HumanReporter {
       ],
       nls.localize('testSummaryHeader')
     );
-    return summaryTable;
   }
 
   private formatTestResults(tests: ApexTestResultData[]): string {
