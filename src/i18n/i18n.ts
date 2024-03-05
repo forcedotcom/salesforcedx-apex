@@ -30,6 +30,8 @@ export const messages = {
     'Start typing Apex code. Press the Enter key after each line, then press CTRL+D when finished.\n',
   execAnonInputTimeout: 'Timed out while waiting for user input.',
   noTestResultSummary: 'No test results were found for test run %s',
+  noTestResultStatusProcessing:
+    'Apex test results for test run %s but status is still Processing. Please try again.',
   noTestQueueResults: 'No test results were found in the queue for test run %s',
   noAccessTokenFound:
     'No access token could be found for the provided username',

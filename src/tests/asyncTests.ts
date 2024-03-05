@@ -168,6 +168,13 @@ export class AsyncTests {
     if (testRunSummaryResults.records.length === 0) {
       throw new Error(nls.localize('noTestResultSummary', testRunId));
     }
+    // Fix issue when ApexTestRunResult is still processing
+    if (
+      testRunSummaryResults.records[0].Status ===
+      ApexTestRunResultStatus.Processing
+    ) {
+      throw new Error(nls.localize('noTestResultStatusProcessing', testRunId));
+    }
 
     if (
       testRunSummaryResults.records[0].Status ===

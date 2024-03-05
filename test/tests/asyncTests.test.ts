@@ -492,6 +492,39 @@ describe('Run Apex tests asynchronously', () => {
     }
   });
 
+  it('should return an error if test results are still in progress', async () => {
+    const asyncTestSrv = new AsyncTests(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    mockToolingQuery.onFirstCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Processing,
+          StartTime: testStartTime,
+          TestTime: null,
+          UserId: '005xx000000abcDAAU'
+        }
+      ]
+    } as ApexTestRunResult);
+
+    try {
+      const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+      await asyncTestSrv.formatAsyncResults(
+        { queueItem: pollResponse, runId: testRunId },
+        new Date().getTime(),
+        false,
+        testRunSummary
+      );
+      fail('Test should have thrown an error');
+    } catch (e) {
+      expect(e.message).to.equal(
+        nls.localize('noTestResultStatusProcessing', testRunId)
+      );
+    }
+  });
+
   it('should return an error if invalid test run id was provided', async () => {
     const invalidId = '000000xxxxx';
     const asyncTestSrv = new AsyncTests(mockConnection);
