@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { ApexDiagnostic } from '../utils/types';
+import { ApexDiagnostic } from '../utils';
 
 export const enum TestLevel {
   /**
@@ -526,5 +526,35 @@ export const isTestResult = (
   return (
     (result as TestResult).summary !== undefined &&
     (result as TestResult).tests !== undefined
+  );
+};
+
+export const isString = (value: unknown): value is string => {
+  return typeof value === 'string';
+};
+
+export const isNumber = (value: unknown): value is number => {
+  return typeof value === 'number';
+};
+
+export const isObject = (value: unknown): value is object => {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+};
+
+export const isArray = (value: unknown): value is unknown[] => {
+  return Array.isArray(value);
+};
+
+export const isBoolean = (value: unknown): value is boolean => {
+  return typeof value === 'boolean';
+};
+
+export const isNull = (value: unknown): value is null => {
+  return value === null;
+};
+
+export const isPrimitive = (value: unknown): boolean => {
+  return (
+    isString(value) || isNumber(value) || isBoolean(value) || isNull(value)
   );
 };

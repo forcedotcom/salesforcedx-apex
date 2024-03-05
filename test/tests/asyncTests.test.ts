@@ -14,7 +14,15 @@ import {
   SinonSpy,
   SinonStub
 } from 'sinon';
-import { TestService, OutputDirConfig } from '../../src/tests';
+import {
+  TestService,
+  OutputDirConfig,
+  ApexTestProgressValue,
+  Progress,
+  JUnitFormatTransformer,
+  TapFormatTransformer,
+  CancellationTokenSource
+} from '../../src';
 import {
   AsyncTestConfiguration,
   TestLevel,
@@ -50,13 +58,6 @@ import { join } from 'path';
 import * as stream from 'stream';
 import * as fs from 'fs';
 import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
-import {
-  CancellationTokenSource,
-  JUnitReporter,
-  TapReporter,
-  Progress,
-  ApexTestProgressValue
-} from '../../src';
 import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
@@ -885,7 +886,6 @@ describe('Run Apex tests asynchronously', () => {
 
   describe('Create Result Files', () => {
     let createStreamStub: SinonStub;
-    let stringifySpy: SinonSpy;
     let junitSpy: SinonSpy;
     let tapSpy: SinonSpy;
     let sandboxStub1: SinonSandbox;
@@ -899,9 +899,8 @@ describe('Run Apex tests asynchronously', () => {
       createStreamStub.returns(new stream.PassThrough() as any);
       sandboxStub1.stub(fs, 'closeSync');
       sandboxStub1.stub(fs, 'openSync');
-      stringifySpy = sandboxStub1.spy(utils, 'stringify');
-      junitSpy = sandboxStub1.spy(JUnitReporter.prototype, 'format');
-      tapSpy = sandboxStub1.spy(TapReporter.prototype, 'format');
+      junitSpy = sandboxStub1.spy(JUnitFormatTransformer.prototype, 'format');
+      tapSpy = sandboxStub1.spy(TapFormatTransformer.prototype, 'format');
     });
 
     afterEach(() => {
@@ -974,7 +973,6 @@ describe('Run Apex tests asynchronously', () => {
           join(config.dirPath, `test-result-${testRunId}.json`)
         )
       ).to.be.true;
-      expect(stringifySpy.calledOnce).to.be.true;
       expect(createStreamStub.callCount).to.eql(2);
     });
 
@@ -1027,7 +1025,6 @@ describe('Run Apex tests asynchronously', () => {
           join(config.dirPath, `test-result-myFile.json`)
         )
       ).to.be.true;
-      expect(stringifySpy.callCount).to.eql(1);
       expect(createStreamStub.callCount).to.eql(2);
     });
 
@@ -1043,7 +1040,6 @@ describe('Run Apex tests asynchronously', () => {
           join(config.dirPath, `test-result-${testRunId}-codecoverage.json`)
         )
       ).to.be.true;
-      expect(stringifySpy.callCount).to.eql(1);
       expect(createStreamStub.callCount).to.eql(2);
     });
 

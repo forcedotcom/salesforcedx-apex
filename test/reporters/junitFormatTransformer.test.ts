@@ -8,41 +8,42 @@
 import { JUnitFormatTransformer } from '../../src';
 import { expect } from 'chai';
 import { pipeline, Writable } from 'node:stream';
-import {
+import { getTestData } from './testResults';
+import { fail } from 'assert';
+
+const {
   testResults,
   junitResult,
   junitSuccess,
   junitCodeCov,
   junitMissingVal,
   successResult
-} from './testResults';
-import { fail } from 'assert';
+} = getTestData();
 
-const createWritableAndPipeline = (
-  reporter: JUnitFormatTransformer,
-  callback: (result: string) => void
-): void => {
-  let result = '';
-
-  const writable = new Writable({
-    write(chunk, encoding, done) {
-      result += chunk;
-      done();
-    }
-  });
-
-  writable.on('finish', () => callback(result));
-
-  pipeline(reporter, writable, (err) => {
-    if (err) {
-      console.error('Pipeline failed', err);
-      fail(err);
-    }
-  });
-};
-
-// Helper function to read all data from a stream and return it as a string
 describe('JUnitFormatTransformer', () => {
+  const createWritableAndPipeline = (
+    reporter: JUnitFormatTransformer,
+    callback: (result: string) => void
+  ): void => {
+    let result = '';
+
+    const writable = new Writable({
+      write(chunk, encoding, done) {
+        result += chunk;
+        done();
+      }
+    });
+
+    writable.on('finish', () => callback(result));
+
+    pipeline(reporter, writable, (err) => {
+      if (err) {
+        console.error('Pipeline failed', err);
+        fail(err);
+      }
+    });
+  };
+
   it('should format test results with failures', () => {
     const reporter = new JUnitFormatTransformer(testResults);
     createWritableAndPipeline(reporter, (result) => {

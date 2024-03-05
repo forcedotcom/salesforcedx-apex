@@ -23,23 +23,18 @@ import {
 import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
-import {
-  JUnitReporter,
-  TapReporter,
-  JUnitFormatTransformer,
-  TapFormatTransformer
-} from '../reporters';
-import { isValidApexClassID, queryNamespaces, stringify } from './utils';
-import { createFiles } from '../utils/fileSystemHandler';
+import { JUnitFormatTransformer, TapFormatTransformer } from '../reporters';
+import { isValidApexClassID, queryNamespaces } from './utils';
 import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
-import { writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { JSONReadable, TestResultStringifyStream } from '../streaming';
+import { JSONStringifyStream, TestResultStringifyStream } from '../streaming';
+import { CodeCoverageStringifyStream } from '../streaming/codeCoverageStringifyStream';
 
 export class TestService {
   private readonly connection: Connection;
@@ -241,7 +236,7 @@ export class TestService {
    * @param codeCoverage should report code coverage
    * @returns list of result files created
    */
-  public async writeResultFilesNew(
+  public async writeResultFiles(
     result: TestResult | TestRunIdResult,
     outputDirConfig: OutputDirConfig,
     codeCoverage = false
@@ -250,18 +245,24 @@ export class TestService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { dirPath, resultFormats, fileInfos } = outputDirConfig;
     // ensure supplied result formats are support here
-    if (!resultFormats.every((format) => format in ResultFormat)) {
+    if (
+      resultFormats &&
+      !resultFormats.every((format) => format in ResultFormat)
+    ) {
       throw new Error(nls.localize('resultFormatErr'));
     }
     const testRunId = isTestResult(result)
       ? (result as TestResult).summary.testRunId
       : (result as TestRunIdResult).testRunId;
 
-    // write test id file to disk
-    await writeFile(join(dirPath, 'test-run-id.txt'), testRunId, 'utf8');
+    const pipeThese = [];
+    await mkdir(dirPath, { recursive: true });
+    pipeThese.push([
+      Readable.from([testRunId]),
+      createWriteStream(join(dirPath, 'test-run-id.txt'), 'utf8')
+    ]);
     filesWritten.push(join(dirPath, 'test-run-id.txt'));
 
-    const pipeThese = [];
     // produce result formats
     if (resultFormats) {
       if (!isTestResult(result)) {
@@ -313,15 +314,18 @@ export class TestService {
       if (!isTestResult(result)) {
         throw new Error(nls.localize('covIdFormatErr'));
       }
-      const coverageRecords = result.tests.map((record) => {
-        return record.perClassCoverage;
-      });
       const filePath = join(
         dirPath,
         `test-result-${testRunId}-codecoverage.json`
       );
+      const c = result.tests
+        .map((record) => {
+          return record.perClassCoverage;
+        })
+        .filter((pcc) => pcc?.length);
       pipeThese.push([
-        JSONReadable.from(coverageRecords),
+        Readable.from(c),
+        new CodeCoverageStringifyStream(),
         createWriteStream(filePath)
       ]);
       filesWritten.push(filePath);
@@ -336,7 +340,7 @@ export class TestService {
         ]);
       } else {
         pipeThese.push([
-          JSONReadable.fromJSON(fileInfo.content),
+          JSONStringifyStream.from(fileInfo.content),
           createWriteStream(fileInfoPath)
         ]);
       }
@@ -353,95 +357,95 @@ export class TestService {
     return filesWritten;
   }
 
-  public async writeResultFiles(
-    result: TestResult | TestRunIdResult,
-    outputDirConfig: OutputDirConfig,
-    codeCoverage = false
-  ): Promise<string[]> {
-    const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-    const fileMap: { path: string; content: string }[] = [];
-    const testRunId = isTestResult(result)
-      ? (result as TestResult).summary.testRunId
-      : (result as TestRunIdResult).testRunId;
-
-    fileMap.push({
-      path: join(dirPath, 'test-run-id.txt'),
-      content: testRunId
-    });
-
-    if (resultFormats) {
-      if (!result.hasOwnProperty('summary')) {
-        throw new Error(nls.localize('runIdFormatErr'));
-      }
-      result = result as TestResult;
-
-      for (const format of resultFormats) {
-        if (!(format in ResultFormat)) {
-          throw new Error(nls.localize('resultFormatErr'));
-        }
-
-        switch (format) {
-          case ResultFormat.json:
-            fileMap.push({
-              path: join(
-                dirPath,
-                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
-              ),
-              content: stringify(result)
-            });
-            break;
-          case ResultFormat.tap:
-            const tapResult = new TapReporter().format(result);
-            fileMap.push({
-              path: join(dirPath, `test-result-${testRunId}-tap.txt`),
-              content: tapResult
-            });
-            break;
-          case ResultFormat.junit:
-            const junitResult = new JUnitReporter().format(result);
-            fileMap.push({
-              path: join(
-                dirPath,
-                testRunId
-                  ? `test-result-${testRunId}-junit.xml`
-                  : `test-result-junit.xml`
-              ),
-              content: junitResult
-            });
-            break;
-        }
-      }
-    }
-
-    if (codeCoverage) {
-      if (!result.hasOwnProperty('summary')) {
-        throw new Error(nls.localize('covIdFormatErr'));
-      }
-      result = result as TestResult;
-      const coverageRecords = result.tests.map((record) => {
-        return record.perClassCoverage;
-      });
-      fileMap.push({
-        path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
-        content: stringify(coverageRecords)
-      });
-    }
-
-    fileInfos?.forEach((fileInfo) => {
-      fileMap.push({
-        path: join(dirPath, fileInfo.filename),
-        content:
-          typeof fileInfo.content !== 'string'
-            ? stringify(fileInfo.content)
-            : fileInfo.content
-      });
-    });
-
-    await createFiles(fileMap);
-    return fileMap.map((file) => {
-      return file.path;
-    });
-  }
+  // public async writeResultFiles(
+  //   result: TestResult | TestRunIdResult,
+  //   outputDirConfig: OutputDirConfig,
+  //   codeCoverage = false
+  // ): Promise<string[]> {
+  //   const { dirPath, resultFormats, fileInfos } = outputDirConfig;
+  //   const fileMap: { path: string; content: string }[] = [];
+  //   const testRunId = isTestResult(result)
+  //     ? (result as TestResult).summary.testRunId
+  //     : (result as TestRunIdResult).testRunId;
+  //
+  //   fileMap.push({
+  //     path: join(dirPath, 'test-run-id.txt'),
+  //     content: testRunId
+  //   });
+  //
+  //   if (resultFormats) {
+  //     if (!result.hasOwnProperty('summary')) {
+  //       throw new Error(nls.localize('runIdFormatErr'));
+  //     }
+  //     result = result as TestResult;
+  //
+  //     for (const format of resultFormats) {
+  //       if (!(format in ResultFormat)) {
+  //         throw new Error(nls.localize('resultFormatErr'));
+  //       }
+  //
+  //       switch (format) {
+  //         case ResultFormat.json:
+  //           fileMap.push({
+  //             path: join(
+  //               dirPath,
+  //               testRunId ? `test-result-${testRunId}.json` : `test-result.json`
+  //             ),
+  //             content: stringify(result)
+  //           });
+  //           break;
+  //         case ResultFormat.tap:
+  //           const tapResult = new TapReporter().format(result);
+  //           fileMap.push({
+  //             path: join(dirPath, `test-result-${testRunId}-tap.txt`),
+  //             content: tapResult
+  //           });
+  //           break;
+  //         case ResultFormat.junit:
+  //           const junitResult = new JUnitReporter().format(result);
+  //           fileMap.push({
+  //             path: join(
+  //               dirPath,
+  //               testRunId
+  //                 ? `test-result-${testRunId}-junit.xml`
+  //                 : `test-result-junit.xml`
+  //             ),
+  //             content: junitResult
+  //           });
+  //           break;
+  //       }
+  //     }
+  //   }
+  //
+  //   if (codeCoverage) {
+  //     if (!result.hasOwnProperty('summary')) {
+  //       throw new Error(nls.localize('covIdFormatErr'));
+  //     }
+  //     result = result as TestResult;
+  //     const coverageRecords = result.tests.map((record) => {
+  //       return record.perClassCoverage;
+  //     });
+  //     fileMap.push({
+  //       path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
+  //       content: stringify(coverageRecords)
+  //     });
+  //   }
+  //
+  //   fileInfos?.forEach((fileInfo) => {
+  //     fileMap.push({
+  //       path: join(dirPath, fileInfo.filename),
+  //       content:
+  //         typeof fileInfo.content !== 'string'
+  //           ? stringify(fileInfo.content)
+  //           : fileInfo.content
+  //     });
+  //   });
+  //
+  //   await createFiles(fileMap);
+  //   return fileMap.map((file) => {
+  //     return file.path;
+  //   });
+  // }
 
   // utils to build test run payloads that may contain namespaces
   public async buildSyncPayload(

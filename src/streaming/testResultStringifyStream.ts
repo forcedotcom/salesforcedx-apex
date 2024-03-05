@@ -6,6 +6,7 @@
  */
 import { Readable, ReadableOptions } from 'node:stream';
 import { TestResult } from '../tests';
+import { pushArrayToStream } from './utils';
 
 export class TestResultStringifyStream extends Readable {
   constructor(
@@ -23,6 +24,7 @@ export class TestResultStringifyStream extends Readable {
 
   public format(): void {
     const { summary } = this.testResult;
+    // strip out vars not included in the summary data reported to the user
 
     // outer curly
     this.push('{');
@@ -67,18 +69,23 @@ export class TestResultStringifyStream extends Readable {
   }
 
   buildCodeCoverage(): void {
-    this.push('"codecoverage":[');
-    const numberOfCodeCoverage = this.testResult.codecoverage.length - 1;
-    this.testResult.codecoverage.forEach((coverage, index) => {
-      const { coveredLines, uncoveredLines, ...theRest } = coverage;
-      this.push(`${JSON.stringify(theRest).slice(0, -1)},`);
-      this.push(`"coveredLines": ${JSON.stringify(coveredLines)},`);
-      this.push(`"uncoveredLines": ${JSON.stringify(uncoveredLines)}}`);
-      if (numberOfCodeCoverage !== index) {
-        this.push(',');
-      }
-    });
-    this.push(']');
+    if (this.testResult.codecoverage) {
+      this.push('"codecoverage":[');
+      const numberOfCodeCoverage = this.testResult.codecoverage.length - 1;
+      this.testResult.codecoverage.forEach((coverage, index) => {
+        const { coveredLines, uncoveredLines, ...theRest } = coverage;
+        this.push(`${JSON.stringify(theRest).slice(0, -1)},`);
+        this.push('"coveredLines":[');
+        pushArrayToStream(coveredLines, this);
+        this.push('],"uncoveredLines":[');
+        pushArrayToStream(uncoveredLines, this);
+        this.push(']}');
+        if (numberOfCodeCoverage !== index) {
+          this.push(',');
+        }
+      });
+      this.push(']');
+    }
   }
 
   private static isEmpty(value: string | number): boolean {
