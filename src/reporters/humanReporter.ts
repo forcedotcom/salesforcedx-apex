@@ -13,8 +13,11 @@ import {
   TestResult
 } from '../tests';
 import { nls } from '../i18n';
+import { elapsedTime } from '../utils/elapsedTime';
+import { LoggerLevel } from '@salesforce/core';
 
 export class HumanReporter {
+  @elapsedTime()
   public format(testResult: TestResult, detailedCoverage: boolean): string {
     let tbResult = this.formatSummary(testResult);
     if (!testResult.codecoverage || !detailedCoverage) {
@@ -30,6 +33,7 @@ export class HumanReporter {
     return tbResult;
   }
 
+  @elapsedTime()
   private formatSummary(testResult: TestResult): string {
     const tb = new Table();
 
@@ -94,6 +98,7 @@ export class HumanReporter {
     );
   }
 
+  @elapsedTime()
   private formatTestResults(tests: ApexTestResultData[]): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
@@ -136,6 +141,7 @@ export class HumanReporter {
     return testResultTable;
   }
 
+  @elapsedTime()
   private formatDetailedCov(testResult: TestResult): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
@@ -195,6 +201,7 @@ export class HumanReporter {
     return detailedCovTable;
   }
 
+  @elapsedTime()
   private formatCodeCov(codeCoverages: CodeCoverageResult[]): string {
     const tb = new Table();
     const codeCovRowArray: Row[] = [];
@@ -234,6 +241,7 @@ export class HumanReporter {
     return codeCovTable;
   }
 
+  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private formatUncoveredLines(uncoveredLines: number[]): string {
     const arrayLimit = 5;
     if (uncoveredLines.length === 0) {
