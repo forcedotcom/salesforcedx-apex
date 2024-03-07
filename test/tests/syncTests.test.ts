@@ -29,7 +29,7 @@ import {
   syncResult,
   syncTestResultSimple,
   syncTestResultWithFailures
-} from './testData';
+} from '../testData';
 import { JUnitFormatTransformer } from '../../src';
 import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
 import { fail } from 'assert';

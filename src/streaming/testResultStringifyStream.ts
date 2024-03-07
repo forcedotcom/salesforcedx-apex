@@ -7,6 +7,7 @@
 import { Readable, ReadableOptions } from 'node:stream';
 import { TestResult } from '../tests';
 import { pushArrayToStream } from './utils';
+import { elapsedTime } from '../utils';
 
 export class TestResultStringifyStream extends Readable {
   constructor(
@@ -22,6 +23,7 @@ export class TestResultStringifyStream extends Readable {
     this.push(null); // Signal the end of the stream
   }
 
+  @elapsedTime()
   public format(): void {
     const { summary } = this.testResult;
     // strip out vars not included in the summary data reported to the user
@@ -38,6 +40,7 @@ export class TestResultStringifyStream extends Readable {
     this.push(`}`);
   }
 
+  @elapsedTime()
   buildTests(): void {
     this.push('"tests":[');
 
@@ -68,6 +71,7 @@ export class TestResultStringifyStream extends Readable {
     this.push('],');
   }
 
+  @elapsedTime()
   buildCodeCoverage(): void {
     if (this.testResult.codecoverage) {
       this.push('"codecoverage":[');
@@ -86,14 +90,6 @@ export class TestResultStringifyStream extends Readable {
       });
       this.push(']');
     }
-  }
-
-  private static isEmpty(value: string | number): boolean {
-    return (
-      value === null ||
-      value === undefined ||
-      (typeof value === 'string' && value.length === 0)
-    );
   }
 
   public static fromTestResult(testResult: TestResult) {

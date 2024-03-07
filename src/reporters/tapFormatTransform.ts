@@ -10,6 +10,7 @@ import {
   ApexTestResultOutcome,
   TestResult
 } from '../tests';
+import { elapsedTime } from '../utils';
 
 export interface TapResult {
   description: string;
@@ -37,6 +38,7 @@ export class TapFormatTransformer extends Readable {
     this.push(null); // Signal the end of the stream
   }
 
+  @elapsedTime()
   public format(): void {
     const testPointCount = this.testResult.tests.length;
 
@@ -48,6 +50,7 @@ export class TapFormatTransformer extends Readable {
     });
   }
 
+  @elapsedTime()
   public buildTapResults(): void {
     this.testResult.tests.forEach((test: ApexTestResultData, index: number) => {
       const testNumber = index + 1;
@@ -60,6 +63,7 @@ export class TapFormatTransformer extends Readable {
     });
   }
 
+  @elapsedTime()
   private buildTapDiagnostics(testResult: ApexTestResultData): string[] {
     const message = [];
     if (testResult.outcome !== 'Pass') {

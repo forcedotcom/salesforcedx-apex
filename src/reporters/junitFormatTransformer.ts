@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { ApexTestResultOutcome, TestResult } from '../tests';
-import { formatStartTime, msToSecond } from '../utils';
+import { elapsedTime, formatStartTime, msToSecond } from '../utils';
 import { Readable, ReadableOptions } from 'node:stream';
 
 // cli currently has spaces in multiples of four for junit format
@@ -29,14 +29,11 @@ const xmlEscape = (value: string): string => {
 };
 
 const isEmpty = (value: string | number): boolean => {
-  if (
+  return (
     value === null ||
     value === undefined ||
     (typeof value === 'string' && value.length === 0)
-  ) {
-    return true;
-  }
-  return false;
+  );
 };
 
 export class JUnitFormatTransformer extends Readable {
@@ -53,6 +50,7 @@ export class JUnitFormatTransformer extends Readable {
     this.push(null); // Signal the end of the stream
   }
 
+  @elapsedTime()
   public format(): void {
     const { summary } = this.testResult;
 
@@ -73,6 +71,7 @@ export class JUnitFormatTransformer extends Readable {
     this.push(`</testsuites>\n`);
   }
 
+  @elapsedTime()
   buildProperties(): void {
     this.push(`${tab}${tab}<properties>\n`);
 
@@ -102,6 +101,7 @@ export class JUnitFormatTransformer extends Readable {
     this.push(`${tab}${tab}</properties>\n`);
   }
 
+  @elapsedTime()
   buildTestCases(): void {
     const testCases = this.testResult.tests;
 

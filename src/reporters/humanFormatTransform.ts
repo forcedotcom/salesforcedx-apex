@@ -13,6 +13,8 @@ import {
 } from '../tests';
 import { nls } from '../i18n';
 import { Readable, ReadableOptions } from 'node:stream';
+import { elapsedTime } from '../utils';
+import { LoggerLevel } from '@salesforce/core';
 
 export class HumanFormatTransform extends Readable {
   constructor(
@@ -30,6 +32,7 @@ export class HumanFormatTransform extends Readable {
     this.push(null); // Indicates end of data
   }
 
+  @elapsedTime()
   public format(): void {
     this.formatSummary();
     if (!this.testResult.codecoverage || !this.detailedCoverage) {
@@ -44,6 +47,7 @@ export class HumanFormatTransform extends Readable {
     }
   }
 
+  @elapsedTime()
   private formatSummary(): void {
     const tb = new TableWriteableStream(this);
 
@@ -108,6 +112,7 @@ export class HumanFormatTransform extends Readable {
     );
   }
 
+  @elapsedTime()
   private formatTestResults(): void {
     const tb = new TableWriteableStream(this);
     const testRowArray: Row[] = [];
@@ -149,6 +154,7 @@ export class HumanFormatTransform extends Readable {
     );
   }
 
+  @elapsedTime()
   private formatDetailedCov(): void {
     const tb = new TableWriteableStream(this);
     const testRowArray: Row[] = [];
@@ -207,6 +213,7 @@ export class HumanFormatTransform extends Readable {
     );
   }
 
+  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private formatCodeCov(): void {
     const tb = new TableWriteableStream(this);
     const codeCovRowArray: Row[] = [];
@@ -245,6 +252,7 @@ export class HumanFormatTransform extends Readable {
     );
   }
 
+  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private formatUncoveredLines(uncoveredLines: number[]): string {
     const arrayLimit = 5;
     if (uncoveredLines.length === 0) {

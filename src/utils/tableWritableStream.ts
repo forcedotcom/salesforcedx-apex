@@ -5,6 +5,8 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Readable } from 'node:stream';
+import { elapsedTime } from './elapsedTime';
+import { LoggerLevel } from '@salesforce/core';
 const COLUMN_SEPARATOR = '  ';
 const COLUMN_FILLER = ' ';
 const HEADER_FILLER = '─';
@@ -23,6 +25,7 @@ export class TableWriteableStream {
     this.stream = stream;
   }
 
+  @elapsedTime()
   public createTable(rows: Row[], cols: Column[], title?: string): void {
     if (!rows) {
       throw Error('rows cannot be undefined');
@@ -83,6 +86,7 @@ export class TableWriteableStream {
     });
   }
 
+  @elapsedTime()
   private calculateMaxColumnWidths(
     rows: Row[],
     cols: Column[]
@@ -115,6 +119,7 @@ export class TableWriteableStream {
     return maxColWidths;
   }
 
+  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private fillColumn(
     label: string,
     width: number,

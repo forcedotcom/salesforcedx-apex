@@ -7,7 +7,9 @@
 import { Transform, TransformCallback } from 'stream';
 import { PerClassCoverage } from '../tests';
 import { TransformOptions } from 'node:stream';
-import { pushArrayToStream } from './utils'; // replace with your actual import
+import { pushArrayToStream } from './utils';
+import { elapsedTime } from '../utils';
+import { LoggerLevel } from '@salesforce/core'; // replace with your actual import
 
 export class CodeCoverageStringifyStream extends Transform {
   private outerPushed = false;
@@ -56,6 +58,7 @@ export class CodeCoverageStringifyStream extends Transform {
     callback();
   }
 
+  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private transformCoverage(perClassCoverage: PerClassCoverage): string {
     // Manually construct the string representation of the PerClassCoverage object
     const transformedData = '{';

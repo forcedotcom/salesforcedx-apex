@@ -55,7 +55,7 @@ import {
   diagnosticFailure,
   diagnosticResult,
   skippedTestData
-} from './testData';
+} from '../testData';
 import { join } from 'path';
 import * as stream from 'stream';
 import * as fs from 'fs';
