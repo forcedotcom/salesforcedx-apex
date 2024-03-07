@@ -12,6 +12,5 @@ export {
   getArrayEntries,
   getPrimitiveEntries,
   getObjectEntries,
-  isNotQuotable,
   pushArrayToStream
 } from './utils';

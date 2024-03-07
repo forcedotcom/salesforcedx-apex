@@ -5,9 +5,9 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Readable, ReadableOptions } from 'stream';
-import { isArray, isObject, isPrimitive } from '../tests';
 import { elapsedTime } from '../utils';
 import { LoggerLevel } from '@salesforce/core';
+import { isArray, isObject, isPrimitive } from '../narrowing';
 
 interface JSONStringifyStreamOptions extends ReadableOptions {
   object: unknown;

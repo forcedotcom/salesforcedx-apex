@@ -5,14 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { Readable } from 'node:stream';
-import {
-  isArray,
-  isBoolean,
-  isNull,
-  isNumber,
-  isObject,
-  isPrimitive
-} from '../tests';
+import { isArray, isObject, isPrimitive } from '../narrowing';
 
 export const pushArrayToStream = (array: unknown[], stream: Readable): void => {
   const chunkSize = 1000;
@@ -44,9 +37,6 @@ export const getObjectEntries = (obj: object): [string, object][] => {
 export const getArrayEntries = (obj: object): [string, unknown[]][] => {
   return Object.entries(obj).filter((entry) => isArray(entry[1]));
 };
-
-export const isNotQuotable = (value: unknown): boolean =>
-  isNull(value) || isBoolean(value) || isNumber(value);
 
 export const determineType = (
   value: unknown | unknown[]

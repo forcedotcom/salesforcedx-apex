@@ -7,19 +7,11 @@
 
 import { elapsedTime } from './elapsedTime';
 import { LoggerLevel } from '@salesforce/core';
+import { Column, Row } from './types';
 
 const COLUMN_SEPARATOR = '  ';
 const COLUMN_FILLER = ' ';
 const HEADER_FILLER = '─';
-
-export interface Row {
-  [column: string]: string;
-}
-
-export interface Column {
-  key: string;
-  label: string;
-}
 
 export class Table {
   @elapsedTime()

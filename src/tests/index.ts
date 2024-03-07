@@ -23,13 +23,5 @@ export {
   TestItem,
   TestLevel,
   TestResult,
-  TestRunIdResult,
-  isArray,
-  isBoolean,
-  isNull,
-  isNumber,
-  isObject,
-  isPrimitive,
-  isString,
-  isTestResult
+  TestRunIdResult
 } from './types';

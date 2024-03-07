@@ -9,7 +9,6 @@ import {
   ApexTestProgressValue,
   AsyncTestArrayConfiguration,
   AsyncTestConfiguration,
-  isTestResult,
   NamespaceInfo,
   OutputDirConfig,
   ResultFormat,
@@ -24,7 +23,7 @@ import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { JUnitFormatTransformer, TapFormatTransformer } from '../reporters';
-import { isValidApexClassID, queryNamespaces } from './utils';
+import { queryNamespaces } from './utils';
 import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
@@ -35,7 +34,8 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { JSONStringifyStream, TestResultStringifyStream } from '../streaming';
 import { CodeCoverageStringifyStream } from '../streaming/codeCoverageStringifyStream';
-import { elapsedTime } from '../utils/elapsedTime';
+import { elapsedTime } from '../utils';
+import { isTestResult, isValidApexClassID } from '../narrowing';
 
 export class TestService {
   private readonly connection: Connection;

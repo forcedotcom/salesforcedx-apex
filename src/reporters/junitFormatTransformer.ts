@@ -7,6 +7,7 @@
 import { ApexTestResultOutcome, TestResult } from '../tests';
 import { elapsedTime, formatStartTime, msToSecond } from '../utils';
 import { Readable, ReadableOptions } from 'node:stream';
+import { isEmpty } from '../narrowing';
 
 // cli currently has spaces in multiples of four for junit format
 const tab = '    ';
@@ -19,22 +20,6 @@ const timeProperties = [
 
 // properties not in cli junit spec
 const skippedProperties = ['skipRate', 'totalLines', 'linesCovered'];
-const xmlEscape = (value: string): string => {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-};
-
-const isEmpty = (value: string | number): boolean => {
-  return (
-    value === null ||
-    value === undefined ||
-    (typeof value === 'string' && value.length === 0)
-  );
-};
 
 export class JUnitFormatTransformer extends Readable {
   constructor(
@@ -106,7 +91,7 @@ export class JUnitFormatTransformer extends Readable {
     const testCases = this.testResult.tests;
 
     for (const testCase of testCases) {
-      const methodName = xmlEscape(testCase.methodName);
+      const methodName = JUnitFormatTransformer.xmlEscape(testCase.methodName);
       this.push(
         `${tab}${tab}<testcase name="${methodName}" classname="${
           testCase.apexClass.fullName
@@ -117,10 +102,8 @@ export class JUnitFormatTransformer extends Readable {
         testCase.outcome === ApexTestResultOutcome.Fail ||
         testCase.outcome === ApexTestResultOutcome.CompileFail
       ) {
-        let message = JUnitFormatTransformer.isEmpty(testCase.message)
-          ? ''
-          : testCase.message;
-        message = xmlEscape(message);
+        let message = isEmpty(testCase.message) ? '' : testCase.message;
+        message = JUnitFormatTransformer.xmlEscape(message);
         this.push(`${tab}${tab}${tab}<failure message="${message}">`);
         if (testCase.stackTrace) {
           this.push(`<![CDATA[${testCase.stackTrace}]]>`);
@@ -139,13 +122,5 @@ export class JUnitFormatTransformer extends Readable {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
-  }
-
-  private static isEmpty(value: string | number): boolean {
-    return (
-      value === null ||
-      value === undefined ||
-      (typeof value === 'string' && value.length === 0)
-    );
   }
 }
