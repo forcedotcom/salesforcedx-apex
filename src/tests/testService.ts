@@ -358,105 +358,15 @@ export class TestService {
       filesWritten.push(fileInfoPath);
     });
 
-    await Promise.all(pipeThese.map((streams) => pipeline(streams)))
-      .then(() => console.log('All pipelines completed successfully'))
-      .catch((err) => {
+    await Promise.all(pipeThese.map((streams) => pipeline(streams))).catch(
+      (err) => {
         const error = new Error('An error occurred writing files');
         error.stack = err.stack;
         throw error;
-      });
+      }
+    );
     return filesWritten;
   }
-
-  // public async writeResultFiles(
-  //   result: TestResult | TestRunIdResult,
-  //   outputDirConfig: OutputDirConfig,
-  //   codeCoverage = false
-  // ): Promise<string[]> {
-  //   const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-  //   const fileMap: { path: string; content: string }[] = [];
-  //   const testRunId = isTestResult(result)
-  //     ? (result as TestResult).summary.testRunId
-  //     : (result as TestRunIdResult).testRunId;
-  //
-  //   fileMap.push({
-  //     path: join(dirPath, 'test-run-id.txt'),
-  //     content: testRunId
-  //   });
-  //
-  //   if (resultFormats) {
-  //     if (!result.hasOwnProperty('summary')) {
-  //       throw new Error(nls.localize('runIdFormatErr'));
-  //     }
-  //     result = result as TestResult;
-  //
-  //     for (const format of resultFormats) {
-  //       if (!(format in ResultFormat)) {
-  //         throw new Error(nls.localize('resultFormatErr'));
-  //       }
-  //
-  //       switch (format) {
-  //         case ResultFormat.json:
-  //           fileMap.push({
-  //             path: join(
-  //               dirPath,
-  //               testRunId ? `test-result-${testRunId}.json` : `test-result.json`
-  //             ),
-  //             content: stringify(result)
-  //           });
-  //           break;
-  //         case ResultFormat.tap:
-  //           const tapResult = new TapReporter().format(result);
-  //           fileMap.push({
-  //             path: join(dirPath, `test-result-${testRunId}-tap.txt`),
-  //             content: tapResult
-  //           });
-  //           break;
-  //         case ResultFormat.junit:
-  //           const junitResult = new JUnitReporter().format(result);
-  //           fileMap.push({
-  //             path: join(
-  //               dirPath,
-  //               testRunId
-  //                 ? `test-result-${testRunId}-junit.xml`
-  //                 : `test-result-junit.xml`
-  //             ),
-  //             content: junitResult
-  //           });
-  //           break;
-  //       }
-  //     }
-  //   }
-  //
-  //   if (codeCoverage) {
-  //     if (!result.hasOwnProperty('summary')) {
-  //       throw new Error(nls.localize('covIdFormatErr'));
-  //     }
-  //     result = result as TestResult;
-  //     const coverageRecords = result.tests.map((record) => {
-  //       return record.perClassCoverage;
-  //     });
-  //     fileMap.push({
-  //       path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
-  //       content: stringify(coverageRecords)
-  //     });
-  //   }
-  //
-  //   fileInfos?.forEach((fileInfo) => {
-  //     fileMap.push({
-  //       path: join(dirPath, fileInfo.filename),
-  //       content:
-  //         typeof fileInfo.content !== 'string'
-  //           ? stringify(fileInfo.content)
-  //           : fileInfo.content
-  //     });
-  //   });
-  //
-  //   await createFiles(fileMap);
-  //   return fileMap.map((file) => {
-  //     return file.path;
-  //   });
-  // }
 
   // utils to build test run payloads that may contain namespaces
   @elapsedTime()
