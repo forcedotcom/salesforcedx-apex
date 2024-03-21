@@ -289,7 +289,12 @@ export class StreamingClient {
         }
       );
     } catch (error) {
-      throw new Error(nls.localize('largeTestResultErr', 'ApexTestQueueItem'));
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexTestQueueItem',
+          error?.message
+        ])
+      );
     }
 
     if (result.records.length === 0) {

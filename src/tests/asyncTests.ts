@@ -162,12 +162,22 @@ export class AsyncTests {
       message: nls.localize('retrievingTestRunSummary')
     });
 
-    const testRunSummaryResults = (await this.connection.tooling.query(
-      testRunSummaryQuery,
-      {
-        autoFetch: true
-      }
-    )) as ApexTestRunResult;
+    let testRunSummaryResults;
+    try {
+      testRunSummaryResults = (await this.connection.tooling.query(
+        testRunSummaryQuery,
+        {
+          autoFetch: true
+        }
+      )) as ApexTestRunResult;
+    } catch (error) {
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexTestRunResult',
+          error?.message
+        ])
+      );
+    }
 
     if (testRunSummaryResults.records.length === 0) {
       throw new Error(nls.localize('noTestResultSummary', testRunId));
@@ -318,7 +328,9 @@ export class AsyncTests {
       const apexTestResults = await Promise.all(queryPromises);
       return apexTestResults as ApexTestResult[];
     } catch (error) {
-      throw new Error(nls.localize('largeTestResultErr', 'ApexTestResult[]'));
+      throw new Error(
+        nls.localize('largeTestResultErr', ['ApexTestResult[]', error?.message])
+      );
     }
   }
 
@@ -396,7 +408,10 @@ export class AsyncTests {
       };
     } catch (error) {
       throw new Error(
-        nls.localize('largeTestResultErr', 'ApexTestResultData[]')
+        nls.localize('largeTestResultErr', [
+          'ApexTestResultData[]',
+          error?.message
+        ])
       );
     }
   }

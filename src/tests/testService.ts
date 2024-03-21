@@ -294,7 +294,9 @@ export class TestService {
               });
               break;
             } catch (error) {
-              throw new Error(nls.localize('jsonStringifyErr', format));
+              throw new Error(
+                nls.localize('jsonStringifyErr', [format, error?.message])
+              );
             }
           case ResultFormat.tap:
             try {
@@ -305,7 +307,9 @@ export class TestService {
               });
               break;
             } catch (error) {
-              throw new Error(nls.localize('jsonStringifyErr', format));
+              throw new Error(
+                nls.localize('jsonStringifyErr', [format, error?.message])
+              );
             }
           case ResultFormat.junit:
             try {
@@ -320,7 +324,9 @@ export class TestService {
                 content: junitResult
               });
             } catch (error) {
-              throw new Error(nls.localize('jsonStringifyErr', format));
+              throw new Error(
+                nls.localize('jsonStringifyErr', [format, error?.message])
+              );
             }
             break;
         }
@@ -343,8 +349,11 @@ export class TestService {
           content
         });
       } catch (error) {
-        throw new error(
-          nls.localize('jsonStringifyErr', 'code coverage records')
+        throw new Error(
+          nls.localize('jsonStringifyErr', [
+            'code coverage records',
+            error?.message
+          ])
         );
       }
     }
@@ -359,7 +368,9 @@ export class TestService {
               : fileInfo.content
         });
       } catch (error) {
-        throw new error(nls.localize('jsonStringifyErr', 'fileInfos'));
+        throw new Error(
+          nls.localize('jsonStringifyErr', ['fileInfos', error?.message])
+        );
       }
     });
 

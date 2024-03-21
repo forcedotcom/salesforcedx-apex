@@ -60,7 +60,12 @@ export class CodeCoverage {
       perClassCodeCovResults =
         await this.queryPerClassCodeCov(apexTestClassSet);
     } catch (error) {
-      throw new Error(nls.localize('largeTestResultErr', 'ApexCodeCoverage[]'));
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexCodeCoverage[]',
+          error?.message
+        ])
+      );
     }
 
     const perClassCoverageMap = new Map<string, PerClassCoverage[]>();
@@ -98,7 +103,10 @@ export class CodeCoverage {
       return perClassCoverageMap;
     } catch (error) {
       throw new Error(
-        nls.localize('largeTestResultErr', 'Map<string, PerClassCoverage[]>')
+        nls.localize('largeTestResultErr', [
+          'Map<string, PerClassCoverage[]>',
+          error?.message
+        ])
       );
     }
   }
@@ -122,7 +130,10 @@ export class CodeCoverage {
       codeCoverageAggregates = await this.queryAggregateCodeCov(apexClassIdSet);
     } catch (error) {
       throw new Error(
-        nls.localize('largeTestResultErr', 'ApexCodeCoverageAggregate[]')
+        nls.localize('largeTestResultErr', [
+          'ApexCodeCoverageAggregate[]',
+          error?.message
+        ])
       );
     }
 

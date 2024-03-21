@@ -10,6 +10,7 @@ import { CancellationToken } from '../common';
 import { formatStartTime, getCurrentTime } from '../utils';
 import { CodeCoverage } from './codeCoverage';
 import { formatTestErrors, getSyncDiagnostic } from './diagnosticUtil';
+import { nls } from '../i18n';
 import {
   ApexTestResultData,
   ApexTestResultOutcome,
@@ -154,58 +155,67 @@ export class SyncTests {
     const testResults: ApexTestResultData[] = [];
     const apexTestClassIdSet = new Set<string>();
 
-    apiTestResult.successes.forEach((item) => {
-      const nms = item.namespace ? `${item.namespace}.` : '';
-      apexTestClassIdSet.add(item.id);
-      testResults.push({
-        id: '',
-        queueItemId: '',
-        stackTrace: '',
-        message: '',
-        asyncApexJobId: '',
-        methodName: item.methodName,
-        outcome: ApexTestResultOutcome.Pass,
-        apexLogId: apiTestResult.apexLogId,
-        apexClass: {
-          id: item.id,
-          name: item.name,
-          namespacePrefix: item.namespace,
-          fullName: `${nms}${item.name}`
-        },
-        runTime: item.time ?? 0,
-        testTimestamp: '',
-        fullName: `${nms}${item.name}.${item.methodName}`
+    try {
+      apiTestResult.successes.forEach((item) => {
+        const nms = item.namespace ? `${item.namespace}.` : '';
+        apexTestClassIdSet.add(item.id);
+        testResults.push({
+          id: '',
+          queueItemId: '',
+          stackTrace: '',
+          message: '',
+          asyncApexJobId: '',
+          methodName: item.methodName,
+          outcome: ApexTestResultOutcome.Pass,
+          apexLogId: apiTestResult.apexLogId,
+          apexClass: {
+            id: item.id,
+            name: item.name,
+            namespacePrefix: item.namespace,
+            fullName: `${nms}${item.name}`
+          },
+          runTime: item.time ?? 0,
+          testTimestamp: '',
+          fullName: `${nms}${item.name}.${item.methodName}`
+        });
       });
-    });
 
-    apiTestResult.failures.forEach((item) => {
-      const nms = item.namespace ? `${item.namespace}__` : '';
-      apexTestClassIdSet.add(item.id);
-      const diagnostic =
-        item.message || item.stackTrace ? getSyncDiagnostic(item) : null;
+      apiTestResult.failures.forEach((item) => {
+        const nms = item.namespace ? `${item.namespace}__` : '';
+        apexTestClassIdSet.add(item.id);
+        const diagnostic =
+          item.message || item.stackTrace ? getSyncDiagnostic(item) : null;
 
-      testResults.push({
-        id: '',
-        queueItemId: '',
-        stackTrace: item.stackTrace,
-        message: item.message,
-        asyncApexJobId: '',
-        methodName: item.methodName,
-        outcome: ApexTestResultOutcome.Fail,
-        apexLogId: apiTestResult.apexLogId,
-        apexClass: {
-          id: item.id,
-          name: item.name,
-          namespacePrefix: item.namespace,
-          fullName: `${nms}${item.name}`
-        },
-        runTime: item.time ?? 0,
-        testTimestamp: '',
-        fullName: `${nms}${item.name}.${item.methodName}`,
-        ...(diagnostic ? { diagnostic } : {})
+        testResults.push({
+          id: '',
+          queueItemId: '',
+          stackTrace: item.stackTrace,
+          message: item.message,
+          asyncApexJobId: '',
+          methodName: item.methodName,
+          outcome: ApexTestResultOutcome.Fail,
+          apexLogId: apiTestResult.apexLogId,
+          apexClass: {
+            id: item.id,
+            name: item.name,
+            namespacePrefix: item.namespace,
+            fullName: `${nms}${item.name}`
+          },
+          runTime: item.time ?? 0,
+          testTimestamp: '',
+          fullName: `${nms}${item.name}.${item.methodName}`,
+          ...(diagnostic ? { diagnostic } : {})
+        });
       });
-    });
 
-    return { apexTestClassIdSet, testResults };
+      return { apexTestClassIdSet, testResults };
+    } catch (error) {
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexTestResultData[]',
+          error?.message
+        ])
+      );
+    }
   }
 }
