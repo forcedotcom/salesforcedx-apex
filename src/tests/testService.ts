@@ -29,7 +29,7 @@ import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
-import { elapsedTime } from '../utils/elapsedTime';
+import { elapsedTime } from '../utils';
 
 export class TestService {
   private readonly connection: Connection;
@@ -341,11 +341,9 @@ export class TestService {
     try {
       if (tests) {
         const payload = await this.buildTestPayload(tests);
-        const classes = payload.tests?.map((testItem) => {
-          if (testItem.className) {
-            return testItem.className;
-          }
-        });
+        const classes = payload.tests
+          ?.filter((testItem) => testItem.className)
+          .map((testItem) => testItem.className);
         if (new Set(classes).size !== 1) {
           throw new Error(nls.localize('syncClassErr'));
         }

@@ -255,7 +255,7 @@ export const enum ApexTestRunResultStatus {
   Skipped = 'Skipped'
 }
 
-export type ApexTestRunResultRecord = {
+export type ApexTestRunResult = {
   /**
    * The parent Apex job ID for the result
    */
@@ -276,12 +276,6 @@ export type ApexTestRunResultRecord = {
    * The user who ran the test run
    */
   UserId: string;
-};
-
-export type ApexTestRunResult = {
-  done: boolean;
-  totalSize: number;
-  records: ApexTestRunResultRecord[];
 };
 
 export const enum ApexTestQueueItemStatus {

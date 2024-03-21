@@ -296,16 +296,16 @@ export class StreamingClient {
       value: result
     });
 
-    for (let i = 0; i < result.records.length; i++) {
-      const item = result.records[i];
-      if (
-        item.Status === ApexTestQueueItemStatus.Queued ||
-        item.Status === ApexTestQueueItemStatus.Holding ||
-        item.Status === ApexTestQueueItemStatus.Preparing ||
-        item.Status === ApexTestQueueItemStatus.Processing
-      ) {
-        return null;
-      }
+    if (
+      result.records.some(
+        (item) =>
+          item.Status === ApexTestQueueItemStatus.Queued ||
+          item.Status === ApexTestQueueItemStatus.Holding ||
+          item.Status === ApexTestQueueItemStatus.Preparing ||
+          item.Status === ApexTestQueueItemStatus.Processing
+      )
+    ) {
+      return null;
     }
     return result;
   }

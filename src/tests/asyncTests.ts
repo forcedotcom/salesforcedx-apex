@@ -5,11 +5,13 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+'use strict';
+
 import { Connection } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
-import { formatStartTime, getCurrentTime } from '../utils';
+import { elapsedTime, formatStartTime, getCurrentTime } from '../utils';
 import { formatTestErrors, getAsyncDiagnostic } from './diagnosticUtil';
 import {
   ApexTestProgressValue,
@@ -20,7 +22,6 @@ import {
   ApexTestResultData,
   ApexTestResultOutcome,
   ApexTestRunResult,
-  ApexTestRunResultRecord,
   ApexTestRunResultStatus,
   AsyncTestArrayConfiguration,
   AsyncTestConfiguration,
@@ -32,7 +33,14 @@ import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
 import { HttpRequest } from 'jsforce';
-import { elapsedTime } from '../utils/elapsedTime';
+
+const finishedStatuses = [
+  ApexTestRunResultStatus.Aborted,
+  ApexTestRunResultStatus.Failed,
+  ApexTestRunResultStatus.Completed,
+  ApexTestRunResultStatus.Passed,
+  ApexTestRunResultStatus.Skipped
+];
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -145,16 +153,12 @@ export class AsyncTests {
   public async checkRunStatus(
     testRunId: string,
     progress?: Progress<ApexTestProgressValue>
-  ): Promise<ApexTestRunResultRecord | undefined> {
+  ): Promise<ApexTestRunResult> {
     if (!isValidTestRunID(testRunId)) {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
 
-    let testRunSummaryQuery =
-      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    testRunSummaryQuery +=
-      'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
-    testRunSummaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
     progress?.report({
       type: 'FormatTestResultProgress',
@@ -162,30 +166,19 @@ export class AsyncTests {
       message: nls.localize('retrievingTestRunSummary')
     });
 
-    const testRunSummaryResults = (await this.connection.tooling.query(
-      testRunSummaryQuery,
-      {
-        autoFetch: true
+    try {
+      const testRunSummaryResults = (await this.connection.singleRecordQuery(
+        testRunSummaryQuery,
+        {
+          tooling: true
+        }
+      )) as ApexTestRunResult;
+
+      if (finishedStatuses.includes(testRunSummaryResults.Status)) {
+        return testRunSummaryResults;
       }
-    )) as ApexTestRunResult;
-
-    if (testRunSummaryResults.records.length === 0) {
+    } catch (e) {
       throw new Error(nls.localize('noTestResultSummary', testRunId));
-    }
-
-    if (
-      testRunSummaryResults.records[0].Status ===
-        ApexTestRunResultStatus.Aborted ||
-      testRunSummaryResults.records[0].Status ===
-        ApexTestRunResultStatus.Failed ||
-      testRunSummaryResults.records[0].Status ===
-        ApexTestRunResultStatus.Completed ||
-      testRunSummaryResults.records[0].Status ===
-        ApexTestRunResultStatus.Passed ||
-      testRunSummaryResults.records[0].Status ===
-        ApexTestRunResultStatus.Skipped
-    ) {
-      return testRunSummaryResults.records[0];
     }
 
     return undefined;
@@ -196,7 +189,7 @@ export class AsyncTests {
    * @param asyncRunResult TestQueueItem and RunId for an async run
    * @param commandStartTime start time for the async test run
    * @param codeCoverage should report code coverages
-   * @param testRunSummary test run summary
+   * @param testRunSummary test run summary | undefined
    * @param progress progress reporter
    * @returns
    */
@@ -205,7 +198,7 @@ export class AsyncTests {
     asyncRunResult: AsyncTestRun,
     commandStartTime: number,
     codeCoverage = false,
-    testRunSummary: ApexTestRunResultRecord,
+    testRunSummary: ApexTestRunResult | undefined,
     progress?: Progress<ApexTestProgressValue>
   ): Promise<TestResult> {
     const coveredApexClassIdSet = new Set<string>();
@@ -215,12 +208,12 @@ export class AsyncTests {
     const { apexTestClassIdSet, testResults, globalTests } =
       await this.buildAsyncTestResults(apexTestResults);
 
-    let outcome = testRunSummary.Status;
+    let outcome = testRunSummary?.Status ?? 'Unknown';
     if (globalTests.failed > 0) {
       outcome = ApexTestRunResultStatus.Failed;
     } else if (globalTests.passed === 0) {
       outcome = ApexTestRunResultStatus.Skipped;
-    } else if (testRunSummary.Status === ApexTestRunResultStatus.Completed) {
+    } else if (testRunSummary?.Status === ApexTestRunResultStatus.Completed) {
       outcome = ApexTestRunResultStatus.Passed;
     }
 
@@ -235,15 +228,17 @@ export class AsyncTests {
         passRate: calculatePercentage(globalTests.passed, testResults.length),
         failRate: calculatePercentage(globalTests.failed, testResults.length),
         skipRate: calculatePercentage(globalTests.skipped, testResults.length),
-        testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
-        testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
-        testTotalTimeInMs: testRunSummary.TestTime ?? 0,
+        testStartTime: testRunSummary?.StartTime
+          ? formatStartTime(testRunSummary.StartTime, 'ISO')
+          : '',
+        testExecutionTimeInMs: testRunSummary?.TestTime ?? 0,
+        testTotalTimeInMs: testRunSummary?.TestTime ?? 0,
         commandTimeInMs: getCurrentTime() - commandStartTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
         testRunId: asyncRunResult.runId,
-        userId: testRunSummary.UserId
+        userId: testRunSummary?.UserId ?? 'Unknown'
       },
       tests: testResults
     };
@@ -394,6 +389,7 @@ export class AsyncTests {
   /**
    * Abort test run with test run id
    * @param testRunId
+   * @param progress
    */
   public async abortTestRun(
     testRunId: string,
@@ -430,7 +426,7 @@ export class AsyncTests {
   private getTestRunRequestAction(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration
   ): () => Promise<string> {
-    const requestTestRun = async (): Promise<string> => {
+    return async (): Promise<string> => {
       const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
       const request: HttpRequest = {
         method: 'POST',
@@ -448,6 +444,5 @@ export class AsyncTests {
         return Promise.reject(e);
       }
     };
-    return requestTestRun;
   }
 }
