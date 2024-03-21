@@ -82,6 +82,8 @@ export const messages = {
   missingTestClassErr: 'Apex class %s does not exist in the org',
   jsonStringifyErr:
     'The test result in the format of %s is too large to be stringified. Please try to run fewer tests at a time.',
+  largeTestResultErr:
+    'The test result in the format of %s is too large to be stored in the heap. Please try to run fewer tests at a time.',
   testSuiteMsg: 'Apex test class %s already exists in Apex test suite %s',
   classSuiteMsg: `Added Apex class %s to your Apex test suite %s`,
   error_no_default_username:
