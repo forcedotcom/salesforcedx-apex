@@ -186,11 +186,7 @@ export class TestService {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
-    try {
-      return await this.syncService.runTests(options, codeCoverage, token);
-    } catch (error) {
-      throw error;
-    }
+    return await this.syncService.runTests(options, codeCoverage, token);
   }
 
   /**
@@ -209,17 +205,13 @@ export class TestService {
     progress?: Progress<ApexTestProgressValue>,
     token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
-    try {
-      return await this.asyncService.runTests(
-        options,
-        codeCoverage,
-        immediatelyReturn,
-        progress,
-        token
-      );
-    } catch (error) {
-      throw error;
-    }
+    return await this.asyncService.runTests(
+      options,
+      codeCoverage,
+      immediatelyReturn,
+      progress,
+      token
+    );
   }
 
   /**
@@ -234,15 +226,11 @@ export class TestService {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult> {
-    try {
-      return await this.asyncService.reportAsyncResults(
-        testRunId,
-        codeCoverage,
-        token
-      );
-    } catch (error) {
-      throw error;
-    }
+    return await this.asyncService.reportAsyncResults(
+      testRunId,
+      codeCoverage,
+      token
+    );
   }
 
   /**

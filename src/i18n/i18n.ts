@@ -80,10 +80,8 @@ export const messages = {
     'Must provide a suite name or suite id to retrieve test classes in suite',
   missingSuiteErr: 'Suite does not exist',
   missingTestClassErr: 'Apex class %s does not exist in the org',
-  jsonStringifyErr:
-    'The test result in the format of %s is too large to be stringified. Please try to run fewer tests at a time. \nError: %s',
-  largeTestResultErr:
-    'The test result in the format of %s is too large to be stored in the heap. Please try to run fewer tests at a time. \nError: %s',
+  jsonStringifyErr: `The test result in the format of %s is too large to be stringified. Please try to run fewer tests at a time. Error: %s`,
+  largeTestResultErr: `The test result in the format of %s is too large to be stored in the heap. Please try to run fewer tests at a time. Error: %s`,
   testSuiteMsg: 'Apex test class %s already exists in Apex test suite %s',
   classSuiteMsg: `Added Apex class %s to your Apex test suite %s`,
   error_no_default_username:
