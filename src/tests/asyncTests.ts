@@ -213,7 +213,7 @@ export class AsyncTests {
       outcome = ApexTestRunResultStatus.Failed;
     } else if (globalTests.passed === 0) {
       outcome = ApexTestRunResultStatus.Skipped;
-    } else if (testRunSummary?.Status === ApexTestRunResultStatus.Completed) {
+    } else if (outcome === ApexTestRunResultStatus.Completed) {
       outcome = ApexTestRunResultStatus.Passed;
     }
 

@@ -1366,6 +1366,86 @@ describe('Run Apex tests asynchronously', () => {
       expect(handlerStub.calledOnce).to.be.true;
     });
   });
+  it('should still format async result with undefined test summary', async () => {
+    const asyncTestSrv = new AsyncTests(mockConnection);
+    const mockcheckRunResult = sandboxStub
+      .stub(asyncTestSrv, 'checkRunStatus')
+      .resolves(undefined);
+    const mockSingleRecordQuery = sandboxStub.stub(
+      mockConnection,
+      'singleRecordQuery'
+    );
+    sandboxStub.stub(mockConnection.tooling, 'query');
+    mockSingleRecordQuery.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: testStartTime,
+      TestTime: null,
+      UserId: '005xx000000abcDAAU'
+    });
+    const getAsyncTestResultsStub = sandboxStub
+      .stub(asyncTestSrv, 'getAsyncTestResults')
+      .resolves([
+        {
+          done: true,
+          totalSize: 1,
+          records: [
+            {
+              Id: '07Mxx00000F2Xx6UAF',
+              QueueItemId: '7092M000000Vt94QAC',
+              StackTrace: null,
+              Message: null,
+              AsyncApexJobId: testRunId,
+              MethodName: 'testLoggerLog',
+              Outcome: ApexTestResultOutcome.Skip,
+              ApexLogId: null,
+              ApexClass: {
+                Id: '01pxx00000O6tXZQAZ',
+                Name: 'TestLogger',
+                NamespacePrefix: 't3st',
+                FullName: 't3st__TestLogger'
+              },
+              RunTime: null,
+              TestTimestamp: '3'
+            }
+          ]
+        }
+      ]);
+    const subscribeStub = sandboxStub
+      .stub(StreamingClient.prototype, 'subscribe')
+      .resolves({
+        queueItem: {
+          done: true,
+          totalSize: 1,
+          records: [
+            {
+              Status: ApexTestQueueItemStatus.Completed,
+              Id: 'xxx',
+              ApexClassId: 'xxxx',
+              TestRunResultId: 'xxx'
+            }
+          ]
+        } as ApexTestQueueItem,
+        runId: testRunId
+      });
+    const handlerStub = sandboxStub.stub(StreamingClient.prototype, 'handler');
+    sandboxStub.stub(StreamingClient.prototype, 'init');
+    sandboxStub.stub(StreamingClient.prototype, 'handshake');
+
+    const results = await asyncTestSrv.reportAsyncResults(testRunId);
+
+    expect(mockSingleRecordQuery.notCalled).to.be.true;
+    expect(mockcheckRunResult.calledTwice).to.be.true;
+    expect(getAsyncTestResultsStub.calledOnce).to.be.true;
+    expect(subscribeStub.called).to.be.true;
+    expect(handlerStub.notCalled).to.be.true;
+
+    expect(results.summary.outcome === 'Unknown');
+    expect(results.summary.userId === 'Unknown');
+    expect(results.summary.testStartTime === '');
+    expect(results.summary.testExecutionTimeInMs === 0);
+    expect(results.summary.testTotalTimeInMs === 0);
+  });
 });
 
 describe('elapsedTime', () => {
