@@ -15,6 +15,7 @@ import { nls } from '../i18n';
 import { Readable, ReadableOptions } from 'node:stream';
 import { elapsedTime } from '../utils';
 import { LoggerLevel } from '@salesforce/core';
+import { EOL } from 'os';
 
 export class HumanFormatTransform extends Readable {
   constructor(
@@ -138,7 +139,7 @@ export class HumanFormatTransform extends Readable {
       }
     );
 
-    this.push('\n\n');
+    this.push(`${EOL}${EOL}`);
     tb.createTable(
       testRowArray,
       [
