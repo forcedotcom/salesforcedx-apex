@@ -276,16 +276,26 @@ export class StreamingClient {
     return null;
   }
 
-  private async getCompletedTestRun(
+  public async getCompletedTestRun(
     testRunId: string
   ): Promise<ApexTestQueueItem> {
     const queryApexTestQueueItem = `SELECT Id, Status, ApexClassId, TestRunResultId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`;
-    const result = await this.conn.tooling.query<ApexTestQueueItemRecord>(
-      queryApexTestQueueItem,
-      {
-        autoFetch: true
-      }
-    );
+    let result;
+    try {
+      result = await this.conn.tooling.query<ApexTestQueueItemRecord>(
+        queryApexTestQueueItem,
+        {
+          autoFetch: true
+        }
+      );
+    } catch (error) {
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexTestQueueItem',
+          error?.message
+        ])
+      );
+    }
 
     if (result.records.length === 0) {
       throw new Error(nls.localize('noTestQueueResults', testRunId));

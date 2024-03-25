@@ -18,6 +18,7 @@ import {
   ApexCodeCoverageAggregateRecord
 } from '../../src/tests/types';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
+import { nls } from '../../src/i18n';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
@@ -156,6 +157,72 @@ describe('Get code coverage results', () => {
     expect(codeCoverageResults.length).to.equal(0);
     expect(totalLines).to.equal(0);
     expect(coveredLines).to.equal(0);
+  });
+
+  it('should throw error when queryPerClassCodeCov fail', async () => {
+    const errorMessage = '123';
+    const codeCov = new CodeCoverage(mockConnection);
+    sandboxStub
+      .stub(codeCov, 'queryPerClassCodeCov')
+      .rejects(new Error(errorMessage));
+    try {
+      await codeCov.getPerClassCodeCoverage(
+        new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
+      );
+    } catch (e) {
+      expect(e.message).to.be.include(
+        nls.localize('largeTestResultErr', ['ApexCodeCoverage[]', errorMessage])
+      );
+    }
+  });
+
+  it('should throw error when queryAggregateCodeCov fail', async () => {
+    const codeCoverageQueryResult = [
+      {
+        ApexClassOrTrigger: { Id: '0001x05958', Name: 'ApexTrigger1' },
+        NumLinesCovered: 5,
+        NumLinesUncovered: 1,
+        Coverage: { coveredLines: [1, 2, 3, 4, 5], uncoveredLines: [6] }
+      },
+      {
+        ApexClassOrTrigger: { Id: '0001x05959', Name: 'ApexTrigger2' },
+        NumLinesCovered: 6,
+        NumLinesUncovered: 2,
+        Coverage: { coveredLines: [1, 2, 3, 4, 5, 6], uncoveredLines: [7, 8] }
+      },
+      {
+        ApexClassOrTrigger: { Id: '0001x05951', Name: 'ApexTrigger3' },
+        NumLinesCovered: 7,
+        NumLinesUncovered: 3,
+        Coverage: {
+          coveredLines: [1, 2, 3, 4, 5, 6, 7],
+          uncoveredLines: [8, 9, 10]
+        }
+      }
+    ];
+
+    toolingQueryStub.resolves({
+      done: true,
+      totalSize: 3,
+      records: codeCoverageQueryResult
+    } as ApexCodeCoverageAggregate);
+    const errorMessage = '123';
+    const codeCov = new CodeCoverage(mockConnection);
+    sandboxStub
+      .stub(codeCov, 'queryAggregateCodeCov')
+      .rejects(new Error(errorMessage));
+    try {
+      await codeCov.getPerClassCodeCoverage(
+        new Set<string>(['0001x05958', '0001x05959', '0001x05951'])
+      );
+    } catch (e) {
+      expect(e.message).to.be.include(
+        nls.localize('largeTestResultErr', [
+          'ApexCodeCoverageAggregate[]',
+          errorMessage
+        ])
+      );
+    }
   });
 
   it('should return per class code coverage for multiple test classes', async () => {

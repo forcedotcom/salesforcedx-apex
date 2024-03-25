@@ -270,32 +270,52 @@ export class TestService {
 
         switch (format) {
           case ResultFormat.json:
-            fileMap.push({
-              path: join(
-                dirPath,
-                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
-              ),
-              content: stringify(result)
-            });
-            break;
+            try {
+              fileMap.push({
+                path: join(
+                  dirPath,
+                  testRunId
+                    ? `test-result-${testRunId}.json`
+                    : `test-result.json`
+                ),
+                content: stringify(result)
+              });
+              break;
+            } catch (error) {
+              throw new Error(
+                nls.localize('jsonStringifyErr', [format, error?.message])
+              );
+            }
           case ResultFormat.tap:
-            const tapResult = new TapReporter().format(result);
-            fileMap.push({
-              path: join(dirPath, `test-result-${testRunId}-tap.txt`),
-              content: tapResult
-            });
-            break;
+            try {
+              const tapResult = new TapReporter().format(result);
+              fileMap.push({
+                path: join(dirPath, `test-result-${testRunId}-tap.txt`),
+                content: tapResult
+              });
+              break;
+            } catch (error) {
+              throw new Error(
+                nls.localize('jsonStringifyErr', [format, error?.message])
+              );
+            }
           case ResultFormat.junit:
-            const junitResult = new JUnitReporter().format(result);
-            fileMap.push({
-              path: join(
-                dirPath,
-                testRunId
-                  ? `test-result-${testRunId}-junit.xml`
-                  : `test-result-junit.xml`
-              ),
-              content: junitResult
-            });
+            try {
+              const junitResult = new JUnitReporter().format(result);
+              fileMap.push({
+                path: join(
+                  dirPath,
+                  testRunId
+                    ? `test-result-${testRunId}-junit.xml`
+                    : `test-result-junit.xml`
+                ),
+                content: junitResult
+              });
+            } catch (error) {
+              throw new Error(
+                nls.localize('jsonStringifyErr', [format, error?.message])
+              );
+            }
             break;
         }
       }
@@ -309,20 +329,37 @@ export class TestService {
       const coverageRecords = result.tests.map((record) => {
         return record.perClassCoverage;
       });
-      fileMap.push({
-        path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
-        content: stringify(coverageRecords)
-      });
+
+      try {
+        const content = stringify(coverageRecords);
+        fileMap.push({
+          path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
+          content
+        });
+      } catch (error) {
+        throw new Error(
+          nls.localize('jsonStringifyErr', [
+            'code coverage records',
+            error?.message
+          ])
+        );
+      }
     }
 
     fileInfos?.forEach((fileInfo) => {
-      fileMap.push({
-        path: join(dirPath, fileInfo.filename),
-        content:
-          typeof fileInfo.content !== 'string'
-            ? stringify(fileInfo.content)
-            : fileInfo.content
-      });
+      try {
+        fileMap.push({
+          path: join(dirPath, fileInfo.filename),
+          content:
+            typeof fileInfo.content !== 'string'
+              ? stringify(fileInfo.content)
+              : fileInfo.content
+        });
+      } catch (error) {
+        throw new Error(
+          nls.localize('jsonStringifyErr', ['fileInfos', error?.message])
+        );
+      }
     });
 
     createFiles(fileMap);

@@ -162,12 +162,22 @@ export class AsyncTests {
       message: nls.localize('retrievingTestRunSummary')
     });
 
-    const testRunSummaryResults = (await this.connection.tooling.query(
-      testRunSummaryQuery,
-      {
-        autoFetch: true
-      }
-    )) as ApexTestRunResult;
+    let testRunSummaryResults;
+    try {
+      testRunSummaryResults = (await this.connection.tooling.query(
+        testRunSummaryQuery,
+        {
+          autoFetch: true
+        }
+      )) as ApexTestRunResult;
+    } catch (error) {
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexTestRunResult',
+          error?.message
+        ])
+      );
+    }
 
     if (testRunSummaryResults.records.length === 0) {
       throw new Error(nls.localize('noTestResultSummary', testRunId));
@@ -314,8 +324,14 @@ export class AsyncTests {
     const queryPromises = queries.map((query) => {
       return queryAll(this.connection, query, true);
     });
-    const apexTestResults = await Promise.all(queryPromises);
-    return apexTestResults as ApexTestResult[];
+    try {
+      const apexTestResults = await Promise.all(queryPromises);
+      return apexTestResults as ApexTestResult[];
+    } catch (error) {
+      throw new Error(
+        nls.localize('largeTestResultErr', ['ApexTestResult[]', error?.message])
+      );
+    }
   }
 
   @elapsedTime()
@@ -336,59 +352,68 @@ export class AsyncTests {
     let skipped = 0;
 
     // Iterate over test results, format and add them as results.tests
-    const testResults: ApexTestResultData[] = [];
-    for (const result of apexTestResults) {
-      result.records.forEach((item) => {
-        switch (item.Outcome) {
-          case ApexTestResultOutcome.Pass:
-            passed++;
-            break;
-          case ApexTestResultOutcome.Fail:
-          case ApexTestResultOutcome.CompileFail:
-            failed++;
-            break;
-          case ApexTestResultOutcome.Skip:
-            skipped++;
-            break;
-        }
+    try {
+      const testResults: ApexTestResultData[] = [];
+      for (const result of apexTestResults) {
+        result.records.forEach((item) => {
+          switch (item.Outcome) {
+            case ApexTestResultOutcome.Pass:
+              passed++;
+              break;
+            case ApexTestResultOutcome.Fail:
+            case ApexTestResultOutcome.CompileFail:
+              failed++;
+              break;
+            case ApexTestResultOutcome.Skip:
+              skipped++;
+              break;
+          }
 
-        apexTestClassIdSet.add(item.ApexClass.Id);
-        // Can only query the FullName field if a single record is returned, so manually build the field
-        item.ApexClass.FullName = item.ApexClass.NamespacePrefix
-          ? `${item.ApexClass.NamespacePrefix}.${item.ApexClass.Name}`
-          : item.ApexClass.Name;
+          apexTestClassIdSet.add(item.ApexClass.Id);
+          // Can only query the FullName field if a single record is returned, so manually build the field
+          item.ApexClass.FullName = item.ApexClass.NamespacePrefix
+            ? `${item.ApexClass.NamespacePrefix}.${item.ApexClass.Name}`
+            : item.ApexClass.Name;
 
-        const diagnostic =
-          item.Message || item.StackTrace ? getAsyncDiagnostic(item) : null;
+          const diagnostic =
+            item.Message || item.StackTrace ? getAsyncDiagnostic(item) : null;
 
-        testResults.push({
-          id: item.Id,
-          queueItemId: item.QueueItemId,
-          stackTrace: item.StackTrace,
-          message: item.Message,
-          asyncApexJobId: item.AsyncApexJobId,
-          methodName: item.MethodName,
-          outcome: item.Outcome,
-          apexLogId: item.ApexLogId,
-          apexClass: {
-            id: item.ApexClass.Id,
-            name: item.ApexClass.Name,
-            namespacePrefix: item.ApexClass.NamespacePrefix,
-            fullName: item.ApexClass.FullName
-          },
-          runTime: item.RunTime ?? 0,
-          testTimestamp: item.TestTimestamp, // TODO: convert timestamp
-          fullName: `${item.ApexClass.FullName}.${item.MethodName}`,
-          ...(diagnostic ? { diagnostic } : {})
+          testResults.push({
+            id: item.Id,
+            queueItemId: item.QueueItemId,
+            stackTrace: item.StackTrace,
+            message: item.Message,
+            asyncApexJobId: item.AsyncApexJobId,
+            methodName: item.MethodName,
+            outcome: item.Outcome,
+            apexLogId: item.ApexLogId,
+            apexClass: {
+              id: item.ApexClass.Id,
+              name: item.ApexClass.Name,
+              namespacePrefix: item.ApexClass.NamespacePrefix,
+              fullName: item.ApexClass.FullName
+            },
+            runTime: item.RunTime ?? 0,
+            testTimestamp: item.TestTimestamp, // TODO: convert timestamp
+            fullName: `${item.ApexClass.FullName}.${item.MethodName}`,
+            ...(diagnostic ? { diagnostic } : {})
+          });
         });
-      });
-    }
+      }
 
-    return {
-      apexTestClassIdSet,
-      testResults,
-      globalTests: { passed, failed, skipped }
-    };
+      return {
+        apexTestClassIdSet,
+        testResults,
+        globalTests: { passed, failed, skipped }
+      };
+    } catch (error) {
+      throw new Error(
+        nls.localize('largeTestResultErr', [
+          'ApexTestResultData[]',
+          error?.message
+        ])
+      );
+    }
   }
 
   /**

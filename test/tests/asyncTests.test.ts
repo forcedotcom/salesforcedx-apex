@@ -735,6 +735,23 @@ describe('Run Apex tests asynchronously', () => {
       expect(result.length).to.eql(1);
     });
 
+    it('should throw error when queryPromises fail in getAsyncTestResults', async () => {
+      sandboxStub
+        .stub(mockConnection.tooling, 'query')
+        .resolves({ done: true, totalSize: 1, records: [] });
+      const errorMessage = '123';
+      sandboxStub.stub(utils, 'queryAll').rejects(new Error(errorMessage));
+      const asyncTestSrv = new AsyncTests(mockConnection);
+      try {
+        await asyncTestSrv.getAsyncTestResults(pollResponse);
+        fail('should throw an error');
+      } catch (e) {
+        expect(e.message).to.include(
+          nls.localize('largeTestResultErr', ['ApexTestResult[]', errorMessage])
+        );
+      }
+    });
+
     it('should format multiple queries correctly', async () => {
       const queryOneIds = queryIds.slice(0, QUERY_RECORD_LIMIT).join("','");
       const queryOne = `${queryStart}('${queryOneIds}')`;
@@ -1404,6 +1421,21 @@ describe('Run Apex tests asynchronously', () => {
       expect(formatResultsStub.calledOnce).to.be.true;
       expect(handlerStub.calledOnce).to.be.true;
     });
+  });
+
+  it('should throw error when query fails in checkRunStatus', async () => {
+    const asyncTestSrv = new AsyncTests(mockConnection);
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    const errorMessage = '123';
+    mockToolingQuery.onFirstCall().rejects(new Error(errorMessage));
+    try {
+      await asyncTestSrv.checkRunStatus(testRunId);
+      fail('should throw an error');
+    } catch (e) {
+      expect(e.message).to.include(
+        nls.localize('largeTestResultErr', ['ApexTestRunResult', errorMessage])
+      );
+    }
   });
 });
 
