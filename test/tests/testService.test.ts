@@ -9,6 +9,8 @@ import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
 import { fail } from 'assert';
 import { expect } from 'chai';
 import * as u from '../../src/tests/utils';
+import * as stream from 'stream';
+import * as fs from 'fs';
 import { createSandbox, SinonSandbox, SinonStub, spy } from 'sinon';
 import { ApexTestResultData, ResultFormat, TestService } from '../../src';
 import { nls } from '../../src/i18n';
@@ -318,6 +320,9 @@ describe('WriteResultFiles', async () => {
     toolingQueryStub.resolves({ records: [{ Id: 'xxxxxxx243' }] });
     const errorMessage = '123';
     sandboxStub.stub(u, 'stringify').throws(new Error(errorMessage));
+    sandboxStub
+      .stub(fs, 'createWriteStream')
+      .returns(new stream.PassThrough() as never);
     const mockResult = {
       summary: {
         failRate: '123',
