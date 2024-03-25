@@ -179,7 +179,7 @@ export class CodeCoverage {
   }
 
   @elapsedTime()
-  private async queryPerClassCodeCov(
+  public async queryPerClassCodeCov(
     apexTestClassSet: Set<string>
   ): Promise<ApexCodeCoverage[]> {
     const perClassCodeCovQuery =
@@ -188,7 +188,7 @@ export class CodeCoverage {
   }
 
   @elapsedTime()
-  private async queryAggregateCodeCov(
+  public async queryAggregateCodeCov(
     apexClassIdSet: Set<string>
   ): Promise<ApexCodeCoverageAggregate[]> {
     const codeCoverageQuery =

@@ -548,3 +548,34 @@ describe('Streaming API Client', () => {
     assert.calledOnce(clearIntervalStub);
   });
 });
+
+describe('getCompletedTestRun', () => {
+  const $$ = new TestContext();
+
+  beforeEach(async () => {
+    sandboxStub = createSandbox();
+    // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
+    sandboxStub
+      .stub(Connection.prototype, 'retrieveMaxApiVersion')
+      .resolves('50.0');
+    await $$.stubAuths(testData);
+    mockConnection = await testData.getConnection();
+  });
+
+  afterEach(() => {
+    sandboxStub.restore();
+  });
+
+  it('should return largeTestResultErr if query fails', () => {
+    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    const errorMessage = '123';
+    mockToolingQuery.rejects(new Error(errorMessage));
+    const streamClient = new StreamingClient(mockConnection);
+    try {
+      streamClient.getCompletedTestRun('testRunId');
+    } catch (error) {
+      expect(error.message).to.include('ApexTestQueueItem');
+      expect(error.message).to.include(errorMessage);
+    }
+  });
+});

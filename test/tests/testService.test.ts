@@ -8,8 +8,10 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
 import { fail } from 'assert';
 import { expect } from 'chai';
+import * as u from '../../src/tests/utils';
 import { createSandbox, SinonSandbox, SinonStub, spy } from 'sinon';
-import { TestService } from '../../src';
+import { ApexTestResultData, ResultFormat, TestService } from '../../src';
+import { nls } from '../../src/i18n';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
@@ -286,5 +288,97 @@ describe('Apex Test Suites', async () => {
       const result = await (testService as any).buildTestPayload(tests);
       expect(result.tests.toString()).to.equal(testsPayload.tests.toString());
     });
+  });
+});
+
+describe('WriteResultFiles', async () => {
+  const $$ = new TestContext();
+  beforeEach(async () => {
+    sandboxStub = createSandbox();
+    await $$.stubAuths(testData);
+    // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
+    sandboxStub
+      .stub(Connection.prototype, 'retrieveMaxApiVersion')
+      .resolves('50.0');
+    mockConnection = await Connection.create({
+      authInfo: await AuthInfo.create({
+        username: testData.username
+      })
+    });
+
+    toolingQueryStub = sandboxStub.stub(mockConnection.tooling, 'query');
+    toolingCreateStub = sandboxStub.stub(mockConnection.tooling, 'create');
+  });
+
+  afterEach(async () => {
+    sandboxStub.restore();
+  });
+
+  it('should throw error when stringify fail', async () => {
+    toolingQueryStub.resolves({ records: [{ Id: 'xxxxxxx243' }] });
+    const errorMessage = '123';
+    sandboxStub.stub(u, 'stringify').throws(new Error(errorMessage));
+    const mockResult = {
+      summary: {
+        failRate: '123',
+        testsRan: 1,
+        orgId: '123',
+        outcome: '123',
+        passing: 1,
+        failing: 0,
+        skipped: 0,
+        passRate: '123',
+        skipRate: '123',
+        testStartTime: '123',
+        testExecutionTimeInMs: 1,
+        testTotalTimeInMs: 1,
+        commandTimeInMs: 1,
+        hostname: '123',
+        username: '123',
+        testRunId: '123',
+        userId: '123'
+      },
+      tests: [
+        {
+          id: '123',
+          queueItemId: '123',
+          stackTrace: '123',
+          message: '123',
+          asyncApexJobId: '123',
+          methodName: 'method',
+          outcome: 'CompileFail',
+          apexLogId: '123',
+          apexClass: {
+            id: '123',
+            name: 'apex',
+            namespacePrefix: 'a',
+            fullName: 'apexClass'
+          },
+          runTime: 1,
+          testTimestamp: '123',
+          fullName: 'mockApexTestResultData'
+        } as ApexTestResultData
+      ]
+    };
+
+    const outputDirConfig = {
+      dirPath: './',
+      resultFormats: [ResultFormat.json],
+      fileInfos: [
+        {
+          filename: 'hello',
+          content: 'world'
+        }
+      ]
+    };
+    const testService = new TestService(mockConnection);
+    try {
+      await testService.writeResultFiles(mockResult, outputDirConfig, false);
+      fail('Should throw an error');
+    } catch (e) {
+      expect(e.message).to.include(
+        nls.localize('jsonStringifyErr', [ResultFormat.json, errorMessage])
+      );
+    }
   });
 });
