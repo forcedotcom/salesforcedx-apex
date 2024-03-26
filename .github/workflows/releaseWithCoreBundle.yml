@@ -20,9 +20,12 @@ jobs:
           node-version: ${{ inputs.nodeVersion }}
           registry-url: 'https://registry.npmjs.org'
           cache: yarn
+      - name: Retrieve Scripts
+        run: |
+          git clone https://github.com/forcedotcom/bundle-publish-scripts.git
       - name: Update for Publishing
         run: |
-          node scripts/updateForCoreBundle.js
+          node bundle-publish-scripts/updateForCoreBundle.js apex-node
       - uses: salesforcecli/github-workflows/.github/actions/yarnInstallWithRetries@main
       - name: Build the Project
         run: |
