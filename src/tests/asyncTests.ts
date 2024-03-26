@@ -90,12 +90,12 @@ export class AsyncTests {
       }
 
       const asyncRunResult = await sClient.subscribe(undefined, testRunId);
-      const testRunSummary = await this.checkRunStatus(asyncRunResult.runId);
+      const runResult = await this.checkRunStatus(asyncRunResult.runId);
       return await this.formatAsyncResults(
         asyncRunResult,
         getCurrentTime(),
         codeCoverage,
-        testRunSummary,
+        runResult.testRunSummary,
         progress
       );
     } catch (e) {
@@ -120,13 +120,13 @@ export class AsyncTests {
       await sClient.init();
       await sClient.handshake();
       let queueItem: ApexTestQueueItem;
-      let testRunSummary = await this.checkRunStatus(testRunId);
+      let renResult = await this.checkRunStatus(testRunId);
 
-      if (testRunSummary !== undefined) {
+      if (renResult.testsComplete) {
         queueItem = await sClient.handler(undefined, testRunId);
       } else {
         queueItem = (await sClient.subscribe(undefined, testRunId)).queueItem;
-        testRunSummary = await this.checkRunStatus(testRunId);
+        renResult = await this.checkRunStatus(testRunId);
       }
 
       token &&
@@ -142,7 +142,7 @@ export class AsyncTests {
         { queueItem, runId: testRunId },
         getCurrentTime(),
         codeCoverage,
-        testRunSummary
+        renResult.testRunSummary
       );
     } catch (e) {
       throw formatTestErrors(e);
@@ -153,7 +153,10 @@ export class AsyncTests {
   public async checkRunStatus(
     testRunId: string,
     progress?: Progress<ApexTestProgressValue>
-  ): Promise<ApexTestRunResult> {
+  ): Promise<{
+    testsComplete: boolean;
+    testRunSummary: ApexTestRunResult;
+  }> {
     if (!isValidTestRunID(testRunId)) {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
@@ -167,21 +170,20 @@ export class AsyncTests {
     });
 
     try {
-      const testRunSummaryResults = (await this.connection.singleRecordQuery(
-        testRunSummaryQuery,
-        {
-          tooling: true
-        }
-      )) as ApexTestRunResult;
-
-      if (finishedStatuses.includes(testRunSummaryResults.Status)) {
-        return testRunSummaryResults;
-      }
+      const testRunSummaryResults =
+        await this.connection.singleRecordQuery<ApexTestRunResult>(
+          testRunSummaryQuery,
+          {
+            tooling: true
+          }
+        );
+      return {
+        testsComplete: finishedStatuses.includes(testRunSummaryResults.Status),
+        testRunSummary: testRunSummaryResults
+      };
     } catch (e) {
       throw new Error(nls.localize('noTestResultSummary', testRunId));
     }
-
-    return undefined;
   }
 
   /**
@@ -208,12 +210,12 @@ export class AsyncTests {
     const { apexTestClassIdSet, testResults, globalTests } =
       await this.buildAsyncTestResults(apexTestResults);
 
-    let outcome = testRunSummary?.Status ?? 'Unknown';
+    let outcome = testRunSummary.Status;
     if (globalTests.failed > 0) {
       outcome = ApexTestRunResultStatus.Failed;
     } else if (globalTests.passed === 0) {
       outcome = ApexTestRunResultStatus.Skipped;
-    } else if (outcome === ApexTestRunResultStatus.Completed) {
+    } else if (testRunSummary.Status === ApexTestRunResultStatus.Completed) {
       outcome = ApexTestRunResultStatus.Passed;
     }
 
@@ -228,17 +230,15 @@ export class AsyncTests {
         passRate: calculatePercentage(globalTests.passed, testResults.length),
         failRate: calculatePercentage(globalTests.failed, testResults.length),
         skipRate: calculatePercentage(globalTests.skipped, testResults.length),
-        testStartTime: testRunSummary?.StartTime
-          ? formatStartTime(testRunSummary.StartTime, 'ISO')
-          : '',
-        testExecutionTimeInMs: testRunSummary?.TestTime ?? 0,
-        testTotalTimeInMs: testRunSummary?.TestTime ?? 0,
+        testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
+        testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
+        testTotalTimeInMs: testRunSummary.TestTime ?? 0,
         commandTimeInMs: getCurrentTime() - commandStartTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
         username: this.connection.getUsername(),
         testRunId: asyncRunResult.runId,
-        userId: testRunSummary?.UserId ?? 'Unknown'
+        userId: testRunSummary.UserId
       },
       tests: testResults
     };

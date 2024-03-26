@@ -38,7 +38,8 @@ import {
   ApexCodeCoverage,
   ApexTestQueueItemRecord,
   ResultFormat,
-  TestRunIdResult
+  TestRunIdResult,
+  ApexTestRunResult
 } from '../../src/tests/types';
 import { AsyncTestRun, StreamingClient } from '../../src/streaming';
 import { fail } from 'assert';
@@ -134,7 +135,10 @@ describe('Run Apex tests asynchronously', () => {
     sandboxStub
       .stub(StreamingClient.prototype, 'subscribe')
       .resolves(asyncResult);
-    sandboxStub.stub(AsyncTests.prototype, 'checkRunStatus');
+    sandboxStub.stub(AsyncTests.prototype, 'checkRunStatus').resolves({
+      testsComplete: true,
+      testRunSummary: {} as ApexTestRunResult
+    });
     const testSrv = new TestService(mockConnection);
     const mockTestResultData = sandboxStub
       .stub(AsyncTests.prototype, 'formatAsyncResults')
@@ -207,12 +211,12 @@ describe('Run Apex tests asynchronously', () => {
         }
       ]
     } as ApexTestResult);
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       undefined,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     let summaryQuery =
@@ -326,12 +330,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       false,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     let summaryQuery =
@@ -392,12 +396,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       false,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     expect(getTestResultData).to.deep.equals(diagnosticResult);
@@ -448,12 +452,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       false,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     expect(getTestResultData).to.deep.equals(diagnosticFailure);
@@ -468,12 +472,12 @@ describe('Run Apex tests asynchronously', () => {
     mockSingleRecordQuery.onFirstCall().throwsException('No records found');
 
     try {
-      const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+      const runResult = await asyncTestSrv.checkRunStatus(testRunId);
       await asyncTestSrv.formatAsyncResults(
         { queueItem: pollResponse, runId: testRunId },
         new Date().getTime(),
         false,
-        testRunSummary
+        runResult.testRunSummary
       );
       fail('Test should have thrown an error');
     } catch (e) {
@@ -569,12 +573,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexOrgWideCoverage);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       true,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     // verify summary data
@@ -643,7 +647,7 @@ describe('Run Apex tests asynchronously', () => {
       report: reportStub
     };
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(
+    const runResult = await asyncTestSrv.checkRunStatus(
       testRunId,
       progressReporter
     );
@@ -651,7 +655,7 @@ describe('Run Apex tests asynchronously', () => {
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       true,
-      testRunSummary,
+      runResult.testRunSummary,
       progressReporter
     );
 
@@ -1365,86 +1369,6 @@ describe('Run Apex tests asynchronously', () => {
       expect(formatResultsStub.calledOnce).to.be.true;
       expect(handlerStub.calledOnce).to.be.true;
     });
-  });
-  it('should still format async result with undefined test summary', async () => {
-    const asyncTestSrv = new AsyncTests(mockConnection);
-    const mockcheckRunResult = sandboxStub
-      .stub(asyncTestSrv, 'checkRunStatus')
-      .resolves(undefined);
-    const mockSingleRecordQuery = sandboxStub.stub(
-      mockConnection,
-      'singleRecordQuery'
-    );
-    sandboxStub.stub(mockConnection.tooling, 'query');
-    mockSingleRecordQuery.onFirstCall().resolves({
-      AsyncApexJobId: testRunId,
-      Status: ApexTestRunResultStatus.Completed,
-      StartTime: testStartTime,
-      TestTime: null,
-      UserId: '005xx000000abcDAAU'
-    });
-    const getAsyncTestResultsStub = sandboxStub
-      .stub(asyncTestSrv, 'getAsyncTestResults')
-      .resolves([
-        {
-          done: true,
-          totalSize: 1,
-          records: [
-            {
-              Id: '07Mxx00000F2Xx6UAF',
-              QueueItemId: '7092M000000Vt94QAC',
-              StackTrace: null,
-              Message: null,
-              AsyncApexJobId: testRunId,
-              MethodName: 'testLoggerLog',
-              Outcome: ApexTestResultOutcome.Skip,
-              ApexLogId: null,
-              ApexClass: {
-                Id: '01pxx00000O6tXZQAZ',
-                Name: 'TestLogger',
-                NamespacePrefix: 't3st',
-                FullName: 't3st__TestLogger'
-              },
-              RunTime: null,
-              TestTimestamp: '3'
-            }
-          ]
-        }
-      ]);
-    const subscribeStub = sandboxStub
-      .stub(StreamingClient.prototype, 'subscribe')
-      .resolves({
-        queueItem: {
-          done: true,
-          totalSize: 1,
-          records: [
-            {
-              Status: ApexTestQueueItemStatus.Completed,
-              Id: 'xxx',
-              ApexClassId: 'xxxx',
-              TestRunResultId: 'xxx'
-            }
-          ]
-        } as ApexTestQueueItem,
-        runId: testRunId
-      });
-    const handlerStub = sandboxStub.stub(StreamingClient.prototype, 'handler');
-    sandboxStub.stub(StreamingClient.prototype, 'init');
-    sandboxStub.stub(StreamingClient.prototype, 'handshake');
-
-    const results = await asyncTestSrv.reportAsyncResults(testRunId);
-
-    expect(mockSingleRecordQuery.notCalled).to.be.true;
-    expect(mockcheckRunResult.calledTwice).to.be.true;
-    expect(getAsyncTestResultsStub.calledOnce).to.be.true;
-    expect(subscribeStub.called).to.be.true;
-    expect(handlerStub.notCalled).to.be.true;
-
-    expect(results.summary.outcome === 'Unknown');
-    expect(results.summary.userId === 'Unknown');
-    expect(results.summary.testStartTime === '');
-    expect(results.summary.testExecutionTimeInMs === 0);
-    expect(results.summary.testTotalTimeInMs === 0);
   });
 });
 
