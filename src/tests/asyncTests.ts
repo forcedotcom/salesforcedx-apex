@@ -191,7 +191,7 @@ export class AsyncTests {
    * @param asyncRunResult TestQueueItem and RunId for an async run
    * @param commandStartTime start time for the async test run
    * @param codeCoverage should report code coverages
-   * @param testRunSummary test run summary | undefined
+   * @param testRunSummary test run summary
    * @param progress progress reporter
    * @returns
    */
@@ -200,7 +200,7 @@ export class AsyncTests {
     asyncRunResult: AsyncTestRun,
     commandStartTime: number,
     codeCoverage = false,
-    testRunSummary: ApexTestRunResult | undefined,
+    testRunSummary: ApexTestRunResult,
     progress?: Progress<ApexTestProgressValue>
   ): Promise<TestResult> {
     const coveredApexClassIdSet = new Set<string>();

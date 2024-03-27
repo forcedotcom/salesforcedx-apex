@@ -267,11 +267,11 @@ export type ApexTestRunResult = {
   /**
    * The time at which the test run started.
    */
-  StartTime: string;
+  StartTime: string | undefined;
   /**
    * The time it took the test to run, in seconds.
    */
-  TestTime: number;
+  TestTime: number | undefined;
   /**
    * The user who ran the test run
    */
