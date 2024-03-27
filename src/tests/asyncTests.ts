@@ -120,13 +120,13 @@ export class AsyncTests {
       await sClient.init();
       await sClient.handshake();
       let queueItem: ApexTestQueueItem;
-      let renResult = await this.checkRunStatus(testRunId);
+      let runResult = await this.checkRunStatus(testRunId);
 
-      if (renResult.testsComplete) {
+      if (runResult.testsComplete) {
         queueItem = await sClient.handler(undefined, testRunId);
       } else {
         queueItem = (await sClient.subscribe(undefined, testRunId)).queueItem;
-        renResult = await this.checkRunStatus(testRunId);
+        runResult = await this.checkRunStatus(testRunId);
       }
 
       token &&
@@ -142,7 +142,7 @@ export class AsyncTests {
         { queueItem, runId: testRunId },
         getCurrentTime(),
         codeCoverage,
-        renResult.testRunSummary
+        runResult.testRunSummary
       );
     } catch (e) {
       throw formatTestErrors(e);
