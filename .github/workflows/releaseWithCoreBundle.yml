@@ -13,4 +13,3 @@ jobs:
     uses: forcedotcom/bundle-publish-scripts/.github/workflows/releaseWithCoreBundle.yml@main
     with:
       branch: ${{ inputs.branch }}
-      module_name: 'apex-node'
