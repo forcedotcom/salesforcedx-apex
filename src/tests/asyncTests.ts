@@ -30,7 +30,7 @@ import { calculatePercentage, queryAll } from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
-import { HttpRequest } from 'jsforce';
+import type { HttpRequest } from '@jsforce/jsforce-node';
 import { isValidTestRunID } from '../narrowing';
 
 const finishedStatuses = [

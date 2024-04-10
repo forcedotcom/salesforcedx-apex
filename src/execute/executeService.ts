@@ -19,7 +19,7 @@ import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
 import { encodeBody } from './utils';
 import * as readline from 'readline';
-import { HttpRequest } from 'jsforce';
+import type { HttpRequest } from '@jsforce/jsforce-node';
 import { elapsedTime } from '../utils/elapsedTime';
 
 export class ExecuteService {
