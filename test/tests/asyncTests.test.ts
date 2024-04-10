@@ -7,7 +7,7 @@
 import * as sinon from 'sinon';
 import { Connection, Logger } from '@salesforce/core';
 import { elapsedTime } from '../../src/utils';
-import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
+import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
 import { assert, expect } from 'chai';
 import {
   assert as sinonAssert,
