@@ -40,7 +40,7 @@ import { isTestResult, isValidApexClassID } from '../narrowing';
 export class TestService {
   private readonly connection: Connection;
   public readonly asyncService: AsyncTests;
-  public readonly syncService: SyncTests;
+  private readonly syncService: SyncTests;
 
   constructor(connection: Connection) {
     this.connection = connection;
