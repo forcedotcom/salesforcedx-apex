@@ -9,8 +9,8 @@ import { AuthInfo, Connection } from '@salesforce/core';
 import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox, SinonSpy, SinonStub } from 'sinon';
-import * as fs from 'fs';
-import * as stream from 'stream';
+import fs from 'fs';
+import stream from 'stream';
 import { join } from 'path';
 import { SyncTestConfiguration, TestService } from '../../src/tests';
 import {

@@ -8,8 +8,8 @@
 import { Connection } from '@salesforce/core';
 import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
 import { assert, expect } from 'chai';
-import * as fs from 'fs';
-import * as readline from 'readline';
+import fs from 'node:fs';
+import readline from 'readline';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
