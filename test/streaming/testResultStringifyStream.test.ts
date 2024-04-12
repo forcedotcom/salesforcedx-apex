@@ -51,6 +51,34 @@ const tests = [
     perClassCoverage: [] as PerClassCoverage[] // Add PerClassCoverage objects here if needed
   }
 ];
+const perClassCoverageData: PerClassCoverage[] = [
+  {
+    apexClassOrTriggerName: tests[0].apexClass.name,
+    apexClassOrTriggerId: tests[0].apexClass.id,
+    apexTestClassId: tests[0].id,
+    apexTestMethodName: tests[0].methodName,
+    numLinesCovered: 80,
+    numLinesUncovered: 20,
+    percentage: '80%',
+    coverage: {
+      coveredLines: [1, 2, 3, 4, 5, 6, 7, 8],
+      uncoveredLines: [9, 10]
+    }
+  },
+  {
+    apexClassOrTriggerName: tests[1].apexClass.name,
+    apexClassOrTriggerId: tests[1].apexClass.id,
+    apexTestClassId: tests[1].id,
+    apexTestMethodName: tests[1].methodName,
+    numLinesCovered: 60,
+    numLinesUncovered: 40,
+    percentage: '60%',
+    coverage: {
+      coveredLines: [1, 2, 3, 4, 5, 6],
+      uncoveredLines: [7, 8, 9, 10]
+    }
+  }
+];
 const coverageData: CodeCoverageResult[] = [
   {
     apexId: 'apexId1',
@@ -127,6 +155,8 @@ describe('TestResultStringifyStream', () => {
   });
   it('should transform TestResult into a JSON string', (done) => {
     let output = '';
+    tests[0].perClassCoverage = [perClassCoverageData[0]];
+    tests[1].perClassCoverage = perClassCoverageData;
     const resultsWithTests = {
       ...testResult,
       tests,
