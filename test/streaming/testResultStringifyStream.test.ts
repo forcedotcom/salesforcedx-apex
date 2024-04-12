@@ -108,7 +108,7 @@ describe('TestResultStringifyStream', () => {
     };
   });
 
-  it('should transform TestResult into a JSON string with no tests and not coverage', (done) => {
+  it('should transform TestResult into a JSON string with no tests and no coverage', (done) => {
     let output = '';
     // Initialize the stream with the testResult
     stream = new TestResultStringifyStream(testResult);
