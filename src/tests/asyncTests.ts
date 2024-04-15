@@ -160,7 +160,7 @@ export class AsyncTests {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
 
-    const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
     progress?.report({
       type: 'FormatTestResultProgress',
@@ -285,7 +285,7 @@ export class AsyncTests {
   ): Promise<ApexTestResult[]> {
     let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     apexTestResultQuery +=
-      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
     apexTestResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
@@ -372,6 +372,7 @@ export class AsyncTests {
           },
           runTime: item.RunTime ?? 0,
           testTimestamp: item.TestTimestamp, // TODO: convert timestamp
+          isTestSetup: false,
           fullName: `${item.ApexClass.FullName}.${item.MethodName}`,
           ...(diagnostic ? { diagnostic } : {})
         });

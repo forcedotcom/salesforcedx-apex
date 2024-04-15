@@ -51,6 +51,7 @@ export const coverageResult: TestResult = {
         fullName: 'AccountServiceTest'
       },
       runTime: 86,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountServiceTest.should_create_account'
     },
@@ -70,6 +71,7 @@ export const coverageResult: TestResult = {
         fullName: 'AwesomeCalculatorTest'
       },
       runTime: 23,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AwesomeCalculatorTest.testCallout'
     }
@@ -119,6 +121,7 @@ export const coverageFailResult: TestResult = {
           fullName: 'AnimalLocatorTest'
         },
         runTime: 5,
+        isTestSetup: false,
         testTimestamp: '2020-11-09T18:02:51.000+0000',
         fullName: 'AnimalLocatorTest.testMissingAnimal'
       }
@@ -164,6 +167,7 @@ export const successResult: TestResult = {
         fullName: 'AccountServiceTest'
       },
       runTime: 86,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountServiceTest.should_create_account'
     },
@@ -183,6 +187,7 @@ export const successResult: TestResult = {
         fullName: 'AwesomeCalculatorTest'
       },
       runTime: 23,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AwesomeCalculatorTest.testCallout'
     }
@@ -226,6 +231,7 @@ export const testResults: TestResult = {
         fullName: 'AccountServiceTest'
       },
       runTime: 86,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountServiceTest.should_create_account'
     },
@@ -245,6 +251,7 @@ export const testResults: TestResult = {
         fullName: 'AwesomeCalculatorTest'
       },
       runTime: 23,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AwesomeCalculatorTest.testCallout'
     },
@@ -264,6 +271,7 @@ export const testResults: TestResult = {
         fullName: 'trlhdtips.tt_UtilControllerTest'
       },
       runTime: 13,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'trlhdtips.tt_UtilControllerTest.testGetCurrentUser'
     },
@@ -283,6 +291,7 @@ export const testResults: TestResult = {
         fullName: 'trlhdtips.tt_UtilControllerTest'
       },
       runTime: 179,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'trlhdtips.tt_UtilControllerTest.testResetMyPassword'
     },
@@ -302,6 +311,7 @@ export const testResults: TestResult = {
         fullName: 'AnimalLocatorTest'
       },
       runTime: 16,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AnimalLocatorTest.testGetCallout'
     },
@@ -323,6 +333,7 @@ export const testResults: TestResult = {
         fullName: 'AnimalLocatorTest'
       },
       runTime: 5,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AnimalLocatorTest.testMissingAnimal'
     },
@@ -342,6 +353,7 @@ export const testResults: TestResult = {
         fullName: 'LeadProcessorTest'
       },
       runTime: 2256,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:52.000+0000',
       fullName: 'LeadProcessorTest.testProcessing'
     },
@@ -361,6 +373,7 @@ export const testResults: TestResult = {
         fullName: 'Dashboard_Pal.DashboardPalTest'
       },
       runTime: 128,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'Dashboard_Pal.DashboardPalTest.testDashboardPal'
     },
@@ -382,6 +395,7 @@ export const testResults: TestResult = {
         fullName: 'AccountProcessorTest'
       },
       runTime: 241,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountProcessorTest.testCountContacts'
     },
@@ -401,6 +415,7 @@ export const testResults: TestResult = {
         fullName: 'AccountProcessorTest'
       },
       runTime: 10,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountProcessorTest.testCountContactsEmptyList'
     },
@@ -420,6 +435,7 @@ export const testResults: TestResult = {
         fullName: 'AccountProcessorTest'
       },
       runTime: 10,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountProcessorTest.testCountContactsNullList'
     },
@@ -439,6 +455,7 @@ export const testResults: TestResult = {
         fullName: 'ParkLocatorTest'
       },
       runTime: 15,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'ParkLocatorTest.testCallout'
     },
@@ -459,6 +476,7 @@ export const testResults: TestResult = {
         fullName: 'AnimalsCalloutsTest'
       },
       runTime: 28,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AnimalsCalloutsTest.testGetCallout'
     },
@@ -478,6 +496,7 @@ export const testResults: TestResult = {
         fullName: 'AnimalsCalloutsTest'
       },
       runTime: 7,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AnimalsCalloutsTest.testPostCallout'
     },
@@ -497,6 +516,7 @@ export const testResults: TestResult = {
         fullName: 'AddPrimaryContactTest'
       },
       runTime: 250,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AddPrimaryContactTest.testAddContact'
     },
@@ -516,6 +536,7 @@ export const testResults: TestResult = {
         fullName: 'DailyLeadProcessorTest'
       },
       runTime: 2196,
+      isTestSetup: false,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'DailyLeadProcessorTest.testLeadProcessing'
     }

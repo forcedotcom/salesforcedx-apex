@@ -237,6 +237,10 @@ export type ApexTestResultRecord = {
    * The start time of the test method.
    */
   TestTimestamp: string;
+  /**
+   * TODO: Write description
+   */
+  IsTestSetup: boolean;
 };
 
 export type ApexTestResult = {
@@ -272,6 +276,10 @@ export type ApexTestRunResult = {
    * The time it took the test to run, in seconds.
    */
   TestTime: number | undefined;
+  /**
+   * The time it took the test setup to run, in seconds.
+   */
+  TestSetupTime: number;
   /**
    * The user who ran the test run
    */
@@ -360,6 +368,10 @@ export type ApexTestResultData = {
    * The start time of the test method.
    */
   testTimestamp: string;
+  /**
+   * TODO: Write description
+   */
+  isTestSetup: boolean;
   /**
    * The full name of the associated ApexClass method
    */

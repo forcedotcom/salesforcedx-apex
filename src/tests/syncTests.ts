@@ -174,6 +174,7 @@ export class SyncTests {
         },
         runTime: item.time ?? 0,
         testTimestamp: '',
+        isTestSetup: false,
         fullName: `${nms}${item.name}.${item.methodName}`
       });
     });
@@ -201,6 +202,7 @@ export class SyncTests {
         },
         runTime: item.time ?? 0,
         testTimestamp: '',
+        isTestSetup: false,
         fullName: `${nms}${item.name}.${item.methodName}`,
         ...(diagnostic ? { diagnostic } : {})
       });

@@ -112,6 +112,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.tests[0].methodName).to.equal('testOne');
     expect(testResult.tests[0].outcome).to.equal('Pass');
     expect(testResult.tests[0].apexLogId).to.equal('07Lxx00000cxy6YUAQ');
+    expect(testResult.tests[0].isTestSetup).to.equal(false);
     expect(testResult.tests[0].apexClass).to.be.a('object');
     expect(testResult.tests[0].apexClass.id).to.equal('01pxx00000NWwb3AAD');
     expect(testResult.tests[0].apexClass.name).to.equal('TestSample');
@@ -157,6 +158,7 @@ describe('Run Apex tests synchronously', () => {
     expect(testResult.tests[0].methodName).to.equal('testOne');
     expect(testResult.tests[0].outcome).to.equal('Fail');
     expect(testResult.tests[0].apexLogId).to.equal('07Lxx00000cxy6YUAQ');
+    expect(testResult.tests[0].isTestSetup).to.equal(false);
     expect(testResult.tests[0].apexClass).to.be.a('object');
     expect(testResult.tests[0].apexClass.id).to.equal('01pxx00000NWwb3AAD');
     expect(testResult.tests[0].apexClass.name).to.equal('TestSample');

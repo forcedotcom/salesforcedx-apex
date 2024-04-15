@@ -128,6 +128,7 @@ export const syncResult: TestResult = {
         fullName: 't3st.TestApexClass'
       },
       runTime: 8,
+      isTestSetup: false,
       testTimestamp: '',
       fullName: `t3st.TestApexClass.testMethod`
     }
@@ -170,6 +171,7 @@ export const testResultData: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 8,
+      isTestSetup: false,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
@@ -212,6 +214,7 @@ export const missingTimeTestData: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
+      isTestSetup: false,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
@@ -254,6 +257,7 @@ export const skippedTestData: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
+      isTestSetup: false,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
@@ -298,6 +302,7 @@ export const diagnosticResult: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
+      isTestSetup: false,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog',
       diagnostic: {
@@ -333,6 +338,7 @@ export const diagnosticFailure: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
+      isTestSetup: false,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog',
       diagnostic: {
@@ -426,6 +432,7 @@ export const mixedTestResults: ApexTestResultRecord[] = [
     StackTrace: null,
     Message: null,
     RunTime: 1397,
+    IsTestSetup: false,
     TestTimestamp: testStartTime,
     AsyncApexJobId: '707xx0000ASIPB5QQP',
     MethodName: 'testAssignOnFuture',
@@ -444,6 +451,7 @@ export const mixedTestResults: ApexTestResultRecord[] = [
     StackTrace: null,
     Message: null,
     RunTime: 615,
+    IsTestSetup: false,
     TestTimestamp: '2020-08-18T02:04:51.000+0000',
     AsyncApexJobId: '707xxM0000ASIPB5QQP',
     MethodName: 'testAssignOnInsert',
@@ -462,6 +470,7 @@ export const mixedTestResults: ApexTestResultRecord[] = [
     StackTrace: null,
     Message: null,
     RunTime: 676,
+    IsTestSetup: false,
     TestTimestamp: '2020-08-18T02:04:52.000+0000',
     AsyncApexJobId: '707xx0000ASIPB5QQP',
     MethodName: 'testAssignOnUpdate',
@@ -480,6 +489,7 @@ export const mixedTestResults: ApexTestResultRecord[] = [
     StackTrace: null,
     Message: null,
     RunTime: 593,
+    IsTestSetup: false,
     TestTimestamp: '2020-08-18T02:04:53.000+0000',
     AsyncApexJobId: '707xx0000ASIPB5QQP',
     MethodName: 'testAssignContains',
@@ -510,6 +520,7 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       FullName: 'TestAssignment'
     },
     RunTime: 560,
+    IsTestSetup: false,
     TestTimestamp: '2020-08-18T02:21:30.000+0000'
   },
   {
@@ -529,6 +540,7 @@ export const mixedTestResults: ApexTestResultRecord[] = [
       FullName: 'TestAssignment'
     },
     RunTime: 56,
+    IsTestSetup: false,
     TestTimestamp: '2020-08-18T02:21:30.000+0000'
   }
 ];
