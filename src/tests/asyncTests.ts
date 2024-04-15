@@ -232,6 +232,7 @@ export class AsyncTests {
         testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
         testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
         testTotalTimeInMs: testRunSummary.TestTime ?? 0,
+        testSetupTime: testRunSummary.TestSetupTime ?? 0,
         commandTimeInMs: getCurrentTime() - commandStartTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,
@@ -372,7 +373,7 @@ export class AsyncTests {
           },
           runTime: item.RunTime ?? 0,
           testTimestamp: item.TestTimestamp, // TODO: convert timestamp
-          isTestSetup: false,
+          isTestSetup: item.IsTestSetup,
           fullName: `${item.ApexClass.FullName}.${item.MethodName}`,
           ...(diagnostic ? { diagnostic } : {})
         });

@@ -104,6 +104,7 @@ export class SyncTests {
         testStartTime: formatStartTime(startTime, 'ISO'),
         testExecutionTimeInMs: apiTestResult.totalTime ?? 0,
         testTotalTimeInMs: apiTestResult.totalTime ?? 0,
+        testSetupTime: 0,
         commandTimeInMs: getCurrentTime() - startTime,
         hostname: this.connection.instanceUrl,
         orgId: this.connection.getAuthInfoFields().orgId,

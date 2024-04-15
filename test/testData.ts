@@ -107,6 +107,7 @@ export const syncResult: TestResult = {
     testStartTime: localStartTime,
     testExecutionTimeInMs: 1765,
     testTotalTimeInMs: 1765,
+    testSetupTime: 0,
     commandTimeInMs: 2000,
     testRunId: '',
     userId: '005xx000000abcDAAU'
@@ -150,6 +151,7 @@ export const testResultData: TestResult = {
     testStartTime: localStartTime,
     testExecutionTimeInMs: 1765,
     testTotalTimeInMs: 1765,
+    testSetupTime: 0,
     commandTimeInMs: 2000,
     testRunId,
     userId: '005xx000000abcDAAU'
@@ -193,6 +195,7 @@ export const missingTimeTestData: TestResult = {
     testStartTime: localStartTime,
     testExecutionTimeInMs: 0,
     testTotalTimeInMs: 0,
+    testSetupTime: 0,
     commandTimeInMs: 2000,
     testRunId,
     userId: '005xx000000abcDAAU'
@@ -214,7 +217,7 @@ export const missingTimeTestData: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
-      isTestSetup: false,
+      isTestSetup: undefined,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
@@ -236,6 +239,7 @@ export const skippedTestData: TestResult = {
     testStartTime: localStartTime,
     testExecutionTimeInMs: 0,
     testTotalTimeInMs: 0,
+    testSetupTime: 0,
     commandTimeInMs: 2000,
     testRunId,
     userId: '005xx000000abcDAAU'
@@ -257,7 +261,7 @@ export const skippedTestData: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
-      isTestSetup: false,
+      isTestSetup: undefined,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
@@ -277,6 +281,7 @@ const failureSummary = {
   testStartTime: localStartTime,
   testExecutionTimeInMs: 0,
   testTotalTimeInMs: 0,
+  testSetupTime: 0,
   commandTimeInMs: 2000,
   testRunId,
   userId: '005xx000000abcDAAU'
@@ -302,7 +307,7 @@ export const diagnosticResult: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
-      isTestSetup: false,
+      isTestSetup: undefined,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog',
       diagnostic: {
@@ -338,7 +343,7 @@ export const diagnosticFailure: TestResult = {
         fullName: 't3st.TestLogger'
       },
       runTime: 0,
-      isTestSetup: false,
+      isTestSetup: undefined,
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog',
       diagnostic: {

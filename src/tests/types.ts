@@ -412,6 +412,7 @@ export type TestResult = {
     testStartTime: string;
     testExecutionTimeInMs: number;
     testTotalTimeInMs: number;
+    testSetupTime: number;
     commandTimeInMs: number;
     hostname: string;
     username: string;

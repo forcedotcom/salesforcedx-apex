@@ -24,6 +24,7 @@ export const coverageResult: TestResult = {
     testStartTime: isoStartTime,
     testExecutionTimeInMs: 5463,
     testTotalTimeInMs: 5463,
+    testSetupTime: 0,
     commandTimeInMs: 6000,
     testRunId: '7073t000061uwZI',
     userId: '0053t000007OxppAAC',
@@ -141,6 +142,7 @@ export const successResult: TestResult = {
     testStartTime: isoStartTime,
     testExecutionTimeInMs: 5463,
     testTotalTimeInMs: 5463,
+    testSetupTime: 0,
     commandTimeInMs: 6000,
     testRunId: '7073t000061uwZI',
     userId: '0053t000007OxppAAC',
@@ -205,6 +207,7 @@ export const testResults: TestResult = {
     testStartTime: isoStartTime,
     testExecutionTimeInMs: 5463,
     testTotalTimeInMs: 5463,
+    testSetupTime: 0,
     commandTimeInMs: 6000,
     testRunId: '7073t000061uwZI',
     userId: '0053t000007OxppAAC',
@@ -555,6 +558,7 @@ export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>
             <property name="testTotalTime" value="5.46 s"/>
+            <property name="testSetupTime" value="0"/>
             <property name="commandTime" value="6.00 s"/>
             <property name="testRunId" value="7073t000061uwZI"/>
             <property name="userId" value="0053t000007OxppAAC"/>
@@ -611,6 +615,7 @@ const successProperties = `            <property name="failRate" value="0%"/>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>
             <property name="testTotalTime" value="5.46 s"/>
+            <property name="testSetupTime" value="0"/>
             <property name="commandTime" value="6.00 s"/>
             <property name="testRunId" value="7073t000061uwZI"/>
             <property name="userId" value="0053t000007OxppAAC"/>
@@ -627,6 +632,7 @@ const missingValProperties = `            <property name="failRate" value="0%"/>
             <property name="testStartTime" value="${localStartTime}"/>
             <property name="testExecutionTime" value="5.46 s"/>
             <property name="testTotalTime" value="5.46 s"/>
+            <property name="testSetupTime" value="0"/>
             <property name="commandTime" value="6.00 s"/>
             <property name="username" value="tpo-3"/>
             <property name="failing" value="0"/>
