@@ -23,8 +23,7 @@ import {
   ApexTestQueueItemStatus,
   TestRunIdResult
 } from '../tests/types';
-import type { Duration } from '@salesforce/kit';
-import { clearInterval } from 'timers';
+import { Duration } from '@salesforce/kit';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 export const DEFAULT_STREAMING_TIMEOUT_SEC = 14400;

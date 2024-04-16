@@ -135,11 +135,7 @@ export class AsyncTests {
         queueItem = await sClient.handler(undefined, testRunId);
       } else {
         queueItem = (
-          (await sClient.subscribe(
-            undefined,
-            testRunId,
-            undefined
-          )) as AsyncTestRun
+          (await sClient.subscribe(undefined, testRunId)) as AsyncTestRun
         ).queueItem;
         runResult = await this.checkRunStatus(testRunId);
       }
