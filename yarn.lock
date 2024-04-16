@@ -546,10 +546,10 @@
     picocolors "^1.0.0"
     tslib "^2.6.0"
 
-"@salesforce/core@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@salesforce/core/-/core-7.0.0.tgz#f680cff11192cdf939067959908613365bf4bf2e"
-  integrity sha512-yoZFx1jC75D4uGLGRNKIzxS2W+AHExFD4wT9whLox1c2B48nxZjaEB2zB3d9dBtoZcVD5KI5AvmPGJ7eyPnLHA==
+"@salesforce/core@^7.2.0":
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/@salesforce/core/-/core-7.3.0.tgz#2ad3dfccb1ef0eb2e65b49b655e39748002bbc13"
+  integrity sha512-c/gZLvKFHvgAv/Gyd4LjGGQykvGLn67QtCmdT7Hnm57bTDZoyr7XJXcaI+ILN0NO47guG1tEWP5eBvAi+u2DNA==
   dependencies:
     "@jsforce/jsforce-node" "^3.1.0"
     "@salesforce/kit" "^3.1.0"
