@@ -560,6 +560,7 @@ describe('Streaming API Client', () => {
     const setIntervalStub = sandboxStub.stub(global, 'setInterval');
     setIntervalStub.callsFake((callback: Function) => callback.call(null));
     const clearIntervalStub = sandboxStub.stub(global, 'clearInterval');
+    const clearTimeoutStub = sandboxStub.stub(global, 'clearTimeout');
 
     const streamClient = new StreamingClient(mockConnection);
     const result = await streamClient.subscribe(() =>
@@ -573,5 +574,6 @@ describe('Streaming API Client', () => {
     assert.calledOnce(mockToolingQuery);
     assert.calledOnce(disconnectStub);
     assert.calledOnce(clearIntervalStub);
+    assert.calledOnce(clearTimeoutStub);
   });
 });
