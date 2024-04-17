@@ -173,7 +173,7 @@ export class StreamingClient {
     return new Promise((subscriptionResolve, subscriptionReject) => {
       let intervalId: NodeJS.Timeout;
       // start timeout
-      setTimeout(
+      const timeoutId = setTimeout(
         () => {
           this.disconnect();
           clearInterval(intervalId);
@@ -191,6 +191,7 @@ export class StreamingClient {
             if (result) {
               this.disconnect();
               clearInterval(intervalId);
+              clearTimeout(timeoutId);
               subscriptionResolve({
                 runId: this.subscribedTestRunId,
                 queueItem: result
@@ -211,6 +212,7 @@ export class StreamingClient {
                   if (result) {
                     this.disconnect();
                     clearInterval(intervalId);
+                    clearTimeout(timeoutId);
                     subscriptionResolve({
                       runId: this.subscribedTestRunId,
                       queueItem: result
@@ -222,6 +224,7 @@ export class StreamingClient {
             .catch((e) => {
               this.disconnect();
               clearInterval(intervalId);
+              clearTimeout(timeoutId);
               subscriptionReject(e);
             });
         } else {
@@ -234,6 +237,7 @@ export class StreamingClient {
               if (result) {
                 this.disconnect();
                 clearInterval(intervalId);
+                clearTimeout(timeoutId);
                 subscriptionResolve({
                   runId: this.subscribedTestRunId,
                   queueItem: result
@@ -244,6 +248,7 @@ export class StreamingClient {
         }
       } catch (e) {
         this.disconnect();
+        clearTimeout(timeoutId);
         clearInterval(intervalId);
         subscriptionReject(e);
       }

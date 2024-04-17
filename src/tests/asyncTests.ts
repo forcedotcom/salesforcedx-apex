@@ -57,6 +57,7 @@ export class AsyncTests {
    * @param exitOnTestRunId should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
+   * @param timeout Duration to wait before returning a TestRunIdResult
    */
   @elapsedTime()
   public async runTests(
