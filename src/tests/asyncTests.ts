@@ -9,7 +9,7 @@ import { Connection } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
-import { elapsedTime, formatStartTime, getCurrentTime } from '../utils';
+import { formatStartTime, getCurrentTime } from '../utils';
 import { formatTestErrors, getAsyncDiagnostic } from './diagnosticUtil';
 import {
   ApexTestProgressValue,
@@ -20,26 +20,19 @@ import {
   ApexTestResultData,
   ApexTestResultOutcome,
   ApexTestRunResult,
+  ApexTestRunResultRecord,
   ApexTestRunResultStatus,
   AsyncTestArrayConfiguration,
   AsyncTestConfiguration,
   TestResult,
   TestRunIdResult
 } from './types';
-import { calculatePercentage, queryAll } from './utils';
+import { calculatePercentage, isValidTestRunID, queryAll } from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
 import { HttpRequest } from 'jsforce';
-import { isValidTestRunID } from '../narrowing';
-
-const finishedStatuses = [
-  ApexTestRunResultStatus.Aborted,
-  ApexTestRunResultStatus.Failed,
-  ApexTestRunResultStatus.Completed,
-  ApexTestRunResultStatus.Passed,
-  ApexTestRunResultStatus.Skipped
-];
+import { elapsedTime } from '../utils/elapsedTime';
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -89,12 +82,12 @@ export class AsyncTests {
       }
 
       const asyncRunResult = await sClient.subscribe(undefined, testRunId);
-      const runResult = await this.checkRunStatus(asyncRunResult.runId);
+      const testRunSummary = await this.checkRunStatus(asyncRunResult.runId);
       return await this.formatAsyncResults(
         asyncRunResult,
         getCurrentTime(),
         codeCoverage,
-        runResult.testRunSummary,
+        testRunSummary,
         progress
       );
     } catch (e) {
@@ -119,13 +112,13 @@ export class AsyncTests {
       await sClient.init();
       await sClient.handshake();
       let queueItem: ApexTestQueueItem;
-      let runResult = await this.checkRunStatus(testRunId);
+      let testRunSummary = await this.checkRunStatus(testRunId);
 
-      if (runResult.testsComplete) {
+      if (testRunSummary !== undefined) {
         queueItem = await sClient.handler(undefined, testRunId);
       } else {
         queueItem = (await sClient.subscribe(undefined, testRunId)).queueItem;
-        runResult = await this.checkRunStatus(testRunId);
+        testRunSummary = await this.checkRunStatus(testRunId);
       }
 
       token &&
@@ -141,7 +134,7 @@ export class AsyncTests {
         { queueItem, runId: testRunId },
         getCurrentTime(),
         codeCoverage,
-        runResult.testRunSummary
+        testRunSummary
       );
     } catch (e) {
       throw formatTestErrors(e);
@@ -152,15 +145,16 @@ export class AsyncTests {
   public async checkRunStatus(
     testRunId: string,
     progress?: Progress<ApexTestProgressValue>
-  ): Promise<{
-    testsComplete: boolean;
-    testRunSummary: ApexTestRunResult;
-  }> {
+  ): Promise<ApexTestRunResultRecord | undefined> {
     if (!isValidTestRunID(testRunId)) {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
 
-    const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    let testRunSummaryQuery =
+      'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
+    testRunSummaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    testRunSummaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
     progress?.report({
       type: 'FormatTestResultProgress',
@@ -168,21 +162,33 @@ export class AsyncTests {
       message: nls.localize('retrievingTestRunSummary')
     });
 
-    try {
-      const testRunSummaryResults =
-        await this.connection.singleRecordQuery<ApexTestRunResult>(
-          testRunSummaryQuery,
-          {
-            tooling: true
-          }
-        );
-      return {
-        testsComplete: finishedStatuses.includes(testRunSummaryResults.Status),
-        testRunSummary: testRunSummaryResults
-      };
-    } catch (e) {
+    const testRunSummaryResults = (await this.connection.tooling.query(
+      testRunSummaryQuery,
+      {
+        autoFetch: true
+      }
+    )) as ApexTestRunResult;
+
+    if (testRunSummaryResults.records.length === 0) {
       throw new Error(nls.localize('noTestResultSummary', testRunId));
     }
+
+    if (
+      testRunSummaryResults.records[0].Status ===
+        ApexTestRunResultStatus.Aborted ||
+      testRunSummaryResults.records[0].Status ===
+        ApexTestRunResultStatus.Failed ||
+      testRunSummaryResults.records[0].Status ===
+        ApexTestRunResultStatus.Completed ||
+      testRunSummaryResults.records[0].Status ===
+        ApexTestRunResultStatus.Passed ||
+      testRunSummaryResults.records[0].Status ===
+        ApexTestRunResultStatus.Skipped
+    ) {
+      return testRunSummaryResults.records[0];
+    }
+
+    return undefined;
   }
 
   /**
@@ -199,7 +205,7 @@ export class AsyncTests {
     asyncRunResult: AsyncTestRun,
     commandStartTime: number,
     codeCoverage = false,
-    testRunSummary: ApexTestRunResult,
+    testRunSummary: ApexTestRunResultRecord,
     progress?: Progress<ApexTestProgressValue>
   ): Promise<TestResult> {
     const coveredApexClassIdSet = new Set<string>();

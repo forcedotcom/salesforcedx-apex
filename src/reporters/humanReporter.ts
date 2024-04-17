@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { elapsedTime, Row, Table } from '../utils';
+import { Row, Table } from '../utils';
 import {
   ApexTestResultData,
   ApexTestResultOutcome,
@@ -13,6 +13,7 @@ import {
   TestResult
 } from '../tests';
 import { nls } from '../i18n';
+import { elapsedTime } from '../utils/elapsedTime';
 import { LoggerLevel } from '@salesforce/core';
 
 export class HumanReporter {
@@ -84,7 +85,7 @@ export class HumanReporter {
         : [])
     ];
 
-    return tb.createTable(
+    const summaryTable = tb.createTable(
       summaryRowArray,
       [
         {
@@ -95,6 +96,7 @@ export class HumanReporter {
       ],
       nls.localize('testSummaryHeader')
     );
+    return summaryTable;
   }
 
   @elapsedTime()

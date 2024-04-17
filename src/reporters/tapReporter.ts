@@ -8,7 +8,7 @@ import {
   ApexTestResultData,
   ApexTestResultOutcome,
   TestResult
-} from '../tests';
+} from '../tests/types';
 import { elapsedTime } from '../utils/elapsedTime';
 
 export interface TapResult {

@@ -6,7 +6,7 @@
  */
 
 import { Client } from 'faye';
-import { Connection, LoggerLevel } from '@salesforce/core';
+import { Connection } from '@salesforce/core';
 import {
   RetrieveResultsInterval,
   StreamMessage,
@@ -15,13 +15,14 @@ import {
 } from './types';
 import { Progress } from '../common';
 import { nls } from '../i18n';
-import { elapsedTime, refreshAuth } from '../utils';
+import { refreshAuth } from '../utils';
 import {
   ApexTestProgressValue,
   ApexTestQueueItem,
   ApexTestQueueItemRecord,
   ApexTestQueueItemStatus
 } from '../tests/types';
+import { elapsedTime } from '../utils/elapsedTime';
 
 const TEST_RESULT_CHANNEL = '/systemTopic/TestResult';
 const DEFAULT_STREAMING_TIMEOUT_MS = 14400;
@@ -61,7 +62,7 @@ export class StreamingClient {
     const urlElements = [
       this.removeTrailingSlashURL(instanceUrl),
       'cometd',
-      this.conn.getApiVersion()
+      this.apiVersion
     ];
     return urlElements.join('/');
   }
@@ -275,7 +276,6 @@ export class StreamingClient {
     return null;
   }
 
-  @elapsedTime('elapsedTime', LoggerLevel.TRACE)
   private async getCompletedTestRun(
     testRunId: string
   ): Promise<ApexTestQueueItem> {
@@ -296,16 +296,16 @@ export class StreamingClient {
       value: result
     });
 
-    if (
-      result.records.some(
-        (item) =>
-          item.Status === ApexTestQueueItemStatus.Queued ||
-          item.Status === ApexTestQueueItemStatus.Holding ||
-          item.Status === ApexTestQueueItemStatus.Preparing ||
-          item.Status === ApexTestQueueItemStatus.Processing
-      )
-    ) {
-      return null;
+    for (let i = 0; i < result.records.length; i++) {
+      const item = result.records[i];
+      if (
+        item.Status === ApexTestQueueItemStatus.Queued ||
+        item.Status === ApexTestQueueItemStatus.Holding ||
+        item.Status === ApexTestQueueItemStatus.Preparing ||
+        item.Status === ApexTestQueueItemStatus.Processing
+      ) {
+        return null;
+      }
     }
     return result;
   }

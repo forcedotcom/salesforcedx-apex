@@ -633,14 +633,3 @@ export const junitMissingVal = util.format(
   successTemplate,
   missingValProperties
 );
-
-export function getTestData() {
-  return {
-    testResults: structuredClone(testResults),
-    junitResult: junitResult.toString(),
-    junitSuccess: junitSuccess.toString(),
-    junitCodeCov: junitCodeCov.toString(),
-    junitMissingVal: junitMissingVal.toString(),
-    successResult: structuredClone(successResult)
-  };
-}

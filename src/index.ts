@@ -14,9 +14,7 @@ export {
 export { LogService, ApexLogGetOptions, LogRecord, LogResult } from './logs';
 export {
   JUnitReporter,
-  JUnitFormatTransformer,
   TapReporter,
-  TapFormatTransformer,
   HumanReporter,
   CoverageReporterOptions,
   CoverageReporter,
@@ -43,4 +41,4 @@ export {
   TestService,
   TestRunIdResult
 } from './tests';
-export { ApexDiagnostic, Row, Table } from './utils';
+export { Row, Table } from './utils';
