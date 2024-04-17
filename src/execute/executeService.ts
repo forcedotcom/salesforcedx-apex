@@ -56,7 +56,6 @@ export class ExecuteService {
         }
       }
     }
-    throw new Error(nls.localize('authForAnonymousApexFailed'));
   }
 
   @elapsedTime()

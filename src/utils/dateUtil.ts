@@ -18,13 +18,9 @@ export function getCurrentTime(): number {
  * @returns formatted date and time
  */
 export function formatStartTime(
-  startTime: string | number | undefined,
+  startTime: string | number,
   format: 'ISO' | 'locale' = 'locale'
 ): string {
-  if (!startTime) {
-    return '';
-  }
-
   const date = new Date(startTime);
   if (format === 'ISO') {
     return date.toISOString();

@@ -341,9 +341,11 @@ export class TestService {
     try {
       if (tests) {
         const payload = await this.buildTestPayload(tests);
-        const classes = payload.tests
-          ?.filter((testItem) => testItem.className)
-          .map((testItem) => testItem.className);
+        const classes = payload.tests?.map((testItem) => {
+          if (testItem.className) {
+            return testItem.className;
+          }
+        });
         if (new Set(classes).size !== 1) {
           throw new Error(nls.localize('syncClassErr'));
         }

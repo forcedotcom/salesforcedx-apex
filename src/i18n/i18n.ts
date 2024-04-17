@@ -91,6 +91,5 @@ export const messages = {
   covIdFormatErr: 'Cannot specify code coverage with a TestRunId result',
   startHandshake: 'Attempting StreamingClient handshake',
   finishHandshake: 'Finished StreamingClient handshake',
-  subscribeStarted: 'Subscribing to ApexLog events',
-  authForAnonymousApexFailed: 'The authentication for execute anonymous failed'
+  subscribeStarted: 'Subscribing to ApexLog events'
 };
