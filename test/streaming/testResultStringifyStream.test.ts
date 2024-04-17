@@ -180,7 +180,7 @@ describe('TestResultStringifyStream', () => {
 
     stream._read();
   });
-  it('should transform TestResult into a JSON string', (done) => {
+  it('should transform TestResult into a JSON string with tests and coverage both present', (done) => {
     let output = '';
     const testsWithCoverage = structuredClone(tests);
     testsWithCoverage[0].perClassCoverage = [perClassCoverageData[0]];
