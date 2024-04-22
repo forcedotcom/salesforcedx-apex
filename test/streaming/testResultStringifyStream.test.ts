@@ -18,6 +18,7 @@ const tests = [
     asyncApexJobId: 'asyncApexJobId1',
     methodName: 'testMethod1',
     outcome: ApexTestResultOutcome.Pass,
+    isTestSetup: false,
     apexLogId: null,
     apexClass: {
       id: 'classId1',
@@ -38,6 +39,7 @@ const tests = [
     asyncApexJobId: 'asyncApexJobId2',
     methodName: 'testMethod2',
     outcome: ApexTestResultOutcome.Fail,
+    isTestSetup: false,
     apexLogId: 'logId2',
     apexClass: {
       id: 'classId2',
@@ -121,6 +123,7 @@ describe('TestResultStringifyStream', () => {
         testStartTime: '1641340181000',
         testExecutionTimeInMs: 1,
         testTotalTimeInMs: 1,
+        testSetupTime: 0,
         commandTimeInMs: 1,
         hostname: 'test.salesforce.com',
         username: 'test-user@test.com',
