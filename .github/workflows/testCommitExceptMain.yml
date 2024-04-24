@@ -19,7 +19,5 @@ jobs:
       externalProjectGitUrl: 'https://github.com/salesforcecli/plugin-apex'
       command: 'yarn test:nuts'
       os: ${{ matrix.os }}
-      preSwapCommands: 'yarn upgrade @salesforce/core; npx yarn-deduplicate; yarn install'
-      preExternalBuildCommands: 'npm why @salesforce/core --json'
       useCache: false
     secrets: inherit
