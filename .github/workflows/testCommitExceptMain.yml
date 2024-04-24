@@ -19,7 +19,6 @@ jobs:
       externalProjectGitUrl: 'https://github.com/salesforcecli/plugin-apex'
       ignoreScripts: true
       os: ${{ matrix.os }}
-      branch: 'wr/bumpDeps'
       preSwapCommands: 'yarn upgrade @salesforce/core; npx yarn-deduplicate; yarn install'
       preExternalBuildCommands: 'npm why @salesforce/core --json'
       useCache: false
