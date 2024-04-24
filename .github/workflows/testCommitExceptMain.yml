@@ -17,7 +17,9 @@ jobs:
     with:
       packageName: '@salesforce/apex-node'
       externalProjectGitUrl: 'https://github.com/salesforcecli/plugin-apex'
-      command: 'yarn test:nuts'
+      ignoreScripts: true
       os: ${{ matrix.os }}
+      preSwapCommands: 'yarn upgrade @salesforce/core; npx yarn-deduplicate; yarn install'
+      preExternalBuildCommands: 'npm why @salesforce/core --json'
       useCache: false
     secrets: inherit
