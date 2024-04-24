@@ -19,6 +19,7 @@ export function ensureDirectoryExists(filePath: string): void {
 
 export function ensureFileExists(filePath: string): void {
   ensureDirectoryExists(path.dirname(filePath));
+  // a change
   fs.closeSync(fs.openSync(filePath, 'w'));
 }
 
