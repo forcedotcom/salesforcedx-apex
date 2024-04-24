@@ -62,6 +62,7 @@
   ],
   "scripts": {
     "build": "shx rm -rf lib && tsc -b",
+    "compile": "shx rm -rf lib && tsc -b",
     "commit-init": "commitizen init cz-conventional-changelog --save-dev --save-exact --force",
     "commit": "git-cz",
     "format": "prettier --config ./.prettierrc --write './{src,test,scripts}/**/*.{ts,js,json}'",
