@@ -8,11 +8,12 @@ jobs:
     uses: salesforcecli/github-workflows/.github/workflows/unitTest.yml@main
   xNuts:
     needs: unit-tests
+    name: external NUTs
     uses: salesforcecli/github-workflows/.github/workflows/externalNut.yml@main
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-latest', 'windows-latest' ]
+        os: ['ubuntu-latest', 'windows-latest']
     with:
       packageName: '@salesforce/apex-node'
       externalProjectGitUrl: 'https://github.com/salesforcecli/plugin-apex'
