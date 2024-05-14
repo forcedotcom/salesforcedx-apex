@@ -17,7 +17,7 @@ import * as path from 'path';
 import { glob } from 'glob';
 import * as fs from 'fs';
 import { nls } from '../i18n';
-import { elapsedTime } from '../utils/elapsedTime';
+import { elapsedTime } from '../utils';
 
 const startOfSource = (source: string): number => {
   if (source) {

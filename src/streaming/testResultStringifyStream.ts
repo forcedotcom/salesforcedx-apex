@@ -4,18 +4,22 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+import { Logger } from '@salesforce/core';
 import { Readable, ReadableOptions } from 'node:stream';
 import { TestResult } from '../tests';
 import { pushArrayToStream } from './utils';
 import { elapsedTime } from '../utils';
 
 export class TestResultStringifyStream extends Readable {
+  private readonly logger: Logger;
+
   constructor(
     private readonly testResult: TestResult,
     options?: ReadableOptions
   ) {
     super({ ...options, objectMode: true });
     this.testResult = testResult;
+    this.logger = Logger.childFromRoot('TestResultStringifyStream');
   }
 
   _read(): void {
@@ -25,6 +29,7 @@ export class TestResultStringifyStream extends Readable {
 
   @elapsedTime()
   public format(): void {
+    this.logger.trace('starting format');
     const { summary } = this.testResult;
     // strip out vars not included in the summary data reported to the user
 
@@ -38,6 +43,7 @@ export class TestResultStringifyStream extends Readable {
 
     // closing outer curly
     this.push(`}`);
+    this.logger.trace('finishing format');
   }
 
   @elapsedTime()

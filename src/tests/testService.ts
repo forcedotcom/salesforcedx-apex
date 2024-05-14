@@ -37,6 +37,7 @@ import { CodeCoverageStringifyStream } from '../streaming/codeCoverageStringifyS
 import { elapsedTime } from '../utils';
 import { isTestResult, isValidApexClassID } from '../narrowing';
 import { Duration } from '@salesforce/kit';
+import { HeapMonitor } from '../utils/heapMonitor';
 
 export class TestService {
   private readonly connection: Connection;
@@ -255,120 +256,126 @@ export class TestService {
     outputDirConfig: OutputDirConfig,
     codeCoverage = false
   ): Promise<string[]> {
-    const filesWritten: string[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-    // ensure supplied result formats are support here
-    if (
-      resultFormats &&
-      !resultFormats.every((format) => format in ResultFormat)
-    ) {
-      throw new Error(nls.localize('resultFormatErr'));
-    }
-    const testRunId = isTestResult(result)
-      ? (result as TestResult).summary.testRunId
-      : (result as TestRunIdResult).testRunId;
-
-    const pipeThese = [];
-    await mkdir(dirPath, { recursive: true });
-    pipeThese.push([
-      Readable.from([testRunId]),
-      createWriteStream(join(dirPath, 'test-run-id.txt'), 'utf8')
-    ]);
-    filesWritten.push(join(dirPath, 'test-run-id.txt'));
-
-    // produce result formats
-    if (resultFormats) {
-      if (!isTestResult(result)) {
-        throw new Error(nls.localize('runIdFormatErr'));
+    const heapMonitor = new HeapMonitor('testService.writeResultFiles');
+    heapMonitor.startMonitoring(500);
+    try {
+      const filesWritten: string[] = [];
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { dirPath, resultFormats, fileInfos } = outputDirConfig;
+      // ensure supplied result formats are support here
+      if (
+        resultFormats &&
+        !resultFormats.every((format) => format in ResultFormat)
+      ) {
+        throw new Error(nls.localize('resultFormatErr'));
       }
-      for (const format of resultFormats) {
-        switch (format) {
-          case ResultFormat.json:
-            // Create a readable stream from the JSON object
-            const jsonFilePath = join(
-              dirPath,
-              testRunId ? `test-result-${testRunId}.json` : `test-result.json`
-            );
-            filesWritten.push(jsonFilePath);
-            pipeThese.push([
-              TestResultStringifyStream.fromTestResult(result),
-              createWriteStream(jsonFilePath)
-            ]);
-            break;
-          case ResultFormat.tap:
-            const tapFilePath = join(
-              dirPath,
-              `test-result-${testRunId}-tap.txt`
-            );
-            filesWritten.push(tapFilePath);
-            pipeThese.push([
-              new TapFormatTransformer(result),
-              createWriteStream(tapFilePath)
-            ]);
-            break;
-          case ResultFormat.junit:
-            const filePath = join(
-              dirPath,
-              testRunId
-                ? `test-result-${testRunId}-junit.xml`
-                : `test-result-junit.xml`
-            );
-            filesWritten.push(filePath);
-            pipeThese.push([
-              new JUnitFormatTransformer(result),
-              createWriteStream(filePath)
-            ]);
-            break;
+      const testRunId = isTestResult(result)
+        ? (result as TestResult).summary.testRunId
+        : (result as TestRunIdResult).testRunId;
+
+      const pipeThese = [];
+      await mkdir(dirPath, { recursive: true });
+      pipeThese.push([
+        Readable.from([testRunId]),
+        createWriteStream(join(dirPath, 'test-run-id.txt'), 'utf8')
+      ]);
+      filesWritten.push(join(dirPath, 'test-run-id.txt'));
+
+      // produce result formats
+      if (resultFormats) {
+        if (!isTestResult(result)) {
+          throw new Error(nls.localize('runIdFormatErr'));
+        }
+        for (const format of resultFormats) {
+          switch (format) {
+            case ResultFormat.json:
+              // Create a readable stream from the JSON object
+              const jsonFilePath = join(
+                dirPath,
+                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
+              );
+              filesWritten.push(jsonFilePath);
+              pipeThese.push([
+                TestResultStringifyStream.fromTestResult(result),
+                createWriteStream(jsonFilePath)
+              ]);
+              break;
+            case ResultFormat.tap:
+              const tapFilePath = join(
+                dirPath,
+                `test-result-${testRunId}-tap.txt`
+              );
+              filesWritten.push(tapFilePath);
+              pipeThese.push([
+                new TapFormatTransformer(result),
+                createWriteStream(tapFilePath)
+              ]);
+              break;
+            case ResultFormat.junit:
+              const filePath = join(
+                dirPath,
+                testRunId
+                  ? `test-result-${testRunId}-junit.xml`
+                  : `test-result-junit.xml`
+              );
+              filesWritten.push(filePath);
+              pipeThese.push([
+                new JUnitFormatTransformer(result),
+                createWriteStream(filePath)
+              ]);
+              break;
+          }
         }
       }
-    }
-    // produce code coverage
-    if (codeCoverage) {
-      if (!isTestResult(result)) {
-        throw new Error(nls.localize('covIdFormatErr'));
+      // produce code coverage
+      if (codeCoverage) {
+        if (!isTestResult(result)) {
+          throw new Error(nls.localize('covIdFormatErr'));
+        }
+        const filePath = join(
+          dirPath,
+          `test-result-${testRunId}-codecoverage.json`
+        );
+        const c = result.tests
+          .map((record) => {
+            return record.perClassCoverage;
+          })
+          .filter((pcc) => pcc?.length);
+        pipeThese.push([
+          Readable.from(c),
+          new CodeCoverageStringifyStream(),
+          createWriteStream(filePath)
+        ]);
+        filesWritten.push(filePath);
       }
-      const filePath = join(
-        dirPath,
-        `test-result-${testRunId}-codecoverage.json`
+
+      fileInfos?.forEach((fileInfo) => {
+        const fileInfoPath = join(dirPath, fileInfo.filename);
+        if (typeof fileInfo.content === 'string') {
+          pipeThese.push([
+            Readable.from([fileInfo.content]),
+            createWriteStream(fileInfoPath)
+          ]);
+        } else {
+          pipeThese.push([
+            JSONStringifyStream.from(fileInfo.content),
+            createWriteStream(fileInfoPath)
+          ]);
+        }
+        filesWritten.push(fileInfoPath);
+      });
+
+      await Promise.all(pipeThese.map((streams) => pipeline(streams))).catch(
+        (err) => {
+          const error = new Error('An error occurred writing files');
+          error.stack = err.stack;
+          throw error;
+        }
       );
-      const c = result.tests
-        .map((record) => {
-          return record.perClassCoverage;
-        })
-        .filter((pcc) => pcc?.length);
-      pipeThese.push([
-        Readable.from(c),
-        new CodeCoverageStringifyStream(),
-        createWriteStream(filePath)
-      ]);
-      filesWritten.push(filePath);
+      return filesWritten;
+    } finally {
+      heapMonitor.stopMonitoring();
     }
-
-    fileInfos?.forEach((fileInfo) => {
-      const fileInfoPath = join(dirPath, fileInfo.filename);
-      if (typeof fileInfo.content === 'string') {
-        pipeThese.push([
-          Readable.from([fileInfo.content]),
-          createWriteStream(fileInfoPath)
-        ]);
-      } else {
-        pipeThese.push([
-          JSONStringifyStream.from(fileInfo.content),
-          createWriteStream(fileInfoPath)
-        ]);
-      }
-      filesWritten.push(fileInfoPath);
-    });
-
-    await Promise.all(pipeThese.map((streams) => pipeline(streams))).catch(
-      (err) => {
-        const error = new Error('An error occurred writing files');
-        error.stack = err.stack;
-        throw error;
-      }
-    );
-    return filesWritten;
   }
 
   // utils to build test run payloads that may contain namespaces

@@ -8,6 +8,7 @@ import { ApexTestResultOutcome, TestResult } from '../tests';
 import { elapsedTime, formatStartTime, msToSecond } from '../utils';
 import { Readable, ReadableOptions } from 'node:stream';
 import { isEmpty } from '../narrowing';
+import { Logger } from '@salesforce/core';
 
 // cli currently has spaces in multiples of four for junit format
 const tab = '    ';
@@ -22,17 +23,21 @@ const timeProperties = [
 const skippedProperties = ['skipRate', 'totalLines', 'linesCovered'];
 
 export class JUnitFormatTransformer extends Readable {
+  private logger: Logger;
   constructor(
     private readonly testResult: TestResult,
     options?: ReadableOptions
   ) {
     super(options);
     this.testResult = testResult;
+    this.logger = Logger.childFromRoot('JUnitFormatTransformer');
   }
 
   _read(): void {
+    this.logger.trace('starting _read');
     this.format();
     this.push(null); // Signal the end of the stream
+    this.logger.trace('finishing _read');
   }
 
   @elapsedTime()

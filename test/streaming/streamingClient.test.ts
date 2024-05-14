@@ -501,10 +501,10 @@ describe('Streaming API Client', () => {
     mockToolingQuery.resolves(queryResponse);
 
     const setIntervalStub = sandboxStub.stub(global, 'setInterval');
-    setIntervalStub.callsFake((callback: Function) => callback.call(null));
+    setIntervalStub.callsFake((callback) => callback.call(null));
 
     const streamClient = new StreamingClient(mockConnection);
-    streamClient.subscribe(() => Promise.resolve('707xx0000AGQ3jbQQD'));
+    await streamClient.subscribe(() => Promise.resolve('707xx0000AGQ3jbQQD'));
 
     await Promise.resolve();
     assert.calledOnce(mockToolingQuery);
@@ -519,7 +519,7 @@ describe('Streaming API Client', () => {
     const mockRunId = '707xx0000AGQ3jbQQD';
 
     const setIntervalStub = sandboxStub.stub(global, 'setInterval');
-    setIntervalStub.callsFake((callback: Function) => callback.call(null));
+    setIntervalStub.callsFake((callback) => callback.call(null));
     const clearIntervalStub = sandboxStub.stub(global, 'clearInterval');
 
     const streamClient = new StreamingClient(mockConnection);
@@ -558,7 +558,7 @@ describe('Streaming API Client', () => {
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
     mockToolingQuery.resolves(queryResponse);
     const setIntervalStub = sandboxStub.stub(global, 'setInterval');
-    setIntervalStub.callsFake((callback: Function) => callback.call(null));
+    setIntervalStub.callsFake((callback) => callback.call(null));
     const clearIntervalStub = sandboxStub.stub(global, 'clearInterval');
     const clearTimeoutStub = sandboxStub.stub(global, 'clearTimeout');
 

@@ -14,10 +14,11 @@ import {
 import { nls } from '../i18n';
 import { Readable, ReadableOptions } from 'node:stream';
 import { elapsedTime } from '../utils';
-import { LoggerLevel } from '@salesforce/core';
+import { Logger, LoggerLevel } from '@salesforce/core';
 import { EOL } from 'os';
 
 export class HumanFormatTransform extends Readable {
+  private logger: Logger;
   constructor(
     private readonly testResult: TestResult,
     private readonly detailedCoverage: boolean,
@@ -26,11 +27,14 @@ export class HumanFormatTransform extends Readable {
     super(options);
     this.testResult = testResult;
     this.detailedCoverage ??= false;
+    this.logger = Logger.childFromRoot('HumanFormatTransform');
   }
 
   _read(): void {
+    this.logger.trace('starting _read');
     this.format();
     this.push(null); // Indicates end of data
+    this.logger.trace('finishing _read');
   }
 
   @elapsedTime()

@@ -4,9 +4,9 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+import { Logger, LoggerLevel } from '@salesforce/core';
 import { Readable, ReadableOptions } from 'stream';
 import { elapsedTime } from '../utils';
-import { LoggerLevel } from '@salesforce/core';
 import { isArray, isObject, isPrimitive } from '../narrowing';
 
 interface JSONStringifyStreamOptions extends ReadableOptions {
@@ -17,10 +17,12 @@ export class JSONStringifyStream extends Readable {
   private sent: boolean = false;
   private lastYielded: unknown | undefined;
   private readonly object: unknown;
+  private readonly logger: Logger;
 
   constructor(options: JSONStringifyStreamOptions) {
     super({ ...options, objectMode: false });
     this.object = options.object;
+    this.logger = Logger.childFromRoot('JSONStringifyStream');
   }
 
   @elapsedTime('elapsedTime', LoggerLevel.TRACE)
@@ -90,6 +92,7 @@ export class JSONStringifyStream extends Readable {
   }
 
   _read(): void {
+    this.logger.trace('starting _read');
     if (!this.sent) {
       const generator = this.stringify(this.object);
       for (const chunk of generator) {
@@ -99,6 +102,7 @@ export class JSONStringifyStream extends Readable {
     } else {
       this.push(null);
     }
+    this.logger.trace('finishing _read');
   }
 
   static from(json: unknown): JSONStringifyStream {

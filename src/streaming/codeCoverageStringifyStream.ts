@@ -4,18 +4,20 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { Transform, TransformCallback } from 'stream';
+import { Logger, LoggerLevel } from '@salesforce/core';
+import { Transform, TransformCallback, TransformOptions } from 'stream';
 import { PerClassCoverage } from '../tests';
-import { TransformOptions } from 'node:stream';
 import { pushArrayToStream } from './utils';
 import { elapsedTime } from '../utils';
-import { LoggerLevel } from '@salesforce/core'; // replace with your actual import
 
 export class CodeCoverageStringifyStream extends Transform {
   private outerPushed = false;
   private pushedInner = false;
+  private readonly logger: Logger;
+
   constructor(options?: TransformOptions) {
     super({ ...options, objectMode: true });
+    this.logger = Logger.childFromRoot('CodeCoverageStringifyStream');
   }
 
   _transform(
@@ -23,6 +25,7 @@ export class CodeCoverageStringifyStream extends Transform {
     encoding: string,
     callback: TransformCallback
   ): void {
+    this.logger.trace('starting _transform');
     try {
       // push '[' once to encapsulate the entire result as an array
       if (!this.outerPushed) {
@@ -55,6 +58,7 @@ export class CodeCoverageStringifyStream extends Transform {
     if (this.outerPushed) {
       this.push(']');
     }
+    this.logger.trace('finishing _flush');
     callback();
   }
 

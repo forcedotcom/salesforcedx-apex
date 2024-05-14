@@ -4,6 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+import { Logger } from '@salesforce/core';
 import { Readable, ReadableOptions } from 'node:stream';
 import {
   ApexTestResultData,
@@ -20,6 +21,7 @@ export interface TapResult {
 }
 
 export class TapFormatTransformer extends Readable {
+  private readonly logger: Logger;
   private testResult: TestResult;
   private epilogue?: string[];
 
@@ -31,6 +33,7 @@ export class TapFormatTransformer extends Readable {
     super(options);
     this.testResult = testResult;
     this.epilogue = epilogue;
+    this.logger = Logger.childFromRoot('TapFormatTransformer');
   }
 
   _read(): void {
@@ -40,6 +43,7 @@ export class TapFormatTransformer extends Readable {
 
   @elapsedTime()
   public format(): void {
+    this.logger.trace('starting format');
     const testPointCount = this.testResult.tests.length;
 
     this.push(`1..${testPointCount}\n`);
@@ -48,6 +52,7 @@ export class TapFormatTransformer extends Readable {
     this.epilogue?.forEach((c) => {
       this.push(`# ${c}\n`);
     });
+    this.logger.trace('finishing format');
   }
 
   @elapsedTime()
