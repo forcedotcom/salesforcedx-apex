@@ -501,10 +501,10 @@ describe('Streaming API Client', () => {
     mockToolingQuery.resolves(queryResponse);
 
     const setIntervalStub = sandboxStub.stub(global, 'setInterval');
-    setIntervalStub.callsFake((callback) => callback.call(null));
+    setIntervalStub.callsFake((callback: Function) => callback.call(null));
 
     const streamClient = new StreamingClient(mockConnection);
-    await streamClient.subscribe(() => Promise.resolve('707xx0000AGQ3jbQQD'));
+    streamClient.subscribe(() => Promise.resolve('707xx0000AGQ3jbQQD'));
 
     await Promise.resolve();
     assert.calledOnce(mockToolingQuery);
