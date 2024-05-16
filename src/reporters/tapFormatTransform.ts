@@ -37,13 +37,14 @@ export class TapFormatTransformer extends Readable {
   }
 
   _read(): void {
+    this.logger.trace('starting format');
     this.format();
     this.push(null); // Signal the end of the stream
+    this.logger.trace('finishing format');
   }
 
   @elapsedTime()
   public format(): void {
-    this.logger.trace('starting format');
     const testPointCount = this.testResult.tests.length;
 
     this.push(`1..${testPointCount}\n`);
@@ -52,7 +53,6 @@ export class TapFormatTransformer extends Readable {
     this.epilogue?.forEach((c) => {
       this.push(`# ${c}\n`);
     });
-    this.logger.trace('finishing format');
   }
 
   @elapsedTime()

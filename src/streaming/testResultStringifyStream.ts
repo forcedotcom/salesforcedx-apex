@@ -23,13 +23,14 @@ export class TestResultStringifyStream extends Readable {
   }
 
   _read(): void {
+    this.logger.trace('starting format');
     this.format();
     this.push(null); // Signal the end of the stream
+    this.logger.trace('finishing format');
   }
 
   @elapsedTime()
   public format(): void {
-    this.logger.trace('starting format');
     const { summary } = this.testResult;
     // strip out vars not included in the summary data reported to the user
 
@@ -43,7 +44,6 @@ export class TestResultStringifyStream extends Readable {
 
     // closing outer curly
     this.push(`}`);
-    this.logger.trace('finishing format');
   }
 
   @elapsedTime()
