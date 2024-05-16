@@ -5,7 +5,12 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { ApexTestResultOutcome, TestResult } from '../tests';
-import { elapsedTime, formatStartTime, msToSecond } from '../utils';
+import {
+  elapsedTime,
+  formatStartTime,
+  HeapMonitor,
+  msToSecond
+} from '../utils';
 import { Readable, ReadableOptions } from 'node:stream';
 import { isEmpty } from '../narrowing';
 import { Logger } from '@salesforce/core';
@@ -24,6 +29,7 @@ const skippedProperties = ['skipRate', 'totalLines', 'linesCovered'];
 
 export class JUnitFormatTransformer extends Readable {
   private logger: Logger;
+  private heapMonitor: HeapMonitor;
   constructor(
     private readonly testResult: TestResult,
     options?: ReadableOptions
@@ -31,13 +37,16 @@ export class JUnitFormatTransformer extends Readable {
     super(options);
     this.testResult = testResult;
     this.logger = Logger.childFromRoot('JUnitFormatTransformer');
+    this.heapMonitor = new HeapMonitor('JUnitFormatTransformer');
   }
 
   _read(): void {
     this.logger.trace('starting _read');
+    this.heapMonitor.startMonitoring(500);
     this.format();
     this.push(null); // Signal the end of the stream
     this.logger.trace('finishing _read');
+    this.heapMonitor.stopMonitoring();
   }
 
   @elapsedTime()

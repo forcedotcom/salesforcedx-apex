@@ -11,7 +11,7 @@ import {
   ApexTestResultOutcome,
   TestResult
 } from '../tests';
-import { elapsedTime } from '../utils';
+import { elapsedTime, HeapMonitor } from '../utils';
 
 export interface TapResult {
   description: string;
@@ -24,6 +24,7 @@ export class TapFormatTransformer extends Readable {
   private readonly logger: Logger;
   private testResult: TestResult;
   private epilogue?: string[];
+  private heapMonitor: HeapMonitor;
 
   constructor(
     testResult: TestResult,
@@ -34,10 +35,12 @@ export class TapFormatTransformer extends Readable {
     this.testResult = testResult;
     this.epilogue = epilogue;
     this.logger = Logger.childFromRoot('TapFormatTransformer');
+    this.heapMonitor = new HeapMonitor('TapFormatTransformer');
   }
 
   _read(): void {
     this.logger.trace('starting format');
+    this.heapMonitor.startMonitoring(500);
     this.format();
     this.push(null); // Signal the end of the stream
     this.logger.trace('finishing format');

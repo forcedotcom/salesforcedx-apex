@@ -9,7 +9,7 @@ import {
   ApexTestResultOutcome,
   TestResult
 } from '../tests';
-import { elapsedTime } from '../utils/elapsedTime';
+import { elapsedTime, HeapMonitor } from '../utils';
 
 export interface TapResult {
   description: string;
@@ -19,26 +19,35 @@ export interface TapResult {
 }
 
 export class TapReporter {
+  private heapMonitor: HeapMonitor;
+  constructor() {
+    this.heapMonitor = new HeapMonitor('TapReporter');
+  }
   @elapsedTime()
   public format(testResult: TestResult, epilog?: string[]): string {
-    const results: TapResult[] = this.buildTapResults(testResult);
-    const testPointCount = results.length;
+    this.heapMonitor.startMonitoring(500);
+    try {
+      const results: TapResult[] = this.buildTapResults(testResult);
+      const testPointCount = results.length;
 
-    let out = '';
-    out = out.concat(`1..${testPointCount}\n`);
-    results.forEach((testPoint) => {
-      out = out.concat(
-        `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`
-      );
-      testPoint.diagnostics.forEach((s) => {
-        out = out.concat(`# ${s}\n`);
+      let out = '';
+      out = out.concat(`1..${testPointCount}\n`);
+      results.forEach((testPoint) => {
+        out = out.concat(
+          `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`
+        );
+        testPoint.diagnostics.forEach((s) => {
+          out = out.concat(`# ${s}\n`);
+        });
       });
-    });
 
-    epilog?.forEach((c) => {
-      out = out.concat(`# ${c}\n`);
-    });
-    return out;
+      epilog?.forEach((c) => {
+        out = out.concat(`# ${c}\n`);
+      });
+      return out;
+    } finally {
+      this.heapMonitor.stopMonitoring();
+    }
   }
 
   @elapsedTime()

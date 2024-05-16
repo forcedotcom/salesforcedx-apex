@@ -5,11 +5,20 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Connection } from '@salesforce/core';
+import { Connection, Logger, LoggerLevel } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
-import { AsyncTestRun, StreamingClient } from '../streaming';
-import { elapsedTime, formatStartTime, getCurrentTime } from '../utils';
+import {
+  AsyncTestRun,
+  JSONStringifyStream,
+  StreamingClient
+} from '../streaming';
+import {
+  elapsedTime,
+  formatStartTime,
+  getCurrentTime,
+  HeapMonitor
+} from '../utils';
 import { formatTestErrors, getAsyncDiagnostic } from './diagnosticUtil';
 import {
   ApexTestProgressValue,
@@ -32,7 +41,11 @@ import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
 import { isValidTestRunID } from '../narrowing';
 import { Duration } from '@salesforce/kit';
-import { HeapMonitor } from '../utils/heapMonitor';
+import { createWriteStream } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
+import * as os from 'node:os';
+import path from 'path';
+import fs from 'node:fs/promises';
 
 const finishedStatuses = [
   ApexTestRunResultStatus.Aborted,
@@ -45,10 +58,12 @@ const finishedStatuses = [
 export class AsyncTests {
   public readonly connection: Connection;
   private readonly codecoverage: CodeCoverage;
+  private readonly logger: Logger;
 
   constructor(connection: Connection) {
     this.connection = connection;
     this.codecoverage = new CodeCoverage(this.connection);
+    this.logger = Logger.childFromRoot('AsyncTests');
   }
 
   /**
@@ -104,17 +119,35 @@ export class AsyncTests {
       }
 
       const runResult = await this.checkRunStatus(asyncRunResult.runId);
-      return await this.formatAsyncResults(
+      const formattedResults = await this.formatAsyncResults(
         asyncRunResult,
         getCurrentTime(),
         codeCoverage,
         runResult.testRunSummary,
         progress
       );
+      await this.writeResultsToFile(formattedResults, asyncRunResult.runId);
+      return formattedResults;
     } catch (e) {
       throw formatTestErrors(e);
     } finally {
       heapMonitor.stopMonitoring();
+    }
+  }
+
+  private async writeResultsToFile(
+    formattedResults: TestResult,
+    runId: string
+  ): Promise<void> {
+    if (this.logger.shouldLog(LoggerLevel.DEBUG)) {
+      const rawResultsPath = path.join(os.tmpdir(), runId, 'rawResults.json');
+      await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
+      const writeStream = createWriteStream(
+        path.join(os.tmpdir(), runId, 'rawResults.json')
+      );
+      this.logger.debug(`Raw raw results written to: ${writeStream.path}`);
+      const jsonStringify = JSONStringifyStream.from(formattedResults);
+      return await pipeline(jsonStringify, writeStream);
     }
   }
 
@@ -157,12 +190,16 @@ export class AsyncTests {
         return null;
       }
 
-      return await this.formatAsyncResults(
+      const formattedResults = await this.formatAsyncResults(
         { queueItem, runId: testRunId },
         getCurrentTime(),
         codeCoverage,
         runResult.testRunSummary
       );
+
+      await this.writeResultsToFile(formattedResults, testRunId);
+
+      return formattedResults;
     } catch (e) {
       throw formatTestErrors(e);
     } finally {
@@ -433,6 +470,7 @@ export class AsyncTests {
   /**
    * Abort test run with test run id
    * @param testRunId
+   * @param progress
    */
   public async abortTestRun(
     testRunId: string,
@@ -469,7 +507,7 @@ export class AsyncTests {
   private getTestRunRequestAction(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration
   ): () => Promise<string> {
-    const requestTestRun = async (): Promise<string> => {
+    return async (): Promise<string> => {
       const url = `${this.connection.tooling._baseUrl()}/runTestsAsynchronous`;
 
       try {
@@ -484,6 +522,5 @@ export class AsyncTests {
         return Promise.reject(e);
       }
     };
-    return requestTestRun;
   }
 }

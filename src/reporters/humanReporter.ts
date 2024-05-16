@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { elapsedTime, Row, Table } from '../utils';
+import { elapsedTime, HeapMonitor, Row, Table } from '../utils';
 import {
   ApexTestResultData,
   ApexTestResultOutcome,
@@ -16,20 +16,30 @@ import { nls } from '../i18n';
 import { LoggerLevel } from '@salesforce/core';
 
 export class HumanReporter {
+  private heapMonitor: HeapMonitor;
+  constructor() {
+    this.heapMonitor = new HeapMonitor('HumanReporter');
+  }
+
   @elapsedTime()
   public format(testResult: TestResult, detailedCoverage: boolean): string {
-    let tbResult = this.formatSummary(testResult);
-    if (!testResult.codecoverage || !detailedCoverage) {
-      tbResult += this.formatTestResults(testResult.tests);
-    }
-
-    if (testResult.codecoverage) {
-      if (detailedCoverage) {
-        tbResult += this.formatDetailedCov(testResult);
+    this.heapMonitor.startMonitoring(500);
+    try {
+      let tbResult = this.formatSummary(testResult);
+      if (!testResult.codecoverage || !detailedCoverage) {
+        tbResult += this.formatTestResults(testResult.tests);
       }
-      tbResult += this.formatCodeCov(testResult.codecoverage);
+
+      if (testResult.codecoverage) {
+        if (detailedCoverage) {
+          tbResult += this.formatDetailedCov(testResult);
+        }
+        tbResult += this.formatCodeCov(testResult.codecoverage);
+      }
+      return tbResult;
+    } finally {
+      this.heapMonitor.stopMonitoring();
     }
-    return tbResult;
   }
 
   @elapsedTime()

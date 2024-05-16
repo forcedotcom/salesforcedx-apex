@@ -42,6 +42,7 @@ export class HeapMonitor {
   }
 
   public startMonitoring(interval: number): void {
+    this.checkHeapSize();
     this.intervalId = setInterval(() => this.checkHeapSize(), interval);
   }
 
