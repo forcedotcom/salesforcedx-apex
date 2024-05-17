@@ -12,12 +12,19 @@ export class HeapMonitor {
   private logger: Logger;
   private intervalId?: NodeJS.Timeout;
   private isMonitoring: boolean;
+  private interval: number;
 
   private constructor() {
     this.logger = Logger.childFromRoot('heap-monitor', {
       tag: 'heap-monitor'
     });
     this.isMonitoring = false;
+    // Check for SF_HEAP_MONITOR_INTERVAL environment variable
+    this.interval = 500; // default value
+    const envInterval = process.env.SF_HEAP_MONITOR_INTERVAL;
+    if (envInterval && Number.isInteger(Number(envInterval))) {
+      this.interval = Number(envInterval);
+    }
   }
 
   public static getInstance(): HeapMonitor {
@@ -63,20 +70,15 @@ export class HeapMonitor {
   }
 
   public startMonitoring(): void {
-    this.isMonitoring = true;
-    if (!this.logger.shouldLog(LoggerLevel.DEBUG)) {
-      return;
-    }
+    if (!this.isMonitoring) {
+      this.isMonitoring = true;
+      if (!this.logger.shouldLog(LoggerLevel.DEBUG)) {
+        return;
+      }
 
-    // Check for SF_HEAP_MONITOR_INTERVAL environment variable
-    let interval = 500; // default value
-    const envInterval = process.env.SF_HEAP_MONITOR_INTERVAL;
-    if (envInterval && Number.isInteger(Number(envInterval))) {
-      interval = Number(envInterval);
+      this.checkHeapSize();
+      this.intervalId = setInterval(() => this.checkHeapSize(), this.interval);
     }
-
-    this.checkHeapSize();
-    this.intervalId = setInterval(() => this.checkHeapSize(), interval);
   }
 
   public stopMonitoring(): void {
