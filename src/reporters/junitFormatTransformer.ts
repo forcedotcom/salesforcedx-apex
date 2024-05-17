@@ -29,7 +29,6 @@ const skippedProperties = ['skipRate', 'totalLines', 'linesCovered'];
 
 export class JUnitFormatTransformer extends Readable {
   private logger: Logger;
-  private heapMonitor: HeapMonitor;
   constructor(
     private readonly testResult: TestResult,
     options?: ReadableOptions
@@ -37,16 +36,15 @@ export class JUnitFormatTransformer extends Readable {
     super(options);
     this.testResult = testResult;
     this.logger = Logger.childFromRoot('JUnitFormatTransformer');
-    this.heapMonitor = new HeapMonitor('JUnitFormatTransformer');
   }
 
   _read(): void {
     this.logger.trace('starting _read');
-    this.heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('JUnitFormatTransformer._read');
     this.format();
     this.push(null); // Signal the end of the stream
     this.logger.trace('finishing _read');
-    this.heapMonitor.stopMonitoring();
+    HeapMonitor.getInstance().checkHeapSize('JUnitFormatTransformer._read');
   }
 
   @elapsedTime()

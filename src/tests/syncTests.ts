@@ -47,8 +47,7 @@ export class SyncTests {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult> {
-    const heapMonitor = new HeapMonitor('syncTests.runTests');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('synctests.runTests');
     try {
       const url = `${this.connection.tooling._baseUrl()}/runTestsSynchronous`;
       const request: HttpRequest = {
@@ -74,7 +73,7 @@ export class SyncTests {
     } catch (e) {
       throw formatTestErrors(e);
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('synctests.runTests');
     }
   }
 
@@ -84,8 +83,7 @@ export class SyncTests {
     startTime: number,
     codeCoverage = false
   ): Promise<TestResult> {
-    const heapMonitor = new HeapMonitor('synctests.formatSyncResults');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('synctests.formatSyncResults');
     const coveredApexClassIdSet = new Set<string>();
     const { apexTestClassIdSet, testResults } =
       this.buildSyncTestResults(apiTestResult);
@@ -157,7 +155,7 @@ export class SyncTests {
       }
       return result;
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('synctests.formatSyncResults');
     }
   }
 
@@ -166,8 +164,7 @@ export class SyncTests {
     apexTestClassIdSet: Set<string>;
     testResults: ApexTestResultData[];
   } {
-    const heapMonitor = new HeapMonitor('syncTests.buildSyncTestResults');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('syncTests.buildSyncTestResults');
     try {
       const testResults: ApexTestResultData[] = [];
       const apexTestClassIdSet = new Set<string>();
@@ -226,7 +223,7 @@ export class SyncTests {
 
       return { apexTestClassIdSet, testResults };
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('syncTests.buildSyncTestResults');
     }
   }
 }

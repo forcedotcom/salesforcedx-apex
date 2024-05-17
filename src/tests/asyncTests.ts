@@ -84,8 +84,7 @@ export class AsyncTests {
     token?: CancellationToken,
     timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
-    const heapMonitor = new HeapMonitor('asyncTests.runTests');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
     try {
       const sClient = new StreamingClient(this.connection, progress);
       await sClient.init();
@@ -131,7 +130,7 @@ export class AsyncTests {
     } catch (e) {
       throw formatTestErrors(e);
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
     }
   }
 
@@ -139,15 +138,20 @@ export class AsyncTests {
     formattedResults: TestResult,
     runId: string
   ): Promise<void> {
-    if (this.logger.shouldLog(LoggerLevel.DEBUG)) {
-      const rawResultsPath = path.join(os.tmpdir(), runId, 'rawResults.json');
-      await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
-      const writeStream = createWriteStream(
-        path.join(os.tmpdir(), runId, 'rawResults.json')
-      );
-      this.logger.debug(`Raw raw results written to: ${writeStream.path}`);
-      const jsonStringify = JSONStringifyStream.from(formattedResults);
-      return await pipeline(jsonStringify, writeStream);
+    HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
+    try {
+      if (this.logger.shouldLog(LoggerLevel.DEBUG)) {
+        const rawResultsPath = path.join(os.tmpdir(), runId, 'rawResults.json');
+        await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
+        const writeStream = createWriteStream(
+          path.join(os.tmpdir(), runId, 'rawResults.json')
+        );
+        this.logger.debug(`Raw raw results written to: ${writeStream.path}`);
+        const jsonStringify = JSONStringifyStream.from(formattedResults);
+        return await pipeline(jsonStringify, writeStream);
+      }
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
     }
   }
 
@@ -163,8 +167,7 @@ export class AsyncTests {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult> {
-    const heapMonitor = new HeapMonitor('asyncTests.reportAsyncResults');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('asyncTests.reportAsyncResults');
     try {
       const sClient = new StreamingClient(this.connection);
       await sClient.init();
@@ -203,7 +206,7 @@ export class AsyncTests {
     } catch (e) {
       throw formatTestErrors(e);
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('asyncTests.reportAsyncResults');
     }
   }
 
@@ -261,8 +264,7 @@ export class AsyncTests {
     testRunSummary: ApexTestRunResult,
     progress?: Progress<ApexTestProgressValue>
   ): Promise<TestResult> {
-    const heapMonitor = new HeapMonitor('asyncTests.formatAsyncResults');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     try {
       const coveredApexClassIdSet = new Set<string>();
       const apexTestResults = await this.getAsyncTestResults(
@@ -345,7 +347,7 @@ export class AsyncTests {
 
       return result;
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     }
   }
 
@@ -353,8 +355,7 @@ export class AsyncTests {
   public async getAsyncTestResults(
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
-    const heapMonitor = new HeapMonitor('asyncTests.getAsyncTestResults');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
     try {
       let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
       apexTestResultQuery +=
@@ -384,7 +385,7 @@ export class AsyncTests {
       const apexTestResults = await Promise.all(queryPromises);
       return apexTestResults as ApexTestResult[];
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
     }
   }
 
@@ -400,8 +401,7 @@ export class AsyncTests {
       failed: number;
     };
   }> {
-    const heapMonitor = new HeapMonitor('asyncTests.buildAsyncTestResults');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('asyncTests.buildAsyncTestResults');
     try {
       const apexTestClassIdSet = new Set<string>();
       let passed = 0;
@@ -463,7 +463,9 @@ export class AsyncTests {
         globalTests: { passed, failed, skipped }
       };
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize(
+        'asyncTests.buildAsyncTestResults'
+      );
     }
   }
 

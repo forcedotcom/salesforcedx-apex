@@ -19,7 +19,6 @@ import { EOL } from 'os';
 
 export class HumanFormatTransform extends Readable {
   private logger: Logger;
-  private heapMonitor: HeapMonitor;
   constructor(
     private readonly testResult: TestResult,
     private readonly detailedCoverage: boolean,
@@ -29,18 +28,17 @@ export class HumanFormatTransform extends Readable {
     this.testResult = testResult;
     this.detailedCoverage ??= false;
     this.logger = Logger.childFromRoot('HumanFormatTransform');
-    this.heapMonitor = new HeapMonitor('HumanFormatTransform');
   }
 
   _read(): void {
     this.logger.trace('starting _read');
-    this.heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('HumanFormatTransform._read');
     try {
       this.format();
       this.push(null); // Indicates end of data
       this.logger.trace('finishing _read');
     } finally {
-      this.heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('HumanFormatTransform._read');
     }
   }
 

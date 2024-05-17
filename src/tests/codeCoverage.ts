@@ -31,8 +31,7 @@ export class CodeCoverage {
    */
   @elapsedTime()
   public async getOrgWideCoverage(): Promise<string> {
-    const heapMonitor = new HeapMonitor('codeCoverage.getOrgWideCoverage');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('codeCoverage.getOrgWideCoverage');
     try {
       const orgWideCoverageResult = (await this.connection.tooling.query(
         'SELECT PercentCovered FROM ApexOrgWideCoverage'
@@ -43,7 +42,9 @@ export class CodeCoverage {
       }
       return `${orgWideCoverageResult.records[0].PercentCovered}%`;
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize(
+        'codeCoverage.getOrgWideCoverage'
+      );
     }
   }
 
@@ -57,8 +58,9 @@ export class CodeCoverage {
   public async getPerClassCodeCoverage(
     apexTestClassSet: Set<string>
   ): Promise<Map<string, PerClassCoverage[]>> {
-    const heapMonitor = new HeapMonitor('codeCoverage.getPerClassCodeCoverage');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize(
+      'codeCoverage.getPerClassCodeCoverage'
+    );
     try {
       if (apexTestClassSet.size === 0) {
         return new Map();
@@ -101,7 +103,9 @@ export class CodeCoverage {
 
       return perClassCoverageMap;
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize(
+        'codeCoverage.getPerClassCodeCoverage'
+      );
     }
   }
 
@@ -116,10 +120,9 @@ export class CodeCoverage {
     totalLines: number;
     coveredLines: number;
   }> {
-    const heapMonitor = new HeapMonitor(
+    HeapMonitor.getInstance().checkHeapSize(
       'codeCoverage.getAggregateCodeCoverage'
     );
-    heapMonitor.startMonitoring(500);
     try {
       if (apexClassIdSet.size === 0) {
         return { codeCoverageResults: [], totalLines: 0, coveredLines: 0 };
@@ -168,7 +171,9 @@ export class CodeCoverage {
         coveredLines: totalLinesCovered
       };
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize(
+        'codeCoverage.getAggregateCodeCoverage'
+      );
     }
   }
 

@@ -30,14 +30,9 @@ const timeProperties = [
 // properties not in cli junit spec
 const skippedProperties = ['skipRate', 'totalLines', 'linesCovered'];
 export class JUnitReporter {
-  private heapMonitor: HeapMonitor;
-  constructor() {
-    this.heapMonitor = new HeapMonitor('JUnitReporter');
-  }
-
   @elapsedTime()
   public format(testResult: TestResult): string {
-    this.heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('JUnitReporter.format');
     try {
       const { summary, tests } = testResult;
 
@@ -58,7 +53,7 @@ export class JUnitReporter {
       output += `</testsuites>\n`;
       return output;
     } finally {
-      this.heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('JUnitReporter.format');
     }
   }
 

@@ -16,14 +16,9 @@ import { nls } from '../i18n';
 import { LoggerLevel } from '@salesforce/core';
 
 export class HumanReporter {
-  private heapMonitor: HeapMonitor;
-  constructor() {
-    this.heapMonitor = new HeapMonitor('HumanReporter');
-  }
-
   @elapsedTime()
   public format(testResult: TestResult, detailedCoverage: boolean): string {
-    this.heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
     try {
       let tbResult = this.formatSummary(testResult);
       if (!testResult.codecoverage || !detailedCoverage) {
@@ -38,7 +33,7 @@ export class HumanReporter {
       }
       return tbResult;
     } finally {
-      this.heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
     }
   }
 

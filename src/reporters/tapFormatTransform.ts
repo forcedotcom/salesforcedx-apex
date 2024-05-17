@@ -35,15 +35,15 @@ export class TapFormatTransformer extends Readable {
     this.testResult = testResult;
     this.epilogue = epilogue;
     this.logger = Logger.childFromRoot('TapFormatTransformer');
-    this.heapMonitor = new HeapMonitor('TapFormatTransformer');
   }
 
   _read(): void {
     this.logger.trace('starting format');
-    this.heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('TapFormatTransformer._read');
     this.format();
     this.push(null); // Signal the end of the stream
     this.logger.trace('finishing format');
+    HeapMonitor.getInstance().checkHeapSize('TapFormatTransformer._read');
   }
 
   @elapsedTime()

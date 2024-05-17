@@ -19,13 +19,9 @@ export interface TapResult {
 }
 
 export class TapReporter {
-  private heapMonitor: HeapMonitor;
-  constructor() {
-    this.heapMonitor = new HeapMonitor('TapReporter');
-  }
   @elapsedTime()
   public format(testResult: TestResult, epilog?: string[]): string {
-    this.heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().checkHeapSize('TapReporter.format');
     try {
       const results: TapResult[] = this.buildTapResults(testResult);
       const testPointCount = results.length;
@@ -46,7 +42,7 @@ export class TapReporter {
       });
       return out;
     } finally {
-      this.heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('TapReporter.format');
     }
   }
 

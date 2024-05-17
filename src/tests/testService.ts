@@ -34,10 +34,9 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { JSONStringifyStream, TestResultStringifyStream } from '../streaming';
 import { CodeCoverageStringifyStream } from '../streaming/codeCoverageStringifyStream';
-import { elapsedTime } from '../utils';
+import { elapsedTime, HeapMonitor } from '../utils';
 import { isTestResult, isValidApexClassID } from '../narrowing';
 import { Duration } from '@salesforce/kit';
-import { HeapMonitor } from '../utils/heapMonitor';
 
 export class TestService {
   private readonly connection: Connection;
@@ -194,7 +193,12 @@ export class TestService {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
-    return await this.syncService.runTests(options, codeCoverage, token);
+    HeapMonitor.getInstance().startMonitoring();
+    try {
+      return await this.syncService.runTests(options, codeCoverage, token);
+    } finally {
+      HeapMonitor.getInstance().stopMonitoring();
+    }
   }
 
   /**
@@ -204,6 +208,7 @@ export class TestService {
    * @param immediatelyReturn should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
+   * @param timeout
    */
   @elapsedTime()
   public async runTestAsynchronous(
@@ -214,14 +219,19 @@ export class TestService {
     token?: CancellationToken,
     timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
-    return await this.asyncService.runTests(
-      options,
-      codeCoverage,
-      immediatelyReturn,
-      progress,
-      token,
-      timeout
-    );
+    HeapMonitor.getInstance().startMonitoring();
+    try {
+      return await this.asyncService.runTests(
+        options,
+        codeCoverage,
+        immediatelyReturn,
+        progress,
+        token,
+        timeout
+      );
+    } finally {
+      HeapMonitor.getInstance().stopMonitoring();
+    }
   }
 
   /**
@@ -236,11 +246,16 @@ export class TestService {
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult> {
-    return await this.asyncService.reportAsyncResults(
-      testRunId,
-      codeCoverage,
-      token
-    );
+    HeapMonitor.getInstance().startMonitoring();
+    try {
+      return await this.asyncService.reportAsyncResults(
+        testRunId,
+        codeCoverage,
+        token
+      );
+    } finally {
+      HeapMonitor.getInstance().stopMonitoring();
+    }
   }
 
   /**
@@ -256,8 +271,8 @@ export class TestService {
     outputDirConfig: OutputDirConfig,
     codeCoverage = false
   ): Promise<string[]> {
-    const heapMonitor = new HeapMonitor('testService.writeResultFiles');
-    heapMonitor.startMonitoring(500);
+    HeapMonitor.getInstance().startMonitoring();
+    HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
     try {
       const filesWritten: string[] = [];
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -374,7 +389,8 @@ export class TestService {
       );
       return filesWritten;
     } finally {
-      heapMonitor.stopMonitoring();
+      HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
+      HeapMonitor.getInstance().stopMonitoring();
     }
   }
 
