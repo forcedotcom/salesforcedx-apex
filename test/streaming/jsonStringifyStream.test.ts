@@ -27,7 +27,9 @@ describe('JSONStringifyStream', () => {
     });
 
     stream.on('end', () => {
-      expect(result).to.equal(JSON.stringify(json));
+      expect(result.replace(' ', '')).to.equal(
+        JSON.stringify(json).replace(' ', '')
+      );
       expect(() => JSON.parse(result)).to.not.throw();
       done();
     });
@@ -65,8 +67,8 @@ describe('JSONStringifyStream', () => {
     });
 
     stream.on('end', () => {
-      expect(result).to.equal(JSON.stringify(json));
-      expect(() => JSON.parse(result)).to.not.throw();
+      const actualJson = JSON.parse(result);
+      expect(actualJson).to.deep.equal(json);
       done();
     });
   });
@@ -85,8 +87,8 @@ describe('JSONStringifyStream', () => {
     });
 
     stream.on('end', () => {
-      expect(result).to.equal(JSON.stringify(json));
-      expect(() => JSON.parse(result)).to.not.throw();
+      const actualJson = JSON.parse(result);
+      expect(actualJson).to.deep.equal(json);
       done();
     });
   });

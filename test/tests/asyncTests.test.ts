@@ -56,12 +56,34 @@ import {
   skippedTestData
 } from '../testData';
 import { join } from 'path';
-import stream from 'stream';
 import fs from 'fs';
 import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
 import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
+import { Writable, WritableOptions } from 'node:stream';
+
+class StringWritable extends Writable {
+  private _data: string;
+
+  constructor(options?: WritableOptions) {
+    super(options);
+    this._data = '';
+  }
+
+  _write(
+    chunk: unknown,
+    encoding: BufferEncoding,
+    callback: (error?: Error | null) => void
+  ): void {
+    this._data += chunk;
+    callback();
+  }
+
+  getData(): string {
+    return this._data;
+  }
+}
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
@@ -882,7 +904,8 @@ describe('Run Apex tests asynchronously', () => {
       sandboxStub1.stub(fs, 'mkdirSync');
       createStreamStub = sandboxStub1.stub(fs, 'createWriteStream');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      createStreamStub.returns(new stream.PassThrough() as any);
+      createStreamStub.onFirstCall().returns(new StringWritable());
+      createStreamStub.onSecondCall().returns(new StringWritable());
       sandboxStub1.stub(fs, 'closeSync');
       sandboxStub1.stub(fs, 'openSync');
       junitSpy = sandboxStub1.spy(JUnitFormatTransformer.prototype, 'format');

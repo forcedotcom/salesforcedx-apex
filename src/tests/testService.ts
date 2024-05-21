@@ -29,14 +29,14 @@ import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
 import { mkdir } from 'node:fs/promises';
-import { createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
 import { JSONStringifyStream, TestResultStringifyStream } from '../streaming';
-import { CodeCoverageStringifyStream } from '../streaming/codeCoverageStringifyStream';
 import { elapsedTime, HeapMonitor } from '../utils';
 import { isTestResult, isValidApexClassID } from '../narrowing';
 import { Duration } from '@salesforce/kit';
+import { Transform } from 'stream';
+import { pipeline } from 'node:stream/promises';
+import { createWriteStream } from 'node:fs';
 
 export class TestService {
   private readonly connection: Connection;
@@ -275,74 +275,61 @@ export class TestService {
     HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
     try {
       const filesWritten: string[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-      // ensure supplied result formats are support here
+
       if (
         resultFormats &&
         !resultFormats.every((format) => format in ResultFormat)
       ) {
         throw new Error(nls.localize('resultFormatErr'));
       }
-      const testRunId = isTestResult(result)
-        ? (result as TestResult).summary.testRunId
-        : (result as TestRunIdResult).testRunId;
 
-      const pipeThese = [];
       await mkdir(dirPath, { recursive: true });
-      pipeThese.push([
-        Readable.from([testRunId]),
-        createWriteStream(join(dirPath, 'test-run-id.txt'), 'utf8')
-      ]);
-      filesWritten.push(join(dirPath, 'test-run-id.txt'));
 
-      // produce result formats
+      const testRunId = isTestResult(result)
+        ? result.summary.testRunId
+        : result.testRunId;
+
+      filesWritten.push(
+        await this.runPipeline(
+          Readable.from([testRunId]),
+          join(dirPath, 'test-run-id.txt')
+        )
+      );
+
       if (resultFormats) {
         if (!isTestResult(result)) {
           throw new Error(nls.localize('runIdFormatErr'));
         }
         for (const format of resultFormats) {
+          let filePath;
+          let readable;
           switch (format) {
             case ResultFormat.json:
-              // Create a readable stream from the JSON object
-              const jsonFilePath = join(
+              filePath = join(
                 dirPath,
-                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
+                `test-result-${testRunId || 'default'}.json`
               );
-              filesWritten.push(jsonFilePath);
-              pipeThese.push([
-                TestResultStringifyStream.fromTestResult(result),
-                createWriteStream(jsonFilePath)
-              ]);
+              readable = TestResultStringifyStream.fromTestResult(result);
               break;
             case ResultFormat.tap:
-              const tapFilePath = join(
-                dirPath,
-                `test-result-${testRunId}-tap.txt`
-              );
-              filesWritten.push(tapFilePath);
-              pipeThese.push([
-                new TapFormatTransformer(result),
-                createWriteStream(tapFilePath)
-              ]);
+              filePath = join(dirPath, `test-result-${testRunId}-tap.txt`);
+              readable = new TapFormatTransformer(result);
               break;
             case ResultFormat.junit:
-              const filePath = join(
+              filePath = join(
                 dirPath,
-                testRunId
-                  ? `test-result-${testRunId}-junit.xml`
-                  : `test-result-junit.xml`
+                `test-result-${testRunId || 'default'}-junit.xml`
               );
-              filesWritten.push(filePath);
-              pipeThese.push([
-                new JUnitFormatTransformer(result),
-                createWriteStream(filePath)
-              ]);
+              readable = new JUnitFormatTransformer(result);
               break;
+          }
+          if (filePath && readable) {
+            filesWritten.push(await this.runPipeline(readable, filePath));
           }
         }
       }
-      // produce code coverage
+
       if (codeCoverage) {
         if (!isTestResult(result)) {
           throw new Error(nls.localize('covIdFormatErr'));
@@ -352,41 +339,24 @@ export class TestService {
           `test-result-${testRunId}-codecoverage.json`
         );
         const c = result.tests
-          .map((record) => {
-            return record.perClassCoverage;
-          })
+          .map((record) => record.perClassCoverage)
           .filter((pcc) => pcc?.length);
-        pipeThese.push([
-          Readable.from(c),
-          new CodeCoverageStringifyStream(),
-          createWriteStream(filePath)
-        ]);
-        filesWritten.push(filePath);
+        filesWritten.push(
+          await this.runPipeline(JSONStringifyStream.from(c), filePath)
+        );
       }
 
-      fileInfos?.forEach((fileInfo) => {
-        const fileInfoPath = join(dirPath, fileInfo.filename);
-        if (typeof fileInfo.content === 'string') {
-          pipeThese.push([
-            Readable.from([fileInfo.content]),
-            createWriteStream(fileInfoPath)
-          ]);
-        } else {
-          pipeThese.push([
-            JSONStringifyStream.from(fileInfo.content),
-            createWriteStream(fileInfoPath)
-          ]);
+      if (fileInfos) {
+        for (const fileInfo of fileInfos) {
+          const filePath = join(dirPath, fileInfo.filename);
+          const readable =
+            typeof fileInfo.content === 'string'
+              ? Readable.from([fileInfo.content])
+              : JSONStringifyStream.from(fileInfo.content);
+          filesWritten.push(await this.runPipeline(readable, filePath));
         }
-        filesWritten.push(fileInfoPath);
-      });
+      }
 
-      await Promise.all(pipeThese.map((streams) => pipeline(streams))).catch(
-        (err) => {
-          const error = new Error('An error occurred writing files');
-          error.stack = err.stack;
-          throw error;
-        }
-      );
       return filesWritten;
     } finally {
       HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
@@ -540,5 +510,19 @@ export class TestService {
       tests: testItems,
       testLevel: TestLevel.RunSpecifiedTests
     };
+  }
+
+  private async runPipeline(
+    readable: Readable,
+    filePath: string,
+    transform?: Transform
+  ): Promise<string> {
+    const writable = createWriteStream(filePath, 'utf8');
+    if (transform) {
+      await pipeline(readable, transform, writable);
+    } else {
+      await pipeline(readable, writable);
+    }
+    return filePath;
   }
 }
