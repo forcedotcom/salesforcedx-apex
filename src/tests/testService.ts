@@ -23,20 +23,23 @@ import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { JUnitFormatTransformer, TapFormatTransformer } from '../reporters';
-import { queryNamespaces } from './utils';
+import { getBufferSize, getJsonIndent, queryNamespaces } from './utils';
 import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
 import { mkdir } from 'node:fs/promises';
 import { Readable } from 'node:stream';
-import { JSONStringifyStream, TestResultStringifyStream } from '../streaming';
+import { TestResultStringifyStream } from '../streaming';
 import { elapsedTime, HeapMonitor } from '../utils';
 import { isTestResult, isValidApexClassID } from '../narrowing';
 import { Duration } from '@salesforce/kit';
 import { Transform } from 'stream';
 import { pipeline } from 'node:stream/promises';
 import { createWriteStream } from 'node:fs';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bfj = require('bfj');
 
 export class TestService {
   private readonly connection: Connection;
@@ -310,18 +313,24 @@ export class TestService {
                 dirPath,
                 `test-result-${testRunId || 'default'}.json`
               );
-              readable = TestResultStringifyStream.fromTestResult(result);
+              readable = TestResultStringifyStream.fromTestResult(result, {
+                bufferSize: getBufferSize()
+              });
               break;
             case ResultFormat.tap:
               filePath = join(dirPath, `test-result-${testRunId}-tap.txt`);
-              readable = new TapFormatTransformer(result);
+              readable = new TapFormatTransformer(result, undefined, {
+                bufferSize: getBufferSize()
+              });
               break;
             case ResultFormat.junit:
               filePath = join(
                 dirPath,
                 `test-result-${testRunId || 'default'}-junit.xml`
               );
-              readable = new JUnitFormatTransformer(result);
+              readable = new JUnitFormatTransformer(result, {
+                bufferSize: getBufferSize()
+              });
               break;
           }
           if (filePath && readable) {
@@ -342,7 +351,14 @@ export class TestService {
           .map((record) => record.perClassCoverage)
           .filter((pcc) => pcc?.length);
         filesWritten.push(
-          await this.runPipeline(JSONStringifyStream.from(c), filePath)
+          await this.runPipeline(
+            bfj.stringify(c, {
+              bufferLength: getBufferSize(),
+              iterables: 'ignore',
+              space: getJsonIndent()
+            }),
+            filePath
+          )
         );
       }
 
@@ -352,7 +368,11 @@ export class TestService {
           const readable =
             typeof fileInfo.content === 'string'
               ? Readable.from([fileInfo.content])
-              : JSONStringifyStream.from(fileInfo.content);
+              : bfj.stringify(fileInfo.content, {
+                  bufferLength: getBufferSize(),
+                  iterables: 'ignore',
+                  space: getJsonIndent()
+                });
           filesWritten.push(await this.runPipeline(readable, filePath));
         }
       }

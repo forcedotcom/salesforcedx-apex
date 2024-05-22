@@ -61,3 +61,19 @@ export const queryAll = async <T>(
     records: allRecords
   } as QueryResult<T>;
 };
+
+export const getJsonIndent = (): number | undefined => {
+  const jsonIndent = process.env.SF_APEX_RESULTS_JSON_INDENT;
+  if (jsonIndent && Number.isInteger(Number(jsonIndent))) {
+    return Number(jsonIndent);
+  }
+  return undefined;
+};
+
+export const getBufferSize = (): number => {
+  const jsonBufferSize = process.env.SF_APEX_JSON_BUFFER_SIZE;
+  if (jsonBufferSize && Number.isInteger(Number(jsonBufferSize))) {
+    return Number(jsonBufferSize);
+  }
+  return 256;
+};

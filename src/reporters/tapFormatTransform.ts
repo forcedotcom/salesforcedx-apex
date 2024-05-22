@@ -20,27 +20,45 @@ export interface TapResult {
   testNumber: number;
 }
 
+export type TapFormatTransformerOptions = ReadableOptions & {
+  bufferSize?: number;
+};
+
 export class TapFormatTransformer extends Readable {
   private readonly logger: Logger;
   private testResult: TestResult;
   private epilogue?: string[];
-  private heapMonitor: HeapMonitor;
+  private buffer: string;
+  private bufferSize: number;
 
   constructor(
     testResult: TestResult,
     epilogue?: string[],
-    options?: ReadableOptions
+    options?: TapFormatTransformerOptions
   ) {
     super(options);
     this.testResult = testResult;
     this.epilogue = epilogue;
     this.logger = Logger.childFromRoot('TapFormatTransformer');
+    this.buffer = '';
+    this.bufferSize = options?.bufferSize || 256; // Default buffer size is 256
+  }
+
+  private pushToBuffer(chunk: string): void {
+    this.buffer += chunk;
+    if (this.buffer.length >= this.bufferSize) {
+      this.push(this.buffer);
+      this.buffer = '';
+    }
   }
 
   _read(): void {
     this.logger.trace('starting format');
     HeapMonitor.getInstance().checkHeapSize('TapFormatTransformer._read');
     this.format();
+    if (this.buffer.length > 0) {
+      this.push(this.buffer);
+    }
     this.push(null); // Signal the end of the stream
     this.logger.trace('finishing format');
     HeapMonitor.getInstance().checkHeapSize('TapFormatTransformer._read');
@@ -50,11 +68,11 @@ export class TapFormatTransformer extends Readable {
   public format(): void {
     const testPointCount = this.testResult.tests.length;
 
-    this.push(`1..${testPointCount}\n`);
+    this.pushToBuffer(`1..${testPointCount}\n`);
     this.buildTapResults();
 
     this.epilogue?.forEach((c) => {
-      this.push(`# ${c}\n`);
+      this.pushToBuffer(`# ${c}\n`);
     });
   }
 
@@ -64,9 +82,9 @@ export class TapFormatTransformer extends Readable {
       const testNumber = index + 1;
       const outcome =
         test.outcome === ApexTestResultOutcome.Pass ? 'ok' : 'not ok';
-      this.push(`${outcome} ${testNumber} ${test.fullName}\n`);
+      this.pushToBuffer(`${outcome} ${testNumber} ${test.fullName}\n`);
       this.buildTapDiagnostics(test).forEach((s) => {
-        this.push(`# ${s}\n`);
+        this.pushToBuffer(`# ${s}\n`);
       });
     });
   }

@@ -8,11 +8,7 @@
 import { Connection, Logger, LoggerLevel } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
-import {
-  AsyncTestRun,
-  JSONStringifyStream,
-  StreamingClient
-} from '../streaming';
+import { AsyncTestRun, StreamingClient } from '../streaming';
 import {
   elapsedTime,
   formatStartTime,
@@ -35,7 +31,12 @@ import {
   TestResult,
   TestRunIdResult
 } from './types';
-import { calculatePercentage, queryAll } from './utils';
+import {
+  calculatePercentage,
+  getBufferSize,
+  getJsonIndent,
+  queryAll
+} from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { CodeCoverage } from './codeCoverage';
@@ -46,6 +47,9 @@ import { pipeline } from 'node:stream/promises';
 import * as os from 'node:os';
 import path from 'path';
 import fs from 'node:fs/promises';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bfj = require('bfj');
 
 const finishedStatuses = [
   ApexTestRunResultStatus.Aborted,
@@ -147,8 +151,12 @@ export class AsyncTests {
           path.join(os.tmpdir(), runId, 'rawResults.json')
         );
         this.logger.debug(`Raw raw results written to: ${writeStream.path}`);
-        const jsonStringify = JSONStringifyStream.from(formattedResults);
-        return await pipeline(jsonStringify, writeStream);
+        const stringifyStream = bfj.stringify(formattedResults, {
+          bufferLength: getBufferSize(),
+          iterables: 'ignore',
+          space: getJsonIndent()
+        });
+        return await pipeline(stringifyStream, writeStream);
       }
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
