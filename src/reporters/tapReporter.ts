@@ -10,6 +10,7 @@ import {
   TestResult
 } from '../tests';
 import { elapsedTime, HeapMonitor } from '../utils';
+import * as os from 'node:os';
 
 export interface TapResult {
   description: string;
@@ -83,7 +84,7 @@ export class TapReporter {
       }
 
       if (testResult.stackTrace) {
-        testResult.stackTrace.split('\n').forEach((line) => {
+        testResult.stackTrace.split(os.EOL).forEach((line) => {
           message.push(line);
         });
       }

@@ -18,6 +18,7 @@ import { glob } from 'glob';
 import * as fs from 'fs';
 import { nls } from '../i18n';
 import { elapsedTime } from '../utils';
+import * as os from 'node:os';
 
 const startOfSource = (source: string): number => {
   if (source) {
@@ -154,7 +155,7 @@ export class CoverageReporter {
         try {
           sourceLines = fs
             .readFileSync(fileCoverageData.path, 'utf8')
-            .split('\n');
+            .split(os.EOL);
         } catch {
           // file not found
         }

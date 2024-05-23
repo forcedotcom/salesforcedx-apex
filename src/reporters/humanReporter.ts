@@ -14,6 +14,7 @@ import {
 } from '../tests';
 import { nls } from '../i18n';
 import { LoggerLevel } from '@salesforce/core';
+import * as os from 'node:os';
 
 export class HumanReporter {
   @elapsedTime()
@@ -128,7 +129,7 @@ export class HumanReporter {
       }
     );
 
-    let testResultTable = '\n\n';
+    let testResultTable = os.EOL.repeat(2);
     testResultTable += tb.createTable(
       testRowArray,
       [
@@ -177,7 +178,7 @@ export class HumanReporter {
       }
     });
 
-    let detailedCovTable = '\n\n';
+    let detailedCovTable = os.EOL.repeat(2);
     detailedCovTable += tb.createTable(
       testRowArray,
       [
@@ -223,7 +224,7 @@ export class HumanReporter {
       }
     );
 
-    let codeCovTable = '\n\n';
+    let codeCovTable = os.EOL.repeat(2);
     codeCovTable += tb.createTable(
       codeCovRowArray,
       [

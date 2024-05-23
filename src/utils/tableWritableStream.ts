@@ -111,7 +111,7 @@ export class TableWriteableStream {
 
         // if a cell is multiline, find the line that's the longest
         const longestLineWidth = cell
-          .split('\n')
+          .split(os.EOL)
           .reduce((maxLine, line) =>
             line.length > maxLine.length ? line : maxLine
           ).length;

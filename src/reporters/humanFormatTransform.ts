@@ -16,6 +16,7 @@ import { Readable, ReadableOptions } from 'node:stream';
 import { elapsedTime, HeapMonitor } from '../utils';
 import { Logger, LoggerLevel } from '@salesforce/core';
 import { EOL } from 'os';
+import * as os from 'node:os';
 
 export class HumanFormatTransform extends Readable {
   private logger: Logger;
@@ -196,7 +197,7 @@ export class HumanFormatTransform extends Readable {
       }
     });
 
-    this.push('\n\n');
+    this.push(os.EOL.repeat(2));
     tb.createTable(
       testRowArray,
       [
@@ -241,7 +242,7 @@ export class HumanFormatTransform extends Readable {
       }
     );
 
-    this.push('\n\n');
+    this.push(os.EOL.repeat(2));
     tb.createTable(
       codeCovRowArray,
       [

@@ -28,8 +28,8 @@ import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
-import { mkdir } from 'node:fs/promises';
-import { Readable } from 'node:stream';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { Readable, Writable } from 'node:stream';
 import { TestResultStringifyStream } from '../streaming';
 import { elapsedTime, HeapMonitor } from '../utils';
 import { isTestResult, isValidApexClassID } from '../narrowing';
@@ -293,12 +293,12 @@ export class TestService {
         ? result.summary.testRunId
         : result.testRunId;
 
-      filesWritten.push(
-        await this.runPipeline(
-          Readable.from([testRunId]),
-          join(dirPath, 'test-run-id.txt')
-        )
-      );
+      try {
+        await writeFile(join(dirPath, 'test-run-id.txt'), testRunId);
+        filesWritten.push(join(dirPath, 'test-run-id.txt'));
+      } catch (err) {
+        console.error(`Error writing file: ${err}`);
+      }
 
       if (resultFormats) {
         if (!isTestResult(result)) {
@@ -537,12 +537,16 @@ export class TestService {
     filePath: string,
     transform?: Transform
   ): Promise<string> {
-    const writable = createWriteStream(filePath, 'utf8');
+    const writable = this.createStream(filePath);
     if (transform) {
       await pipeline(readable, transform, writable);
     } else {
       await pipeline(readable, writable);
     }
     return filePath;
+  }
+
+  public createStream(filePath: string): Writable {
+    return createWriteStream(filePath, 'utf8');
   }
 }
