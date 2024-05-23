@@ -18,32 +18,6 @@ import { calculatePercentage, queryAll } from './utils';
 import { QUERY_RECORD_LIMIT } from './constants';
 import { elapsedTime } from '../utils/elapsedTime';
 
-// These types are used to populate the apexClassIdSet when the apexClassIdSet is empty
-export type QueryResult<T = QueryRecord> = { records: T[] };
-export type QueryRecord = { Id: string };
-export type QueryRecords = {
-  totalSize: number;
-  records: ApexCodeCoverageAggregateRecord[];
-};
-export type ApexCodeCoverageAggregateRecord = {
-  attributes: {
-    type: string;
-    url: string;
-  };
-  ApexClassOrTrigger: ApexClassOrTrigger;
-  NumLinesCovered: number;
-  NumLinesUncovered: number;
-  Coverage: object;
-};
-type ApexClassOrTrigger = {
-  attributes: {
-    type: string;
-    url: string;
-  };
-  Id: string;
-  Name: string;
-};
-
 export class CodeCoverage {
   public readonly connection: Connection;
 
@@ -187,24 +161,23 @@ export class CodeCoverage {
   private async queryAggregateCodeCov(
     apexClassIdSet: Set<string>
   ): Promise<ApexCodeCoverageAggregate[]> {
-    const codeCoverageQuery =
-      'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
+    let codeCoverageQuery;
 
-    // If the "Store Only Aggregate Code Coverage" setting is checked, then apexClassIdSet is empty and we should query all the Apex classes and triggers in the ApexCodeCoverageAggregate table.
     if (apexClassIdSet.size === 0) {
-      // Set apexClassIdSet to all the Apex classes and triggers in the ApexCodeCoverageAggregate table
-      const codeCoverageQueryResult = (await this.connection.tooling.query(
-        'SELECT ApexClassOrTrigger.Id FROM ApexCodeCoverageAggregate'
-      )) as QueryRecords;
+      codeCoverageQuery =
+        'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate';
 
-      apexClassIdSet = new Set<string>(
-        codeCoverageQueryResult.records.map((record) =>
-          record.ApexClassOrTrigger.Id.toString()
-        )
+      const result = await queryAll<ApexCodeCoverageAggregate>(
+        this.connection,
+        codeCoverageQuery,
+        true
       );
+      return [result] as unknown as ApexCodeCoverageAggregate[];
+    } else {
+      codeCoverageQuery =
+        'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
+      return this.fetchResults(apexClassIdSet, codeCoverageQuery);
     }
-
-    return this.fetchResults(apexClassIdSet, codeCoverageQuery);
   }
 
   @elapsedTime()
