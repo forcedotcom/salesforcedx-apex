@@ -8,7 +8,6 @@
 import { elapsedTime } from './elapsedTime';
 import { LoggerLevel } from '@salesforce/core';
 import { Column, Row } from './types';
-import * as os from 'node:os';
 
 const COLUMN_SEPARATOR = '  ';
 const COLUMN_FILLER = ' ';
@@ -43,7 +42,7 @@ export class Table {
     });
 
     if (columnHeader && headerSeparator) {
-      table += `${title ? os.EOL : ''}${columnHeader}\n${headerSeparator}\n`;
+      table += `${title ? '\n' : ''}${columnHeader}\n${headerSeparator}\n`;
     }
 
     rows.forEach((row) => {
@@ -52,7 +51,7 @@ export class Table {
         const cell = row[col.key];
         const isLastCol = colIndex === colArr.length - 1;
         const rowWidth = outputRow.length;
-        cell.split(os.EOL).forEach((line, lineIndex) => {
+        cell.split('\n').forEach((line, lineIndex) => {
           const cellWidth = maxColWidths.get(col.key);
           if (cellWidth) {
             if (lineIndex === 0) {
@@ -67,14 +66,14 @@ export class Table {
               // and pad it to the beginning of the current column.
               // Only add col separator padding once to additional line.
               outputRow +=
-                os.EOL +
+                '\n' +
                 this.fillColumn('', rowWidth, COLUMN_FILLER, true) +
                 this.fillColumn(line, cellWidth, COLUMN_FILLER, isLastCol);
             }
           }
         });
       });
-      table += outputRow + os.EOL;
+      table += outputRow + '\n';
     });
 
     return table;
@@ -100,7 +99,7 @@ export class Table {
 
         // if a cell is multiline, find the line that's the longest
         const longestLineWidth = cell
-          .split(os.EOL)
+          .split('\n')
           .reduce((maxLine, line) =>
             line.length > maxLine.length ? line : maxLine
           ).length;
