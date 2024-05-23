@@ -86,6 +86,9 @@ export class TableWriteableStream {
         });
       });
       this.stream.push(outputRow + os.EOL);
+      // this call to setImmediate will schedule the closure on the event loop
+      // this action causing the current code to yield to the event loop
+      // allowing other processes to get time on the event loop
       setImmediate(() => {});
     });
   }

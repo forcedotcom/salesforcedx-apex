@@ -113,6 +113,9 @@ export class JUnitFormatTransformer extends Readable {
       this.pushToBuffer(
         `${tab}${tab}${tab}<property name="${key}" value="${value}"/>\n`
       );
+      // this call to setImmediate will schedule the closure on the event loop
+      // this action causing the current code to yield to the event loop
+      // allowing other processes to get time on the event loop
       setImmediate(() => {});
     });
 
@@ -145,6 +148,9 @@ export class JUnitFormatTransformer extends Readable {
       }
 
       this.pushToBuffer(`${tab}${tab}</testcase>\n`);
+      // this call to setImmediate will schedule the closure on the event loop
+      // this action causing the current code to yield to the event loop
+      // allowing other processes to get time on the event loop
       setImmediate(() => {});
     }
   }
