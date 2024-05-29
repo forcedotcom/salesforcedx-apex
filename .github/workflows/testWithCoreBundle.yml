@@ -18,5 +18,5 @@ jobs:
       branch: ${{ github.ref_name || inputs.branch }}
   tests:
     name: Call tests workflow
-    uses: ./.github/workflows/testCommitExceptMain.yml
+    uses: salesforcecli/github-workflows/.github/workflows/unitTest.yml@main
 
