@@ -1,7 +1,8 @@
-name: unit tests
+name: Unit tests
 on:
   push:
     branches-ignore: [main]
+  workflow_call:
 
 jobs:
   unit-tests:
