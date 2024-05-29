@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Set the branch to bundle core'
+        description: 'Set the branch to test core bundle'
         type: string
         required: false
         default: main
