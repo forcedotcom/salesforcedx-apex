@@ -9,11 +9,6 @@ on:
         type: string
         required: false
         default: main
-      nodeVersion:
-        description: version of node to use.  It's better to specify latest, lts/* or lts/-1 than to hardode numbers
-        type: string
-        required: false
-        default: lts/*
 
 jobs:
   build:
