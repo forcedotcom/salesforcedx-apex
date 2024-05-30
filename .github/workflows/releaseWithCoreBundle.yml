@@ -3,6 +3,7 @@ on:
   workflow_run:
     workflows:
       - version, tag and github release
+      - manual release
     types:
       - completed
   workflow_dispatch:
