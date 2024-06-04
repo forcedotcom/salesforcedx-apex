@@ -59,5 +59,5 @@ export const queryAll = async <R>(
     done: true,
     totalSize: allRecords.length,
     records: allRecords
-  } as QueryResult<R>;
+  };
 };
