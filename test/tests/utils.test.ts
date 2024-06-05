@@ -9,7 +9,11 @@ import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
 import { expect } from 'chai';
 import { createSandbox, SinonSandbox } from 'sinon';
 import * as utils from '../../src/tests/utils';
-import { getBufferSize, getJsonIndent } from '../../src/tests/utils';
+import {
+  getBufferSize,
+  getJsonIndent,
+  resetLimitsForTesting
+} from '../../src/tests/utils';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
@@ -75,6 +79,9 @@ describe('Query Namespaces', async () => {
 });
 
 describe('getJsonIndent', () => {
+  beforeEach(() => {
+    resetLimitsForTesting();
+  });
   it('should return the integer value of the environment variable when it is set and is an integer', () => {
     process.env.SF_APEX_RESULTS_JSON_INDENT = '4';
     const result = getJsonIndent();
@@ -89,6 +96,9 @@ describe('getJsonIndent', () => {
 });
 
 describe('getBufferSize', () => {
+  beforeEach(() => {
+    resetLimitsForTesting();
+  });
   it('should return the integer value of the environment variable when it is set and is an integer', () => {
     process.env.SF_APEX_JSON_BUFFER_SIZE = '512';
     const result = getBufferSize();

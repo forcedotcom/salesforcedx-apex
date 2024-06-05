@@ -8,11 +8,22 @@ import { Logger, LoggerLevel } from '@salesforce/core';
 import v8 from 'node:v8';
 import { clearInterval } from 'node:timers';
 
+const INTERVAL_DEFAULT = 500;
+const INTERVAL_MIN = 100;
+const INTERVAL_MAX = 10_000;
+
+export class NullHeapMonitor implements Disposable {
+  checkHeapSize(): void {}
+  startMonitoring(): void {}
+  stopMonitoring(): void {}
+  [Symbol.dispose](): void {}
+}
+
 /**
  * Class responsible for monitoring heap memory usage.
  */
 export class HeapMonitor implements Disposable {
-  private static instance: HeapMonitor;
+  private static instance: HeapMonitor | NullHeapMonitor;
   private logger: Logger;
   private intervalId?: NodeJS.Timeout;
   private isMonitoring: boolean;
@@ -27,10 +38,16 @@ export class HeapMonitor implements Disposable {
     });
     this.isMonitoring = false;
     // Check for SF_HEAP_MONITOR_INTERVAL environment variable
-    this.interval = 500; // default value
+    this.interval = INTERVAL_DEFAULT; // default value
     const envInterval = process.env.SF_HEAP_MONITOR_INTERVAL;
     if (envInterval && Number.isInteger(Number(envInterval))) {
       this.interval = Number(envInterval);
+    }
+    if (this.interval < INTERVAL_MIN || this.interval > INTERVAL_MAX) {
+      this.logger.warn(
+        `Interval if ${this.interval} found in SF_HEAP_MONITOR_INTERVAL must be between: ${INTERVAL_MIN} and ${INTERVAL_MAX}. Using default of ${INTERVAL_DEFAULT}`
+      );
+      this.interval = INTERVAL_DEFAULT;
     }
   }
 
@@ -38,9 +55,13 @@ export class HeapMonitor implements Disposable {
    * Returns the singleton instance of HeapMonitor.
    * @returns The singleton instance.
    */
-  public static getInstance(): HeapMonitor {
+  public static getInstance(): HeapMonitor | NullHeapMonitor {
     if (!HeapMonitor.instance) {
-      HeapMonitor.instance = new HeapMonitor();
+      if (Logger.getRoot().shouldLog(LoggerLevel.DEBUG)) {
+        HeapMonitor.instance = new HeapMonitor();
+      } else {
+        HeapMonitor.instance = new NullHeapMonitor();
+      }
     }
     return HeapMonitor.instance;
   }
