@@ -662,6 +662,7 @@ export function getTestData() {
     junitResult: junitResult.toString(),
     junitSuccess: junitSuccess.toString(),
     junitCodeCov: junitCodeCov.toString(),
+    junitDetailedCodeCov: junitDetailedCodeCov.toString(),
     junitMissingVal: junitMissingVal.toString(),
     successResult: structuredClone(successResult)
   };
