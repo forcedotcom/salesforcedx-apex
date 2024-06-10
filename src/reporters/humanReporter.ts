@@ -21,7 +21,7 @@ export class HumanReporter {
   public format(testResult: TestResult, detailedCoverage: boolean): string {
     HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
     try {
-      let tbResult = this.formatSummary(testResult);
+      let tbResult: string;
       if (!testResult.codecoverage || !detailedCoverage) {
         tbResult += this.formatTestResults(testResult.tests);
       }
@@ -32,6 +32,7 @@ export class HumanReporter {
         }
         tbResult += this.formatCodeCov(testResult.codecoverage);
       }
+      tbResult += this.formatSummary(testResult);
       return tbResult;
     } finally {
       HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
