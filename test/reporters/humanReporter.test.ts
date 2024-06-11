@@ -86,4 +86,15 @@ describe('Human Reporter Tests', () => {
     );
     expect(result).to.contain('=== Test Summary');
   });
+
+  it('should format test results and skip successful tests if verbose is false', () => {
+    const result = reporter.format(testResults, false, false);
+    expect(result).to.not.be.empty;
+    expect(result).to.not.contain(
+      'AccountServiceTest.should_create_account             Pass                                                                                                           86'
+    );
+    expect(result).to.contain('AwesomeCalculatorTest.testCallout       Fail');
+    expect(result).to.contain('=== Test Results');
+    expect(result).to.contain('=== Test Summary');
+  });
 });
