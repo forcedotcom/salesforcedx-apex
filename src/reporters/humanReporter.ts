@@ -18,12 +18,16 @@ import * as os from 'node:os';
 
 export class HumanReporter {
   @elapsedTime()
-  public format(testResult: TestResult, detailedCoverage: boolean): string {
+  public format(
+    testResult: TestResult,
+    detailedCoverage: boolean,
+    verbose: boolean = true
+  ): string {
     HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
     try {
       let tbResult: string;
       if (!testResult.codecoverage || !detailedCoverage) {
-        tbResult += this.formatTestResults(testResult.tests);
+        tbResult += this.formatTestResults(testResult.tests, verbose);
       }
 
       if (testResult.codecoverage) {
@@ -105,7 +109,10 @@ export class HumanReporter {
   }
 
   @elapsedTime()
-  private formatTestResults(tests: ApexTestResultData[]): string {
+  private formatTestResults(
+    tests: ApexTestResultData[],
+    verbose: boolean
+  ): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
     tests.forEach(
@@ -120,13 +127,21 @@ export class HumanReporter {
           ? `${elem.message}\n${elem.stackTrace}`
           : elem.message;
 
-        testRowArray.push({
-          name: elem.fullName,
-          outcome: elem.outcome,
-          msg: elem.message ? msg : '',
-          runtime:
-            elem.outcome !== ApexTestResultOutcome.Fail ? `${elem.runTime}` : ''
-        });
+        if (
+          verbose ||
+          elem.outcome === ApexTestResultOutcome.Fail ||
+          elem.outcome === ApexTestResultOutcome.CompileFail
+        ) {
+          testRowArray.push({
+            name: elem.fullName,
+            outcome: elem.outcome,
+            msg: elem.message ? msg : '',
+            runtime:
+              elem.outcome !== ApexTestResultOutcome.Fail
+                ? `${elem.runTime}`
+                : ''
+          });
+        }
       }
     );
 
