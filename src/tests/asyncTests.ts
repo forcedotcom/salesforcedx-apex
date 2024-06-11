@@ -29,6 +29,7 @@ import {
   AsyncTestArrayConfiguration,
   AsyncTestConfiguration,
   TestResult,
+  TestResultRaw,
   TestRunIdResult
 } from './types';
 import {
@@ -47,6 +48,7 @@ import { pipeline } from 'node:stream/promises';
 import * as os from 'node:os';
 import path from 'path';
 import fs from 'node:fs/promises';
+import { Field } from '@jsforce/jsforce-node';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bfj = require('bfj');
@@ -230,7 +232,16 @@ export class AsyncTests {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
 
-    const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    const apexTestRunResultTableFields =
+      await this.describeSObjects('ApexTestRunResult');
+
+    const testRunSummaryQuery = apexTestRunResultTableFields.some(
+      (field) => field.label === 'TestSetupTime'
+    )
+      ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
+      : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+
+    // const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
     progress?.report({
       type: 'FormatTestResultProgress',
@@ -353,7 +364,8 @@ export class AsyncTests {
           await this.codecoverage.getOrgWideCoverage();
       }
 
-      return result;
+      const transformedResult = this.transformTestResult(result);
+      return transformedResult;
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     }
@@ -364,13 +376,23 @@ export class AsyncTests {
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
+    const apexTestResultTableFields =
+      await this.describeSObjects('ApexTestResult');
+
     try {
-      let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
-      apexTestResultQuery +=
-        'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
-      apexTestResultQuery +=
-        'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
-      apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
+      const apexTestResultQuery = apexTestResultTableFields.some(
+        (field) => field.label === 'IsTestSetup'
+      )
+        ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
+        : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
+
+      // try {
+      //   let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
+      //   apexTestResultQuery +=
+      //     'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
+      //   apexTestResultQuery +=
+      //     'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
+      //   apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
 
       const apexResultIds = testQueueResult.records.map((record) => record.Id);
 
@@ -531,6 +553,40 @@ export class AsyncTests {
       } catch (e) {
         return Promise.reject(e);
       }
+    };
+  }
+
+  private async describeSObjects(sObjectName: string): Promise<Field[]> {
+    let describeRequest;
+
+    try {
+      describeRequest = await this.connection.tooling.describe(sObjectName);
+      console.log(`esto anda? ${sObjectName}`, await describeRequest);
+    } catch (error) {
+      console.error('Error describing sObject:', error);
+      return Promise.reject(error);
+    } finally {
+      // eslint-disable-next-line no-unsafe-finally
+      return Promise.resolve(describeRequest.fields);
+    }
+  }
+
+  private transformTestResult(rawResult: TestResultRaw): TestResult {
+    // Destructure summary to omit testSetupTime
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { testSetupTime, ...summary } = rawResult.summary;
+
+    // Filter and transform tests array
+    const tests = rawResult.tests
+      .filter((test) => !test.isTestSetup)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(({ isTestSetup, ...rest }) => rest);
+
+    // Return the transformed result
+    return {
+      summary,
+      tests,
+      codecoverage: rawResult.codecoverage
     };
   }
 }

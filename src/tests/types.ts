@@ -361,6 +361,10 @@ export type ApexTestResultData = {
    */
   testTimestamp: string;
   /**
+   * TODO: Write description
+   */
+  isTestSetup?: boolean; // Include this field for filtering
+  /**
    * The full name of the associated ApexClass method
    */
   fullName: string;
@@ -387,6 +391,12 @@ export type TestRunIdResult = {
 };
 
 export type TestResult = {
+  summary: Omit<TestResultRaw['summary'], 'testSetupTime'>;
+  tests: Omit<ApexTestResultData, 'IsTestSetup'>[];
+  codecoverage?: CodeCoverageResult[];
+};
+
+export type TestResultRaw = {
   summary: {
     failRate: string;
     testsRan: number;
@@ -400,6 +410,7 @@ export type TestResult = {
     testStartTime: string;
     testExecutionTimeInMs: number;
     testTotalTimeInMs: number;
+    testSetupTime?: number;
     commandTimeInMs: number;
     hostname: string;
     username: string;
