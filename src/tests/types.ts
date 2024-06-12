@@ -361,9 +361,9 @@ export type ApexTestResultData = {
    */
   testTimestamp: string;
   /**
-   * TODO: Write description
+   * Indicates if the results are for a test setup method. The default is false.
    */
-  isTestSetup?: boolean; // Include this field for filtering
+  isTestSetup?: boolean;
   /**
    * The full name of the associated ApexClass method
    */

@@ -236,7 +236,7 @@ export class AsyncTests {
       await this.describeSObjects('ApexTestRunResult');
 
     const testRunSummaryQuery = apexTestRunResultTableFields.some(
-      (field) => field.label === 'TestSetupTime'
+      (field) => field.name === 'TestSetupTime'
     )
       ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
       : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
@@ -381,7 +381,7 @@ export class AsyncTests {
 
     try {
       const apexTestResultQuery = apexTestResultTableFields.some(
-        (field) => field.label === 'IsTestSetup'
+        (field) => field.name === 'IsTestSetup'
       )
         ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
         : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
@@ -557,17 +557,14 @@ export class AsyncTests {
   }
 
   private async describeSObjects(sObjectName: string): Promise<Field[]> {
-    let describeRequest;
-
     try {
-      describeRequest = await this.connection.tooling.describe(sObjectName);
+      const describeRequest =
+        await this.connection.tooling.describe(sObjectName);
       console.log(`esto anda? ${sObjectName}`, await describeRequest);
+      return describeRequest.fields;
     } catch (error) {
       console.error('Error describing sObject:', error);
       return Promise.reject(error);
-    } finally {
-      // eslint-disable-next-line no-unsafe-finally
-      return Promise.resolve(describeRequest.fields);
     }
   }
 
