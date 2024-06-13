@@ -215,12 +215,6 @@ describe('Run Apex tests asynchronously', () => {
   });
 
   it('should return formatted test results', async () => {
-    // toolingDescribeStub
-    //   .withArgs('ApexTestResult')
-    //   .resolves(mockDescribeApexTestResult);
-    // toolingDescribeStub
-    //   .withArgs('ApexTestRunResult')
-    //   .resolves(mockDescribeApexTestRunResult);
     missingTimeTestData.summary.orgId =
       mockConnection.getAuthInfoFields().orgId;
     missingTimeTestData.summary.username = mockConnection.getUsername();

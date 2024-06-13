@@ -560,7 +560,6 @@ export class AsyncTests {
     try {
       const describeRequest =
         await this.connection.tooling.describe(sObjectName);
-      console.log(`esto anda? ${sObjectName}`, await describeRequest);
       return describeRequest.fields;
     } catch (error) {
       console.error('Error describing sObject:', error);
