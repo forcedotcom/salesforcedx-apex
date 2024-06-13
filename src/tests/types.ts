@@ -237,6 +237,10 @@ export type ApexTestResultRecord = {
    * The start time of the test method.
    */
   TestTimestamp: string;
+  // /**
+  //  * Indicates if the results are for a test setup method. The default is false.
+  //  */
+  // IsTestSetup: boolean;
 };
 
 export type ApexTestResult = {
@@ -392,7 +396,7 @@ export type TestRunIdResult = {
 
 export type TestResult = {
   summary: Omit<TestResultRaw['summary'], 'testSetupTime'>;
-  tests: Omit<ApexTestResultData, 'IsTestSetup'>[];
+  tests: Omit<ApexTestResultData, 'isTestSetup'>[];
   codecoverage?: CodeCoverageResult[];
 };
 

@@ -62,10 +62,12 @@ import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
 import { Writable } from 'node:stream';
+import { DescribeSObjectResult } from '@jsforce/jsforce-node';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingRequestStub: SinonStub;
+let toolingDescribeStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Run Apex tests asynchronously', () => {
@@ -85,6 +87,43 @@ describe('Run Apex tests asynchronously', () => {
       }
     ]
   };
+
+  const mockDescribeApexTestRunResult = {
+    fields: [
+      { name: 'AsyncApexJobId' },
+      { name: 'Status' },
+      { name: 'ClassesCompleted' },
+      { name: 'ClassesEnqueued' },
+      { name: 'MethodsEnqueued' },
+      { name: 'StartTime' },
+      { name: 'EndTime' },
+      { name: 'TestTime' },
+      { name: 'TestSetupTime' },
+      { name: 'UserId' }
+    ],
+    name: 'ApexTestRunResult',
+    label: 'Apex Test Run Result',
+    labelPlural: 'Apex Test Run Results'
+  } as DescribeSObjectResult;
+  const mockDescribeApexTestResult = {
+    fields: [
+      { name: 'Id' },
+      { name: 'QueueItemId' },
+      { name: 'StackTrace' },
+      { name: 'Message' },
+      { name: 'AsyncApexJobId' },
+      { name: 'MethodName' },
+      { name: 'Outcome' },
+      { name: 'ApexLogId' },
+      { name: 'IsTestSetup' },
+      { name: 'ApexClass' },
+      { name: 'RunTime' },
+      { name: 'TestTimestamp' }
+    ],
+    name: 'ApexTestResult',
+    label: 'Apex Test Result',
+    labelPlural: 'Apex Test Results'
+  } as DescribeSObjectResult;
 
   beforeEach(async () => {
     sandboxStub = createSandbox();
@@ -106,7 +145,14 @@ describe('Run Apex tests asynchronously', () => {
     testResultData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
     testResultData.summary.username = mockConnection.getUsername();
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
+    toolingDescribeStub = sandboxStub.stub(mockConnection.tooling, 'describe');
     formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
+    toolingDescribeStub
+      .withArgs('ApexTestResult')
+      .resolves(mockDescribeApexTestResult);
+    toolingDescribeStub
+      .withArgs('ApexTestRunResult')
+      .resolves(mockDescribeApexTestRunResult);
   });
 
   afterEach(() => {
@@ -169,6 +215,12 @@ describe('Run Apex tests asynchronously', () => {
   });
 
   it('should return formatted test results', async () => {
+    // toolingDescribeStub
+    //   .withArgs('ApexTestResult')
+    //   .resolves(mockDescribeApexTestResult);
+    // toolingDescribeStub
+    //   .withArgs('ApexTestRunResult')
+    //   .resolves(mockDescribeApexTestRunResult);
     missingTimeTestData.summary.orgId =
       mockConnection.getAuthInfoFields().orgId;
     missingTimeTestData.summary.username = mockConnection.getUsername();
@@ -220,13 +272,14 @@ describe('Run Apex tests asynchronously', () => {
 
     let summaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    summaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    summaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId ';
     summaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
     expect(mockSingleRecordQuery.getCall(0).args[0]).to.equal(summaryQuery);
 
     let testResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     testResultQuery +=
-      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
     testResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
@@ -339,13 +392,14 @@ describe('Run Apex tests asynchronously', () => {
 
     let summaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    summaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    summaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId ';
     summaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
     expect(mockSingleRecordQuery.getCall(0).args[0]).to.equal(summaryQuery);
 
     let testResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     testResultQuery +=
-      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
     testResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
@@ -673,7 +727,7 @@ describe('Run Apex tests asynchronously', () => {
 
   describe('Check Query Limits', async () => {
     const queryStart =
-      'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
+      'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
 
     const queueItemRecords: ApexTestQueueItemRecord[] = [];
     const queryIds: string[] = [];
@@ -772,7 +826,7 @@ describe('Run Apex tests asynchronously', () => {
 
     it('should split the queue into chunks of 500 records', async () => {
       const queryStart =
-        'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
+        'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
       const queryStartSeparatorCount = queryStart.split(',').length - 1;
 
       const mockToolingQuery = sandboxStub
