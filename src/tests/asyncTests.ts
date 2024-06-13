@@ -241,8 +241,6 @@ export class AsyncTests {
       ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
       : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
-    // const testRunSummaryQuery = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
-
     progress?.report({
       type: 'FormatTestResultProgress',
       value: 'retrievingTestRunSummary',
@@ -385,14 +383,6 @@ export class AsyncTests {
       )
         ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
         : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
-
-      // try {
-      //   let apexTestResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
-      //   apexTestResultQuery +=
-      //     'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
-      //   apexTestResultQuery +=
-      //     'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
-      //   apexTestResultQuery += 'FROM ApexTestResult WHERE QueueItemId IN (%s)';
 
       const apexResultIds = testQueueResult.records.map((record) => record.Id);
 
