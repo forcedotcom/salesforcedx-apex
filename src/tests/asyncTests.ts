@@ -231,13 +231,11 @@ export class AsyncTests {
     if (!isValidTestRunID(testRunId)) {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
-
-    const apexTestRunResultTableFields =
-      await this.describeSObjects('ApexTestRunResult');
-
-    const testRunSummaryQuery = apexTestRunResultTableFields.some(
-      (field) => field.name === 'TestSetupTime'
-    )
+    const hasTestSetupTimeField = await this.describeSObjects(
+      'ApexTestRunResult',
+      'TestSetupTime'
+    );
+    const testRunSummaryQuery = hasTestSetupTimeField
       ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
       : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
@@ -361,9 +359,7 @@ export class AsyncTests {
         result.summary.orgWideCoverage =
           await this.codecoverage.getOrgWideCoverage();
       }
-
-      const transformedResult = this.transformTestResult(result);
-      return transformedResult;
+      return this.transformTestResult(result);
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     }
@@ -374,13 +370,13 @@ export class AsyncTests {
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
-    const apexTestResultTableFields =
-      await this.describeSObjects('ApexTestResult');
+    const hasIsTestSetupField = await this.describeSObjects(
+      'ApexTestResult',
+      'IsTestSetup'
+    );
 
     try {
-      const apexTestResultQuery = apexTestResultTableFields.some(
-        (field) => field.name === 'IsTestSetup'
-      )
+      const apexTestResultQuery = hasIsTestSetupField
         ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
         : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
 
@@ -546,14 +542,24 @@ export class AsyncTests {
     };
   }
 
-  private async describeSObjects(sObjectName: string): Promise<Field[]> {
+  /**
+   * Checks if the specified sObject contains the given field.
+   * @param sObjectName - The name of the sObject.
+   * @param fieldName - The name of the field to check.
+   * @returns A boolean indicating if the field exists in the sObject.
+   */
+  public async describeSObjects(
+    sObjectName: string,
+    fieldName: string
+  ): Promise<boolean> {
     try {
-      const describeRequest =
+      const describeResult =
         await this.connection.tooling.describe(sObjectName);
-      return describeRequest.fields;
-    } catch (error) {
-      console.error('Error describing sObject:', error);
-      return Promise.reject(error);
+      return describeResult.fields.some(
+        (field: Field) => field.name === fieldName
+      );
+    } catch (e) {
+      throw new Error(`Error describing ${sObjectName}: ${e.message}`);
     }
   }
 
