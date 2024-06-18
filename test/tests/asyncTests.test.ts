@@ -1190,12 +1190,6 @@ describe('Run Apex tests asynchronously', () => {
   });
 
   describe('Describe SObjects', async () => {
-    // beforeEach(async () => {
-    //   singleRecordQueryStub = sandboxStub.stub(
-    //     mockConnection,
-    //     'singleRecordQuery'
-    //   );
-    // });
     it('should describe SObject and check for the existence of a field', async () => {
       const asyncTests = new AsyncTests(mockConnection);
 
