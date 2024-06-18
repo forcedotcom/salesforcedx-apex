@@ -227,7 +227,6 @@ export class HumanReporter {
   private formatCodeCov(codeCoverages: CodeCoverageResult[]): string {
     const tb = new Table();
     const codeCovRowArray: Row[] = [];
-    console.log('code_coverage');
     codeCoverages.forEach(
       (elem: {
         name: string;
