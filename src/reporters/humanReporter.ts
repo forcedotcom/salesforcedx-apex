@@ -21,13 +21,13 @@ export class HumanReporter {
   public format(
     testResult: TestResult,
     detailedCoverage: boolean,
-    verbose: boolean = true
+    concise: boolean = false
   ): string {
     HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
     try {
       let tbResult: string;
       if (!testResult.codecoverage || !detailedCoverage) {
-        tbResult += this.formatTestResults(testResult.tests, verbose);
+        tbResult += this.formatTestResults(testResult.tests, concise);
       }
 
       if (testResult.codecoverage) {
@@ -95,7 +95,8 @@ export class HumanReporter {
         : [])
     ];
 
-    return tb.createTable(
+    let summaryTable = os.EOL.repeat(2);
+    return (summaryTable += tb.createTable(
       summaryRowArray,
       [
         {
@@ -105,13 +106,13 @@ export class HumanReporter {
         { key: 'value', label: nls.localize('valueColHeader') }
       ],
       nls.localize('testSummaryHeader')
-    );
+    ));
   }
 
   @elapsedTime()
   private formatTestResults(
     tests: ApexTestResultData[],
-    verbose: boolean
+    concise: boolean
   ): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
@@ -123,15 +124,15 @@ export class HumanReporter {
         runTime: number;
         stackTrace: string | null;
       }) => {
-        const msg = elem.stackTrace
-          ? `${elem.message}\n${elem.stackTrace}`
-          : elem.message;
-
         if (
-          verbose ||
+          !concise ||
           elem.outcome === ApexTestResultOutcome.Fail ||
           elem.outcome === ApexTestResultOutcome.CompileFail
         ) {
+          const msg = elem.stackTrace
+            ? `${elem.message}\n${elem.stackTrace}`
+            : elem.message;
+
           testRowArray.push({
             name: elem.fullName,
             outcome: elem.outcome,
@@ -226,6 +227,7 @@ export class HumanReporter {
   private formatCodeCov(codeCoverages: CodeCoverageResult[]): string {
     const tb = new Table();
     const codeCovRowArray: Row[] = [];
+    console.log('code_coverage');
     codeCoverages.forEach(
       (elem: {
         name: string;

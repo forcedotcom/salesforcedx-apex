@@ -23,11 +23,13 @@ export class HumanFormatTransform extends Readable {
   constructor(
     private readonly testResult: TestResult,
     private readonly detailedCoverage: boolean,
+    private readonly concise: boolean,
     options?: ReadableOptions
   ) {
     super(options);
     this.testResult = testResult;
     this.detailedCoverage ??= false;
+    this.concise ??= false;
     this.logger = Logger.childFromRoot('HumanFormatTransform');
   }
 
@@ -135,17 +137,25 @@ export class HumanFormatTransform extends Readable {
         runTime: number;
         stackTrace: string | null;
       }) => {
-        const msg = elem.stackTrace
-          ? `${elem.message}\n${elem.stackTrace}`
-          : elem.message;
+        if (
+          !this.concise ||
+          elem.outcome === ApexTestResultOutcome.Fail ||
+          elem.outcome === ApexTestResultOutcome.CompileFail
+        ) {
+          const msg = elem.stackTrace
+            ? `${elem.message}\n${elem.stackTrace}`
+            : elem.message;
 
-        testRowArray.push({
-          name: elem.fullName,
-          outcome: elem.outcome,
-          msg: elem.message ? msg : '',
-          runtime:
-            elem.outcome !== ApexTestResultOutcome.Fail ? `${elem.runTime}` : ''
-        });
+          testRowArray.push({
+            name: elem.fullName,
+            outcome: elem.outcome,
+            msg: elem.message ? msg : '',
+            runtime:
+              elem.outcome !== ApexTestResultOutcome.Fail
+                ? `${elem.runTime}`
+                : ''
+          });
+        }
       }
     );
 
