@@ -47,7 +47,6 @@ export class HumanFormatTransform extends Readable {
 
   @elapsedTime()
   public format(): void {
-    this.formatSummary();
     if (!this.testResult.codecoverage || !this.detailedCoverage) {
       this.formatTestResults();
     }
@@ -58,6 +57,7 @@ export class HumanFormatTransform extends Readable {
       }
       this.formatCodeCov();
     }
+    this.formatSummary();
   }
 
   @elapsedTime()
@@ -112,6 +112,7 @@ export class HumanFormatTransform extends Readable {
         : [])
     ];
 
+    this.push(`${EOL}${EOL}`);
     tb.createTable(
       summaryRowArray,
       [
