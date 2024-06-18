@@ -563,21 +563,32 @@ export class AsyncTests {
     }
   }
 
-  private transformTestResult(rawResult: TestResultRaw): TestResult {
-    // Destructure summary to omit testSetupTime
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { testSetupTime, ...summary } = rawResult.summary;
+  public transformTestResult(rawResult: TestResultRaw): TestResult {
+    // Destructure summary to omit testSetupTimeInMs
+    const { testSetupTimeInMs, ...summary } = rawResult.summary;
 
-    // Filter and transform tests array
-    const tests = rawResult.tests
-      .filter((test) => !test.isTestSetup)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ isTestSetup, ...rest }) => rest);
+    // Initialize arrays for setup methods and regular tests
+    const setupMethods: Omit<ApexTestResultData, 'isTestSetup'>[] = [];
+    const regularTests: Omit<ApexTestResultData, 'isTestSetup'>[] = [];
 
-    // Return the transformed result
+    // Iterate through each item in rawResult.tests
+    rawResult.tests.forEach((test) => {
+      const { isTestSetup, ...rest } = test;
+      if (isTestSetup) {
+        // If isTestSetup is present, push to setupMethods array
+        setupMethods.push(rest);
+      } else {
+        regularTests.push(rest);
+      }
+    });
+
     return {
-      summary,
-      tests,
+      summary: {
+        ...summary,
+        testTotalTimeInMs:
+          (testSetupTimeInMs || 0) + summary.testExecutionTimeInMs
+      },
+      tests: regularTests,
       codecoverage: rawResult.codecoverage
     };
   }

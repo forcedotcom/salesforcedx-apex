@@ -391,7 +391,7 @@ export type TestRunIdResult = {
 };
 
 export type TestResult = {
-  summary: Omit<TestResultRaw['summary'], 'testSetupTime'>;
+  summary: Omit<TestResultRaw['summary'], 'testSetupTimeInMs'>;
   tests: Omit<ApexTestResultData, 'isTestSetup'>[];
   codecoverage?: CodeCoverageResult[];
 };
@@ -410,7 +410,7 @@ export type TestResultRaw = {
     testStartTime: string;
     testExecutionTimeInMs: number;
     testTotalTimeInMs: number;
-    testSetupTime?: number;
+    testSetupTimeInMs?: number;
     commandTimeInMs: number;
     hostname: string;
     username: string;
