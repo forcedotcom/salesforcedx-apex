@@ -148,7 +148,7 @@ export class HumanReporter {
       }
     );
 
-    let testResultTable: string;
+    let testResultTable: string = '';
     if (testRowArray.length > 0) {
       testResultTable = os.EOL.repeat(2);
       testResultTable += tb.createTable(
@@ -206,7 +206,7 @@ export class HumanReporter {
       }
     });
 
-    let detailedCovTable: string;
+    let detailedCovTable: string = '';
     if (testRowArray.length > 0) {
       detailedCovTable = os.EOL.repeat(2);
       detailedCovTable += tb.createTable(
