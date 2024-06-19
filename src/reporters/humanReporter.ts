@@ -25,7 +25,7 @@ export class HumanReporter {
   ): string {
     HeapMonitor.getInstance().checkHeapSize('HumanReporter.format');
     try {
-      let tbResult: string;
+      let tbResult: string = '';
       if (!testResult.codecoverage || !detailedCoverage) {
         tbResult += this.formatTestResults(testResult.tests, concise);
       }
