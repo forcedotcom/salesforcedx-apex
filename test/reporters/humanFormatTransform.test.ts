@@ -14,6 +14,7 @@ import {
   coverageFailResult
 } from './testResults';
 import { fail } from 'assert';
+import * as os from 'node:os';
 
 describe('HumanFormatTransform', () => {
   const createWritableAndPipeline = (
@@ -145,9 +146,14 @@ describe('HumanFormatTransform', () => {
       expect(result).to.not.contain(
         'AccountServiceTest.should_create_account             Pass                                                                                                           86'
       );
-      expect(result).to.contain(
-        'AnimalLocatorTest.testMissingAnimal                      Fail              System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:'
-      );
+      const resultLines = result.split(os.EOL);
+      expect(
+        resultLines.some((l) =>
+          l.includes(
+            'AnimalLocatorTest.testMissingAnimal                      Fail              System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:'
+          )
+        )
+      ).to.be.true;
       expect(result).to.contain('=== Test Summary');
     });
   });
