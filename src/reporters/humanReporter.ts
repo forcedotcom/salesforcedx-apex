@@ -32,9 +32,11 @@ export class HumanReporter {
 
       if (testResult.codecoverage) {
         if (detailedCoverage) {
-          tbResult += this.formatDetailedCov(testResult);
+          tbResult += this.formatDetailedCov(testResult, concise);
         }
-        tbResult += this.formatCodeCov(testResult.codecoverage);
+        if (!concise) {
+          tbResult += this.formatCodeCov(testResult.codecoverage);
+        }
       }
       tbResult += this.formatSummary(testResult);
       return tbResult;
@@ -146,80 +148,92 @@ export class HumanReporter {
       }
     );
 
-    let testResultTable = os.EOL.repeat(2);
-    testResultTable += tb.createTable(
-      testRowArray,
-      [
-        {
-          key: 'name',
-          label: nls.localize('testNameColHeader')
-        },
-        { key: 'outcome', label: nls.localize('outcomeColHeader') },
-        { key: 'msg', label: nls.localize('msgColHeader') },
-        { key: 'runtime', label: nls.localize('runtimeColHeader') }
-      ],
-      nls.localize('testResultsHeader')
-    );
+    let testResultTable: string;
+    if (testRowArray.length > 0) {
+      testResultTable = os.EOL.repeat(2);
+      testResultTable += tb.createTable(
+        testRowArray,
+        [
+          {
+            key: 'name',
+            label: nls.localize('testNameColHeader')
+          },
+          { key: 'outcome', label: nls.localize('outcomeColHeader') },
+          { key: 'msg', label: nls.localize('msgColHeader') },
+          { key: 'runtime', label: nls.localize('runtimeColHeader') }
+        ],
+        nls.localize('testResultsHeader')
+      );
+    }
     return testResultTable;
   }
 
   @elapsedTime()
-  private formatDetailedCov(testResult: TestResult): string {
+  private formatDetailedCov(testResult: TestResult, concise: boolean): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
     testResult.tests.forEach((elem: ApexTestResultData) => {
-      const msg = elem.stackTrace
-        ? `${elem.message}\n${elem.stackTrace}`
-        : elem.message;
+      if (
+        !concise ||
+        elem.outcome === ApexTestResultOutcome.Fail ||
+        elem.outcome === ApexTestResultOutcome.CompileFail
+      ) {
+        const msg = elem.stackTrace
+          ? `${elem.message}\n${elem.stackTrace}`
+          : elem.message;
 
-      if (elem.perClassCoverage) {
-        elem.perClassCoverage.forEach((perClassCov) => {
+        if (elem.perClassCoverage) {
+          elem.perClassCoverage.forEach((perClassCov) => {
+            testRowArray.push({
+              name: elem.fullName,
+              coveredClassName: perClassCov.apexClassOrTriggerName,
+              outcome: elem.outcome,
+              coveredClassPercentage: perClassCov.percentage,
+              msg: elem.message ? msg : '',
+              runtime: `${elem.runTime}`
+            });
+          });
+        } else {
           testRowArray.push({
             name: elem.fullName,
-            coveredClassName: perClassCov.apexClassOrTriggerName,
+            coveredClassName: '',
             outcome: elem.outcome,
-            coveredClassPercentage: perClassCov.percentage,
+            coveredClassPercentage: '',
             msg: elem.message ? msg : '',
             runtime: `${elem.runTime}`
           });
-        });
-      } else {
-        testRowArray.push({
-          name: elem.fullName,
-          coveredClassName: '',
-          outcome: elem.outcome,
-          coveredClassPercentage: '',
-          msg: elem.message ? msg : '',
-          runtime: `${elem.runTime}`
-        });
+        }
       }
     });
 
-    let detailedCovTable = os.EOL.repeat(2);
-    detailedCovTable += tb.createTable(
-      testRowArray,
-      [
-        {
-          key: 'name',
-          label: nls.localize('testNameColHeader')
-        },
-        {
-          key: 'coveredClassName',
-          label: nls.localize('classTestedHeader')
-        },
-        {
-          key: 'outcome',
-          label: nls.localize('outcomeColHeader')
-        },
-        {
-          key: 'coveredClassPercentage',
-          label: nls.localize('percentColHeader')
-        },
-        { key: 'msg', label: nls.localize('msgColHeader') },
-        { key: 'runtime', label: nls.localize('runtimeColHeader') }
-      ],
-      nls.localize('detailedCodeCovHeader', [testResult.summary.testRunId])
-    );
+    let detailedCovTable: string;
+    if (testRowArray.length > 0) {
+      detailedCovTable = os.EOL.repeat(2);
+      detailedCovTable += tb.createTable(
+        testRowArray,
+        [
+          {
+            key: 'name',
+            label: nls.localize('testNameColHeader')
+          },
+          {
+            key: 'coveredClassName',
+            label: nls.localize('classTestedHeader')
+          },
+          {
+            key: 'outcome',
+            label: nls.localize('outcomeColHeader')
+          },
+          {
+            key: 'coveredClassPercentage',
+            label: nls.localize('percentColHeader')
+          },
+          { key: 'msg', label: nls.localize('msgColHeader') },
+          { key: 'runtime', label: nls.localize('runtimeColHeader') }
+        ],
+        nls.localize('detailedCodeCovHeader', [testResult.summary.testRunId])
+      );
+    }
     return detailedCovTable;
   }
 
