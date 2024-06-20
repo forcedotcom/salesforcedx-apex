@@ -7,6 +7,7 @@
 import { Readable } from 'node:stream';
 import { elapsedTime } from './elapsedTime';
 import { LoggerLevel } from '@salesforce/core';
+
 const COLUMN_SEPARATOR = ' '.repeat(2);
 const COLUMN_FILLER = ' ';
 const HEADER_FILLER = '─';
@@ -53,8 +54,7 @@ export class TableWriteableStream {
 
     if (columnHeader && headerSeparator) {
       this.stream.push(
-        `${title ? `=== ${title}\n` : ''}${columnHeader}\n
-        }${headerSeparator}\n`
+        `${title ? `=== ${title}\n` : ''}${columnHeader}\n${headerSeparator}\n`
       );
     }
 
