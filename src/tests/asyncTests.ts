@@ -141,7 +141,7 @@ export class AsyncTests {
   }
 
   private async writeResultsToFile(
-    formattedResults: TestResult,
+    formattedResults: TestResultRaw,
     runId: string
   ): Promise<void> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
@@ -564,9 +564,9 @@ export class AsyncTests {
   }
 
   private transformTestResult(rawResult: TestResultRaw): TestResult {
-    // Destructure summary to omit testSetupTime
+    // Destructure summary to omit testSetupTimeInMs
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { testSetupTime, ...summary } = rawResult.summary;
+    const { testSetupTimeInMs, ...summary } = rawResult.summary;
 
     // Filter and transform tests array
     const tests = rawResult.tests

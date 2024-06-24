@@ -361,10 +361,6 @@ export type ApexTestResultData = {
    */
   testTimestamp: string;
   /**
-   * Indicates if the results are for a test setup method. The default is false.
-   */
-  isTestSetup?: boolean;
-  /**
    * The full name of the associated ApexClass method
    */
   fullName: string;
@@ -373,6 +369,13 @@ export type ApexTestResultData = {
    */
   perClassCoverage?: PerClassCoverage[];
   diagnostic?: ApexDiagnostic;
+};
+
+export type ApexTestResultDataRaw = ApexTestResultData & {
+  /**
+   * Indicates if the results are for a test setup method. The default is false.
+   */
+  isTestSetup?: boolean;
 };
 
 export type CodeCoverageResult = {
@@ -391,8 +394,8 @@ export type TestRunIdResult = {
 };
 
 export type TestResult = {
-  summary: Omit<TestResultRaw['summary'], 'testSetupTime'>;
-  tests: Omit<ApexTestResultData, 'isTestSetup'>[];
+  summary: Omit<TestResultRaw['summary'], 'testSetupTimeInMs'>;
+  tests: Omit<ApexTestResultDataRaw, 'isTestSetup'>[];
   codecoverage?: CodeCoverageResult[];
 };
 
@@ -410,7 +413,7 @@ export type TestResultRaw = {
     testStartTime: string;
     testExecutionTimeInMs: number;
     testTotalTimeInMs: number;
-    testSetupTime?: number;
+    testSetupTimeInMs?: number;
     commandTimeInMs: number;
     hostname: string;
     username: string;
@@ -421,7 +424,7 @@ export type TestResultRaw = {
     totalLines?: number;
     coveredLines?: number;
   };
-  tests: ApexTestResultData[];
+  tests: ApexTestResultDataRaw[];
   codecoverage?: CodeCoverageResult[];
 };
 
