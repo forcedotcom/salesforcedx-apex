@@ -564,8 +564,9 @@ export class AsyncTests {
     }
   }
 
-  public transformTestResult(rawResult: TestResultRaw): TestResult {
+  private transformTestResult(rawResult: TestResultRaw): TestResult {
     // Destructure summary to omit testSetupTimeInMs
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { testSetupTimeInMs, ...summary } = rawResult.summary;
 
     // Initialize arrays for setup methods and regular tests
