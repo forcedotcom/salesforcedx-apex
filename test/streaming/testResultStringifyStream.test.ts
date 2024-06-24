@@ -5,9 +5,13 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { expect } from 'chai';
-import { ApexTestResultOutcome, TestResult } from '../../src';
+import { ApexTestResultOutcome } from '../../src';
 import { TestResultStringifyStream } from '../../src/streaming';
-import { CodeCoverageResult, PerClassCoverage } from '../../src/tests';
+import {
+  CodeCoverageResult,
+  PerClassCoverage,
+  TestResultRaw
+} from '../../src/tests';
 
 const tests = [
   {
@@ -102,7 +106,7 @@ const coverageData: CodeCoverageResult[] = [
   }
 ];
 describe('TestResultStringifyStream', () => {
-  let testResult: TestResult;
+  let testResult: TestResultRaw;
   let stream: TestResultStringifyStream;
 
   beforeEach(() => {

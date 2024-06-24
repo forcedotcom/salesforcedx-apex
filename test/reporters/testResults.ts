@@ -74,6 +74,7 @@ export const coverageResult: TestResult = {
       fullName: 'AwesomeCalculatorTest.testCallout'
     }
   ],
+  setup: [],
   codecoverage: [
     {
       apexId: '001917xACG',
@@ -124,6 +125,7 @@ export const coverageFailResult: TestResult = {
       }
     ]
   ],
+  setup: [],
   codecoverage: [...coverageResult.codecoverage]
 };
 
@@ -186,7 +188,8 @@ export const successResult: TestResult = {
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AwesomeCalculatorTest.testCallout'
     }
-  ]
+  ],
+  setup: []
 };
 
 export const testResults: TestResult = {
@@ -519,7 +522,8 @@ export const testResults: TestResult = {
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'DailyLeadProcessorTest.testLeadProcessing'
     }
-  ]
+  ],
+  setup: []
 };
 
 export const junitResult = `<?xml version="1.0" encoding="UTF-8"?>

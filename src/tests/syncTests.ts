@@ -16,7 +16,7 @@ import {
 import { CodeCoverage } from './codeCoverage';
 import { formatTestErrors, getSyncDiagnostic } from './diagnosticUtil';
 import {
-  ApexTestResultData,
+  ApexTestResultDataRaw,
   ApexTestResultOutcome,
   ApexTestRunResultStatus,
   SyncTestConfiguration,
@@ -87,6 +87,12 @@ export class SyncTests {
     const coveredApexClassIdSet = new Set<string>();
     const { apexTestClassIdSet, testResults } =
       this.buildSyncTestResults(apiTestResult);
+    const regularTests = testResults.filter(
+      (test) => test.isTestSetup !== true
+    );
+    const setupMethods = testResults.filter(
+      (test) => test.isTestSetup === true
+    );
     try {
       const globalTestFailed = apiTestResult.failures.length;
       const globalTestPassed = apiTestResult.successes.length;
@@ -119,7 +125,8 @@ export class SyncTests {
           testRunId: '',
           userId: this.connection.getConnectionOptions().userId
         },
-        tests: testResults
+        tests: regularTests,
+        setup: setupMethods
       };
 
       if (codeCoverage) {
@@ -162,11 +169,11 @@ export class SyncTests {
   @elapsedTime()
   private buildSyncTestResults(apiTestResult: SyncTestResult): {
     apexTestClassIdSet: Set<string>;
-    testResults: ApexTestResultData[];
+    testResults: ApexTestResultDataRaw[];
   } {
     HeapMonitor.getInstance().checkHeapSize('syncTests.buildSyncTestResults');
     try {
-      const testResults: ApexTestResultData[] = [];
+      const testResults: ApexTestResultDataRaw[] = [];
       const apexTestClassIdSet = new Set<string>();
 
       apiTestResult.successes.forEach((item) => {
@@ -181,6 +188,7 @@ export class SyncTests {
           methodName: item.methodName,
           outcome: ApexTestResultOutcome.Pass,
           apexLogId: apiTestResult.apexLogId,
+          isTestSetup: apiTestResult.isTestSetup,
           apexClass: {
             id: item.id,
             name: item.name,

@@ -131,7 +131,8 @@ export const syncResult: TestResult = {
       testTimestamp: '',
       fullName: `t3st.TestApexClass.testMethod`
     }
-  ]
+  ],
+  setup: []
 };
 
 export const testResultData: TestResult = {
@@ -173,7 +174,8 @@ export const testResultData: TestResult = {
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
-  ]
+  ],
+  setup: []
 };
 
 export const missingTimeTestData: TestResult = {
@@ -216,6 +218,7 @@ export const missingTimeTestData: TestResult = {
       fullName: 't3st.TestLogger.testLoggerLog'
     }
   ],
+  setup: [],
   codecoverage: undefined
 };
 
@@ -259,6 +262,7 @@ export const skippedTestData: TestResult = {
       fullName: 't3st.TestLogger.testLoggerLog'
     }
   ],
+  setup: [],
   codecoverage: undefined
 };
 
@@ -313,6 +317,7 @@ export const diagnosticResult: TestResult = {
       }
     }
   ],
+  setup: [],
   codecoverage: undefined
 };
 
@@ -346,6 +351,7 @@ export const diagnosticFailure: TestResult = {
       }
     }
   ],
+  setup: [],
   codecoverage: undefined
 };
 

@@ -158,6 +158,7 @@ export type SyncTestFailure = {
 };
 
 export type SyncTestResult = {
+  isTestSetup?: boolean;
   apexLogId: string;
   failures: SyncTestFailure[];
   numFailures: number;
@@ -214,6 +215,10 @@ export type ApexTestResultRecord = {
    * Points to the ApexLog for this test method execution if debug logging is enabled; otherwise, null.
    */
   ApexLogId: string | null;
+  /**
+   * Indicates if the results are for a test setup method. The default is false.
+   */
+  IsTestSetup?: boolean;
   ApexClass: {
     Id: string;
     /**
@@ -396,6 +401,7 @@ export type TestRunIdResult = {
 export type TestResult = {
   summary: Omit<TestResultRaw['summary'], 'testSetupTimeInMs'>;
   tests: Omit<ApexTestResultDataRaw, 'isTestSetup'>[];
+  setup: Omit<ApexTestResultDataRaw, 'isTestSetup'>[];
   codecoverage?: CodeCoverageResult[];
 };
 

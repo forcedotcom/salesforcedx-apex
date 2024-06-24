@@ -22,7 +22,7 @@ import {
   ApexTestQueueItemRecord,
   ApexTestQueueItemStatus,
   ApexTestResult,
-  ApexTestResultData,
+  // ApexTestResultData,
   ApexTestResultDataRaw,
   ApexTestResultOutcome,
   ApexTestRunResult,
@@ -153,7 +153,7 @@ export class AsyncTests {
         const writeStream = createWriteStream(
           path.join(os.tmpdir(), runId, 'rawResults.json')
         );
-        this.logger.debug(`Raw raw results written to: ${writeStream.path}`);
+        this.logger.debug(`Raw results written to: ${writeStream.path}`);
         const stringifyStream = bfj.stringify(formattedResults, {
           bufferLength: getBufferSize(),
           iterables: 'ignore',
@@ -289,6 +289,12 @@ export class AsyncTests {
       const { apexTestClassIdSet, testResults, globalTests } =
         await this.buildAsyncTestResults(apexTestResults);
 
+      const regularTests = testResults.filter(
+        (test) => test.isTestSetup !== true
+      );
+      const setupMethods = testResults.filter(
+        (test) => test.isTestSetup === true
+      );
       let outcome = testRunSummary.Status;
       if (globalTests.failed > 0) {
         outcome = ApexTestRunResultStatus.Failed;
@@ -302,15 +308,21 @@ export class AsyncTests {
       const result: TestResult = {
         summary: {
           outcome,
-          testsRan: testResults.length,
+          testsRan: regularTests.length,
           passing: globalTests.passed,
           failing: globalTests.failed,
           skipped: globalTests.skipped,
-          passRate: calculatePercentage(globalTests.passed, testResults.length),
-          failRate: calculatePercentage(globalTests.failed, testResults.length),
+          passRate: calculatePercentage(
+            globalTests.passed,
+            regularTests.length
+          ),
+          failRate: calculatePercentage(
+            globalTests.failed,
+            regularTests.length
+          ),
           skipRate: calculatePercentage(
             globalTests.skipped,
-            testResults.length
+            regularTests.length
           ),
           testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
           testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
@@ -322,7 +334,8 @@ export class AsyncTests {
           testRunId: asyncRunResult.runId,
           userId: testRunSummary.UserId
         },
-        tests: testResults
+        tests: regularTests,
+        setup: setupMethods
       };
 
       if (codeCoverage) {
@@ -411,7 +424,7 @@ export class AsyncTests {
     apexTestResults: ApexTestResult[]
   ): Promise<{
     apexTestClassIdSet: Set<string>;
-    testResults: ApexTestResultData[];
+    testResults: ApexTestResultDataRaw[];
     globalTests: {
       passed: number;
       skipped: number;
@@ -426,7 +439,7 @@ export class AsyncTests {
       let skipped = 0;
 
       // Iterate over test results, format and add them as results.tests
-      const testResults: ApexTestResultData[] = [];
+      const testResults: ApexTestResultDataRaw[] = [];
       for (const result of apexTestResults) {
         result.records.forEach((item) => {
           switch (item.Outcome) {
@@ -460,6 +473,7 @@ export class AsyncTests {
             methodName: item.MethodName,
             outcome: item.Outcome,
             apexLogId: item.ApexLogId,
+            isTestSetup: item.IsTestSetup,
             apexClass: {
               id: item.ApexClass.Id,
               name: item.ApexClass.Name,
@@ -591,6 +605,7 @@ export class AsyncTests {
           (testSetupTimeInMs || 0) + summary.testExecutionTimeInMs
       },
       tests: regularTests,
+      setup: setupMethods,
       codecoverage: rawResult.codecoverage
     };
   }
