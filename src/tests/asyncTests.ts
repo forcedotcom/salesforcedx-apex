@@ -23,6 +23,7 @@ import {
   ApexTestQueueItemStatus,
   ApexTestResult,
   ApexTestResultData,
+  ApexTestResultDataRaw,
   ApexTestResultOutcome,
   ApexTestRunResult,
   ApexTestRunResultStatus,
@@ -141,7 +142,7 @@ export class AsyncTests {
   }
 
   private async writeResultsToFile(
-    formattedResults: TestResult,
+    formattedResults: TestResultRaw,
     runId: string
   ): Promise<void> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
@@ -568,12 +569,12 @@ export class AsyncTests {
     const { testSetupTimeInMs, ...summary } = rawResult.summary;
 
     // Initialize arrays for setup methods and regular tests
-    const setupMethods: Omit<ApexTestResultData, 'isTestSetup'>[] = [];
-    const regularTests: Omit<ApexTestResultData, 'isTestSetup'>[] = [];
+    const setupMethods: Omit<ApexTestResultDataRaw, 'isTestSetup'>[] = [];
+    const regularTests: Omit<ApexTestResultDataRaw, 'isTestSetup'>[] = [];
 
     // Iterate through each item in rawResult.tests
     rawResult.tests.forEach((test) => {
-      const { isTestSetup, ...rest } = test;
+      const { isTestSetup, ...rest } = test as ApexTestResultDataRaw;
       if (isTestSetup) {
         // If isTestSetup is present, push to setupMethods array
         setupMethods.push(rest);
