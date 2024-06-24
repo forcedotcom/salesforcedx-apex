@@ -29,7 +29,6 @@ export {
   ApexCodeCoverageAggregateRecord,
   ApexTestProgressValue,
   ApexTestResultData,
-  ApexTestResultDataRaw,
   ApexTestResultOutcome,
   ApexTestRunResultStatus,
   AsyncTestArrayConfiguration,
@@ -41,7 +40,6 @@ export {
   TestItem,
   TestLevel,
   TestResult,
-  TestResultRaw,
   TestService,
   TestRunIdResult
 } from './tests';
