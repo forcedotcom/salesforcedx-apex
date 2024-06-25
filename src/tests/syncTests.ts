@@ -20,10 +20,16 @@ import {
   ApexTestResultOutcome,
   ApexTestRunResultStatus,
   SyncTestConfiguration,
+  SyncTestFailure,
   SyncTestResult,
-  TestResult
+  TestResult,
+  TestResultRaw
 } from './types';
-import { calculatePercentage } from './utils';
+import {
+  calculateCodeCoverage,
+  calculatePercentage,
+  transformTestResult
+} from './utils';
 import type { HttpRequest } from '@jsforce/jsforce-node';
 
 export class SyncTests {
@@ -61,7 +67,7 @@ export class SyncTests {
         request
       )) as SyncTestResult;
 
-      if (token && token.isCancellationRequested) {
+      if (token?.isCancellationRequested) {
         return null;
       }
 
@@ -87,16 +93,10 @@ export class SyncTests {
     const coveredApexClassIdSet = new Set<string>();
     const { apexTestClassIdSet, testResults } =
       this.buildSyncTestResults(apiTestResult);
-    const regularTests = testResults.filter(
-      (test) => test.isTestSetup !== true
-    );
-    const setupMethods = testResults.filter(
-      (test) => test.isTestSetup === true
-    );
     try {
       const globalTestFailed = apiTestResult.failures.length;
       const globalTestPassed = apiTestResult.successes.length;
-      const result: TestResult = {
+      const rawResult: TestResultRaw = {
         summary: {
           outcome:
             globalTestFailed === 0
@@ -125,41 +125,19 @@ export class SyncTests {
           testRunId: '',
           userId: this.connection.getConnectionOptions().userId
         },
-        tests: regularTests,
-        setup: setupMethods
+        tests: testResults
       };
 
-      if (codeCoverage) {
-        const perClassCovMap =
-          await this.codecoverage.getPerClassCodeCoverage(apexTestClassIdSet);
+      const result = transformTestResult(rawResult);
 
-        if (perClassCovMap.size > 0) {
-          result.tests.forEach((item) => {
-            const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
-            const perClassCov = perClassCovMap.get(keyCodeCov);
-            if (perClassCov) {
-              perClassCov.forEach((classCov) =>
-                coveredApexClassIdSet.add(classCov.apexClassOrTriggerId)
-              );
-              item.perClassCoverage = perClassCov;
-            }
-          });
-        }
-
-        const { codeCoverageResults, totalLines, coveredLines } =
-          await this.codecoverage.getAggregateCodeCoverage(
-            coveredApexClassIdSet
-          );
-        result.codecoverage = codeCoverageResults;
-        result.summary.totalLines = totalLines;
-        result.summary.coveredLines = coveredLines;
-        result.summary.testRunCoverage = calculatePercentage(
-          coveredLines,
-          totalLines
-        );
-        result.summary.orgWideCoverage =
-          await this.codecoverage.getOrgWideCoverage();
-      }
+      await calculateCodeCoverage(
+        this.codecoverage,
+        codeCoverage,
+        apexTestClassIdSet,
+        result,
+        coveredApexClassIdSet,
+        'sync'
+      );
       return result;
     } finally {
       HeapMonitor.getInstance().checkHeapSize('synctests.formatSyncResults');
@@ -173,65 +151,82 @@ export class SyncTests {
   } {
     HeapMonitor.getInstance().checkHeapSize('syncTests.buildSyncTestResults');
     try {
-      const testResults: ApexTestResultDataRaw[] = [];
       const apexTestClassIdSet = new Set<string>();
-
-      apiTestResult.successes.forEach((item) => {
-        const nms = item.namespace ? `${item.namespace}.` : '';
-        apexTestClassIdSet.add(item.id);
-        testResults.push({
-          id: '',
-          queueItemId: '',
-          stackTrace: '',
-          message: '',
-          asyncApexJobId: '',
-          methodName: item.methodName,
-          outcome: ApexTestResultOutcome.Pass,
-          apexLogId: apiTestResult.apexLogId,
-          isTestSetup: apiTestResult.isTestSetup,
-          apexClass: {
-            id: item.id,
-            name: item.name,
-            namespacePrefix: item.namespace,
-            fullName: `${nms}${item.name}`
-          },
-          runTime: item.time ?? 0,
-          testTimestamp: '',
-          fullName: `${nms}${item.name}.${item.methodName}`
-        });
-      });
-
-      apiTestResult.failures.forEach((item) => {
-        const nms = item.namespace ? `${item.namespace}__` : '';
-        apexTestClassIdSet.add(item.id);
-        const diagnostic =
-          item.message || item.stackTrace ? getSyncDiagnostic(item) : null;
-
-        testResults.push({
-          id: '',
-          queueItemId: '',
-          stackTrace: item.stackTrace,
-          message: item.message,
-          asyncApexJobId: '',
-          methodName: item.methodName,
-          outcome: ApexTestResultOutcome.Fail,
-          apexLogId: apiTestResult.apexLogId,
-          apexClass: {
-            id: item.id,
-            name: item.name,
-            namespacePrefix: item.namespace,
-            fullName: `${nms}${item.name}`
-          },
-          runTime: item.time ?? 0,
-          testTimestamp: '',
-          fullName: `${nms}${item.name}.${item.methodName}`,
-          ...(diagnostic ? { diagnostic } : {})
-        });
-      });
+      const testResults = [
+        ...this.processTestResults(
+          apiTestResult.successes,
+          apiTestResult,
+          apexTestClassIdSet,
+          ApexTestResultOutcome.Pass
+        ),
+        ...this.processTestResults(
+          apiTestResult.failures,
+          apiTestResult,
+          apexTestClassIdSet,
+          ApexTestResultOutcome.Fail
+        )
+      ] as ApexTestResultDataRaw[];
 
       return { apexTestClassIdSet, testResults };
     } finally {
       HeapMonitor.getInstance().checkHeapSize('syncTests.buildSyncTestResults');
     }
+  }
+
+  private processTestResults(
+    items: {
+      id: string;
+      methodName: string;
+      name: string;
+      namespace: string;
+      stackTrace?: string;
+      message?: string;
+      time?: number;
+    }[],
+    apiTestResult: SyncTestResult,
+    apexTestClassIdSet: Set<string>,
+    outcome: ApexTestResultOutcome
+  ): ApexTestResultDataRaw[] {
+    return items.map((item) => {
+      const nms = item.namespace
+        ? outcome === 'Fail'
+          ? `${item.namespace}__`
+          : `${item.namespace}.`
+        : '';
+      apexTestClassIdSet.add(item.id);
+
+      const testResult: ApexTestResultDataRaw = {
+        id: '',
+        queueItemId: '',
+        stackTrace: item.stackTrace || '',
+        message: item.message || '',
+        asyncApexJobId: '',
+        methodName: item.methodName,
+        outcome: outcome,
+        apexLogId: apiTestResult.apexLogId,
+        isTestSetup: apiTestResult.isTestSetup,
+        apexClass: {
+          id: item.id,
+          name: item.name,
+          namespacePrefix: item.namespace,
+          fullName: `${nms}${item.name}`
+        },
+        runTime: item.time ?? 0,
+        testTimestamp: '',
+        fullName: `${nms}${item.name}.${item.methodName}`
+      };
+
+      if (outcome === ApexTestResultOutcome.Fail) {
+        const diagnostic =
+          item.message || item.stackTrace
+            ? getSyncDiagnostic(item as SyncTestFailure)
+            : null;
+        if (diagnostic) {
+          testResult.diagnostic = diagnostic;
+        }
+      }
+
+      return testResult;
+    });
   }
 }

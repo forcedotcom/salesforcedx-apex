@@ -22,7 +22,6 @@ import {
   ApexTestQueueItemRecord,
   ApexTestQueueItemStatus,
   ApexTestResult,
-  // ApexTestResultData,
   ApexTestResultDataRaw,
   ApexTestResultOutcome,
   ApexTestRunResult,
@@ -37,7 +36,9 @@ import {
   calculatePercentage,
   getBufferSize,
   getJsonIndent,
-  queryAll
+  transformTestResult,
+  queryAll,
+  calculateCodeCoverage
 } from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
@@ -97,12 +98,11 @@ export class AsyncTests {
       await sClient.init();
       await sClient.handshake();
 
-      token &&
-        token.onCancellationRequested(async () => {
-          const testRunId = await sClient.subscribedTestRunIdPromise;
-          await this.abortTestRun(testRunId, progress);
-          sClient.disconnect();
-        });
+      token?.onCancellationRequested(async () => {
+        const testRunId = await sClient.subscribedTestRunIdPromise;
+        await this.abortTestRun(testRunId, progress);
+        sClient.disconnect();
+      });
 
       const testRunId = await this.getTestRunRequestAction(options)();
 
@@ -110,7 +110,7 @@ export class AsyncTests {
         return { testRunId };
       }
 
-      if (token && token.isCancellationRequested) {
+      if (token?.isCancellationRequested) {
         return null;
       }
       const asyncRunResult = await sClient.subscribe(
@@ -195,12 +195,11 @@ export class AsyncTests {
         runResult = await this.checkRunStatus(testRunId);
       }
 
-      token &&
-        token.onCancellationRequested(async () => {
-          sClient.disconnect();
-        });
+      token?.onCancellationRequested(async () => {
+        sClient.disconnect();
+      });
 
-      if (token && token.isCancellationRequested) {
+      if (token?.isCancellationRequested) {
         return null;
       }
 
@@ -289,12 +288,6 @@ export class AsyncTests {
       const { apexTestClassIdSet, testResults, globalTests } =
         await this.buildAsyncTestResults(apexTestResults);
 
-      const regularTests = testResults.filter(
-        (test) => test.isTestSetup !== true
-      );
-      const setupMethods = testResults.filter(
-        (test) => test.isTestSetup === true
-      );
       let outcome = testRunSummary.Status;
       if (globalTests.failed > 0) {
         outcome = ApexTestRunResultStatus.Failed;
@@ -305,24 +298,18 @@ export class AsyncTests {
       }
 
       // TODO: deprecate testTotalTime
-      const result: TestResult = {
+      const rawResult: TestResultRaw = {
         summary: {
           outcome,
-          testsRan: regularTests.length,
+          testsRan: testResults.length,
           passing: globalTests.passed,
           failing: globalTests.failed,
           skipped: globalTests.skipped,
-          passRate: calculatePercentage(
-            globalTests.passed,
-            regularTests.length
-          ),
-          failRate: calculatePercentage(
-            globalTests.failed,
-            regularTests.length
-          ),
+          passRate: calculatePercentage(globalTests.passed, testResults.length),
+          failRate: calculatePercentage(globalTests.failed, testResults.length),
           skipRate: calculatePercentage(
             globalTests.skipped,
-            regularTests.length
+            testResults.length
           ),
           testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
           testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
@@ -334,46 +321,20 @@ export class AsyncTests {
           testRunId: asyncRunResult.runId,
           userId: testRunSummary.UserId
         },
-        tests: regularTests,
-        setup: setupMethods
+        tests: testResults
       };
+      const result = transformTestResult(rawResult);
 
-      if (codeCoverage) {
-        const perClassCovMap =
-          await this.codecoverage.getPerClassCodeCoverage(apexTestClassIdSet);
-
-        result.tests.forEach((item) => {
-          const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
-          const perClassCov = perClassCovMap.get(keyCodeCov);
-          // Skipped test is not in coverage map, check to see if perClassCov exists first
-          if (perClassCov) {
-            perClassCov.forEach((classCov) =>
-              coveredApexClassIdSet.add(classCov.apexClassOrTriggerId)
-            );
-            item.perClassCoverage = perClassCov;
-          }
-        });
-
-        progress?.report({
-          type: 'FormatTestResultProgress',
-          value: 'queryingForAggregateCodeCoverage',
-          message: nls.localize('queryingForAggregateCodeCoverage')
-        });
-        const { codeCoverageResults, totalLines, coveredLines } =
-          await this.codecoverage.getAggregateCodeCoverage(
-            coveredApexClassIdSet
-          );
-        result.codecoverage = codeCoverageResults;
-        result.summary.totalLines = totalLines;
-        result.summary.coveredLines = coveredLines;
-        result.summary.testRunCoverage = calculatePercentage(
-          coveredLines,
-          totalLines
-        );
-        result.summary.orgWideCoverage =
-          await this.codecoverage.getOrgWideCoverage();
-      }
-      return this.transformTestResult(result);
+      await calculateCodeCoverage(
+        this.codecoverage,
+        codeCoverage,
+        apexTestClassIdSet,
+        result,
+        coveredApexClassIdSet,
+        'async',
+        progress
+      );
+      return result;
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     }
@@ -576,37 +537,5 @@ export class AsyncTests {
     } catch (e) {
       throw new Error(`Error describing ${sObjectName}: ${e.message}`);
     }
-  }
-
-  private transformTestResult(rawResult: TestResultRaw): TestResult {
-    // Destructure summary to omit testSetupTimeInMs
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { testSetupTimeInMs, ...summary } = rawResult.summary;
-
-    // Initialize arrays for setup methods and regular tests
-    const setupMethods: Omit<ApexTestResultDataRaw, 'isTestSetup'>[] = [];
-    const regularTests: Omit<ApexTestResultDataRaw, 'isTestSetup'>[] = [];
-
-    // Iterate through each item in rawResult.tests
-    rawResult.tests.forEach((test) => {
-      const { isTestSetup, ...rest } = test as ApexTestResultDataRaw;
-      if (isTestSetup) {
-        // If isTestSetup is present, push to setupMethods array
-        setupMethods.push(rest);
-      } else {
-        regularTests.push(rest);
-      }
-    });
-
-    return {
-      summary: {
-        ...summary,
-        testTotalTimeInMs:
-          (testSetupTimeInMs || 0) + summary.testExecutionTimeInMs
-      },
-      tests: regularTests,
-      setup: setupMethods,
-      codecoverage: rawResult.codecoverage
-    };
   }
 }
