@@ -10,7 +10,7 @@ import { TestResultStringifyStream } from '../../src/streaming';
 import {
   CodeCoverageResult,
   PerClassCoverage,
-  TestResultRaw
+  TestResult
 } from '../../src/tests';
 
 const tests = [
@@ -106,7 +106,7 @@ const coverageData: CodeCoverageResult[] = [
   }
 ];
 describe('TestResultStringifyStream', () => {
-  let testResult: TestResultRaw;
+  let testResult: TestResult;
   let stream: TestResultStringifyStream;
 
   beforeEach(() => {

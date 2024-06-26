@@ -6,7 +6,7 @@
  */
 import { Logger } from '@salesforce/core';
 import { Readable, ReadableOptions } from 'node:stream';
-import { TestResult, TestResultRaw } from '../tests';
+import { TestResult } from '../tests';
 import { elapsedTime } from '../utils';
 
 export type TestResultStringifyStreamOptions = ReadableOptions & {
@@ -19,7 +19,7 @@ export class TestResultStringifyStream extends Readable {
   private readonly bufferSize: number;
 
   constructor(
-    private readonly testResult: TestResultRaw,
+    private readonly testResult: TestResult,
     options?: TestResultStringifyStreamOptions
   ) {
     super({ ...options, objectMode: true });

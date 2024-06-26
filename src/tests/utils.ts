@@ -169,11 +169,11 @@ export const calculateCodeCoverage = async (
   codeCoverageInstance: CodeCoverage,
   codeCoverage: boolean,
   apexTestClassIdSet: Set<string>,
-  result: TestResult,
-  coveredApexClassIdSet: Set<string>,
-  testType: string,
+  result: TestResultRaw,
+  isAsync: boolean,
   progress?: Progress<ApexTestProgressValue>
 ): Promise<void> => {
+  const coveredApexClassIdSet = new Set<string>();
   if (codeCoverage) {
     const perClassCovMap =
       await codeCoverageInstance.getPerClassCodeCoverage(apexTestClassIdSet);
@@ -191,7 +191,7 @@ export const calculateCodeCoverage = async (
         }
       });
     }
-    if (testType === 'async') {
+    if (isAsync) {
       progress?.report({
         type: 'FormatTestResultProgress',
         value: 'queryingForAggregateCodeCoverage',

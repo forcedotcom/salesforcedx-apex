@@ -281,7 +281,6 @@ export class AsyncTests {
   ): Promise<TestResult> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     try {
-      const coveredApexClassIdSet = new Set<string>();
       const apexTestResults = await this.getAsyncTestResults(
         asyncRunResult.queueItem
       );
@@ -323,18 +322,16 @@ export class AsyncTests {
         },
         tests: testResults
       };
-      const result = transformTestResult(rawResult);
 
       await calculateCodeCoverage(
         this.codecoverage,
         codeCoverage,
         apexTestClassIdSet,
-        result,
-        coveredApexClassIdSet,
-        'async',
+        rawResult,
+        true,
         progress
       );
-      return result;
+      return transformTestResult(rawResult);
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     }

@@ -400,8 +400,8 @@ export type TestRunIdResult = {
 
 export type TestResult = {
   summary: Omit<TestResultRaw['summary'], 'testSetupTimeInMs'>;
-  tests: Omit<ApexTestResultDataRaw, 'isTestSetup'>[];
-  setup: Omit<ApexTestResultDataRaw, 'isTestSetup'>[];
+  tests: ApexTestResultData[];
+  setup?: ApexTestResultData[];
   codecoverage?: CodeCoverageResult[];
 };
 
