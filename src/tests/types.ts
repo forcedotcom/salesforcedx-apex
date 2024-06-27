@@ -383,6 +383,25 @@ export type ApexTestResultDataRaw = ApexTestResultData & {
   isTestSetup?: boolean;
 };
 
+export type ApexTestSetupData = {
+  id: string;
+  stackTrace: string | null;
+  message: string | null;
+  asyncApexJobId: string;
+  methodName: string;
+  apexLogId: string | null;
+  apexClass: {
+    id: string;
+    name: string;
+    namespacePrefix: string;
+    fullName: string;
+  };
+  testSetupTimeInMs: number;
+  testTimestamp: string;
+  fullName: string;
+  diagnostic?: ApexDiagnostic;
+};
+
 export type CodeCoverageResult = {
   apexId: string;
   name: string;
@@ -399,9 +418,9 @@ export type TestRunIdResult = {
 };
 
 export type TestResult = {
-  summary: Omit<TestResultRaw['summary'], 'testSetupTimeInMs'>;
+  summary: TestResultRaw['summary'];
   tests: ApexTestResultData[];
-  setup?: ApexTestResultData[];
+  setup?: ApexTestSetupData[];
   codecoverage?: CodeCoverageResult[];
 };
 

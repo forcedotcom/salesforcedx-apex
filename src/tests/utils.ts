@@ -9,7 +9,7 @@ import { Connection, Logger } from '@salesforce/core';
 import {
   ApexTestProgressValue,
   ApexTestResultData,
-  ApexTestResultDataRaw,
+  ApexTestSetupData,
   NamespaceInfo,
   TestResult,
   TestResultRaw
@@ -144,13 +144,17 @@ export const transformTestResult = (rawResult: TestResultRaw): TestResult => {
   const { testSetupTimeInMs, ...summary } = rawResult.summary;
 
   // Initialize arrays for setup methods and regular tests
-  const setupMethods: ApexTestResultData[] = [];
   const regularTests: ApexTestResultData[] = [];
+  const setupMethods: ApexTestSetupData[] = [];
 
   // Iterate through each item in rawResult.tests
   rawResult.tests.forEach((test) => {
-    const { isTestSetup, ...rest } = test as ApexTestResultDataRaw;
-    (isTestSetup ? setupMethods : regularTests).push(rest);
+    const { isTestSetup, ...rest } = test;
+    if (isTestSetup) {
+      setupMethods.push(rest as unknown as ApexTestSetupData);
+    } else {
+      regularTests.push(rest);
+    }
   });
 
   return {

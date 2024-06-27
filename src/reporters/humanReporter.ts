@@ -15,6 +15,7 @@ import {
 import { nls } from '../i18n';
 import { LoggerLevel } from '@salesforce/core';
 import * as os from 'node:os';
+import { ApexTestSetupData } from '../tests/types';
 
 export class HumanReporter {
   @elapsedTime()
@@ -37,6 +38,9 @@ export class HumanReporter {
         if (!concise) {
           tbResult += this.formatCodeCov(testResult.codecoverage);
         }
+      }
+      if (testResult.setup) {
+        tbResult += this.formatSetup(testResult.setup);
       }
       tbResult += this.formatSummary(testResult);
       return tbResult;
@@ -76,8 +80,16 @@ export class HumanReporter {
         value: testResult.summary.testRunId
       },
       {
+        name: nls.localize('testSetupTime'),
+        value: `${testResult.summary.testSetupTimeInMs} ms`
+      },
+      {
         name: nls.localize('testExecutionTime'),
         value: `${testResult.summary.testExecutionTimeInMs} ms`
+      },
+      {
+        name: nls.localize('testTotalTime'),
+        value: `${testResult.summary.testTotalTimeInMs} ms`
       },
       {
         name: nls.localize('orgId'),
@@ -163,6 +175,34 @@ export class HumanReporter {
           { key: 'runtime', label: nls.localize('runtimeColHeader') }
         ],
         nls.localize('testResultsHeader')
+      );
+    }
+    return testResultTable;
+  }
+
+  @elapsedTime()
+  private formatSetup(tests: ApexTestSetupData[]): string {
+    const tb = new Table();
+    const testRowArray: Row[] = [];
+    tests.forEach((elem: { fullName: string; testSetupTimeInMs: number }) => {
+      testRowArray.push({
+        name: elem.fullName,
+        time: `${elem.testSetupTimeInMs}`
+      });
+    });
+    let testResultTable: string = '';
+    if (testRowArray.length > 0) {
+      testResultTable = os.EOL.repeat(2);
+      testResultTable += tb.createTable(
+        testRowArray,
+        [
+          {
+            key: 'name',
+            label: nls.localize('testSetupMethodNameColHeader')
+          },
+          { key: 'time', label: nls.localize('setupTimeColHeader') }
+        ],
+        nls.localize('testSetupResultsHeader')
       );
     }
     return testResultTable;
