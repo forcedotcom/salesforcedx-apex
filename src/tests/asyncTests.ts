@@ -296,7 +296,6 @@ export class AsyncTests {
         outcome = ApexTestRunResultStatus.Passed;
       }
 
-      // TODO: deprecate testTotalTime
       const rawResult: TestResultRaw = {
         summary: {
           outcome,
@@ -311,6 +310,7 @@ export class AsyncTests {
             testResults.length
           ),
           testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
+          testSetupTimeInMs: testRunSummary.TestSetupTime,
           testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
           testTotalTimeInMs: testRunSummary.TestTime ?? 0,
           commandTimeInMs: getCurrentTime() - commandStartTime,
