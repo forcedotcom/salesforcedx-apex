@@ -266,13 +266,33 @@ export type ApexTestRunResult = {
    */
   AsyncApexJobId: string;
   /**
-   * The status of the test run
+   * The number of classes that have completed execution in the test run
    */
-  Status: ApexTestRunResultStatus;
+  ClassesCompleted: number;
+  /**
+   * The number of classes that have been enqueued for execution in the test run
+   */
+  ClassesEnqueued: number;
+  /**
+   * The time at which the test run ended.
+   */
+  EndTime: string | undefined;
+  /**
+   * The number of methods that have been enqueued for execution in the test run
+   */
+  MethodsEnqueued: number;
   /**
    * The time at which the test run started.
    */
   StartTime: string | undefined;
+  /**
+   * The status of the test run
+   */
+  Status: ApexTestRunResultStatus;
+  /**
+   * The time it took to set up the test, in seconds.
+   */
+  TestSetupTime: number | undefined;
   /**
    * The time it took the test to run, in seconds.
    */
