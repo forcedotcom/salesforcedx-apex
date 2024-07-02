@@ -51,6 +51,16 @@ describe('Human Reporter Tests', () => {
     expect(result).to.contain('=== Test Summary');
   });
 
+  it('should format test results with setup methods', () => {
+    const result = reporter.format(coverageResult, false);
+    expect(result).to.not.be.empty;
+    expect(result).to.contain('=== Apex Code Coverage by Class');
+    expect(result).to.contain('ApexTestClass  12.5%    9,10');
+    expect(result).to.contain('=== Test Results');
+    expect(result).to.contain('=== Test Summary');
+    // expect(result).to.contain('=== Test Setup Time by Test Class');
+  });
+
   it('should format test results with detailed coverage specified', () => {
     const result = reporter.format(coverageResult, true);
     expect(result).to.not.be.empty;

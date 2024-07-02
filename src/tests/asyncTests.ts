@@ -22,7 +22,7 @@ import {
   ApexTestQueueItemRecord,
   ApexTestQueueItemStatus,
   ApexTestResult,
-  ApexTestResultData,
+  ApexTestResultDataRaw,
   ApexTestResultOutcome,
   ApexTestRunResult,
   ApexTestRunResultStatus,
@@ -36,7 +36,9 @@ import {
   calculatePercentage,
   getBufferSize,
   getJsonIndent,
-  queryAll
+  transformTestResult,
+  queryAll,
+  calculateCodeCoverage
 } from './utils';
 import * as util from 'util';
 import { QUERY_RECORD_LIMIT } from './constants';
@@ -96,12 +98,11 @@ export class AsyncTests {
       await sClient.init();
       await sClient.handshake();
 
-      token &&
-        token.onCancellationRequested(async () => {
-          const testRunId = await sClient.subscribedTestRunIdPromise;
-          await this.abortTestRun(testRunId, progress);
-          sClient.disconnect();
-        });
+      token?.onCancellationRequested(async () => {
+        const testRunId = await sClient.subscribedTestRunIdPromise;
+        await this.abortTestRun(testRunId, progress);
+        sClient.disconnect();
+      });
 
       const testRunId = await this.getTestRunRequestAction(options)();
 
@@ -109,7 +110,7 @@ export class AsyncTests {
         return { testRunId };
       }
 
-      if (token && token.isCancellationRequested) {
+      if (token?.isCancellationRequested) {
         return null;
       }
       const asyncRunResult = await sClient.subscribe(
@@ -141,7 +142,7 @@ export class AsyncTests {
   }
 
   private async writeResultsToFile(
-    formattedResults: TestResult,
+    formattedResults: TestResultRaw,
     runId: string
   ): Promise<void> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
@@ -152,7 +153,7 @@ export class AsyncTests {
         const writeStream = createWriteStream(
           path.join(os.tmpdir(), runId, 'rawResults.json')
         );
-        this.logger.debug(`Raw raw results written to: ${writeStream.path}`);
+        this.logger.debug(`Raw results written to: ${writeStream.path}`);
         const stringifyStream = bfj.stringify(formattedResults, {
           bufferLength: getBufferSize(),
           iterables: 'ignore',
@@ -194,12 +195,11 @@ export class AsyncTests {
         runResult = await this.checkRunStatus(testRunId);
       }
 
-      token &&
-        token.onCancellationRequested(async () => {
-          sClient.disconnect();
-        });
+      token?.onCancellationRequested(async () => {
+        sClient.disconnect();
+      });
 
-      if (token && token.isCancellationRequested) {
+      if (token?.isCancellationRequested) {
         return null;
       }
 
@@ -281,7 +281,6 @@ export class AsyncTests {
   ): Promise<TestResult> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     try {
-      const coveredApexClassIdSet = new Set<string>();
       const apexTestResults = await this.getAsyncTestResults(
         asyncRunResult.queueItem
       );
@@ -297,8 +296,7 @@ export class AsyncTests {
         outcome = ApexTestRunResultStatus.Passed;
       }
 
-      // TODO: deprecate testTotalTime
-      const result: TestResult = {
+      const rawResult: TestResultRaw = {
         summary: {
           outcome,
           testsRan: testResults.length,
@@ -312,6 +310,7 @@ export class AsyncTests {
             testResults.length
           ),
           testStartTime: formatStartTime(testRunSummary.StartTime, 'ISO'),
+          testSetupTimeInMs: testRunSummary.TestSetupTime,
           testExecutionTimeInMs: testRunSummary.TestTime ?? 0,
           testTotalTimeInMs: testRunSummary.TestTime ?? 0,
           commandTimeInMs: getCurrentTime() - commandStartTime,
@@ -324,42 +323,15 @@ export class AsyncTests {
         tests: testResults
       };
 
-      if (codeCoverage) {
-        const perClassCovMap =
-          await this.codecoverage.getPerClassCodeCoverage(apexTestClassIdSet);
-
-        result.tests.forEach((item) => {
-          const keyCodeCov = `${item.apexClass.id}-${item.methodName}`;
-          const perClassCov = perClassCovMap.get(keyCodeCov);
-          // Skipped test is not in coverage map, check to see if perClassCov exists first
-          if (perClassCov) {
-            perClassCov.forEach((classCov) =>
-              coveredApexClassIdSet.add(classCov.apexClassOrTriggerId)
-            );
-            item.perClassCoverage = perClassCov;
-          }
-        });
-
-        progress?.report({
-          type: 'FormatTestResultProgress',
-          value: 'queryingForAggregateCodeCoverage',
-          message: nls.localize('queryingForAggregateCodeCoverage')
-        });
-        const { codeCoverageResults, totalLines, coveredLines } =
-          await this.codecoverage.getAggregateCodeCoverage(
-            coveredApexClassIdSet
-          );
-        result.codecoverage = codeCoverageResults;
-        result.summary.totalLines = totalLines;
-        result.summary.coveredLines = coveredLines;
-        result.summary.testRunCoverage = calculatePercentage(
-          coveredLines,
-          totalLines
-        );
-        result.summary.orgWideCoverage =
-          await this.codecoverage.getOrgWideCoverage();
-      }
-      return this.transformTestResult(result);
+      await calculateCodeCoverage(
+        this.codecoverage,
+        codeCoverage,
+        apexTestClassIdSet,
+        rawResult,
+        true,
+        progress
+      );
+      return transformTestResult(rawResult);
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.formatAsyncResults');
     }
@@ -410,7 +382,7 @@ export class AsyncTests {
     apexTestResults: ApexTestResult[]
   ): Promise<{
     apexTestClassIdSet: Set<string>;
-    testResults: ApexTestResultData[];
+    testResults: ApexTestResultDataRaw[];
     globalTests: {
       passed: number;
       skipped: number;
@@ -425,7 +397,7 @@ export class AsyncTests {
       let skipped = 0;
 
       // Iterate over test results, format and add them as results.tests
-      const testResults: ApexTestResultData[] = [];
+      const testResults: ApexTestResultDataRaw[] = [];
       for (const result of apexTestResults) {
         result.records.forEach((item) => {
           switch (item.Outcome) {
@@ -459,6 +431,7 @@ export class AsyncTests {
             methodName: item.MethodName,
             outcome: item.Outcome,
             apexLogId: item.ApexLogId,
+            isTestSetup: item.IsTestSetup,
             apexClass: {
               id: item.ApexClass.Id,
               name: item.ApexClass.Name,
@@ -561,24 +534,5 @@ export class AsyncTests {
     } catch (e) {
       throw new Error(`Error describing ${sObjectName}: ${e.message}`);
     }
-  }
-
-  private transformTestResult(rawResult: TestResultRaw): TestResult {
-    // Destructure summary to omit testSetupTimeInMs
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { testSetupTimeInMs, ...summary } = rawResult.summary;
-
-    // Filter and transform tests array
-    const tests = rawResult.tests
-      .filter((test) => !test.isTestSetup)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ isTestSetup, ...rest }) => rest);
-
-    // Return the transformed result
-    return {
-      summary,
-      tests,
-      codecoverage: rawResult.codecoverage
-    };
   }
 }
