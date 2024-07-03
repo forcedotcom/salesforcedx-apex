@@ -191,6 +191,7 @@ export const missingTimeTestData: TestResult = {
     skipRate: '0%',
     skipped: 0,
     testStartTime: localStartTime,
+    testSetupTimeInMs: undefined,
     testExecutionTimeInMs: 0,
     testTotalTimeInMs: 0,
     commandTimeInMs: 2000,
@@ -235,6 +236,7 @@ export const skippedTestData: TestResult = {
     skipRate: '100%',
     skipped: 1,
     testStartTime: localStartTime,
+    testSetupTimeInMs: undefined,
     testExecutionTimeInMs: 0,
     testTotalTimeInMs: 0,
     commandTimeInMs: 2000,
@@ -277,12 +279,13 @@ const failureSummary = {
   skipRate: '0%',
   skipped: 0,
   testStartTime: localStartTime,
+  testSetupTimeInMs: undefined,
   testExecutionTimeInMs: 0,
   testTotalTimeInMs: 0,
   commandTimeInMs: 2000,
   testRunId,
   userId: '005xx000000abcDAAU'
-};
+} as unknown;
 
 export const diagnosticResult: TestResult = {
   // @ts-ignore

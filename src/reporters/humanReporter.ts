@@ -15,7 +15,6 @@ import {
 import { nls } from '../i18n';
 import { LoggerLevel } from '@salesforce/core';
 import * as os from 'node:os';
-import { ApexTestSetupData } from '../tests/types';
 
 export class HumanReporter {
   @elapsedTime()
@@ -40,7 +39,7 @@ export class HumanReporter {
         }
       }
       if (testResult.setup) {
-        tbResult += this.formatSetup(testResult.setup);
+        tbResult += this.formatSetup(testResult);
       }
       tbResult += this.formatSummary(testResult);
       return tbResult;
@@ -81,7 +80,7 @@ export class HumanReporter {
       },
       {
         name: nls.localize('testSetupTime'),
-        value: `${testResult.summary.testSetupTimeInMs} ms`
+        value: `${testResult.summary.testSetupTimeInMs || 0} ms`
       },
       {
         name: nls.localize('testExecutionTime'),
@@ -181,13 +180,14 @@ export class HumanReporter {
   }
 
   @elapsedTime()
-  private formatSetup(tests: ApexTestSetupData[]): string {
+  private formatSetup(testResult: TestResult): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
-    tests.forEach((elem: { fullName: string; testSetupTimeInMs: number }) => {
+    testResult.setup.forEach((elem: { fullName: string; runTime: number }) => {
       testRowArray.push({
         name: elem.fullName,
-        time: `${elem.testSetupTimeInMs}`
+        time: `${elem.runTime}`,
+        runId: testResult.summary.testRunId
       });
     });
     let testResultTable: string = '';
@@ -202,7 +202,9 @@ export class HumanReporter {
           },
           { key: 'time', label: nls.localize('setupTimeColHeader') }
         ],
-        nls.localize('testSetupResultsHeader')
+        nls
+          .localize('testSetupResultsHeader')
+          .replace('runId', testRowArray[0].runId)
       );
     }
     return testResultTable;

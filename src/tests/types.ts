@@ -158,7 +158,6 @@ export type SyncTestFailure = {
 };
 
 export type SyncTestResult = {
-  isTestSetup?: boolean;
   apexLogId: string;
   failures: SyncTestFailure[];
   numFailures: number;
@@ -417,6 +416,7 @@ export type ApexTestSetupData = {
     fullName: string;
   };
   testSetupTimeInMs: number;
+  runTime: number;
   testTimestamp: string;
   fullName: string;
   diagnostic?: ApexDiagnostic;

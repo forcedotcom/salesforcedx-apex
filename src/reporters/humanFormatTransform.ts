@@ -95,7 +95,7 @@ export class HumanFormatTransform extends Readable {
       },
       {
         name: nls.localize('testSetupTime'),
-        value: `${this.testResult.summary.testSetupTimeInMs} ms`
+        value: `${this.testResult.summary.testSetupTimeInMs || 0} ms`
       },
       {
         name: nls.localize('testExecutionTime'),
@@ -194,10 +194,11 @@ export class HumanFormatTransform extends Readable {
     const tb = new TableWriteableStream(this);
     const testRowArray: Row[] = [];
     this.testResult.setup.forEach(
-      (elem: { fullName: string; testSetupTimeInMs: number }) => {
+      (elem: { fullName: string; runTime: number }) => {
         testRowArray.push({
           name: elem.fullName,
-          time: `${elem.testSetupTimeInMs}`
+          time: `${elem.runTime}`,
+          runId: this.testResult.summary.testRunId
         });
       }
     );
@@ -213,7 +214,9 @@ export class HumanFormatTransform extends Readable {
           },
           { key: 'time', label: nls.localize('setupTimeColHeader') }
         ],
-        nls.localize('testSetupResultsHeader')
+        nls
+          .localize('testSetupResultsHeader')
+          .replace('runId', testRowArray[0].runId)
       );
     }
   }

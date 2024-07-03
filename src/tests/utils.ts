@@ -139,10 +139,6 @@ export const resetLimitsForTesting = (): void => {
 };
 
 export const transformTestResult = (rawResult: TestResultRaw): TestResult => {
-  // Destructure summary to omit testSetupTimeInMs
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { testSetupTimeInMs, ...summary } = rawResult.summary;
-
   // Initialize arrays for setup methods and regular tests
   const regularTests: ApexTestResultData[] = [];
   const setupMethods: ApexTestSetupData[] = [];
@@ -159,9 +155,11 @@ export const transformTestResult = (rawResult: TestResultRaw): TestResult => {
 
   return {
     summary: {
-      ...summary,
+      ...rawResult.summary,
+      testSetupTimeInMs: rawResult.summary.testSetupTimeInMs,
       testTotalTimeInMs:
-        (testSetupTimeInMs || 0) + summary.testExecutionTimeInMs
+        (rawResult.summary.testSetupTimeInMs || 0) +
+        rawResult.summary.testExecutionTimeInMs
     },
     tests: regularTests,
     setup: setupMethods,

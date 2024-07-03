@@ -66,7 +66,7 @@ export const messages = {
   runtimeColHeader: 'RUNTIME (MS)',
   setupTimeColHeader: 'SETUP TIME',
   testResultsHeader: 'Test Results',
-  testSetupResultsHeader: 'Test Setup Time by Test Class',
+  testSetupResultsHeader: 'Test Setup Time by Test Class for Run runId',
   classesColHeader: 'CLASSES',
   percentColHeader: 'PERCENT',
   classTestedHeader: 'CLASS BEING TESTED',

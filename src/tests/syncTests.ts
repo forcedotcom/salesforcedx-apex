@@ -208,7 +208,6 @@ export class SyncTests {
       methodName: item.methodName,
       outcome: outcome,
       apexLogId: apiTestResult.apexLogId,
-      isTestSetup: apiTestResult.isTestSetup,
       apexClass: {
         id: item.id,
         name: item.name,

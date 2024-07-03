@@ -142,7 +142,7 @@ export class AsyncTests {
   }
 
   private async writeResultsToFile(
-    formattedResults: TestResultRaw,
+    formattedResults: TestResult,
     runId: string
   ): Promise<void> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
