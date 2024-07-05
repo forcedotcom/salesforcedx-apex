@@ -183,10 +183,10 @@ export class HumanReporter {
   private formatSetup(testResult: TestResult): string {
     const tb = new Table();
     const testRowArray: Row[] = [];
-    testResult.setup.forEach((elem: { fullName: string; runTime: number }) => {
+    testResult.setup.forEach((elem) => {
       testRowArray.push({
         name: elem.fullName,
-        time: `${elem.runTime}`,
+        time: `${elem.testSetupTime}`,
         runId: testResult.summary.testRunId
       });
     });

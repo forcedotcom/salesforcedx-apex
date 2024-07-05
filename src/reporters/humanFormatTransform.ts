@@ -193,15 +193,13 @@ export class HumanFormatTransform extends Readable {
   private formatSetup(): void {
     const tb = new TableWriteableStream(this);
     const testRowArray: Row[] = [];
-    this.testResult.setup.forEach(
-      (elem: { fullName: string; runTime: number }) => {
-        testRowArray.push({
-          name: elem.fullName,
-          time: `${elem.runTime}`,
-          runId: this.testResult.summary.testRunId
-        });
-      }
-    );
+    this.testResult.setup.forEach((elem) => {
+      testRowArray.push({
+        name: elem.fullName,
+        time: `${elem.testSetupTime}`,
+        runId: this.testResult.summary.testRunId
+      });
+    });
 
     if (testRowArray.length > 0) {
       this.push('\n\n');

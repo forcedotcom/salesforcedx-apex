@@ -9,6 +9,7 @@ import { Connection, Logger } from '@salesforce/core';
 import {
   ApexTestProgressValue,
   ApexTestResultData,
+  ApexTestResultDataRaw,
   ApexTestSetupData,
   NamespaceInfo,
   TestResult,
@@ -147,7 +148,7 @@ export const transformTestResult = (rawResult: TestResultRaw): TestResult => {
   rawResult.tests.forEach((test) => {
     const { isTestSetup, ...rest } = test;
     if (isTestSetup) {
-      setupMethods.push(rest as unknown as ApexTestSetupData);
+      setupMethods.push(transformToApexTestSetupData(rest));
     } else {
       regularTests.push(rest);
     }
@@ -214,4 +215,23 @@ export const calculateCodeCoverage = async (
     result.summary.orgWideCoverage =
       await codeCoverageInstance.getOrgWideCoverage();
   }
+};
+
+const transformToApexTestSetupData = (
+  testData: Omit<ApexTestResultDataRaw, 'isTestSetup'>
+): ApexTestSetupData => {
+  // Assuming all necessary properties are present and optional properties are handled
+  return {
+    id: testData.id,
+    stackTrace: testData.stackTrace ?? null,
+    message: testData.message ?? null,
+    asyncApexJobId: testData.asyncApexJobId,
+    methodName: testData.methodName,
+    apexLogId: testData.apexLogId ?? null,
+    apexClass: testData.apexClass,
+    testSetupTime: testData.runTime,
+    testTimestamp: testData.testTimestamp,
+    fullName: testData.fullName,
+    diagnostic: testData.diagnostic
+  };
 };

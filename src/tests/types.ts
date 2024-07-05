@@ -415,8 +415,7 @@ export type ApexTestSetupData = {
     namespacePrefix: string;
     fullName: string;
   };
-  testSetupTimeInMs: number;
-  runTime: number;
+  testSetupTime: number;
   testTimestamp: string;
   fullName: string;
   diagnostic?: ApexDiagnostic;

@@ -164,8 +164,7 @@ export const setupResult: TestResult = {
         namespacePrefix: null,
         fullName: 'AccountServiceTest'
       },
-      testSetupTimeInMs: 24,
-      runTime: 24,
+      testSetupTime: 24,
       testTimestamp: '2020-11-09T18:02:51.000+0000',
       fullName: 'AccountServiceTest.setup_method'
     }
