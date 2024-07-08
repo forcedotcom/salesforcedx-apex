@@ -58,6 +58,18 @@ export class StreamingClient {
     return instanceUrl ? instanceUrl.replace(/\/+$/, '') : '';
   }
 
+  /**
+   * Ensures the API version is 61.0 or higher to include the Test Setup section.
+   * If the version is lower than 61.0, sets it to 61.0.
+   */
+  private ensureApiVersion() {
+    const currentVersion = parseFloat(this.conn.getApiVersion());
+
+    if (currentVersion < 61.0) {
+      this.conn.setApiVersion('61.0');
+    }
+  }
+
   public getStreamURL(instanceUrl: string): string {
     const urlElements = [
       this.removeTrailingSlashURL(instanceUrl),
@@ -73,6 +85,7 @@ export class StreamingClient {
   ) {
     this.conn = connection;
     this.progress = progress;
+    this.ensureApiVersion();
     const streamUrl = this.getStreamURL(this.conn.instanceUrl);
     this.client = new Client(streamUrl, {
       timeout: DEFAULT_STREAMING_TIMEOUT_SEC
