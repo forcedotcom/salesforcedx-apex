@@ -50,7 +50,6 @@ import { pipeline } from 'node:stream/promises';
 import * as os from 'node:os';
 import path from 'path';
 import fs from 'node:fs/promises';
-import { Field } from '@jsforce/jsforce-node';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const bfj = require('bfj');
@@ -231,10 +230,8 @@ export class AsyncTests {
     if (!isValidTestRunID(testRunId)) {
       throw new Error(nls.localize('invalidTestRunIdErr', testRunId));
     }
-    const hasTestSetupTimeField = await this.describeSObjects(
-      'ApexTestRunResult',
-      'TestSetupTime'
-    );
+    const hasTestSetupTimeField = await this.supportsTestSetupFeature();
+
     const testRunSummaryQuery = hasTestSetupTimeField
       ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
       : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
@@ -342,10 +339,7 @@ export class AsyncTests {
     testQueueResult: ApexTestQueueItem
   ): Promise<ApexTestResult[]> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
-    const hasIsTestSetupField = await this.describeSObjects(
-      'ApexTestResult',
-      'IsTestSetup'
-    );
+    const hasIsTestSetupField = await this.supportsTestSetupFeature();
 
     try {
       const apexTestResultQuery = hasIsTestSetupField
@@ -516,23 +510,16 @@ export class AsyncTests {
   }
 
   /**
-   * Checks if the specified sObject contains the given field.
-   * @param sObjectName - The name of the sObject.
-   * @param fieldName - The name of the field to check.
-   * @returns A boolean indicating if the field exists in the sObject.
+   * @returns A boolean indicating if the org's api version supports the test setup feature.
    */
-  public async describeSObjects(
-    sObjectName: string,
-    fieldName: string
-  ): Promise<boolean> {
+  public async supportsTestSetupFeature(): Promise<boolean> {
     try {
-      const describeResult =
-        await this.connection.tooling.describe(sObjectName);
-      return describeResult.fields.some(
-        (field: Field) => field.name === fieldName
+      const maxApiVersion = parseFloat(
+        await this.connection.retrieveMaxApiVersion()
       );
+      return maxApiVersion >= 61.0;
     } catch (e) {
-      throw new Error(`Error describing ${sObjectName}: ${e.message}`);
+      throw new Error(`Error retrieving max api version`);
     }
   }
 }
