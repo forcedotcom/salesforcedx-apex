@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Connection, Logger, LoggerLevel } from '@salesforce/core';
+import { AuthInfo, Connection, Logger, LoggerLevel } from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
@@ -243,13 +243,11 @@ export class AsyncTests {
     });
 
     try {
-      const testRunSummaryResults =
-        await this.connection.singleRecordQuery<ApexTestRunResult>(
-          testRunSummaryQuery,
-          {
-            tooling: true
-          }
-        );
+      const testRunSummaryResults = await (
+        await this.defineApiVersion()
+      ).singleRecordQuery<ApexTestRunResult>(testRunSummaryQuery, {
+        tooling: true
+      });
       return {
         testsComplete: finishedStatuses.includes(testRunSummaryResults.Status),
         testRunSummary: testRunSummaryResults
@@ -361,8 +359,8 @@ export class AsyncTests {
         queries.push(query);
       }
 
-      const queryPromises = queries.map((query) => {
-        return queryAll(this.connection, query, true);
+      const queryPromises = queries.map(async (query) => {
+        return queryAll(await this.defineApiVersion(), query, true);
       });
       const apexTestResults = await Promise.all(queryPromises);
       return apexTestResults as ApexTestResult[];
@@ -514,12 +512,43 @@ export class AsyncTests {
    */
   public async supportsTestSetupFeature(): Promise<boolean> {
     try {
-      const maxApiVersion = parseFloat(
-        await this.connection.retrieveMaxApiVersion()
-      );
-      return maxApiVersion >= 61.0;
+      return parseFloat(await this.connection.retrieveMaxApiVersion()) >= 61.0;
     } catch (e) {
       throw new Error(`Error retrieving max api version`);
+    }
+  }
+
+  public async defineApiVersion(): Promise<Connection> {
+    const maxApiVersion = await this.connection.retrieveMaxApiVersion();
+
+    if (
+      parseFloat(this.connection.getApiVersion()) < 61.0 &&
+      parseFloat(maxApiVersion) >= 61.0
+    ) {
+      return await this.cloneConnectionWithNewVersion(maxApiVersion);
+    }
+    return this.connection;
+  }
+
+  public async cloneConnectionWithNewVersion(
+    newVersion: string
+  ): Promise<Connection> {
+    try {
+      const authInfo = await AuthInfo.create({
+        username: this.connection.getUsername()
+      });
+      const newConn = await Connection.create({
+        authInfo: authInfo,
+        connectionOptions: {
+          ...this.connection.getConnectionOptions(),
+          version: newVersion
+        }
+      });
+      return newConn;
+    } catch (e) {
+      throw new Error(
+        `Error creating new connection with API version ${newVersion}: ${e.message}`
+      );
     }
   }
 }

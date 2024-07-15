@@ -92,7 +92,6 @@ describe('Run Apex tests asynchronously', () => {
     sandboxStub = createSandbox();
 
     await $$.stubAuths(testData);
-    sandboxStub.stub(mockConnection, 'getApiVersion').resolves('50.0');
     mockConnection = await testData.getConnection();
     retrieveMaxApiVersionStub = sandboxStub
       .stub(mockConnection, 'retrieveMaxApiVersion')
@@ -100,6 +99,7 @@ describe('Run Apex tests asynchronously', () => {
     sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
     });
+    sandboxStub.stub(mockConnection, 'getApiVersion').resolves('50.0');
     timeStub = sandboxStub
       .stub(Date.prototype, 'getTime')
       .onFirstCall()

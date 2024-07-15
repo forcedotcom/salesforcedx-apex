@@ -7,7 +7,7 @@
 
 import { Connection } from '@salesforce/core';
 import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
-import { assert, createSandbox, SinonSandbox, SinonStub } from 'sinon';
+import { assert, createSandbox, SinonSandbox } from 'sinon';
 import { StreamingClient } from '../../src/streaming';
 import { Deferred } from '../../src/streaming/streamingClient';
 import { expect } from 'chai';
@@ -28,7 +28,6 @@ import { Duration } from '@salesforce/kit';
 const ApexFayeClient: any = Client;
 
 let mockConnection: Connection;
-let getApiVersionStub: SinonStub;
 let sandboxStub: SinonSandbox;
 const testData = new MockTestOrgData();
 const testResultMsg: TestResultMessage = {
@@ -50,10 +49,8 @@ describe('Streaming API Client', () => {
     sandboxStub
       .stub(Connection.prototype, 'retrieveMaxApiVersion')
       .resolves('61.0');
-    getApiVersionStub = sandboxStub
-      .stub(mockConnection, 'getApiVersion')
-      .resolves('50.0');
     mockConnection = await testData.getConnection();
+    sandboxStub.stub(mockConnection, 'getApiVersion').resolves('50.0');
   });
 
   afterEach(() => {
@@ -62,12 +59,11 @@ describe('Streaming API Client', () => {
 
   it('should build a valid streaming url', async () => {
     mockConnection = await testData.getConnection();
-    getApiVersionStub.resolves('50.0');
     const streamClient = new StreamingClient(mockConnection);
     const result = await streamClient.getStreamURL(
       'https://na1.salesforce.com/'
     );
-    expect(result).to.equal('https://na1.salesforce.com/cometd/50.0');
+    expect(result).to.equal('https://na1.salesforce.com/cometd/61.0');
   });
 
   it('should initialize Faye Client', () => {
