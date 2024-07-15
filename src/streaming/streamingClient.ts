@@ -6,7 +6,7 @@
  */
 
 import { Client } from 'faye';
-import { Connection, LoggerLevel } from '@salesforce/core';
+import { AuthInfo, Connection, LoggerLevel } from '@salesforce/core';
 import {
   RetrieveResultsInterval,
   StreamMessage,
@@ -58,13 +58,48 @@ export class StreamingClient {
     return instanceUrl ? instanceUrl.replace(/\/+$/, '') : '';
   }
 
-  public getStreamURL(instanceUrl: string): string {
+  public async getStreamURL(instanceUrl: string): Promise<string> {
     const urlElements = [
       this.removeTrailingSlashURL(instanceUrl),
       'cometd',
-      this.conn.getApiVersion()
+      await this.conn.getApiVersion()
     ];
     return urlElements.join('/');
+  }
+
+  public async defineApiVersion(): Promise<Connection> {
+    const maxApiVersion = await this.conn.retrieveMaxApiVersion();
+    const currentApiVersion = this.conn.getApiVersion();
+
+    if (
+      parseFloat(currentApiVersion) < 61.0 &&
+      parseFloat(maxApiVersion) >= 61.0
+    ) {
+      return await this.cloneConnectionWithNewVersion(maxApiVersion);
+    }
+    return this.conn;
+  }
+
+  public async cloneConnectionWithNewVersion(
+    newVersion: string
+  ): Promise<Connection> {
+    try {
+      const authInfo = await AuthInfo.create({
+        username: this.conn.getUsername()
+      });
+      const newConn = await Connection.create({
+        authInfo: authInfo,
+        connectionOptions: {
+          ...this.conn.getConnectionOptions(),
+          version: newVersion
+        }
+      });
+      return newConn;
+    } catch (e) {
+      throw new Error(
+        `Error creating new connection with API version ${newVersion}: ${e.message}`
+      );
+    }
   }
 
   public constructor(
@@ -73,67 +108,77 @@ export class StreamingClient {
   ) {
     this.conn = connection;
     this.progress = progress;
-    const streamUrl = this.getStreamURL(this.conn.instanceUrl);
-    this.client = new Client(streamUrl, {
-      timeout: DEFAULT_STREAMING_TIMEOUT_SEC
-    });
+    this.initializeClient();
+  }
 
-    this.client.on('transport:up', () => {
-      this.progress?.report({
-        type: 'StreamingClientProgress',
-        value: 'streamingTransportUp',
-        message: nls.localize('streamingTransportUp')
+  private async initializeClient(): Promise<void> {
+    try {
+      const newConnection = await this.defineApiVersion();
+      const streamUrl = await this.getStreamURL(newConnection.instanceUrl);
+      this.client = new Client(streamUrl, {
+        timeout: DEFAULT_STREAMING_TIMEOUT_SEC
       });
-    });
 
-    this.client.on('transport:down', () => {
-      this.progress?.report({
-        type: 'StreamingClientProgress',
-        value: 'streamingTransportDown',
-        message: nls.localize('streamingTransportDown')
+      this.client.on('transport:up', () => {
+        this.progress?.report({
+          type: 'StreamingClientProgress',
+          value: 'streamingTransportUp',
+          message: nls.localize('streamingTransportUp')
+        });
       });
-    });
 
-    this.client.addExtension({
-      incoming: async (
-        message: StreamMessage,
-        callback: (message: StreamMessage) => void
-      ) => {
-        if (message?.error) {
-          // throw errors on handshake errors
-          if (message.channel === '/meta/handshake') {
+      this.client.on('transport:down', () => {
+        this.progress?.report({
+          type: 'StreamingClientProgress',
+          value: 'streamingTransportDown',
+          message: nls.localize('streamingTransportDown')
+        });
+      });
+
+      this.client.addExtension({
+        incoming: async (
+          message: StreamMessage,
+          callback: (message: StreamMessage) => void
+        ) => {
+          if (message?.error) {
+            // throw errors on handshake errors
+            if (message.channel === '/meta/handshake') {
+              this.disconnect();
+              throw new Error(
+                nls.localize('streamingHandshakeFail', message.error)
+              );
+            }
+
+            // refresh auth on 401 errors
+            if (message.error === StreamingErrors.ERROR_AUTH_INVALID) {
+              await this.init();
+              callback(message);
+              return;
+            }
+
+            // call faye callback on handshake advice
+            if (message.advice && message.advice.reconnect === 'handshake') {
+              callback(message);
+              return;
+            }
+
+            // call faye callback on 403 unknown client errors
+            if (message.error === StreamingErrors.ERROR_UNKNOWN_CLIENT_ID) {
+              callback(message);
+              return;
+            }
+
+            // default: disconnect and throw error
             this.disconnect();
-            throw new Error(
-              nls.localize('streamingHandshakeFail', message.error)
-            );
+            throw new Error(message.error);
           }
-
-          // refresh auth on 401 errors
-          if (message.error === StreamingErrors.ERROR_AUTH_INVALID) {
-            await this.init();
-            callback(message);
-            return;
-          }
-
-          // call faye callback on handshake advice
-          if (message.advice && message.advice.reconnect === 'handshake') {
-            callback(message);
-            return;
-          }
-
-          // call faye callback on 403 unknown client errors
-          if (message.error === StreamingErrors.ERROR_UNKNOWN_CLIENT_ID) {
-            callback(message);
-            return;
-          }
-
-          // default: disconnect and throw error
-          this.disconnect();
-          throw new Error(message.error);
+          callback(message);
         }
-        callback(message);
-      }
-    });
+      });
+    } catch (e) {
+      // Handle the error as needed
+      console.error('Error initializing client:', e);
+    }
   }
 
   // NOTE: There's an intermittent auth issue with Streaming API that requires the connection to be refreshed
