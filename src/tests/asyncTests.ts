@@ -360,9 +360,9 @@ export class AsyncTests {
         );
         queries.push(query);
       }
-
+      const connection = await this.defineApiVersion();
       const queryPromises = queries.map(async (query) => {
-        return queryAll(await this.defineApiVersion(), query, true);
+        return queryAll(connection, query, true);
       });
       const apexTestResults = await Promise.all(queryPromises);
       return apexTestResults as ApexTestResult[];
@@ -529,7 +529,7 @@ export class AsyncTests {
     if (
       parseFloat(this.connection.getApiVersion()) <
         MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS &&
-      parseFloat(maxApiVersion) >= MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS
+      this.supportsTestSetupFeature()
     ) {
       return await this.cloneConnectionWithNewVersion(maxApiVersion);
     }

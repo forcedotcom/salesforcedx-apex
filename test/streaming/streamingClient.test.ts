@@ -44,26 +44,22 @@ describe('Streaming API Client', () => {
 
   beforeEach(async () => {
     sandboxStub = createSandbox();
-    await $$.stubAuths(testData);
     // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
     sandboxStub
       .stub(Connection.prototype, 'retrieveMaxApiVersion')
-      .resolves('61.0');
+      .resolves('50.0');
+    await $$.stubAuths(testData);
     mockConnection = await testData.getConnection();
-    sandboxStub.stub(mockConnection, 'getApiVersion').resolves('50.0');
   });
 
   afterEach(() => {
     sandboxStub.restore();
   });
 
-  it('should build a valid streaming url', async () => {
-    mockConnection = await testData.getConnection();
+  it('should build a valid streaming url', () => {
     const streamClient = new StreamingClient(mockConnection);
-    const result = await streamClient.getStreamURL(
-      'https://na1.salesforce.com/'
-    );
-    expect(result).to.equal('https://na1.salesforce.com/cometd/61.0');
+    const result = streamClient.getStreamURL('https://na1.salesforce.com/');
+    expect(result).to.equal('https://na1.salesforce.com/cometd/50.0');
   });
 
   it('should initialize Faye Client', () => {

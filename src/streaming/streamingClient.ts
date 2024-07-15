@@ -46,7 +46,7 @@ export class StreamingClient {
   // that is exported from jsforce.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private client: any;
-  private conn: Connection;
+  private readonly conn: Connection;
   private progress?: Progress<ApexTestProgressValue>;
   public subscribedTestRunId: string;
   private subscribedTestRunIdDeferred = new Deferred<string>();
