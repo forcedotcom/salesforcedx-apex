@@ -29,8 +29,8 @@
     "@types/node": "^18",
     "@types/sinon": "^17.0.3",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.10.0",
-    "chai": "^4.3.10",
+    "@typescript-eslint/parser": "^6.21.0",
+    "chai": "^4.4.1",
     "commitlint": "^18.6.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.53.0",
@@ -43,12 +43,12 @@
     "mocha": "^10.4.0",
     "mocha-junit-reporter": "^2.2.1",
     "nyc": "^15.1.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.3.2",
     "shx": "^0.3.4",
     "sinon": "^17.0.1",
     "source-map-support": "^0.5.16",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.3"
   },
   "homepage": "https://github.com/forcedotcom/salesforcedx-apex",
   "keywords": [
