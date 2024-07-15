@@ -62,6 +62,8 @@ const finishedStatuses = [
   ApexTestRunResultStatus.Skipped
 ];
 
+const MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS = 61.0;
+
 export class AsyncTests {
   public readonly connection: Connection;
   private readonly codecoverage: CodeCoverage;
@@ -512,7 +514,10 @@ export class AsyncTests {
    */
   public async supportsTestSetupFeature(): Promise<boolean> {
     try {
-      return parseFloat(await this.connection.retrieveMaxApiVersion()) >= 61.0;
+      return (
+        parseFloat(await this.connection.retrieveMaxApiVersion()) >=
+        MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS
+      );
     } catch (e) {
       throw new Error(`Error retrieving max api version`);
     }
@@ -522,8 +527,9 @@ export class AsyncTests {
     const maxApiVersion = await this.connection.retrieveMaxApiVersion();
 
     if (
-      parseFloat(this.connection.getApiVersion()) < 61.0 &&
-      parseFloat(maxApiVersion) >= 61.0
+      parseFloat(this.connection.getApiVersion()) <
+        MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS &&
+      parseFloat(maxApiVersion) >= MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS
     ) {
       return await this.cloneConnectionWithNewVersion(maxApiVersion);
     }
