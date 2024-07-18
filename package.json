@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^18.1.0",
-    "@salesforce/ts-sinon": "^1.4.19",
+    "@salesforce/ts-sinon": "^1.4.22",
     "@salesforce/ts-types": "^2.0.10",
     "@types/chai": "^4.3.16",
     "@types/glob": "^8.1.0",
