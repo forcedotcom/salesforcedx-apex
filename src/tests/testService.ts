@@ -6,33 +6,44 @@
  */
 import { Connection } from '@salesforce/core';
 import {
-  SyncTestConfiguration,
-  AsyncTestConfiguration,
-  AsyncTestArrayConfiguration,
   ApexTestProgressValue,
-  TestResult,
+  AsyncTestArrayConfiguration,
+  AsyncTestConfiguration,
+  NamespaceInfo,
   OutputDirConfig,
   ResultFormat,
-  TestLevel,
+  SyncTestConfiguration,
   TestItem,
-  NamespaceInfo,
-  TestSuiteMembershipRecord,
-  TestRunIdResult
+  TestLevel,
+  TestResult,
+  TestRunIdResult,
+  TestSuiteMembershipRecord
 } from './types';
 import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
-import { JUnitReporter, TapReporter } from '../reporters';
-import { isValidApexClassID, queryNamespaces, stringify } from './utils';
-import { createFiles } from '../utils/fileSystemHandler';
+import { JUnitFormatTransformer, TapFormatTransformer } from '../reporters';
+import { getBufferSize, getJsonIndent, queryNamespaces } from './utils';
 import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
 import { QueryResult } from '../utils/types';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { Readable, Writable } from 'node:stream';
+import { TestResultStringifyStream } from '../streaming';
+import { elapsedTime, HeapMonitor } from '../utils';
+import { isTestResult, isValidApexClassID } from '../narrowing';
+import { Duration } from '@salesforce/kit';
+import { Transform } from 'stream';
+import { pipeline } from 'node:stream/promises';
+import { createWriteStream } from 'node:fs';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bfj = require('bfj');
 
 export class TestService {
   private readonly connection: Connection;
-  private readonly asyncService: AsyncTests;
+  public readonly asyncService: AsyncTests;
   private readonly syncService: SyncTests;
 
   constructor(connection: Connection) {
@@ -45,6 +56,7 @@ export class TestService {
    * Retrieve all suites in org
    * @returns list of Suites in org
    */
+  @elapsedTime()
   public async retrieveAllSuites(): Promise<
     { id: string; TestSuiteName: string }[]
   > {
@@ -55,6 +67,7 @@ export class TestService {
     return testSuiteRecords.records;
   }
 
+  @elapsedTime()
   private async retrieveSuiteId(
     suitename: string
   ): Promise<string | undefined> {
@@ -73,6 +86,7 @@ export class TestService {
    * @param suitenames names of suites
    * @returns Ids associated with each suite
    */
+  @elapsedTime()
   private async getOrCreateSuiteIds(suitenames: string[]): Promise<string[]> {
     const suiteIds = suitenames.map(async (suite) => {
       const suiteId = await this.retrieveSuiteId(suite);
@@ -94,6 +108,7 @@ export class TestService {
    * @param suiteId id of suite
    * @returns list of test classes in the suite
    */
+  @elapsedTime()
   public async getTestsInSuite(
     suitename?: string,
     suiteId?: string
@@ -120,6 +135,7 @@ export class TestService {
    * @param testClasses list of Apex class names
    * @returns the associated ids for each Apex class
    */
+  @elapsedTime()
   public async getApexClassIds(testClasses: string[]): Promise<string[]> {
     const classIds = testClasses.map(async (testClass) => {
       const apexClass = (await this.connection.tooling.query(
@@ -136,8 +152,9 @@ export class TestService {
   /**
    * Builds a test suite with the given test classes. Creates the test suite if it doesn't exist already
    * @param suitename name of suite
-   * @param tests tests to be added to suite
+   * @param testClasses
    */
+  @elapsedTime()
   public async buildSuite(
     suitename: string,
     testClasses: string[]
@@ -173,12 +190,18 @@ export class TestService {
    * @param codeCoverage should report code coverage
    * @param token cancellation token
    */
+  @elapsedTime()
   public async runTestSynchronous(
     options: SyncTestConfiguration,
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult | TestRunIdResult> {
-    return await this.syncService.runTests(options, codeCoverage, token);
+    HeapMonitor.getInstance().startMonitoring();
+    try {
+      return await this.syncService.runTests(options, codeCoverage, token);
+    } finally {
+      HeapMonitor.getInstance().stopMonitoring();
+    }
   }
 
   /**
@@ -188,21 +211,30 @@ export class TestService {
    * @param immediatelyReturn should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
+   * @param timeout
    */
+  @elapsedTime()
   public async runTestAsynchronous(
     options: AsyncTestConfiguration | AsyncTestArrayConfiguration,
     codeCoverage = false,
     immediatelyReturn = false,
     progress?: Progress<ApexTestProgressValue>,
-    token?: CancellationToken
+    token?: CancellationToken,
+    timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
-    return await this.asyncService.runTests(
-      options,
-      codeCoverage,
-      immediatelyReturn,
-      progress,
-      token
-    );
+    HeapMonitor.getInstance().startMonitoring();
+    try {
+      return await this.asyncService.runTests(
+        options,
+        codeCoverage,
+        immediatelyReturn,
+        progress,
+        token,
+        timeout
+      );
+    } finally {
+      HeapMonitor.getInstance().stopMonitoring();
+    }
   }
 
   /**
@@ -211,16 +243,22 @@ export class TestService {
    * @param codeCoverage should report code coverages
    * @param token cancellation token
    */
+  @elapsedTime()
   public async reportAsyncResults(
     testRunId: string,
     codeCoverage = false,
     token?: CancellationToken
   ): Promise<TestResult> {
-    return await this.asyncService.reportAsyncResults(
-      testRunId,
-      codeCoverage,
-      token
-    );
+    HeapMonitor.getInstance().startMonitoring();
+    try {
+      return await this.asyncService.reportAsyncResults(
+        testRunId,
+        codeCoverage,
+        token
+      );
+    } finally {
+      HeapMonitor.getInstance().stopMonitoring();
+    }
   }
 
   /**
@@ -230,97 +268,124 @@ export class TestService {
    * @param codeCoverage should report code coverage
    * @returns list of result files created
    */
+  @elapsedTime()
   public async writeResultFiles(
     result: TestResult | TestRunIdResult,
     outputDirConfig: OutputDirConfig,
     codeCoverage = false
   ): Promise<string[]> {
-    const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-    const fileMap: { path: string; content: string }[] = [];
-    const testRunId = result.hasOwnProperty('summary')
-      ? (result as TestResult).summary.testRunId
-      : (result as TestRunIdResult).testRunId;
+    HeapMonitor.getInstance().startMonitoring();
+    HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
+    try {
+      const filesWritten: string[] = [];
+      const { dirPath, resultFormats, fileInfos } = outputDirConfig;
 
-    fileMap.push({
-      path: join(dirPath, 'test-run-id.txt'),
-      content: testRunId
-    });
-
-    if (resultFormats) {
-      if (!result.hasOwnProperty('summary')) {
-        throw new Error(nls.localize('runIdFormatErr'));
+      if (
+        resultFormats &&
+        !resultFormats.every((format) => format in ResultFormat)
+      ) {
+        throw new Error(nls.localize('resultFormatErr'));
       }
-      result = result as TestResult;
 
-      for (const format of resultFormats) {
-        if (!(format in ResultFormat)) {
-          throw new Error(nls.localize('resultFormatErr'));
+      await mkdir(dirPath, { recursive: true });
+
+      const testRunId = isTestResult(result)
+        ? result.summary.testRunId
+        : result.testRunId;
+
+      try {
+        await writeFile(join(dirPath, 'test-run-id.txt'), testRunId);
+        filesWritten.push(join(dirPath, 'test-run-id.txt'));
+      } catch (err) {
+        console.error(`Error writing file: ${err}`);
+      }
+
+      if (resultFormats) {
+        if (!isTestResult(result)) {
+          throw new Error(nls.localize('runIdFormatErr'));
         }
-
-        switch (format) {
-          case ResultFormat.json:
-            fileMap.push({
-              path: join(
+        for (const format of resultFormats) {
+          let filePath;
+          let readable;
+          switch (format) {
+            case ResultFormat.json:
+              filePath = join(
                 dirPath,
-                testRunId ? `test-result-${testRunId}.json` : `test-result.json`
-              ),
-              content: stringify(result)
-            });
-            break;
-          case ResultFormat.tap:
-            const tapResult = new TapReporter().format(result);
-            fileMap.push({
-              path: join(dirPath, `test-result-${testRunId}-tap.txt`),
-              content: tapResult
-            });
-            break;
-          case ResultFormat.junit:
-            const junitResult = new JUnitReporter().format(result);
-            fileMap.push({
-              path: join(
+                `test-result-${testRunId || 'default'}.json`
+              );
+              readable = TestResultStringifyStream.fromTestResult(result, {
+                bufferSize: getBufferSize()
+              });
+              break;
+            case ResultFormat.tap:
+              filePath = join(dirPath, `test-result-${testRunId}-tap.txt`);
+              readable = new TapFormatTransformer(result, undefined, {
+                bufferSize: getBufferSize()
+              });
+              break;
+            case ResultFormat.junit:
+              filePath = join(
                 dirPath,
-                testRunId
-                  ? `test-result-${testRunId}-junit.xml`
-                  : `test-result-junit.xml`
-              ),
-              content: junitResult
-            });
-            break;
+                `test-result-${testRunId || 'default'}-junit.xml`
+              );
+              readable = new JUnitFormatTransformer(result, {
+                bufferSize: getBufferSize()
+              });
+              break;
+          }
+          if (filePath && readable) {
+            filesWritten.push(await this.runPipeline(readable, filePath));
+          }
         }
       }
-    }
 
-    if (codeCoverage) {
-      if (!result.hasOwnProperty('summary')) {
-        throw new Error(nls.localize('covIdFormatErr'));
+      if (codeCoverage) {
+        if (!isTestResult(result)) {
+          throw new Error(nls.localize('covIdFormatErr'));
+        }
+        const filePath = join(
+          dirPath,
+          `test-result-${testRunId}-codecoverage.json`
+        );
+        const c = result.tests
+          .map((record) => record.perClassCoverage)
+          .filter((pcc) => pcc?.length);
+        filesWritten.push(
+          await this.runPipeline(
+            bfj.stringify(c, {
+              bufferLength: getBufferSize(),
+              iterables: 'ignore',
+              space: getJsonIndent()
+            }),
+            filePath
+          )
+        );
       }
-      result = result as TestResult;
-      const coverageRecords = result.tests.map((record) => {
-        return record.perClassCoverage;
-      });
-      fileMap.push({
-        path: join(dirPath, `test-result-${testRunId}-codecoverage.json`),
-        content: stringify(coverageRecords)
-      });
+
+      if (fileInfos) {
+        for (const fileInfo of fileInfos) {
+          const filePath = join(dirPath, fileInfo.filename);
+          const readable =
+            typeof fileInfo.content === 'string'
+              ? Readable.from([fileInfo.content])
+              : bfj.stringify(fileInfo.content, {
+                  bufferLength: getBufferSize(),
+                  iterables: 'ignore',
+                  space: getJsonIndent()
+                });
+          filesWritten.push(await this.runPipeline(readable, filePath));
+        }
+      }
+
+      return filesWritten;
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
+      HeapMonitor.getInstance().stopMonitoring();
     }
-
-    fileInfos?.forEach((fileInfo) => {
-      fileMap.push({
-        path: join(dirPath, fileInfo.filename),
-        content:
-          typeof fileInfo.content !== 'string'
-            ? stringify(fileInfo.content)
-            : fileInfo.content
-      });
-    });
-
-    createFiles(fileMap);
-    return fileMap.map((file) => {
-      return file.path;
-    });
   }
 
   // utils to build test run payloads that may contain namespaces
+  @elapsedTime()
   public async buildSyncPayload(
     testLevel: TestLevel,
     tests?: string,
@@ -329,11 +394,9 @@ export class TestService {
     try {
       if (tests) {
         const payload = await this.buildTestPayload(tests);
-        const classes = payload.tests?.map((testItem) => {
-          if (testItem.className) {
-            return testItem.className;
-          }
-        });
+        const classes = payload.tests
+          ?.filter((testItem) => testItem.className)
+          .map((testItem) => testItem.className);
         if (new Set(classes).size !== 1) {
           throw new Error(nls.localize('syncClassErr'));
         }
@@ -351,6 +414,7 @@ export class TestService {
     }
   }
 
+  @elapsedTime()
   public async buildAsyncPayload(
     testLevel: TestLevel,
     tests?: string,
@@ -375,6 +439,7 @@ export class TestService {
     }
   }
 
+  @elapsedTime()
   private async buildAsyncClassPayload(
     classNames: string
   ): Promise<AsyncTestArrayConfiguration> {
@@ -392,6 +457,7 @@ export class TestService {
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
   }
 
+  @elapsedTime()
   private async buildTestPayload(
     testNames: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
@@ -464,5 +530,23 @@ export class TestService {
       tests: testItems,
       testLevel: TestLevel.RunSpecifiedTests
     };
+  }
+
+  private async runPipeline(
+    readable: Readable,
+    filePath: string,
+    transform?: Transform
+  ): Promise<string> {
+    const writable = this.createStream(filePath);
+    if (transform) {
+      await pipeline(readable, transform, writable);
+    } else {
+      await pipeline(readable, writable);
+    }
+    return filePath;
+  }
+
+  public createStream(filePath: string): Writable {
+    return createWriteStream(filePath, 'utf8');
   }
 }

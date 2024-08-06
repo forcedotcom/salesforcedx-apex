@@ -9,6 +9,7 @@ import { Connection } from '@salesforce/core';
 import {
   ApexCodeCoverage,
   ApexCodeCoverageAggregate,
+  ApexCodeCoverageAggregateRecord,
   ApexOrgWideCoverage,
   CodeCoverageResult,
   PerClassCoverage
@@ -16,6 +17,7 @@ import {
 import * as util from 'util';
 import { calculatePercentage, queryAll } from './utils';
 import { QUERY_RECORD_LIMIT } from './constants';
+import { elapsedTime, HeapMonitor } from '../utils';
 
 export class CodeCoverage {
   public readonly connection: Connection;
@@ -28,15 +30,23 @@ export class CodeCoverage {
    * Returns the string representation of the org wide coverage percentage for a given username connection from OrgWideCoverage entity
    * @returns Org wide coverage percentage for a given username connection
    */
+  @elapsedTime()
   public async getOrgWideCoverage(): Promise<string> {
-    const orgWideCoverageResult = (await this.connection.tooling.query(
-      'SELECT PercentCovered FROM ApexOrgWideCoverage'
-    )) as ApexOrgWideCoverage;
+    HeapMonitor.getInstance().checkHeapSize('codeCoverage.getOrgWideCoverage');
+    try {
+      const orgWideCoverageResult = (await this.connection.tooling.query(
+        'SELECT PercentCovered FROM ApexOrgWideCoverage'
+      )) as ApexOrgWideCoverage;
 
-    if (orgWideCoverageResult.records.length === 0) {
-      return '0%';
+      if (orgWideCoverageResult.records.length === 0) {
+        return '0%';
+      }
+      return `${orgWideCoverageResult.records[0].PercentCovered}%`;
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize(
+        'codeCoverage.getOrgWideCoverage'
+      );
     }
-    return `${orgWideCoverageResult.records[0].PercentCovered}%`;
   }
 
   /**
@@ -45,49 +55,59 @@ export class CodeCoverage {
    * @returns The code coverage information associated with each Apex test class
    * NOTE: a test could cover more than one class, result map should contain a record for each covered class
    */
+  @elapsedTime()
   public async getPerClassCodeCoverage(
     apexTestClassSet: Set<string>
   ): Promise<Map<string, PerClassCoverage[]>> {
-    if (apexTestClassSet.size === 0) {
-      return new Map();
-    }
+    HeapMonitor.getInstance().checkHeapSize(
+      'codeCoverage.getPerClassCodeCoverage'
+    );
+    try {
+      if (apexTestClassSet.size === 0) {
+        return new Map();
+      }
 
-    const perClassCodeCovResults =
-      await this.queryPerClassCodeCov(apexTestClassSet);
+      const perClassCodeCovResults =
+        await this.queryPerClassCodeCov(apexTestClassSet);
 
-    const perClassCoverageMap = new Map<string, PerClassCoverage[]>();
+      const perClassCoverageMap = new Map<string, PerClassCoverage[]>();
 
-    perClassCodeCovResults.forEach((chunk) => {
-      chunk.records.forEach((item) => {
-        const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
-        const percentage = calculatePercentage(
-          item.NumLinesCovered,
-          totalLines
-        );
-
-        const value = {
-          apexClassOrTriggerName: item.ApexClassOrTrigger.Name,
-          apexClassOrTriggerId: item.ApexClassOrTrigger.Id,
-          apexTestClassId: item.ApexTestClassId,
-          apexTestMethodName: item.TestMethodName,
-          numLinesCovered: item.NumLinesCovered,
-          numLinesUncovered: item.NumLinesUncovered,
-          percentage,
-          ...(item.Coverage ? { coverage: item.Coverage } : {})
-        };
-        const key = `${item.ApexTestClassId}-${item.TestMethodName}`;
-        if (perClassCoverageMap.get(key)) {
-          perClassCoverageMap.get(key).push(value);
-        } else {
-          perClassCoverageMap.set(
-            `${item.ApexTestClassId}-${item.TestMethodName}`,
-            [value]
+      perClassCodeCovResults.forEach((chunk) => {
+        chunk.records.forEach((item) => {
+          const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
+          const percentage = calculatePercentage(
+            item.NumLinesCovered,
+            totalLines
           );
-        }
-      });
-    });
 
-    return perClassCoverageMap;
+          const value = {
+            apexClassOrTriggerName: item.ApexClassOrTrigger.Name,
+            apexClassOrTriggerId: item.ApexClassOrTrigger.Id,
+            apexTestClassId: item.ApexTestClassId,
+            apexTestMethodName: item.TestMethodName,
+            numLinesCovered: item.NumLinesCovered,
+            numLinesUncovered: item.NumLinesUncovered,
+            percentage,
+            ...(item.Coverage ? { coverage: item.Coverage } : {})
+          };
+          const key = `${item.ApexTestClassId}-${item.TestMethodName}`;
+          if (perClassCoverageMap.get(key)) {
+            perClassCoverageMap.get(key).push(value);
+          } else {
+            perClassCoverageMap.set(
+              `${item.ApexTestClassId}-${item.TestMethodName}`,
+              [value]
+            );
+          }
+        });
+      });
+
+      return perClassCoverageMap;
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize(
+        'codeCoverage.getPerClassCodeCoverage'
+      );
+    }
   }
 
   /**
@@ -95,59 +115,66 @@ export class CodeCoverage {
    * @param apexClassIdSet Set of ids for Apex classes
    * @returns The aggregate code coverage information for the given set of Apex classes
    */
+  @elapsedTime()
   public async getAggregateCodeCoverage(apexClassIdSet: Set<string>): Promise<{
     codeCoverageResults: CodeCoverageResult[];
     totalLines: number;
     coveredLines: number;
   }> {
-    if (apexClassIdSet.size === 0) {
-      return { codeCoverageResults: [], totalLines: 0, coveredLines: 0 };
-    }
+    HeapMonitor.getInstance().checkHeapSize(
+      'codeCoverage.getAggregateCodeCoverage'
+    );
+    try {
+      const codeCoverageAggregates =
+        await this.queryAggregateCodeCov(apexClassIdSet);
 
-    const codeCoverageAggregates =
-      await this.queryAggregateCodeCov(apexClassIdSet);
+      let totalLinesCovered = 0;
+      let totalLinesUncovered = 0;
 
-    let totalLinesCovered = 0;
-    let totalLinesUncovered = 0;
+      const totalCodeCoverageResults: CodeCoverageResult[] = [];
 
-    const totalCodeCoverageResults: CodeCoverageResult[] = [];
+      codeCoverageAggregates.forEach((chunk) => {
+        const codeCoverageResults: CodeCoverageResult[] = chunk.records.map(
+          (item) => {
+            totalLinesCovered += item.NumLinesCovered;
+            totalLinesUncovered += item.NumLinesUncovered;
+            const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
+            const percentage = calculatePercentage(
+              item.NumLinesCovered,
+              totalLines
+            );
 
-    codeCoverageAggregates.forEach((chunk) => {
-      const codeCoverageResults: CodeCoverageResult[] = chunk.records.map(
-        (item) => {
-          totalLinesCovered += item.NumLinesCovered;
-          totalLinesUncovered += item.NumLinesUncovered;
-          const totalLines = item.NumLinesCovered + item.NumLinesUncovered;
-          const percentage = calculatePercentage(
-            item.NumLinesCovered,
-            totalLines
-          );
+            return {
+              apexId: item.ApexClassOrTrigger.Id,
+              name: item.ApexClassOrTrigger.Name,
+              type: item.ApexClassOrTrigger.Id.startsWith('01p')
+                ? 'ApexClass'
+                : 'ApexTrigger',
+              numLinesCovered: item.NumLinesCovered,
+              numLinesUncovered: item.NumLinesUncovered,
+              percentage,
+              coveredLines: item.Coverage.coveredLines,
+              uncoveredLines: item.Coverage.uncoveredLines
+            };
+          }
+        );
 
-          return {
-            apexId: item.ApexClassOrTrigger.Id,
-            name: item.ApexClassOrTrigger.Name,
-            type: item.ApexClassOrTrigger.Id.startsWith('01p')
-              ? 'ApexClass'
-              : 'ApexTrigger',
-            numLinesCovered: item.NumLinesCovered,
-            numLinesUncovered: item.NumLinesUncovered,
-            percentage,
-            coveredLines: item.Coverage.coveredLines,
-            uncoveredLines: item.Coverage.uncoveredLines
-          };
-        }
+        totalCodeCoverageResults.push(...codeCoverageResults);
+      });
+
+      return {
+        codeCoverageResults: totalCodeCoverageResults,
+        totalLines: totalLinesCovered + totalLinesUncovered,
+        coveredLines: totalLinesCovered
+      };
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize(
+        'codeCoverage.getAggregateCodeCoverage'
       );
-
-      totalCodeCoverageResults.push(...codeCoverageResults);
-    });
-
-    return {
-      codeCoverageResults: totalCodeCoverageResults,
-      totalLines: totalLinesCovered + totalLinesUncovered,
-      coveredLines: totalLinesCovered
-    };
+    }
   }
 
+  @elapsedTime()
   private async queryPerClassCodeCov(
     apexTestClassSet: Set<string>
   ): Promise<ApexCodeCoverage[]> {
@@ -156,14 +183,33 @@ export class CodeCoverage {
     return this.fetchResults(apexTestClassSet, perClassCodeCovQuery);
   }
 
+  @elapsedTime()
   private async queryAggregateCodeCov(
     apexClassIdSet: Set<string>
   ): Promise<ApexCodeCoverageAggregate[]> {
-    const codeCoverageQuery =
-      'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
-    return this.fetchResults(apexClassIdSet, codeCoverageQuery);
+    let codeCoverageQuery;
+
+    // If the "Store Only Aggregate Code Coverage" setting is checked, then apexClassIdSet is empty and we should query all the Apex classes and triggers in the ApexCodeCoverageAggregate table.
+    if (apexClassIdSet.size === 0) {
+      codeCoverageQuery =
+        'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate';
+
+      const result = await queryAll<ApexCodeCoverageAggregateRecord>(
+        this.connection,
+        codeCoverageQuery,
+        true
+      );
+      return [result];
+    }
+    // If the "Store Only Aggregate Code Coverage" setting is unchecked, we continue to query only the Apex classes and triggers in apexClassIdSet from the ApexCodeCoverageAggregate table, as those are the Apex classes and triggers touched by the Apex tests in the current run.
+    else {
+      codeCoverageQuery =
+        'SELECT ApexClassOrTrigger.Id, ApexClassOrTrigger.Name, NumLinesCovered, NumLinesUncovered, Coverage FROM ApexCodeCoverageAggregate WHERE ApexClassorTriggerId IN (%s)';
+      return this.fetchResults(apexClassIdSet, codeCoverageQuery);
+    }
   }
 
+  @elapsedTime()
   private async fetchResults<
     T extends ApexCodeCoverage | ApexCodeCoverageAggregate
   >(idSet: Set<string>, selectQuery: string): Promise<T[]> {

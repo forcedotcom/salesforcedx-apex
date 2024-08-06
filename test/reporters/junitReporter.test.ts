@@ -6,14 +6,18 @@
  */
 import { expect } from 'chai';
 import { JUnitReporter } from '../../src';
-import {
+import { getTestData } from './testResults';
+
+const {
   testResults,
   junitResult,
   junitSuccess,
   junitCodeCov,
   junitMissingVal,
+  junitSetup,
+  setupResult,
   successResult
-} from './testResults';
+} = getTestData();
 
 describe('JUnit Reporter Tests', () => {
   const reporter = new JUnitReporter();
@@ -29,6 +33,13 @@ describe('JUnit Reporter Tests', () => {
     const result = reporter.format(successResult);
     expect(result).to.not.be.empty;
     expect(result).to.eql(junitSuccess);
+    expect(result).to.not.contain('</failure>');
+  });
+
+  it('should format tests with setup methods', async () => {
+    const result = reporter.format(setupResult);
+    expect(result).to.not.be.empty;
+    expect(result).to.eql(junitSetup);
     expect(result).to.not.contain('</failure>');
   });
 

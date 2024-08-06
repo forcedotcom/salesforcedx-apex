@@ -13,7 +13,7 @@ import {
   ApexTestRunResultStatus,
   SyncTestResult,
   TestResult
-} from '../../src/tests/types';
+} from '../src/tests/types';
 
 export const syncTestResultSimple: SyncTestResult = {
   apexLogId: '07Lxx00000cxy6YUAQ',
@@ -131,7 +131,8 @@ export const syncResult: TestResult = {
       testTimestamp: '',
       fullName: `t3st.TestApexClass.testMethod`
     }
-  ]
+  ],
+  setup: []
 };
 
 export const testResultData: TestResult = {
@@ -173,7 +174,8 @@ export const testResultData: TestResult = {
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
-  ]
+  ],
+  setup: []
 };
 
 export const missingTimeTestData: TestResult = {
@@ -189,6 +191,7 @@ export const missingTimeTestData: TestResult = {
     skipRate: '0%',
     skipped: 0,
     testStartTime: localStartTime,
+    testSetupTimeInMs: undefined,
     testExecutionTimeInMs: 0,
     testTotalTimeInMs: 0,
     commandTimeInMs: 2000,
@@ -215,7 +218,9 @@ export const missingTimeTestData: TestResult = {
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
-  ]
+  ],
+  setup: [],
+  codecoverage: undefined
 };
 
 export const skippedTestData: TestResult = {
@@ -231,6 +236,7 @@ export const skippedTestData: TestResult = {
     skipRate: '100%',
     skipped: 1,
     testStartTime: localStartTime,
+    testSetupTimeInMs: undefined,
     testExecutionTimeInMs: 0,
     testTotalTimeInMs: 0,
     commandTimeInMs: 2000,
@@ -257,7 +263,9 @@ export const skippedTestData: TestResult = {
       testTimestamp: '3',
       fullName: 't3st.TestLogger.testLoggerLog'
     }
-  ]
+  ],
+  setup: [],
+  codecoverage: undefined
 };
 
 const failureSummary = {
@@ -271,12 +279,13 @@ const failureSummary = {
   skipRate: '0%',
   skipped: 0,
   testStartTime: localStartTime,
+  testSetupTimeInMs: undefined,
   testExecutionTimeInMs: 0,
   testTotalTimeInMs: 0,
   commandTimeInMs: 2000,
   testRunId,
   userId: '005xx000000abcDAAU'
-};
+} as unknown;
 
 export const diagnosticResult: TestResult = {
   // @ts-ignore
@@ -310,7 +319,9 @@ export const diagnosticResult: TestResult = {
         lineNumber: 6
       }
     }
-  ]
+  ],
+  setup: [],
+  codecoverage: undefined
 };
 
 export const diagnosticFailure: TestResult = {
@@ -342,7 +353,9 @@ export const diagnosticFailure: TestResult = {
         exceptionStackTrace: 'Class.LIFXControllerTest.makeData'
       }
     }
-  ]
+  ],
+  setup: [],
+  codecoverage: undefined
 };
 
 export const perClassCodeCoverage: ApexCodeCoverageRecord[] = [

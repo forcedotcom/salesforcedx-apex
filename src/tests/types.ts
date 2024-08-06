@@ -5,7 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { ApexDiagnostic } from '../utils/types';
+import { ApexDiagnostic } from '../utils';
 
 export const enum TestLevel {
   /**
@@ -214,6 +214,10 @@ export type ApexTestResultRecord = {
    * Points to the ApexLog for this test method execution if debug logging is enabled; otherwise, null.
    */
   ApexLogId: string | null;
+  /**
+   * Indicates if the results are for a test setup method. The default is false.
+   */
+  IsTestSetup?: boolean;
   ApexClass: {
     Id: string;
     /**
@@ -255,33 +259,47 @@ export const enum ApexTestRunResultStatus {
   Skipped = 'Skipped'
 }
 
-export type ApexTestRunResultRecord = {
+export type ApexTestRunResult = {
   /**
    * The parent Apex job ID for the result
    */
   AsyncApexJobId: string;
   /**
+   * The number of classes that have completed execution in the test run
+   */
+  ClassesCompleted: number;
+  /**
+   * The number of classes that have been enqueued for execution in the test run
+   */
+  ClassesEnqueued: number;
+  /**
+   * The time at which the test run ended.
+   */
+  EndTime: string | undefined;
+  /**
+   * The number of methods that have been enqueued for execution in the test run
+   */
+  MethodsEnqueued: number;
+  /**
+   * The time at which the test run started.
+   */
+  StartTime: string | undefined;
+  /**
    * The status of the test run
    */
   Status: ApexTestRunResultStatus;
   /**
-   * The time at which the test run started.
+   * The time it took to set up the test, in seconds.
    */
-  StartTime: string;
+  TestSetupTime: number | undefined;
   /**
    * The time it took the test to run, in seconds.
    */
-  TestTime: number;
+  TestTime: number | undefined;
   /**
    * The user who ran the test run
    */
   UserId: string;
-};
-
-export type ApexTestRunResult = {
-  done: boolean;
-  totalSize: number;
-  records: ApexTestRunResultRecord[];
 };
 
 export const enum ApexTestQueueItemStatus {
@@ -377,6 +395,32 @@ export type ApexTestResultData = {
   diagnostic?: ApexDiagnostic;
 };
 
+export type ApexTestResultDataRaw = ApexTestResultData & {
+  /**
+   * Indicates if the results are for a test setup method. The default is false.
+   */
+  isTestSetup?: boolean;
+};
+
+export type ApexTestSetupData = {
+  id: string;
+  stackTrace: string | null;
+  message: string | null;
+  asyncApexJobId: string;
+  methodName: string;
+  apexLogId: string | null;
+  apexClass: {
+    id: string;
+    name: string;
+    namespacePrefix: string;
+    fullName: string;
+  };
+  testSetupTime: number;
+  testTimestamp: string;
+  fullName: string;
+  diagnostic?: ApexDiagnostic;
+};
+
 export type CodeCoverageResult = {
   apexId: string;
   name: string;
@@ -393,6 +437,13 @@ export type TestRunIdResult = {
 };
 
 export type TestResult = {
+  summary: TestResultRaw['summary'];
+  tests: ApexTestResultData[];
+  setup?: ApexTestSetupData[];
+  codecoverage?: CodeCoverageResult[];
+};
+
+export type TestResultRaw = {
   summary: {
     failRate: string;
     testsRan: number;
@@ -406,6 +457,7 @@ export type TestResult = {
     testStartTime: string;
     testExecutionTimeInMs: number;
     testTotalTimeInMs: number;
+    testSetupTimeInMs?: number;
     commandTimeInMs: number;
     hostname: string;
     username: string;
@@ -416,7 +468,7 @@ export type TestResult = {
     totalLines?: number;
     coveredLines?: number;
   };
-  tests: ApexTestResultData[];
+  tests: ApexTestResultDataRaw[];
   codecoverage?: CodeCoverageResult[];
 };
 

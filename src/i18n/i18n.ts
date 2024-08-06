@@ -49,7 +49,9 @@ export const messages = {
   passRate: 'Pass Rate',
   skipRate: 'Skip Rate',
   testStartTime: 'Test Start Time',
+  testSetupTime: 'Test Setup Time',
   testExecutionTime: 'Test Execution Time',
+  testTotalTime: 'Test Total Time',
   testRunId: 'Test Run Id',
   userId: 'User Id',
   username: 'Username',
@@ -58,10 +60,13 @@ export const messages = {
   valueColHeader: 'VALUE',
   testSummaryHeader: 'Test Summary',
   testNameColHeader: 'TEST NAME',
+  testSetupMethodNameColHeader: 'TEST SETUP METHOD NAME',
   outcomeColHeader: 'OUTCOME',
   msgColHeader: 'MESSAGE',
   runtimeColHeader: 'RUNTIME (MS)',
+  setupTimeColHeader: 'SETUP TIME',
   testResultsHeader: 'Test Results',
+  testSetupResultsHeader: 'Test Setup Time by Test Class for Run runId',
   classesColHeader: 'CLASSES',
   percentColHeader: 'PERCENT',
   classTestedHeader: 'CLASS BEING TESTED',
@@ -91,5 +96,6 @@ export const messages = {
   covIdFormatErr: 'Cannot specify code coverage with a TestRunId result',
   startHandshake: 'Attempting StreamingClient handshake',
   finishHandshake: 'Finished StreamingClient handshake',
-  subscribeStarted: 'Subscribing to ApexLog events'
+  subscribeStarted: 'Subscribing to ApexLog events',
+  authForAnonymousApexFailed: 'The authentication for execute anonymous failed'
 };

@@ -8,7 +8,9 @@ import {
   ApexTestResultData,
   ApexTestResultOutcome,
   TestResult
-} from '../tests/types';
+} from '../tests';
+import { elapsedTime, HeapMonitor } from '../utils';
+import * as os from 'node:os';
 
 export interface TapResult {
   description: string;
@@ -18,27 +20,34 @@ export interface TapResult {
 }
 
 export class TapReporter {
+  @elapsedTime()
   public format(testResult: TestResult, epilog?: string[]): string {
-    const results: TapResult[] = this.buildTapResults(testResult);
-    const testPointCount = results.length;
+    HeapMonitor.getInstance().checkHeapSize('TapReporter.format');
+    try {
+      const results: TapResult[] = this.buildTapResults(testResult);
+      const testPointCount = results.length;
 
-    let out = '';
-    out = out.concat(`1..${testPointCount}\n`);
-    results.forEach((testPoint) => {
-      out = out.concat(
-        `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`
-      );
-      testPoint.diagnostics.forEach((s) => {
-        out = out.concat(`# ${s}\n`);
+      let out = '';
+      out = out.concat(`1..${testPointCount}\n`);
+      results.forEach((testPoint) => {
+        out = out.concat(
+          `${testPoint.outcome} ${testPoint.testNumber} ${testPoint.description}\n`
+        );
+        testPoint.diagnostics.forEach((s) => {
+          out = out.concat(`# ${s}\n`);
+        });
       });
-    });
 
-    epilog?.forEach((c) => {
-      out = out.concat(`# ${c}\n`);
-    });
-    return out;
+      epilog?.forEach((c) => {
+        out = out.concat(`# ${c}\n`);
+      });
+      return out;
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize('TapReporter.format');
+    }
   }
 
+  @elapsedTime()
   public buildTapResults(testResult: TestResult): TapResult[] {
     const tapResults: TapResult[] = [];
     testResult.tests.forEach((test: ApexTestResultData, index: number) => {
@@ -55,6 +64,7 @@ export class TapReporter {
     return tapResults;
   }
 
+  @elapsedTime()
   private buildTapDiagnostics(testResult: ApexTestResultData): string[] {
     const message = [];
     if (testResult.outcome !== 'Pass') {
@@ -62,7 +72,7 @@ export class TapReporter {
         const startsWithNewlineRegex = new RegExp(/^[/\r\n|\r|\n][\w]*/gim);
         if (startsWithNewlineRegex.test(testResult.message)) {
           testResult.message.split(/\r\n|\r|\n/g).forEach((msg) => {
-            if (msg && msg.length > 0) {
+            if (msg?.length > 0) {
               message.push(msg.trim());
             }
           });
@@ -74,7 +84,7 @@ export class TapReporter {
       }
 
       if (testResult.stackTrace) {
-        testResult.stackTrace.split('\n').forEach((line) => {
+        testResult.stackTrace.split(os.EOL).forEach((line) => {
           message.push(line);
         });
       }

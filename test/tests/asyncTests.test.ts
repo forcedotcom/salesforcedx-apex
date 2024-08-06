@@ -1,20 +1,29 @@
 /*
- * Copyright (c) 2020, salesforce.com, inc.
+ * Copyright (c) 2021, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { Connection } from '@salesforce/core';
-import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
+import { Connection, Logger } from '@salesforce/core';
+import { elapsedTime } from '../../src/utils';
+import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
 import { assert, expect } from 'chai';
-import {
+import sinon, {
   assert as sinonAssert,
   createSandbox,
   SinonSandbox,
   SinonSpy,
   SinonStub
 } from 'sinon';
-import { TestService, OutputDirConfig } from '../../src/tests';
+import {
+  TestService,
+  OutputDirConfig,
+  ApexTestProgressValue,
+  Progress,
+  JUnitFormatTransformer,
+  TapFormatTransformer,
+  CancellationTokenSource
+} from '../../src';
 import {
   AsyncTestConfiguration,
   TestLevel,
@@ -45,25 +54,20 @@ import {
   diagnosticFailure,
   diagnosticResult,
   skippedTestData
-} from './testData';
+} from '../testData';
 import { join } from 'path';
-import * as stream from 'stream';
-import * as fs from 'fs';
+import fs from 'node:fs/promises';
 import * as diagnosticUtil from '../../src/tests/diagnosticUtil';
-import {
-  CancellationTokenSource,
-  JUnitReporter,
-  TapReporter,
-  Progress,
-  ApexTestProgressValue
-} from '../../src';
 import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
+import { Writable } from 'node:stream';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
 let toolingRequestStub: SinonStub;
+let retrieveMaxApiVersionStub: SinonStub;
+let singleRecordQueryStub: SinonStub;
 const testData = new MockTestOrgData();
 
 describe('Run Apex tests asynchronously', () => {
@@ -87,15 +91,15 @@ describe('Run Apex tests asynchronously', () => {
   beforeEach(async () => {
     sandboxStub = createSandbox();
 
-    // Stub retrieveMaxApiVersion to get over "Domain Not Found: The org cannot be found" error
-    sandboxStub
-      .stub(Connection.prototype, 'retrieveMaxApiVersion')
-      .resolves('50.0');
     await $$.stubAuths(testData);
     mockConnection = await testData.getConnection();
+    retrieveMaxApiVersionStub = sandboxStub
+      .stub(mockConnection, 'retrieveMaxApiVersion')
+      .resolves('61.0');
     sandboxStub.stub(mockConnection, 'instanceUrl').get(() => {
       return 'https://na139.salesforce.com';
     });
+    sandboxStub.stub(mockConnection, 'getApiVersion').resolves('50.0');
     timeStub = sandboxStub
       .stub(Date.prototype, 'getTime')
       .onFirstCall()
@@ -104,6 +108,10 @@ describe('Run Apex tests asynchronously', () => {
     testResultData.summary.orgId = mockConnection.getAuthInfoFields().orgId;
     testResultData.summary.username = mockConnection.getUsername();
     toolingRequestStub = sandboxStub.stub(mockConnection.tooling, 'request');
+    singleRecordQueryStub = sandboxStub.stub(
+      mockConnection,
+      'singleRecordQuery'
+    );
     formatSpy = sandboxStub.spy(diagnosticUtil, 'formatTestErrors');
   });
 
@@ -132,7 +140,10 @@ describe('Run Apex tests asynchronously', () => {
     sandboxStub
       .stub(StreamingClient.prototype, 'subscribe')
       .resolves(asyncResult);
-    sandboxStub.stub(AsyncTests.prototype, 'checkRunStatus');
+    sandboxStub.stub(AsyncTests.prototype, 'checkRunStatus').resolves({
+      testsComplete: true,
+      testRunSummary: {} as ApexTestRunResult
+    });
     const testSrv = new TestService(mockConnection);
     const mockTestResultData = sandboxStub
       .stub(AsyncTests.prototype, 'formatAsyncResults')
@@ -169,21 +180,15 @@ describe('Run Apex tests asynchronously', () => {
     missingTimeTestData.summary.username = mockConnection.getUsername();
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: testStartTime,
-          TestTime: null,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: testStartTime,
+      TestTime: null,
+      UserId: '005xx000000abcDAAU'
+    });
 
-    mockToolingQuery.onSecondCall().resolves({
+    mockToolingQuery.onFirstCall().resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -207,47 +212,42 @@ describe('Run Apex tests asynchronously', () => {
         }
       ]
     } as ApexTestResult);
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       undefined,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     let summaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    summaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    summaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId ';
     summaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
-    expect(mockToolingQuery.getCall(0).args[0]).to.equal(summaryQuery);
+    expect(singleRecordQueryStub.getCall(0).args[0]).to.equal(summaryQuery);
 
     let testResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     testResultQuery +=
-      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
     testResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
-    expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
+    expect(mockToolingQuery.getCall(0).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(missingTimeTestData);
   });
 
   it('should report progress when checking test summary for run', async () => {
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
+    singleRecordQueryStub.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: testStartTime,
+      TestTime: null,
+      UserId: '005xx000000abcDAAU'
+    });
     mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: testStartTime,
-          TestTime: null,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
-    mockToolingQuery.onSecondCall().resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -291,21 +291,15 @@ describe('Run Apex tests asynchronously', () => {
     skippedTestData.summary.username = mockConnection.getUsername();
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: testStartTime,
-          TestTime: null,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: testStartTime,
+      TestTime: null,
+      UserId: '005xx000000abcDAAU'
+    });
 
-    mockToolingQuery.onSecondCall().resolves({
+    mockToolingQuery.onFirstCall().resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -330,27 +324,28 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       false,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     let summaryQuery =
       'SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, ';
-    summaryQuery += 'MethodsEnqueued, StartTime, EndTime, TestTime, UserId ';
+    summaryQuery +=
+      'MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId ';
     summaryQuery += `FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
-    expect(mockToolingQuery.getCall(0).args[0]).to.equal(summaryQuery);
+    expect(singleRecordQueryStub.getCall(0).args[0]).to.equal(summaryQuery);
 
     let testResultQuery = 'SELECT Id, QueueItemId, StackTrace, Message, ';
     testResultQuery +=
-      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ';
+      'RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ';
     testResultQuery +=
       'ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix ';
     testResultQuery += `FROM ApexTestResult WHERE QueueItemId IN ('${pollResponse.records[0].Id}')`;
-    expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
+    expect(mockToolingQuery.getCall(0).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(skippedTestData);
   });
 
@@ -359,21 +354,15 @@ describe('Run Apex tests asynchronously', () => {
     diagnosticResult.summary.username = mockConnection.getUsername();
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: testStartTime,
-          TestTime: null,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: testStartTime,
+      TestTime: null,
+      UserId: '005xx000000abcDAAU'
+    });
 
-    mockToolingQuery.onSecondCall().resolves({
+    mockToolingQuery.onFirstCall().resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -398,12 +387,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       false,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     expect(getTestResultData).to.deep.equals(diagnosticResult);
@@ -417,21 +406,15 @@ describe('Run Apex tests asynchronously', () => {
     diagnosticFailure.tests[0].stackTrace = undefined;
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: testStartTime,
-          TestTime: null,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: testStartTime,
+      TestTime: null,
+      UserId: '005xx000000abcDAAU'
+    });
 
-    mockToolingQuery.onSecondCall().resolves({
+    mockToolingQuery.onFirstCall().resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -456,12 +439,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexTestResult);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       false,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     expect(getTestResultData).to.deep.equals(diagnosticFailure);
@@ -469,20 +452,15 @@ describe('Run Apex tests asynchronously', () => {
 
   it('should return an error if no test results are found', async () => {
     const asyncTestSrv = new AsyncTests(mockConnection);
-    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 0,
-      records: []
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().throwsException('No records found');
 
     try {
-      const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+      const runResult = await asyncTestSrv.checkRunStatus(testRunId);
       await asyncTestSrv.formatAsyncResults(
         { queueItem: pollResponse, runId: testRunId },
         new Date().getTime(),
         false,
-        testRunSummary
+        runResult.testRunSummary
       );
       fail('Test should have thrown an error');
     } catch (e) {
@@ -495,12 +473,7 @@ describe('Run Apex tests asynchronously', () => {
   it('should return an error if invalid test run id was provided', async () => {
     const invalidId = '000000xxxxx';
     const asyncTestSrv = new AsyncTests(mockConnection);
-    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 0,
-      records: []
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().resolves(undefined);
 
     try {
       await asyncTestSrv.checkRunStatus(invalidId);
@@ -509,19 +482,14 @@ describe('Run Apex tests asynchronously', () => {
       expect(e.message).to.equal(
         nls.localize('invalidTestRunIdErr', invalidId)
       );
-      expect(mockToolingQuery.notCalled).to.be.true;
+      expect(singleRecordQueryStub.notCalled).to.be.true;
     }
   });
 
   it('should return an error if invalid test run id prefix was provided', async () => {
     const invalidId = '708000000xxxxxx';
     const asyncTestSrv = new AsyncTests(mockConnection);
-    const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onFirstCall().resolves({
-      done: true,
-      totalSize: 0,
-      records: []
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onFirstCall().resolves(undefined);
 
     try {
       await asyncTestSrv.checkRunStatus(invalidId);
@@ -530,7 +498,7 @@ describe('Run Apex tests asynchronously', () => {
       expect(e.message).to.equal(
         nls.localize('invalidTestRunIdErr', invalidId)
       );
-      expect(mockToolingQuery.notCalled).to.be.true;
+      expect(singleRecordQueryStub.notCalled).to.be.true;
     }
   });
 
@@ -541,39 +509,32 @@ describe('Run Apex tests asynchronously', () => {
       'query'
     );
 
+    singleRecordQueryStub.onFirstCall().resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: '2020-07-12T02:54:47.000+0000',
+      TestTime: 1765,
+      UserId: '005xx000000abcDAAU'
+    });
     mockToolingAutoQuery.onCall(0).resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: '2020-07-12T02:54:47.000+0000',
-          TestTime: 1765,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
-
-    mockToolingAutoQuery.onCall(1).resolves({
       done: true,
       totalSize: 6,
       records: mixedTestResults
     } as ApexTestResult);
 
-    mockToolingAutoQuery.onCall(2).resolves({
+    mockToolingAutoQuery.onCall(1).resolves({
       done: true,
       totalSize: 3,
       records: mixedPerClassCodeCoverage
     } as ApexCodeCoverage);
 
-    mockToolingAutoQuery.onCall(3).resolves({
+    mockToolingAutoQuery.onCall(2).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
 
-    mockToolingAutoQuery.onCall(4).resolves({
+    mockToolingAutoQuery.onCall(3).resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -583,12 +544,12 @@ describe('Run Apex tests asynchronously', () => {
       ]
     } as ApexOrgWideCoverage);
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(testRunId);
+    const runResult = await asyncTestSrv.checkRunStatus(testRunId);
     const getTestResultData = await asyncTestSrv.formatAsyncResults(
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       true,
-      testRunSummary
+      runResult.testRunSummary
     );
 
     // verify summary data
@@ -612,39 +573,33 @@ describe('Run Apex tests asynchronously', () => {
   it('should report progress for aggregating code coverage', async () => {
     const asyncTestSrv = new AsyncTests(mockConnection);
     const mockToolingQuery = sandboxStub.stub(mockConnection.tooling, 'query');
-    mockToolingQuery.onCall(0).resolves({
-      done: true,
-      totalSize: 1,
-      records: [
-        {
-          AsyncApexJobId: testRunId,
-          Status: ApexTestRunResultStatus.Completed,
-          StartTime: '2020-07-12T02:54:47.000+0000',
-          TestTime: 1765,
-          UserId: '005xx000000abcDAAU'
-        }
-      ]
-    } as ApexTestRunResult);
+    singleRecordQueryStub.onCall(0).resolves({
+      AsyncApexJobId: testRunId,
+      Status: ApexTestRunResultStatus.Completed,
+      StartTime: '2020-07-12T02:54:47.000+0000',
+      TestTime: 1765,
+      UserId: '005xx000000abcDAAU'
+    });
 
-    mockToolingQuery.onCall(1).resolves({
+    mockToolingQuery.onCall(0).resolves({
       done: true,
       totalSize: 6,
       records: mixedTestResults
     } as ApexTestResult);
 
-    mockToolingQuery.onCall(2).resolves({
+    mockToolingQuery.onCall(1).resolves({
       done: true,
       totalSize: 3,
       records: mixedPerClassCodeCoverage
     } as ApexCodeCoverage);
 
-    mockToolingQuery.onCall(3).resolves({
+    mockToolingQuery.onCall(2).resolves({
       done: true,
       totalSize: 3,
       records: codeCoverageQueryResult
     } as ApexCodeCoverageAggregate);
 
-    mockToolingQuery.onCall(4).resolves({
+    mockToolingQuery.onCall(3).resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -659,7 +614,7 @@ describe('Run Apex tests asynchronously', () => {
       report: reportStub
     };
 
-    const testRunSummary = await asyncTestSrv.checkRunStatus(
+    const runResult = await asyncTestSrv.checkRunStatus(
       testRunId,
       progressReporter
     );
@@ -667,7 +622,7 @@ describe('Run Apex tests asynchronously', () => {
       { queueItem: pollResponse, runId: testRunId },
       new Date().getTime(),
       true,
-      testRunSummary,
+      runResult.testRunSummary,
       progressReporter
     );
 
@@ -686,7 +641,7 @@ describe('Run Apex tests asynchronously', () => {
 
   describe('Check Query Limits', async () => {
     const queryStart =
-      'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
+      'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
 
     const queueItemRecords: ApexTestQueueItemRecord[] = [];
     const queryIds: string[] = [];
@@ -785,7 +740,7 @@ describe('Run Apex tests asynchronously', () => {
 
     it('should split the queue into chunks of 500 records', async () => {
       const queryStart =
-        'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
+        'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
       const queryStartSeparatorCount = queryStart.split(',').length - 1;
 
       const mockToolingQuery = sandboxStub
@@ -880,188 +835,6 @@ describe('Run Apex tests asynchronously', () => {
       expect(mockToolingQuery.calledOnce).to.be.true;
       expect(mockToolingQuery.calledWith(singleQuery)).to.be.true;
       expect(result.length).to.eql(1);
-    });
-  });
-
-  describe('Create Result Files', () => {
-    let createStreamStub: SinonStub;
-    let stringifySpy: SinonSpy;
-    let junitSpy: SinonSpy;
-    let tapSpy: SinonSpy;
-    let sandboxStub1: SinonSandbox;
-
-    beforeEach(async () => {
-      sandboxStub1 = createSandbox();
-      sandboxStub1.stub(fs, 'existsSync').returns(true);
-      sandboxStub1.stub(fs, 'mkdirSync');
-      createStreamStub = sandboxStub1.stub(fs, 'createWriteStream');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      createStreamStub.returns(new stream.PassThrough() as any);
-      sandboxStub1.stub(fs, 'closeSync');
-      sandboxStub1.stub(fs, 'openSync');
-      stringifySpy = sandboxStub1.spy(utils, 'stringify');
-      junitSpy = sandboxStub1.spy(JUnitReporter.prototype, 'format');
-      tapSpy = sandboxStub1.spy(TapReporter.prototype, 'format');
-    });
-
-    afterEach(() => {
-      sandboxStub1.restore();
-    });
-
-    it('should only create test-run-id.txt if no result format nor fileInfos are specified', async () => {
-      const config = {
-        dirPath: 'path/to/directory'
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(
-        createStreamStub.calledWith(join(config.dirPath, 'test-run-id.txt'))
-      ).to.be.true;
-      expect(createStreamStub.callCount).to.eql(1);
-    });
-
-    it('should throw an error if result format is specified with TestRunId result', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.tap]
-      };
-      const testSrv = new TestService(mockConnection);
-      try {
-        await testSrv.writeResultFiles(
-          { testRunId } as TestRunIdResult,
-          config,
-          false
-        );
-        assert.fail();
-      } catch (e) {
-        expect(e.message).to.equal(
-          'Cannot specify a result format with a TestRunId result'
-        );
-      }
-    });
-
-    it('should throw an error if code coverage is specified with TestRunId result', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.tap]
-      };
-      const testSrv = new TestService(mockConnection);
-      try {
-        await testSrv.writeResultFiles(
-          { testRunId } as TestRunIdResult,
-          config,
-          true
-        );
-        assert.fail();
-      } catch (e) {
-        expect(e.message).to.equal(
-          'Cannot specify a result format with a TestRunId result'
-        );
-      }
-    });
-
-    it('should create the json files if json result format is specified', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.json]
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-${testRunId}.json`)
-        )
-      ).to.be.true;
-      expect(stringifySpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(2);
-    });
-
-    it('should create the junit result files if junit result format is specified', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.junit]
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-${testRunId}-junit.xml`)
-        )
-      ).to.be.true;
-      expect(junitSpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(2);
-    });
-
-    it('should create the tap result files if result format is specified', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        resultFormats: [ResultFormat.tap]
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-${testRunId}-tap.txt`)
-        )
-      ).to.be.true;
-      expect(tapSpy.calledOnce).to.be.true;
-      expect(createStreamStub.callCount).to.eql(2);
-    });
-
-    it('should create any files provided in fileInfos', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        fileInfos: [
-          { filename: `test-result-myFile.json`, content: { summary: {} } }
-        ]
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config);
-
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-myFile.json`)
-        )
-      ).to.be.true;
-      expect(stringifySpy.callCount).to.eql(1);
-      expect(createStreamStub.callCount).to.eql(2);
-    });
-
-    it('should create code coverage files if set to true', async () => {
-      const config = {
-        dirPath: 'path/to/directory'
-      } as OutputDirConfig;
-      const testSrv = new TestService(mockConnection);
-      await testSrv.writeResultFiles(testResultData, config, true);
-
-      expect(
-        createStreamStub.calledWith(
-          join(config.dirPath, `test-result-${testRunId}-codecoverage.json`)
-        )
-      ).to.be.true;
-      expect(stringifySpy.callCount).to.eql(1);
-      expect(createStreamStub.callCount).to.eql(2);
-    });
-
-    it('should throw an error if unexpected type is specified for result format', async () => {
-      const config = {
-        dirPath: 'path/to/directory',
-        resultFormats: ['rando']
-      };
-      const testSrv = new TestService(mockConnection);
-      try {
-        // @ts-ignore
-        await testSrv.writeResultFiles(testResultData, config, true);
-        assert.fail();
-      } catch (e) {
-        expect(e.message).to.equal(
-          'Specified result formats must be of type json, junit, or tap'
-        );
-      }
     });
   });
 
@@ -1228,39 +1001,24 @@ describe('Run Apex tests asynchronously', () => {
   describe('Report Test Run Status', async () => {
     it('should subscribe to test run for run still in progress', async () => {
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
-      mockToolingQuery
+      sandboxStub.stub(mockConnection.tooling, 'query');
+      singleRecordQueryStub
         .onFirstCall()
         .resolves({
-          done: true,
-          totalSize: 1,
-          records: [
-            {
-              AsyncApexJobId: testRunId,
-              Status: ApexTestRunResultStatus.Queued,
-              StartTime: testStartTime,
-              TestTime: null,
-              UserId: '005xx000000abcDAAU'
-            }
-          ]
-        } as ApexTestRunResult)
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Queued,
+          StartTime: testStartTime,
+          TestTime: null,
+          UserId: '005xx000000abcDAAU'
+        })
         .onSecondCall()
         .resolves({
-          done: true,
-          totalSize: 1,
-          records: [
-            {
-              AsyncApexJobId: testRunId,
-              Status: ApexTestRunResultStatus.Completed,
-              StartTime: testStartTime,
-              TestTime: null,
-              UserId: '005xx000000abcDAAU'
-            }
-          ]
-        } as ApexTestRunResult);
+          AsyncApexJobId: testRunId,
+          Status: ApexTestRunResultStatus.Completed,
+          StartTime: testStartTime,
+          TestTime: null,
+          UserId: '005xx000000abcDAAU'
+        });
       const formatResultsStub = sandboxStub.stub(
         asyncTestSrv,
         'formatAsyncResults'
@@ -1291,7 +1049,7 @@ describe('Run Apex tests asynchronously', () => {
 
       await asyncTestSrv.reportAsyncResults(testRunId);
 
-      expect(mockToolingQuery.calledTwice).to.be.true;
+      expect(singleRecordQueryStub.calledTwice).to.be.true;
       expect(formatResultsStub.calledOnce).to.be.true;
       expect(subscribeStub.calledOnce).to.be.true;
       expect(handlerStub.notCalled).to.be.true;
@@ -1299,23 +1057,14 @@ describe('Run Apex tests asynchronously', () => {
 
     it('should query for test run results if run is complete', async () => {
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
-      mockToolingQuery.onFirstCall().resolves({
-        done: true,
-        totalSize: 1,
-        records: [
-          {
-            AsyncApexJobId: testRunId,
-            Status: ApexTestRunResultStatus.Completed,
-            StartTime: testStartTime,
-            TestTime: null,
-            UserId: '005xx000000abcDAAU'
-          }
-        ]
-      } as ApexTestRunResult);
+      sandboxStub.stub(mockConnection.tooling, 'query');
+      singleRecordQueryStub.onFirstCall().resolves({
+        AsyncApexJobId: testRunId,
+        Status: ApexTestRunResultStatus.Completed,
+        StartTime: testStartTime,
+        TestTime: null,
+        UserId: '005xx000000abcDAAU'
+      });
       const formatResultsStub = sandboxStub.stub(
         asyncTestSrv,
         'formatAsyncResults'
@@ -1346,7 +1095,7 @@ describe('Run Apex tests asynchronously', () => {
 
       await asyncTestSrv.reportAsyncResults(testRunId);
 
-      expect(mockToolingQuery.calledOnce).to.be.true;
+      expect(singleRecordQueryStub.calledOnce).to.be.true;
       expect(formatResultsStub.calledOnce).to.be.true;
       expect(subscribeStub.notCalled).to.be.true;
       expect(handlerStub.calledOnce).to.be.true;
@@ -1354,23 +1103,14 @@ describe('Run Apex tests asynchronously', () => {
 
     it('should format results with retrieved test run summary', async () => {
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const mockToolingQuery = sandboxStub.stub(
-        mockConnection.tooling,
-        'query'
-      );
-      mockToolingQuery.onFirstCall().resolves({
-        done: true,
-        totalSize: 1,
-        records: [
-          {
-            AsyncApexJobId: testRunId,
-            Status: ApexTestRunResultStatus.Completed,
-            StartTime: testStartTime,
-            TestTime: null,
-            UserId: '005xx000000abcDAAU'
-          }
-        ]
-      } as ApexTestRunResult);
+      sandboxStub.stub(mockConnection.tooling, 'query');
+      singleRecordQueryStub.onFirstCall().resolves({
+        AsyncApexJobId: testRunId,
+        Status: ApexTestRunResultStatus.Completed,
+        StartTime: testStartTime,
+        TestTime: null,
+        UserId: '005xx000000abcDAAU'
+      });
       const formatResultsStub = sandboxStub.stub(
         asyncTestSrv,
         'formatAsyncResults'
@@ -1402,5 +1142,309 @@ describe('Run Apex tests asynchronously', () => {
       expect(formatResultsStub.calledOnce).to.be.true;
       expect(handlerStub.calledOnce).to.be.true;
     });
+  });
+
+  describe('Supports Test Setup Feature', async () => {
+    it(`should verify org's api version supports test setup feature`, async () => {
+      const asyncTests = new AsyncTests(mockConnection);
+
+      const fieldExists = await asyncTests.supportsTestSetupFeature();
+      expect(fieldExists).to.be.true;
+      expect(retrieveMaxApiVersionStub.calledOnce).to.be.true;
+
+      const mockQueryResult = {
+        Status: 'Completed',
+        ClassesCompleted: 5,
+        ClassesEnqueued: 5,
+        MethodsEnqueued: 5,
+        StartTime: '2021-01-01T00:00:00Z',
+        EndTime: '2021-01-01T00:10:00Z',
+        TestTime: 600000,
+        UserId: 'someUserId'
+      };
+
+      singleRecordQueryStub.resolves(mockQueryResult);
+
+      const runStatusResult = await asyncTests.checkRunStatus(testRunId);
+
+      expect(runStatusResult.testsComplete).to.be.true;
+      expect(runStatusResult.testRunSummary).to.deep.equal(mockQueryResult);
+      expect(singleRecordQueryStub.calledOnce).to.be.true;
+
+      const expectedQueryWithTestSetupTime = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+      expect(singleRecordQueryStub.getCall(0).args[0]).to.equal(
+        expectedQueryWithTestSetupTime
+      );
+    });
+    it('should handle absence of TestSetupTime field and modify query accordingly', async () => {
+      retrieveMaxApiVersionStub.resolves('60.0');
+      const asyncTests = new AsyncTests(mockConnection);
+
+      const fieldExists = await asyncTests.supportsTestSetupFeature();
+
+      expect(fieldExists).to.be.false;
+      expect(retrieveMaxApiVersionStub.calledOnce).to.be.true;
+
+      const mockQueryResult = {
+        Status: 'Completed',
+        ClassesCompleted: 5,
+        ClassesEnqueued: 5,
+        MethodsEnqueued: 5,
+        StartTime: '2021-01-01T00:00:00Z',
+        EndTime: '2021-01-01T00:10:00Z',
+        TestTime: 600000,
+        UserId: 'someUserId'
+      };
+
+      singleRecordQueryStub.resolves(mockQueryResult);
+
+      const runStatusResult = await asyncTests.checkRunStatus(testRunId);
+
+      expect(runStatusResult.testsComplete).to.be.true;
+      expect(runStatusResult.testRunSummary).to.deep.equal(mockQueryResult);
+      expect(singleRecordQueryStub.calledOnce).to.be.true;
+
+      const expectedQueryWithoutTestSetupTime = `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+      expect(singleRecordQueryStub.getCall(0).args[0]).to.equal(
+        expectedQueryWithoutTestSetupTime
+      );
+    });
+  });
+});
+
+describe('elapsedTime', () => {
+  let sandbox: sinon.SinonSandbox;
+  let loggerStub: sinon.SinonStubbedInstance<Logger>;
+  let loggerChildStub: sinon.SinonStub;
+
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    loggerStub = sandbox.stub(Logger.prototype);
+    loggerChildStub = sandbox.stub(Logger, 'childFromRoot').returns(loggerStub);
+    loggerStub.shouldLog.returns(true);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+    delete process.env.SF_LOG_LEVEL;
+  });
+
+  it('should log the entry and exit of the method', () => {
+    class DummyClass {
+      @elapsedTime()
+      dummyMethod() {
+        return 'dummyResult';
+      }
+    }
+
+    const dummyInstance = new DummyClass();
+    dummyInstance.dummyMethod();
+
+    sinon.assert.calledOnce(loggerChildStub);
+    sinon.assert.calledWith(loggerChildStub, 'elapsedTime');
+    sinon.assert.callOrder(loggerStub.debug, loggerStub.debug);
+    sinon.assert.calledWith(
+      loggerStub.debug,
+      sinon.match.has('msg', 'DummyClass.dummyMethod - enter')
+    );
+    sinon.assert.calledWith(
+      loggerStub.debug,
+      sinon.match.has('msg', 'DummyClass.dummyMethod - exit')
+    );
+  });
+
+  it('should throw the error if the method throws an error', () => {
+    class DummyClass {
+      @elapsedTime()
+      dummyMethod() {
+        throw new Error('dummyError');
+      }
+    }
+
+    const dummyInstance = new DummyClass();
+
+    expect(() => dummyInstance.dummyMethod()).to.throw(Error, 'dummyError');
+  });
+});
+
+describe('Create Result Files', () => {
+  let testServiceSpy: SinonSpy;
+  let junitSpy: SinonSpy;
+  let tapSpy: SinonSpy;
+  let writeFileSpy: SinonSpy;
+  let sandboxStub1: SinonSandbox;
+
+  beforeEach(async () => {
+    sandboxStub1 = createSandbox();
+    sandboxStub1.stub(fs, 'stat');
+    sandboxStub1.stub(fs, 'mkdir');
+    writeFileSpy = sandboxStub1.stub(fs, 'writeFile');
+    // sandboxStub1.stub(fs, 'close');
+    sandboxStub1.stub(fs, 'open');
+    testServiceSpy = sandboxStub1
+      .stub(TestService.prototype, 'createStream')
+      .returns(
+        new Writable({
+          write(chunk: unknown, encoding, callback) {
+            callback();
+          }
+        })
+      );
+    junitSpy = sandboxStub1.spy(JUnitFormatTransformer.prototype, 'format');
+    tapSpy = sandboxStub1.spy(TapFormatTransformer.prototype, 'format');
+  });
+
+  afterEach(() => {
+    sandboxStub1.restore();
+  });
+
+  it('should only create test-run-id.txt if no result format nor fileInfos are specified', async () => {
+    const config = {
+      dirPath: 'path/to/directory'
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config);
+
+    expect(writeFileSpy.calledWith(join(config.dirPath, 'test-run-id.txt'))).to
+      .be.true;
+    expect(testServiceSpy.callCount).to.eql(0);
+  });
+
+  it('should throw an error if result format is specified with TestRunId result', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      resultFormats: [ResultFormat.tap]
+    };
+    const testSrv = new TestService(mockConnection);
+    try {
+      await testSrv.writeResultFiles(
+        { testRunId } as TestRunIdResult,
+        config,
+        false
+      );
+      assert.fail();
+    } catch (e) {
+      expect(e.message).to.equal(
+        'Cannot specify a result format with a TestRunId result'
+      );
+    }
+  });
+
+  it('should throw an error if code coverage is specified with TestRunId result', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      resultFormats: [ResultFormat.tap]
+    };
+    const testSrv = new TestService(mockConnection);
+    try {
+      await testSrv.writeResultFiles(
+        { testRunId } as TestRunIdResult,
+        config,
+        true
+      );
+      assert.fail();
+    } catch (e) {
+      expect(e.message).to.equal(
+        'Cannot specify a result format with a TestRunId result'
+      );
+    }
+  });
+
+  it('should create the json files if json result format is specified', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      resultFormats: [ResultFormat.json]
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config);
+
+    expect(
+      testServiceSpy.calledWith(
+        join(config.dirPath, `test-result-${testRunId}.json`)
+      )
+    ).to.be.true;
+    expect(testServiceSpy.callCount).to.eql(1);
+  });
+
+  it('should create the junit result files if junit result format is specified', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      resultFormats: [ResultFormat.junit]
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config);
+
+    expect(
+      testServiceSpy.calledWith(
+        join(config.dirPath, `test-result-${testRunId}-junit.xml`)
+      )
+    ).to.be.true;
+    expect(junitSpy.calledOnce).to.be.true;
+    expect(testServiceSpy.callCount).to.eql(1);
+  });
+
+  it('should create the tap result files if result format is specified', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      resultFormats: [ResultFormat.tap]
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config);
+
+    expect(
+      testServiceSpy.calledWith(
+        join(config.dirPath, `test-result-${testRunId}-tap.txt`)
+      )
+    ).to.be.true;
+    expect(tapSpy.calledOnce).to.be.true;
+    expect(testServiceSpy.callCount).to.eql(1);
+  });
+
+  it('should throw an error if unexpected type is specified for result format', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      resultFormats: ['rando']
+    };
+    const testSrv = new TestService(mockConnection);
+    try {
+      // @ts-ignore
+      await testSrv.writeResultFiles(testResultData, config, true);
+      assert.fail();
+    } catch (e) {
+      expect(e.message).to.equal(
+        'Specified result formats must be of type json, junit, or tap'
+      );
+    }
+  });
+
+  it('should create code coverage files if set to true', async () => {
+    const config = {
+      dirPath: 'path/to/directory'
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config, true);
+
+    expect(
+      testServiceSpy.calledWith(
+        join(config.dirPath, `test-result-${testRunId}-codecoverage.json`)
+      )
+    ).to.be.true;
+    expect(testServiceSpy.callCount).to.eql(1);
+  });
+
+  it('should create any files provided in fileInfos', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      fileInfos: [
+        { filename: `test-result-myFile.json`, content: { summary: {} } }
+      ]
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config);
+
+    expect(
+      testServiceSpy.calledWith(join(config.dirPath, `test-result-myFile.json`))
+    ).to.be.true;
+    expect(testServiceSpy.callCount).to.eql(1);
   });
 });

@@ -6,10 +6,10 @@
  */
 
 import { Connection } from '@salesforce/core';
-import { MockTestOrgData, TestContext } from '@salesforce/core/lib/testSetup';
+import { MockTestOrgData, TestContext } from '@salesforce/core/testSetup';
 import { assert, expect } from 'chai';
-import * as fs from 'fs';
-import * as readline from 'readline';
+import fs from 'node:fs';
+import readline from 'readline';
 import { createSandbox, SinonSandbox, SinonStub } from 'sinon';
 import { ExecuteService } from '../../src/execute';
 import { nls } from '../../src/i18n';
@@ -18,6 +18,7 @@ import {
   SoapResponse,
   ExecAnonApiResponse
 } from '../../src/execute/types';
+import * as os from 'node:os';
 
 describe('Apex Execute Tests', async () => {
   const $$ = new TestContext();
@@ -71,6 +72,39 @@ describe('Apex Execute Tests', async () => {
       compiled: true,
       success: true,
       logs: log
+    };
+    sandboxStub
+      .stub(ExecuteService.prototype, 'connectionRequest')
+      .resolves(soapResponse);
+    const response = await apexExecute.executeAnonymous({
+      apexFilePath: 'filepath/to/anonApex/file'
+    });
+
+    expect(response).to.eql(expectedResult);
+  });
+
+  it('should execute and display successful result when no DebuggingInfo header', async () => {
+    const apexExecute = new ExecuteService(mockConnection);
+    const execAnonResult = {
+      column: -1,
+      line: -1,
+      compiled: 'true',
+      compileProblem: '',
+      exceptionMessage: '',
+      exceptionStackTrace: '',
+      success: 'true'
+    };
+    const soapResponse: SoapResponse = {
+      'soapenv:Envelope': {
+        'soapenv:Body': {
+          executeAnonymousResponse: { result: execAnonResult }
+        }
+      }
+    };
+    const expectedResult: ExecuteAnonymousResponse = {
+      compiled: true,
+      success: true,
+      logs: undefined
     };
     sandboxStub
       .stub(ExecuteService.prototype, 'connectionRequest')
@@ -317,7 +351,7 @@ describe('Apex Execute Tests', async () => {
 
     const executeService = new ExecuteService(mockConnection);
     const text = await executeService.getUserInput();
-    expect(text).to.equal(`${inputText}\n`);
+    expect(text).to.equal(`${inputText}${os.EOL}`);
   });
 
   it('should throw error if user is idle', async () => {

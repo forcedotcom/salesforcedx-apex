@@ -1,4 +1,4 @@
-name: unit tests
+name: Unit tests
 on:
   push:
     branches-ignore: [main]
@@ -6,3 +6,21 @@ on:
 jobs:
   unit-tests:
     uses: salesforcecli/github-workflows/.github/workflows/unitTest.yml@main
+  xNuts:
+    needs: unit-tests
+    name: external NUTs
+    uses: salesforcecli/github-workflows/.github/workflows/externalNut.yml@main
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-latest', 'windows-latest']
+    with:
+      packageName: '@salesforce/apex-node'
+      externalProjectGitUrl: 'https://github.com/salesforcecli/plugin-apex'
+      ignoreScripts: true
+      os: ${{ matrix.os }}
+      preSwapCommands: 'yarn upgrade @salesforce/core; npx yarn-deduplicate; yarn install'
+      preBuildCommands: 'shx rm -rf node_modules/@salesforce/core; shx rm -rf node_modules/@jsforce/jsforce-node'
+      preExternalBuildCommands: 'npm why @salesforce/core --json'
+      useCache: false
+    secrets: inherit

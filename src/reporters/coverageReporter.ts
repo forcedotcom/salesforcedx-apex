@@ -14,9 +14,11 @@ import * as libReport from 'istanbul-lib-report';
 import * as reports from 'istanbul-reports';
 import * as libCoverage from 'istanbul-lib-coverage';
 import * as path from 'path';
-import { glob } from 'glob';
+import glob from 'fast-glob';
 import * as fs from 'fs';
 import { nls } from '../i18n';
+import { elapsedTime } from '../utils';
+import * as os from 'node:os';
 
 const startOfSource = (source: string): number => {
   if (source) {
@@ -97,6 +99,7 @@ export class CoverageReporter {
     private readonly options?: CoverageReporterOptions
   ) {}
 
+  @elapsedTime()
   public generateReports(): void {
     try {
       this.coverageMap = this.buildCoverageMap();
@@ -120,6 +123,7 @@ export class CoverageReporter {
     }
   }
 
+  @elapsedTime()
   private buildCoverageMap(): libCoverage.CoverageMap {
     const pathsToFiles = this.findFullPathToClass(['cls', 'trigger']);
     const coverageMap = libCoverage.createCoverageMap();
@@ -151,7 +155,7 @@ export class CoverageReporter {
         try {
           sourceLines = fs
             .readFileSync(fileCoverageData.path, 'utf8')
-            .split('\n');
+            .split(os.EOL);
         } catch {
           // file not found
         }
@@ -183,6 +187,7 @@ export class CoverageReporter {
     return coverageMap;
   }
 
+  @elapsedTime()
   private findFullPathToClass(listOfExtensions: string[]): string[] {
     const searchPattern = `**/*.{${listOfExtensions.join(',')}}`;
     return glob.sync(searchPattern, { cwd: this.sourceDir });

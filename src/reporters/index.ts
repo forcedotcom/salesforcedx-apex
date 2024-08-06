@@ -4,10 +4,11 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-
 export { TapReporter } from './tapReporter';
 export { JUnitReporter } from './junitReporter';
+export { JUnitFormatTransformer } from './junitFormatTransformer';
 export { HumanReporter } from './humanReporter';
+export { HumanFormatTransform } from './humanFormatTransform';
 export {
   CoverageReporter,
   CoverageReporterOptions,
@@ -15,3 +16,4 @@ export {
   DefaultReportOptions,
   DefaultWatermarks
 } from './coverageReporter';
+export { TapFormatTransformer } from './tapFormatTransform';

@@ -7,19 +7,21 @@
 import { Connection } from '@salesforce/core';
 import { existsSync, readFileSync } from 'fs';
 import {
-  ExecuteAnonymousResponse,
+  action,
   ApexExecuteOptions,
-  SoapResponse,
-  soapEnv,
+  ExecuteAnonymousResponse,
   soapBody,
+  soapEnv,
   soapHeader,
-  action
+  SoapResponse
 } from './types';
 import { nls } from '../i18n';
 import { refreshAuth } from '../utils';
 import { encodeBody } from './utils';
 import * as readline from 'readline';
-import { HttpRequest } from 'jsforce';
+import type { HttpRequest } from '@jsforce/jsforce-node';
+import { elapsedTime } from '../utils/elapsedTime';
+import * as os from 'node:os';
 
 export class ExecuteService {
   public readonly connection: Connection;
@@ -28,6 +30,7 @@ export class ExecuteService {
     this.connection = connection;
   }
 
+  @elapsedTime()
   public async executeAnonymous(
     options: ApexExecuteOptions
   ): Promise<ExecuteAnonymousResponse> {
@@ -54,8 +57,10 @@ export class ExecuteService {
         }
       }
     }
+    throw new Error(nls.localize('authForAnonymousApexFailed'));
   }
 
+  @elapsedTime()
   public async getApexCode(options: ApexExecuteOptions): Promise<string> {
     if (options.apexCode) {
       return String(options.apexCode);
@@ -68,6 +73,7 @@ export class ExecuteService {
     }
   }
 
+  @elapsedTime()
   public readApexFile(filepath: string): string {
     if (!existsSync(filepath)) {
       throw new Error(nls.localize('fileNotFoundError', filepath));
@@ -75,6 +81,7 @@ export class ExecuteService {
     return readFileSync(filepath, 'utf8');
   }
 
+  @elapsedTime()
   public async getUserInput(): Promise<string> {
     process.stdout.write(nls.localize('execAnonInputPrompt'));
     return new Promise<string>((resolve, reject) => {
@@ -90,7 +97,7 @@ export class ExecuteService {
       let apexCode = '';
       readInterface.on('line', (input: string) => {
         timeout.refresh();
-        apexCode = apexCode + input + '\n';
+        apexCode = apexCode + input + os.EOL;
       });
       readInterface.on('close', () => {
         resolve(apexCode);
@@ -115,16 +122,15 @@ export class ExecuteService {
       'content-type': 'text/xml',
       soapaction: action
     };
-    const request: HttpRequest = {
+    return {
       method: 'POST',
       url: postEndpoint,
       body,
       headers: requestHeaders
     };
-
-    return request;
   }
 
+  @elapsedTime()
   public jsonFormat(soapResponse: SoapResponse): ExecuteAnonymousResponse {
     const execAnonResponse =
       soapResponse[soapEnv][soapBody].executeAnonymousResponse.result;
@@ -132,7 +138,7 @@ export class ExecuteService {
     const formattedResponse: ExecuteAnonymousResponse = {
       compiled: execAnonResponse.compiled === 'true',
       success: execAnonResponse.success === 'true',
-      logs: soapResponse[soapEnv][soapHeader].DebuggingInfo.debugLog
+      logs: soapResponse[soapEnv][soapHeader]?.DebuggingInfo.debugLog
     };
 
     if (!formattedResponse.success) {
@@ -159,9 +165,10 @@ export class ExecuteService {
     return formattedResponse;
   }
 
+  @elapsedTime()
   public async connectionRequest(
     requestData: HttpRequest
   ): Promise<SoapResponse> {
-    return (await this.connection.request(requestData)) as SoapResponse;
+    return this.connection.request(requestData);
   }
 }
