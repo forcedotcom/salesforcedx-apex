@@ -519,10 +519,10 @@
   resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.1.1.tgz#1ec17e2edbec25c8306d424ecfbf13c7de1aaa31"
   integrity sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==
 
-"@salesforce/core@^8.5.3":
-  version "8.5.3"
-  resolved "https://registry.yarnpkg.com/@salesforce/core/-/core-8.5.3.tgz#ba2876d452e91516898903c55a9683f180d7fec0"
-  integrity sha512-EZC1SS8IiJAV3O/B4qKhhzTi4jHMNBsYTzwMM4RTqTyFP2dd7uQQPFHNDybBXcWrUgA4UqQBRoOhW2YPYyuPow==
+"@salesforce/core@^8.5.4":
+  version "8.5.4"
+  resolved "https://registry.yarnpkg.com/@salesforce/core/-/core-8.5.4.tgz#1cdd669462d2c2859b72135d1138a1b790b1fbcc"
+  integrity sha512-dO8tzFxq811qNPeKPPO2OA2KPYW5rO0YRinW/+7zmRJW3EtNpe93dsQVGwBSAAYrSbYeBwiKdliNqNTN7tKJ0A==
   dependencies:
     "@jsforce/jsforce-node" "^3.4.1"
     "@salesforce/kit" "^3.2.2"
