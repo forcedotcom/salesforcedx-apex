@@ -1,12 +1,12 @@
 {
   "name": "@salesforce/apex-node",
   "description": "Salesforce JS library for Apex",
-  "version": "8.1.11",
+  "version": "8.1.12",
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/salesforcedx-apex/issues",
   "main": "lib/src/index.js",
   "dependencies": {
-    "@jsforce/jsforce-node": "^3.4.2",
+    "@jsforce/jsforce-node": "^3.5.1",
     "@salesforce/core": "^8.6.1",
     "@salesforce/kit": "^3.2.3",
     "@types/istanbul-reports": "^3.0.4",
