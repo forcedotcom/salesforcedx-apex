@@ -423,16 +423,25 @@ export class TestService {
     testLevel: TestLevel,
     tests?: string,
     classNames?: string,
-    suiteNames?: string
+    suiteNames?: string,
+    category?: string
   ): Promise<AsyncTestConfiguration | AsyncTestArrayConfiguration> {
     try {
       if (tests) {
         return (await this.buildTestPayload(
-          tests
+          tests,
+          category
         )) as AsyncTestArrayConfiguration;
       } else if (classNames) {
-        return await this.buildAsyncClassPayload(classNames);
+        return await this.buildAsyncClassPayload(classNames, category);
       } else {
+        if (category.length !== 0) {
+          return {
+            suiteNames,
+            testLevel,
+            category
+          };
+        }
         return {
           suiteNames,
           testLevel
@@ -445,25 +454,38 @@ export class TestService {
 
   @elapsedTime()
   private async buildAsyncClassPayload(
-    classNames: string
+    classNames: string,
+    category?: string
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',') as string[];
     const classItems = classNameArray.map((item) => {
       const classParts = item.split('.');
       if (classParts.length > 1) {
-        return {
-          className: `${classParts[0]}.${classParts[1]}`
-        };
+        return category.length === 0
+          ? { className: `${classParts[0]}.${classParts[1]}` }
+          : {
+              className: `${classParts[0]}.${classParts[1]}`,
+              category: category
+            };
       }
       const prop = isValidApexClassID(item) ? 'classId' : 'className';
-      return { [prop]: item } as TestItem;
+      return category.length === 0
+        ? { [prop]: item }
+        : ({ [prop]: item, category: category } as TestItem);
     });
-    return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
+    return category.length === 0
+      ? { tests: classItems, testLevel: TestLevel.RunSpecifiedTests }
+      : {
+          tests: classItems,
+          testLevel: TestLevel.RunSpecifiedTests,
+          category: category
+        };
   }
 
   @elapsedTime()
   private async buildTestPayload(
-    testNames: string
+    testNames: string,
+    category?: string
   ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
     const testNameArray = testNames.split(',');
     const testItems: TestItem[] = [];
@@ -529,6 +551,13 @@ export class TestService {
         const prop = isValidApexClassID(test) ? 'classId' : 'className';
         testItems.push({ [prop]: test });
       }
+    }
+    if (category.length !== 0) {
+      return {
+        tests: testItems,
+        testLevel: TestLevel.RunSpecifiedTests,
+        category: category
+      };
     }
     return {
       tests: testItems,
