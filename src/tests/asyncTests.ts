@@ -65,7 +65,6 @@ const finishedStatuses = [
 ];
 
 const MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS = 61.0;
-const FLOW_TEST_NAMESPACE = 'flowtesting';
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -345,9 +344,9 @@ export class AsyncTests {
     const hasIsTestSetupField = await this.supportsTestSetupFeature();
     try {
       const resultIds = testQueueResult.records.map((record) => record.Id);
-      const isFlowRunTest = await this.isJobIdForFlowTestRun(resultIds);
+      const isFlowRunTest = await this.isJobIdForFlowTestRun(resultIds[0]);
       const apexTestResultQuery = isFlowRunTest
-        ? `SELECT Id, ApexTestQueueItem, Result, TestStartDateTime,TestEndDateTime, FlowTest.DeveloperName, FlowDefinition.DeveloperName, FlowDefinition.NamespacePrefix FROM FlowTestResult WHERE ApexTestQueueItem IN (%s)`
+        ? `SELECT Id, ApexTestQueueItemId, Result, TestStartDateTime,TestEndDateTime, FlowTest.DeveloperName, FlowDefinition.DeveloperName, FlowDefinition.NamespacePrefix FROM FlowTestResult WHERE ApexTestQueueItemId IN (%s)`
         : hasIsTestSetupField
           ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
           : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
@@ -379,6 +378,9 @@ export class AsyncTests {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
     }
   }
+  /**
+   * @returns Convert FlowTest result to ApexTestResult type
+   */
 
   public convertFlowTestResult(
     flowtestResults: FlowTestResult[]
@@ -387,10 +389,10 @@ export class AsyncTests {
       const tmpRecords: ApexTestResultRecord[] = flowtestResult.records.map(
         (record) => ({
           Id: record.Id,
-          QueueItemId: record.ApexTestQueueItem,
+          QueueItemId: record.ApexTestQueueItemId,
           StackTrace: '', // Default value
           Message: '', // Default value
-          AsyncApexJobId: record.ApexTestQueueItem, // Assuming this maps from ApexTestQueueItem
+          AsyncApexJobId: record.ApexTestQueueItemId, // Assuming this maps from ApexTestQueueItem
           MethodName: record.FlowTest.DeveloperName,
           Outcome: record.Result,
           ApexLogId: '', // Default value
@@ -571,17 +573,8 @@ export class AsyncTests {
   /**
    * @returns A boolean indicating if this is running FlowTest.
    */
-  public async isJobIdForFlowTestRun(testRunIds: string[]): Promise<boolean> {
-    const nameSpaceQuery = `SELECT TestNamespace FROM ApexTestQueueItem WHERE ParentJobId In (%s)`;
-    // iterate thru ids, create query with id, & compare query length to char limit
-    const queries: string[] = [];
-    for (let i = 0; i < testRunIds.length; i += QUERY_RECORD_LIMIT) {
-      const recordSet: string[] = testRunIds
-        .slice(i, i + QUERY_RECORD_LIMIT)
-        .map((id) => `'${id}'`);
-      const query: string = util.format(nameSpaceQuery, recordSet.join(','));
-      queries.push(query);
-    }
+  public async isJobIdForFlowTestRun(testRunId: string): Promise<boolean> {
+    const nameSpaceQuery = `SELECT ApexClassId FROM ApexTestQueueItem WHERE Id = '${testRunId}'`;
     try {
       const testRunNameSpaceResults =
         await this.connection.tooling.query<ApexTestQueueItemRecord>(
@@ -589,15 +582,15 @@ export class AsyncTests {
         );
       if (testRunNameSpaceResults.records.length > 0) {
         for (const record of testRunNameSpaceResults.records) {
-          if (record.TestNamespace !== FLOW_TEST_NAMESPACE) {
-            return false;
+          if (record.ApexClassId === null) {
+            return true;
           }
         }
-        return true;
+        return false;
       }
       return false;
     } catch (e) {
-      throw new Error(nls.localize('no test run id found', testRunIds));
+      return false;
     }
   }
 

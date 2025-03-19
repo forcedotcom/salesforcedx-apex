@@ -195,7 +195,7 @@ export const enum ApexTestResultOutcome {
 
 export type FlowTestResultRecord = {
   Id: string;
-  ApexTestQueueItem: string;
+  ApexTestQueueItemId: string;
   Result: ApexTestResultOutcome;
   FlowTest: {
     /**

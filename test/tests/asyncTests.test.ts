@@ -204,7 +204,7 @@ describe('Run Apex tests asynchronously', () => {
       records: [
         {
           Id: '07Mxx00000F2Xx6UAF',
-          ApexTestQueueItem: '7092M000000Vt94QAC',
+          ApexTestQueueItemId: '7092M000000Vt94QAC',
           Result: ApexTestResultOutcome.Pass,
           TestStartDateTime: '3',
           TestEndDateTime: '5',
