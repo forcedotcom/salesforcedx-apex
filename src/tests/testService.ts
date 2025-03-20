@@ -434,7 +434,7 @@ export class TestService {
       } else if (classNames) {
         return await this.buildAsyncClassPayload(classNames);
       } else {
-        if (category.length !== 0) {
+        if (category && category.length !== 0) {
           return {
             suiteNames,
             testLevel,

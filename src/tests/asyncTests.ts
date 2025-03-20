@@ -398,7 +398,7 @@ export class AsyncTests {
           ApexLogId: '', // Default value
           IsTestSetup: false,
           ApexClass: {
-            Id: record.FlowDefinition.Id,
+            Id: record.ApexTestQueueItemId,
             Name: record.FlowDefinition.DeveloperName,
             NamespacePrefix: record.FlowDefinition.NamespacePrefix,
             FullName: record.FlowDefinition.NamespacePrefix
@@ -574,14 +574,14 @@ export class AsyncTests {
    * @returns A boolean indicating if this is running FlowTest.
    */
   public async isJobIdForFlowTestRun(testRunId: string): Promise<boolean> {
-    const nameSpaceQuery = `SELECT ApexClassId FROM ApexTestQueueItem WHERE Id = '${testRunId}'`;
+    const apexIdQuery = `SELECT ApexClassId FROM ApexTestQueueItem WHERE Id = '${testRunId}'`;
     try {
-      const testRunNameSpaceResults =
+      const testRunApexIdResults =
         await this.connection.tooling.query<ApexTestQueueItemRecord>(
-          nameSpaceQuery
+          apexIdQuery
         );
-      if (testRunNameSpaceResults.records.length > 0) {
-        for (const record of testRunNameSpaceResults.records) {
+      if (testRunApexIdResults.records.length > 0) {
+        for (const record of testRunApexIdResults.records) {
           if (record.ApexClassId === null) {
             return true;
           }

@@ -209,7 +209,7 @@ export const flowTestResultData: TestResult = {
       outcome: ApexTestResultOutcome.Pass,
       apexLogId: '',
       apexClass: {
-        id: undefined,
+        id: '7092M000000Vt94QAC',
         name: 'FlowName',
         namespacePrefix: '',
         fullName: 'FlowName'
@@ -299,7 +299,7 @@ export const skippedTestData: TestResult = {
       outcome: ApexTestResultOutcome.Skip,
       apexLogId: null,
       apexClass: {
-        id: '01pxx00000O6tXZQAZ',
+        id: '7092M000000Vt94QAC',
         name: 'TestLogger',
         namespacePrefix: 't3st',
         fullName: 't3st.TestLogger'

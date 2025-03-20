@@ -85,8 +85,7 @@ describe('Run Apex tests asynchronously', () => {
         Id: '7092M000000Vt94QAC',
         Status: ApexTestQueueItemStatus.Completed,
         ApexClassId: '01p2M00000O6tXZQAZ',
-        TestRunResultId: '05m2M000000TgYuQAK',
-        TestNamespace: ''
+        TestRunResultId: '05m2M000000TgYuQAK'
       }
     ]
   };
@@ -194,7 +193,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: 'flowtesting'
+          ApexClassId: null
         }
       ]
     });
@@ -234,10 +233,10 @@ describe('Run Apex tests asynchronously', () => {
     expect(singleRecordQueryStub.getCall(0).args[0]).to.equal(summaryQuery);
 
     let testResultQuery =
-      'SELECT Id, ApexTestQueueItem, Result, TestStartDateTime,TestEndDateTime, FlowTest.DeveloperName, ';
+      'SELECT Id, ApexTestQueueItemId, Result, TestStartDateTime,TestEndDateTime, FlowTest.DeveloperName, ';
     testResultQuery +=
       'FlowDefinition.DeveloperName, FlowDefinition.NamespacePrefix ';
-    testResultQuery += `FROM FlowTestResult WHERE ApexTestQueueItem IN ('${pollResponse.records[0].Id}')`;
+    testResultQuery += `FROM FlowTestResult WHERE ApexTestQueueItemId IN ('${pollResponse.records[0].Id}')`;
     expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(flowTestResultData);
   });
@@ -260,7 +259,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: ''
+          ApexClassId: 'Not Null'
         }
       ]
     });
@@ -379,7 +378,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: ''
+          ApexClassId: 'Not Null'
         }
       ]
     });
@@ -397,7 +396,7 @@ describe('Run Apex tests asynchronously', () => {
           Outcome: ApexTestResultOutcome.Skip,
           ApexLogId: null,
           ApexClass: {
-            Id: '01pxx00000O6tXZQAZ',
+            Id: '7092M000000Vt94QAC',
             Name: 'TestLogger',
             NamespacePrefix: 't3st',
             FullName: 't3st__TestLogger'
@@ -450,7 +449,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: ''
+          ApexClassId: 'Not Null'
         }
       ]
     });
@@ -511,7 +510,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: ''
+          ApexClassId: 'Not Null'
         }
       ]
     });
@@ -623,7 +622,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: ''
+          ApexClassId: 'Not Null'
         }
       ]
     });
@@ -698,7 +697,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          TestNamespace: ''
+          ApexClassId: 'Not Null'
         }
       ]
     });
@@ -774,8 +773,7 @@ describe('Run Apex tests asynchronously', () => {
         Id: `7092M000000Vt94QAC-${i}`,
         Status: ApexTestQueueItemStatus.Completed,
         ApexClassId: '01p2M00000O6tXZQAZ',
-        TestRunResultId: '05m2M000000TgYuQAK',
-        TestNamespace: ''
+        TestRunResultId: '05m2M000000TgYuQAK'
       };
       queueItemRecords.push(record);
       queryIds.push(record.Id);
@@ -931,7 +929,7 @@ describe('Run Apex tests asynchronously', () => {
         totalSize: 1,
         records: [
           {
-            TestNamespace: ''
+            ApexClassId: 'Not Null'
           }
         ]
       });

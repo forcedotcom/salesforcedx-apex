@@ -361,7 +361,6 @@ export type ApexTestQueueItemRecord = {
    * The ID of the associated ApexTestRunResult object
    */
   TestRunResultId: string;
-  TestNamespace?: string;
 };
 
 export type ApexTestQueueItem = {
