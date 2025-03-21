@@ -259,7 +259,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          ApexClassId: 'Not Null'
+          ApexClassId: 'xxxx'
         }
       ]
     });
@@ -378,7 +378,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          ApexClassId: 'Not Null'
+          ApexClassId: 'xxxx'
         }
       ]
     });
@@ -449,7 +449,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          ApexClassId: 'Not Null'
+          ApexClassId: 'xxxx'
         }
       ]
     });
@@ -510,7 +510,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          ApexClassId: 'Not Null'
+          ApexClassId: 'xxxx'
         }
       ]
     });
@@ -622,7 +622,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          ApexClassId: 'Not Null'
+          ApexClassId: 'xxxx'
         }
       ]
     });
@@ -697,7 +697,7 @@ describe('Run Apex tests asynchronously', () => {
       totalSize: 1,
       records: [
         {
-          ApexClassId: 'Not Null'
+          ApexClassId: 'xxxx'
         }
       ]
     });
@@ -929,7 +929,7 @@ describe('Run Apex tests asynchronously', () => {
         totalSize: 1,
         records: [
           {
-            ApexClassId: 'Not Null'
+            ApexClassId: 'xxxx'
           }
         ]
       });
