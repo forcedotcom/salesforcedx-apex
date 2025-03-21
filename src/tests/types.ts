@@ -204,7 +204,6 @@ export type FlowTestResultRecord = {
     DeveloperName: string;
   };
   FlowDefinition: {
-    Id: string;
     DeveloperName: string;
     NamespacePrefix: string;
   };
