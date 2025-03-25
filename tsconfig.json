@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "module": "NodeNext", // Node.js 18 supports ECMAScript modules
-    "target": "ES2022", // Node.js 18 supports ES2022 features
-    "lib": ["ES2022", "dom"], // Include ES2022 standard library
+    "module": "Node16", // Change to CommonJS
+    "target": "ES2022",
+    "lib": ["ES2022", "dom"],
     "sourceMap": true,
     "declaration": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "node16", // Change to Node for CommonJS
     "noImplicitAny": true,
     "rootDir": ".",
     "outDir": "lib",
