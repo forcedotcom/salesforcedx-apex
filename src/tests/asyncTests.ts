@@ -345,7 +345,7 @@ export class AsyncTests {
     try {
       const resultIds = testQueueResult.records.map((record) => record.Id);
       const isFlowRunTest = await this.isJobIdForFlowTestRun(resultIds[0]);
-      const apexTestResultQuery = isFlowRunTest
+      const testResultQuery = isFlowRunTest
         ? `SELECT Id, ApexTestQueueItemId, Result, TestStartDateTime,TestEndDateTime, FlowTest.DeveloperName, FlowDefinition.DeveloperName, FlowDefinition.NamespacePrefix FROM FlowTestResult WHERE ApexTestQueueItemId IN (%s)`
         : hasIsTestSetupField
           ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
@@ -357,10 +357,7 @@ export class AsyncTests {
         const recordSet: string[] = resultIds
           .slice(i, i + QUERY_RECORD_LIMIT)
           .map((id) => `'${id}'`);
-        const query: string = util.format(
-          apexTestResultQuery,
-          recordSet.join(',')
-        );
+        const query: string = util.format(testResultQuery, recordSet.join(','));
         queries.push(query);
       }
       const connection = await this.defineApiVersion();
@@ -369,9 +366,7 @@ export class AsyncTests {
       });
       const testResults = await Promise.all(queryPromises);
       if (isFlowRunTest) {
-        return this.convertFlowTestResult(
-          testResults as FlowTestResult[]
-        ) as ApexTestResult[];
+        return this.convertFlowTestResult(testResults as FlowTestResult[]);
       }
       return testResults as ApexTestResult[];
     } finally {
@@ -382,7 +377,7 @@ export class AsyncTests {
    * @returns Convert FlowTest result to ApexTestResult type
    */
 
-  public convertFlowTestResult(
+  private convertFlowTestResult(
     flowtestResults: FlowTestResult[]
   ): ApexTestResult[] {
     return flowtestResults.map((flowtestResult) => {

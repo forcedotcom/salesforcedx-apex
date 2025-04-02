@@ -393,11 +393,17 @@ export class TestService {
   public async buildSyncPayload(
     testLevel: TestLevel,
     tests?: string,
-    classnames?: string
+    classnames?: string,
+    category?: string
   ): Promise<SyncTestConfiguration> {
     try {
       if (tests) {
-        const payload = await this.buildTestPayload(tests);
+        let payload;
+        if (category && category.length !== 0) {
+          payload = await this.buildTestPayloadForFlow(tests);
+        } else {
+          payload = await this.buildTestPayload(tests);
+        }
         const classes = payload.tests
           ?.filter((testItem) => testItem.className)
           .map((testItem) => testItem.className);
@@ -428,11 +434,21 @@ export class TestService {
   ): Promise<AsyncTestConfiguration | AsyncTestArrayConfiguration> {
     try {
       if (tests) {
-        return (await this.buildTestPayload(
-          tests
-        )) as AsyncTestArrayConfiguration;
+        if (category && category.length !== 0) {
+          return (await this.buildTestPayloadForFlow(
+            tests
+          )) as AsyncTestArrayConfiguration;
+        } else {
+          return (await this.buildTestPayload(
+            tests
+          )) as AsyncTestArrayConfiguration;
+        }
       } else if (classNames) {
-        return await this.buildAsyncClassPayload(classNames);
+        if (category && category.length !== 0) {
+          return await this.buildAsyncClassPayloadForFlow(classNames);
+        } else {
+          return await this.buildAsyncClassPayload(classNames);
+        }
       } else {
         if (category && category.length !== 0) {
           return {
@@ -462,6 +478,18 @@ export class TestService {
         return { className: `${classParts[0]}.${classParts[1]}` };
       }
       const prop = isValidApexClassID(item) ? 'classId' : 'className';
+      return { [prop]: item } as TestItem;
+    });
+    return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
+  }
+
+  @elapsedTime()
+  private async buildAsyncClassPayloadForFlow(
+    classNames: string
+  ): Promise<AsyncTestArrayConfiguration> {
+    const classNameArray = classNames.split(',') as string[];
+    const classItems = classNameArray.map((item) => {
+      const prop = 'className';
       return { [prop]: item } as TestItem;
     });
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
@@ -526,6 +554,86 @@ export class TestService {
               testItems.forEach((element) => {
                 if (element.className === testParts[0]) {
                   element.testMethods.push(testParts[1]);
+                }
+              });
+            }
+          }
+        }
+      } else {
+        const prop = isValidApexClassID(test) ? 'classId' : 'className';
+        testItems.push({ [prop]: test });
+      }
+    }
+    return {
+      tests: testItems,
+      testLevel: TestLevel.RunSpecifiedTests
+    };
+  }
+
+  @elapsedTime()
+  private async buildTestPayloadForFlow(
+    testNames: string
+  ): Promise<AsyncTestArrayConfiguration | SyncTestConfiguration> {
+    const testNameArray = testNames.split(',');
+    const testItems: TestItem[] = [];
+    const classes: string[] = [];
+    let namespaceInfos: NamespaceInfo[];
+
+    for (const test of testNameArray) {
+      if (test.indexOf('.') > 0) {
+        const testParts = test.split('.');
+        if (testParts.length === 4) {
+          if (
+            !classes.includes(`${testParts[0]}.${testParts[1]}.${testParts[2]}`)
+          ) {
+            testItems.push({
+              namespace: `${testParts[0]}.${testParts[1]}`,
+              className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`,
+              testMethods: [testParts[3]]
+            });
+            classes.push(`${testParts[0]}.${testParts[1]}.${testParts[2]}`);
+          } else {
+            testItems.forEach((element) => {
+              if (
+                element.className ===
+                `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+              ) {
+                element.namespace = `${testParts[0]}.${testParts[1]}`;
+                element.testMethods.push(`${testParts[3]}`);
+              }
+            });
+          }
+        } else {
+          if (typeof namespaceInfos === 'undefined') {
+            namespaceInfos = await queryNamespaces(this.connection);
+          }
+          const currentNamespace = namespaceInfos.find(
+            (namespaceInfo) => namespaceInfo.namespace === testParts[1]
+          );
+          // NOTE: Installed packages require the namespace to be specified as part of the className field
+          // The namespace field should not be used with subscriber orgs
+          if (currentNamespace) {
+            if (currentNamespace.installedNs) {
+              testItems.push({
+                className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+              });
+            } else {
+              testItems.push({
+                namespace: `${testParts[0]}.${testParts[1]}`,
+                className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+              });
+            }
+          } else {
+            if (!classes.includes(`${testParts[0]}.${testParts[1]}`)) {
+              testItems.push({
+                className: `${testParts[0]}.${testParts[1]}`,
+                testMethods: [testParts[2]]
+              });
+              classes.push(`${testParts[0]}.${testParts[1]}`);
+            } else {
+              testItems.forEach((element) => {
+                if (element.className === `${testParts[0]}.${testParts[1]}`) {
+                  element.testMethods.push(testParts[2]);
                 }
               });
             }
