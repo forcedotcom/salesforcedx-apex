@@ -412,11 +412,22 @@ export class TestService {
         }
         return payload;
       } else if (classnames) {
-        const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
-        return {
-          tests: [{ [prop]: classnames }],
-          testLevel
-        };
+        if (category && category.length !== 0) {
+          const payload = await this.buildClassPayloadForFlow(classnames);
+          const classes = payload.tests
+            ?.filter((testItem) => testItem.className)
+            .map((testItem) => testItem.className);
+          if (new Set(classes).size !== 1) {
+            throw new Error(nls.localize('syncClassErr'));
+          }
+          return payload;
+        } else {
+          const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
+          return {
+            tests: [{ [prop]: classnames }],
+            testLevel
+          };
+        }
       }
       throw new Error(nls.localize('payloadErr'));
     } catch (e) {
@@ -445,7 +456,7 @@ export class TestService {
         }
       } else if (classNames) {
         if (category && category.length !== 0) {
-          return await this.buildAsyncClassPayloadForFlow(classNames);
+          return await this.buildClassPayloadForFlow(classNames);
         } else {
           return await this.buildAsyncClassPayload(classNames);
         }
@@ -484,7 +495,7 @@ export class TestService {
   }
 
   @elapsedTime()
-  private async buildAsyncClassPayloadForFlow(
+  private async buildClassPayloadForFlow(
     classNames: string
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',') as string[];

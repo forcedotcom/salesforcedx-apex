@@ -400,7 +400,11 @@ export class AsyncTests {
               ? `${record.FlowDefinition.NamespacePrefix}.${record.FlowTest.DeveloperName}`
               : record.FlowTest.DeveloperName
           },
-          RunTime: 0, // Default value, replace with actual runtime if available
+          RunTime: Number.isNaN(Number(record.TestEndDateTime))
+            ? 0
+            : Number(record.TestEndDateTime) - Number(record.TestStartDateTime)
+              ? 0
+              : Number(record.TestStartDateTime), // Default value, replace with actual runtime if available
           TestTimestamp: record.TestStartDateTime
         })
       );
