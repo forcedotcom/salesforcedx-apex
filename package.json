@@ -1,7 +1,7 @@
 {
   "name": "@salesforce/apex-node",
   "description": "Salesforce JS library for Apex",
-  "version": "8.1.20-qa.1",
+  "version": "8.1.20-qa.2",
   "author": "Salesforce",
   "bugs": "https://github.com/forcedotcom/salesforcedx-apex/issues",
   "main": "lib/src/index.js",
