@@ -626,11 +626,13 @@ export class TestService {
           // NOTE: Installed packages require the namespace to be specified as part of the className field
           // The namespace field should not be used with subscriber orgs
           if (currentNamespace) {
+            // with installed namespace, no need to push namespace separately to tooling layer
             if (currentNamespace.installedNs) {
               testItems.push({
                 className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
               });
             } else {
+              // pushing namespace as part of the payload
               testItems.push({
                 namespace: `${testParts[0]}.${testParts[1]}`,
                 className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
