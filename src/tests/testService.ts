@@ -399,7 +399,7 @@ export class TestService {
     try {
       if (tests) {
         let payload;
-        if (category && category.length !== 0) {
+        if (this.isFlowTest(category)) {
           payload = await this.buildTestPayloadForFlow(tests);
         } else {
           payload = await this.buildTestPayload(tests);
@@ -412,10 +412,10 @@ export class TestService {
         }
         return payload;
       } else if (classnames) {
-        if (category && category.length !== 0) {
+        if (this.isFlowTest(category)) {
           const payload = await this.buildClassPayloadForFlow(classnames);
-          const classes = payload.tests
-            ?.filter((testItem) => testItem.className)
+          const classes = (payload.tests || [])
+            .filter((testItem) => testItem.className)
             .map((testItem) => testItem.className);
           if (new Set(classes).size !== 1) {
             throw new Error(nls.localize('syncClassErr'));
@@ -445,7 +445,7 @@ export class TestService {
   ): Promise<AsyncTestConfiguration | AsyncTestArrayConfiguration> {
     try {
       if (tests) {
-        if (category && category.length !== 0) {
+        if (this.isFlowTest(category)) {
           return (await this.buildTestPayloadForFlow(
             tests
           )) as AsyncTestArrayConfiguration;
@@ -455,13 +455,13 @@ export class TestService {
           )) as AsyncTestArrayConfiguration;
         }
       } else if (classNames) {
-        if (category && category.length !== 0) {
+        if (this.isFlowTest(category)) {
           return await this.buildClassPayloadForFlow(classNames);
         } else {
           return await this.buildAsyncClassPayload(classNames);
         }
       } else {
-        if (category && category.length !== 0) {
+        if (this.isFlowTest(category)) {
           return {
             suiteNames,
             testLevel,
@@ -677,5 +677,8 @@ export class TestService {
 
   public createStream(filePath: string): Writable {
     return createWriteStream(filePath, 'utf8');
+  }
+  private isFlowTest(category: string): boolean {
+    return category && category.length !== 0;
   }
 }
