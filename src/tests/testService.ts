@@ -500,8 +500,7 @@ export class TestService {
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',') as string[];
     const classItems = classNameArray.map((item) => {
-      const prop = 'className';
-      return { [prop]: item } as TestItem;
+      return { className: item } as TestItem;
     });
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
   }
@@ -594,6 +593,9 @@ export class TestService {
       if (test.indexOf('.') > 0) {
         const testParts = test.split('.');
         if (testParts.length === 4) {
+          // for flow test, we will prefix flowtesting global namespace always. so, test string will be look like:
+          // flowtesting.myNamespace.myFlow.myTest
+          // the class name is always the full string including all the namespaces, eg: flowtesting.myNamespace.myFlow.
           if (
             !classes.includes(`${testParts[0]}.${testParts[1]}.${testParts[2]}`)
           ) {
