@@ -4,15 +4,22 @@ on:
     branches-ignore: [main]
 
 jobs:
-  unit-tests:
-    uses: salesforcecli/github-workflows/.github/workflows/unitTest.yml@main
+  yarn-lockfile-check:
+    uses: salesforcecli/github-workflows/.github/workflows/lockFileCheck.yml@main
+  # Since the Windows unit tests take much longer, we run the linux unit tests first and then run the windows unit tests in parallel with NUTs
+  linux-unit-tests:
+    needs: yarn-lockfile-check
+    uses: salesforcecli/github-workflows/.github/workflows/unitTestsLinux.yml@main
+  windows-unit-tests:
+    needs: linux-unit-tests
+    uses: salesforcecli/github-workflows/.github/workflows/unitTestsWindows.yml@main
   test-bundle:
     runs-on: ubuntu-latest
     name: test bundling
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: 
+        with:
           node-version: lts/*
           cache: yarn
       - uses: salesforcecli/github-workflows/.github/actions/yarnInstallWithRetries@main
@@ -21,7 +28,7 @@ jobs:
       - name: check if bundling runs into failures
         run: node scripts/testEsbuild.js
   xNuts:
-    needs: unit-tests
+    needs: linux-unit-tests
     name: external NUTs
     uses: salesforcecli/github-workflows/.github/workflows/externalNut.yml@main
     strategy:
