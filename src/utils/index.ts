@@ -16,6 +16,6 @@ export {
 } from './types';
 export { Table } from './table';
 export { getCurrentTime, formatStartTime, msToSecond } from './dateUtil';
-export { refreshAuth } from './authUtil';
+export { refreshAuth, isConnectionError, sleep } from './authUtil';
 export { elapsedTime } from './elapsedTime';
 export { HeapMonitor } from './heapMonitor';

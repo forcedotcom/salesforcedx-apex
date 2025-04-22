@@ -13,7 +13,10 @@ import {
   elapsedTime,
   formatStartTime,
   getCurrentTime,
-  HeapMonitor
+  HeapMonitor,
+  refreshAuth,
+  isConnectionError,
+  sleep
 } from '../utils';
 import { formatTestErrors, getAsyncDiagnostic } from './diagnosticUtil';
 import {
@@ -70,6 +73,8 @@ export class AsyncTests {
   public readonly connection: Connection;
   private readonly codecoverage: CodeCoverage;
   private readonly logger: Logger;
+  private readonly MAX_RETRIES = 3;
+  private readonly RETRY_DELAY_MS = 1000;
 
   constructor(connection: Connection) {
     this.connection = connection;
@@ -96,52 +101,68 @@ export class AsyncTests {
     timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
-    try {
-      const sClient = new StreamingClient(this.connection, progress);
-      await sClient.init();
-      await sClient.handshake();
+    let retryCount = 0;
+    let lastError: Error;
 
-      token?.onCancellationRequested(async () => {
-        const testRunId = await sClient.subscribedTestRunIdPromise;
-        await this.abortTestRun(testRunId, progress);
-        sClient.disconnect();
-      });
+    while (retryCount < this.MAX_RETRIES) {
+      try {
+        const sClient = new StreamingClient(this.connection, progress);
+        await sClient.init();
+        await sClient.handshake();
 
-      const testRunId = await this.getTestRunRequestAction(options)();
+        token?.onCancellationRequested(async () => {
+          const testRunId = await sClient.subscribedTestRunIdPromise;
+          await this.abortTestRun(testRunId, progress);
+          sClient.disconnect();
+        });
 
-      if (exitOnTestRunId) {
-        return { testRunId };
+        const testRunId = await this.getTestRunRequestAction(options)();
+
+        if (exitOnTestRunId) {
+          return { testRunId };
+        }
+
+        if (token?.isCancellationRequested) {
+          return null;
+        }
+
+        const asyncRunResult = await sClient.subscribe(
+          undefined,
+          testRunId,
+          timeout
+        );
+
+        if ('testRunId' in asyncRunResult) {
+          // timeout, return the id
+          return { testRunId };
+        }
+
+        const runResult = await this.checkRunStatus(asyncRunResult.runId);
+        const formattedResults = await this.formatAsyncResults(
+          asyncRunResult,
+          getCurrentTime(),
+          codeCoverage,
+          runResult.testRunSummary,
+          progress
+        );
+        await this.writeResultsToFile(formattedResults, asyncRunResult.runId);
+        return formattedResults;
+      } catch (e) {
+        lastError = e;
+        if (isConnectionError(e)) {
+          retryCount++;
+          if (retryCount < this.MAX_RETRIES) {
+            await sleep(this.RETRY_DELAY_MS);
+            await refreshAuth(this.connection);
+            continue;
+          }
+        }
+        throw formatTestErrors(e);
+      } finally {
+        HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
       }
-
-      if (token?.isCancellationRequested) {
-        return null;
-      }
-      const asyncRunResult = await sClient.subscribe(
-        undefined,
-        testRunId,
-        timeout
-      );
-
-      if ('testRunId' in asyncRunResult) {
-        // timeout, return the id
-        return { testRunId };
-      }
-
-      const runResult = await this.checkRunStatus(asyncRunResult.runId);
-      const formattedResults = await this.formatAsyncResults(
-        asyncRunResult,
-        getCurrentTime(),
-        codeCoverage,
-        runResult.testRunSummary,
-        progress
-      );
-      await this.writeResultsToFile(formattedResults, asyncRunResult.runId);
-      return formattedResults;
-    } catch (e) {
-      throw formatTestErrors(e);
-    } finally {
-      HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
     }
+    throw formatTestErrors(lastError);
   }
 
   private async writeResultsToFile(
