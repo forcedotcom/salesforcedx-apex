@@ -75,7 +75,7 @@ export class SyncTests {
           return { completed: true, payload: response };
         },
         frequency: Duration.milliseconds(1000), // 1 second
-        timeout: Duration.hours(4) // 4 hours
+        timeout: Duration.minutes(10) // 10 minutes
       });
 
       const testRun = (await pollingClient.subscribe()) as SyncTestResult;
