@@ -5,7 +5,13 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { AuthInfo, Connection, Logger, LoggerLevel } from '@salesforce/core';
+import {
+  AuthInfo,
+  Connection,
+  Logger,
+  LoggerLevel,
+  PollingClient
+} from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
@@ -13,10 +19,7 @@ import {
   elapsedTime,
   formatStartTime,
   getCurrentTime,
-  HeapMonitor,
-  refreshAuth,
-  isConnectionError,
-  sleep
+  HeapMonitor
 } from '../utils';
 import { formatTestErrors, getAsyncDiagnostic } from './diagnosticUtil';
 import {
@@ -101,68 +104,111 @@ export class AsyncTests {
     timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
-    let retryCount = 0;
-    let lastError: Error;
+    try {
+      const testRunId = await this.getTestRunRequestAction(options)();
 
-    while (retryCount < this.MAX_RETRIES) {
-      try {
-        const sClient = new StreamingClient(this.connection, progress);
-        await sClient.init();
-        await sClient.handshake();
-
-        token?.onCancellationRequested(async () => {
-          const testRunId = await sClient.subscribedTestRunIdPromise;
-          await this.abortTestRun(testRunId, progress);
-          sClient.disconnect();
-        });
-
-        const testRunId = await this.getTestRunRequestAction(options)();
-
-        if (exitOnTestRunId) {
-          return { testRunId };
-        }
-
-        if (token?.isCancellationRequested) {
-          return null;
-        }
-
-        const asyncRunResult = await sClient.subscribe(
-          undefined,
-          testRunId,
-          timeout
-        );
-
-        if ('testRunId' in asyncRunResult) {
-          // timeout, return the id
-          return { testRunId };
-        }
-
-        const runResult = await this.checkRunStatus(asyncRunResult.runId);
-        const formattedResults = await this.formatAsyncResults(
-          asyncRunResult,
-          getCurrentTime(),
-          codeCoverage,
-          runResult.testRunSummary,
-          progress
-        );
-        await this.writeResultsToFile(formattedResults, asyncRunResult.runId);
-        return formattedResults;
-      } catch (e) {
-        lastError = e;
-        if (isConnectionError(e)) {
-          retryCount++;
-          if (retryCount < this.MAX_RETRIES) {
-            await sleep(this.RETRY_DELAY_MS);
-            await refreshAuth(this.connection);
-            continue;
-          }
-        }
-        throw formatTestErrors(e);
-      } finally {
-        HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
+      if (exitOnTestRunId) {
+        return { testRunId };
       }
+
+      if (token?.isCancellationRequested) {
+        return null;
+      }
+
+      const pollingClient = await PollingClient.create({
+        poll: async (): Promise<{
+          completed: boolean;
+          payload: ApexTestQueueItem;
+        }> => {
+          if (token?.isCancellationRequested) {
+            await this.abortTestRun(testRunId, progress);
+            return {
+              completed: true,
+              payload: {
+                done: true,
+                totalSize: 0,
+                records: []
+              }
+            };
+          }
+
+          // Query for test run summary first to check overall status
+          const testRunSummary =
+            await this.connection.tooling.query<ApexTestRunResult>(
+              `SELECT Status, ClassesCompleted, ClassesEnqueued FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
+            );
+
+          if (!testRunSummary.records || testRunSummary.records.length === 0) {
+            throw new Error(
+              `No test run summary found for test run ID: ${testRunId}`
+            );
+          }
+
+          const summary = testRunSummary.records[0];
+          const isCompleted = finishedStatuses.includes(summary.Status);
+
+          // Only query queue items if the run is completed
+          if (isCompleted) {
+            const queryResult =
+              await this.connection.tooling.query<ApexTestQueueItemRecord>(
+                `SELECT Id, Status, ApexClassId, TestRunResultId, ParentJobId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`
+              );
+
+            if (!queryResult.records || queryResult.records.length === 0) {
+              throw new Error(
+                `No test queue items found for test run ID: ${testRunId}`
+              );
+            }
+
+            const queueItem: ApexTestQueueItem = {
+              done: true,
+              totalSize: queryResult.records.length,
+              records: queryResult.records.map((record) => ({
+                Id: record.Id,
+                Status: record.Status,
+                ApexClassId: record.ApexClassId,
+                TestRunResultId: record.TestRunResultId
+              }))
+            };
+
+            return {
+              completed: true,
+              payload: queueItem
+            };
+          }
+
+          // Return progress information while tests are running
+          return {
+            completed: false,
+            payload: {
+              done: false,
+              totalSize: summary.ClassesEnqueued,
+              records: []
+            }
+          };
+        },
+        frequency: Duration.milliseconds(100),
+        timeout: timeout || Duration.minutes(10)
+      });
+
+      const queueItem = (await pollingClient.subscribe()) as ApexTestQueueItem;
+      const runResult = await this.checkRunStatus(testRunId);
+
+      const formattedResults = await this.formatAsyncResults(
+        { runId: testRunId, queueItem },
+        getCurrentTime(),
+        codeCoverage,
+        runResult.testRunSummary,
+        progress
+      );
+
+      await this.writeResultsToFile(formattedResults, testRunId);
+      return formattedResults;
+    } catch (e) {
+      throw formatTestErrors(e);
+    } finally {
+      HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
     }
-    throw formatTestErrors(lastError);
   }
 
   private async writeResultsToFile(
