@@ -21,30 +21,3 @@ export function escapeXml(data: string): string {
     return xmlCharMap[char];
   });
 }
-
-/**
- * Checks if an error is a connection-related error
- * @param error The error to check
- * @returns true if the error is connection-related
- */
-export function isConnectionError(error: Error): boolean {
-  return (
-    error.name === 'ERROR_HTTP_500' ||
-    error.name === 'ERROR_HTTP_503' ||
-    error.name === 'ERROR_HTTP_504' ||
-    error.message?.includes('ETIMEDOUT') ||
-    error.message?.includes('ECONNRESET') ||
-    error.message?.includes('ENOTFOUND') ||
-    error.message?.includes('INVALID_SESSION_ID') ||
-    error.message?.includes('socket hang up')
-  );
-}
-
-/**
- * Creates a promise that resolves after the specified number of milliseconds
- * @param ms Number of milliseconds to wait
- * @returns A promise that resolves after the specified delay
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

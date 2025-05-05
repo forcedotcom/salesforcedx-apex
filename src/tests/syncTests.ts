@@ -5,8 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Connection, PollingClient } from '@salesforce/core';
-import { Duration } from '@salesforce/kit';
+import { Connection } from '@salesforce/core';
 import { CancellationToken } from '../common';
 import {
   elapsedTime,
@@ -19,7 +18,6 @@ import { formatTestErrors, getSyncDiagnostic } from './diagnosticUtil';
 import {
   ApexTestResultDataRaw,
   ApexTestResultOutcome,
-  ApexTestRunResult,
   ApexTestRunResultStatus,
   SyncTestConfiguration,
   SyncTestFailure,
@@ -65,20 +63,9 @@ export class SyncTests {
         headers: { 'content-type': 'application/json' }
       };
 
-      const pollingClient = await PollingClient.create({
-        poll: async (): Promise<{
-          completed: boolean;
-          payload: ApexTestRunResult;
-        }> => {
-          const response =
-            await this.connection.tooling.request<ApexTestRunResult>(request);
-          return { completed: true, payload: response };
-        },
-        frequency: Duration.milliseconds(1000), // 1 second
-        timeout: Duration.minutes(10) // 10 minutes
-      });
-
-      const testRun = (await pollingClient.subscribe()) as SyncTestResult;
+      const testRun = (await this.connection.tooling.request(
+        request
+      )) as SyncTestResult;
 
       if (token?.isCancellationRequested) {
         return null;
