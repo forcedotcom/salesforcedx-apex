@@ -1,3 +1,30 @@
+## [8.1.25](https://github.com/forcedotcom/salesforcedx-apex/compare/8.1.24...8.1.25) (2025-05-04)
+
+
+### Bug Fixes
+
+* **deps:** bump @salesforce/core from 8.10.0 to 8.10.1 ([9d01281](https://github.com/forcedotcom/salesforcedx-apex/commit/9d01281b48d015e69d6fdd98c7c8259330cbc525))
+
+
+
+## [8.1.24](https://github.com/forcedotcom/salesforcedx-apex/compare/8.1.23...8.1.24) (2025-04-27)
+
+
+### Bug Fixes
+
+* **deps:** bump @jsforce/jsforce-node from 3.7.0 to 3.8.1 ([dfde834](https://github.com/forcedotcom/salesforcedx-apex/commit/dfde8349113cf5a88116667a12b735ca5f417d29))
+
+
+
+## [8.1.23](https://github.com/forcedotcom/salesforcedx-apex/compare/8.1.22...8.1.23) (2025-04-27)
+
+
+### Bug Fixes
+
+* **deps:** bump @salesforce/core from 8.9.1 to 8.10.0 ([363e903](https://github.com/forcedotcom/salesforcedx-apex/commit/363e9038afe32611505b8f78b6295750d87d6ade))
+
+
+
 ## [8.1.22](https://github.com/forcedotcom/salesforcedx-apex/compare/8.1.21...8.1.22) (2025-04-20)
 
 
