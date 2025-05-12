@@ -131,6 +131,14 @@ export class AsyncTests {
               }
             };
           }
+
+          progress?.report({
+            type: 'PollingClientProgress',
+            value: 'pollingProcessingTestRun',
+            message: nls.localize('pollingProcessingTestRun', testRunId),
+            testRunId
+          });
+
           const hasTestSetupTimeField = await this.supportsTestSetupFeature();
           const testRunSummaryQuery = hasTestSetupTimeField
             ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
@@ -315,14 +323,9 @@ export class AsyncTests {
     try {
       const connection = await this.defineApiVersion();
       const testRunSummaryResults =
-        await connection.singleRecordQuery<ApexTestRunResult>(
-          testRunSummaryQuery,
-          {
-            tooling: true
-          }
-        );
+        await connection.tooling.query<ApexTestRunResult>(testRunSummaryQuery);
 
-      if (!testRunSummaryResults) {
+      if (!testRunSummaryResults?.records) {
         // If test run was aborted, return a dummy summary
         if (progress?.report) {
           return {
@@ -341,9 +344,17 @@ export class AsyncTests {
         );
       }
 
+      if (testRunSummaryResults.records.length > 1) {
+        throw new Error(
+          `Multiple test run summaries found for test run ID: ${testRunId}. This is unexpected and may indicate a data integrity issue.`
+        );
+      }
+
       return {
-        testsComplete: finishedStatuses.includes(testRunSummaryResults.Status),
-        testRunSummary: testRunSummaryResults
+        testsComplete: finishedStatuses.includes(
+          testRunSummaryResults.records[0].Status
+        ),
+        testRunSummary: testRunSummaryResults.records[0]
       };
     } catch (e) {
       if (e.message.includes('The requested resource does not exist')) {
