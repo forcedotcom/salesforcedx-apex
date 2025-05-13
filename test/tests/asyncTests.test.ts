@@ -59,6 +59,7 @@ import * as utils from '../../src/tests/utils';
 import { AsyncTests } from '../../src/tests/asyncTests';
 import { QUERY_RECORD_LIMIT } from '../../src/tests/constants';
 import { Writable } from 'node:stream';
+import { Duration } from '@salesforce/kit';
 
 let mockConnection: Connection;
 let sandboxStub: SinonSandbox;
@@ -162,7 +163,14 @@ describe('Run Apex tests asynchronously', () => {
       .stub(AsyncTests.prototype, 'formatAsyncResults')
       .resolves(testResultData);
 
-    const testResult = await testSrv.runTestAsynchronous(requestOptions);
+    const testResult = await testSrv.runTestAsynchronous(
+      requestOptions,
+      false,
+      false,
+      undefined,
+      undefined,
+      Duration.minutes(2)
+    );
     expect(testResult).to.be.a('object');
     expect(mockTestResultData.calledOnce).to.equal(true);
     expect(testResult).to.equal(testResultData);
@@ -189,7 +197,14 @@ describe('Run Apex tests asynchronously', () => {
 
     const testSrv = new TestService(mockConnection);
     try {
-      await testSrv.runTestAsynchronous(requestOptions);
+      await testSrv.runTestAsynchronous(
+        requestOptions,
+        false,
+        false,
+        undefined,
+        undefined,
+        Duration.minutes(2)
+      );
       assert.fail('Expected an error to be thrown');
     } catch (error) {
       assert.equal(error.message, 'No access token');
@@ -1144,7 +1159,8 @@ describe('Run Apex tests asynchronously', () => {
         false,
         undefined,
         undefined,
-        cancellationTokenSource.token
+        cancellationTokenSource.token,
+        Duration.minutes(2)
       );
 
       // Wait for the test to start
@@ -1204,9 +1220,16 @@ describe('Run Apex tests asynchronously', () => {
         .stub(StreamingClient.prototype, 'handshake')
         .throws(new Error(errMsg));
       try {
-        await testSrv.runTestAsynchronous({
-          testLevel: TestLevel.RunLocalTests
-        });
+        await testSrv.runTestAsynchronous(
+          {
+            testLevel: TestLevel.RunLocalTests
+          },
+          false,
+          false,
+          undefined,
+          undefined,
+          Duration.minutes(2)
+        );
         fail('Should have failed');
       } catch (e) {
         expect(formatSpy.calledOnce).to.be.true;
