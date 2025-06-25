@@ -71,6 +71,8 @@ const finishedStatuses = [
 ];
 
 const MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS = 61.0;
+const POLLING_FREQUENCY = Duration.milliseconds(100);
+const POLLING_TIMEOUT = Duration.hours(4);
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -194,8 +196,8 @@ export class AsyncTests {
             payload: queueItem
           };
         },
-        frequency: Duration.milliseconds(100),
-        timeout
+        frequency: POLLING_FREQUENCY,
+        timeout: timeout || POLLING_TIMEOUT
       });
 
       const queueItem = (await pollingClient.subscribe()) as ApexTestQueueItem;
