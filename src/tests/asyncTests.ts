@@ -92,7 +92,8 @@ export class AsyncTests {
    * @param exitOnTestRunId should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
-   * @param timeout Duration to wait before returning a TestRunIdResult
+   * @param timeout Duration to wait before returning a TestRunIdResult. If the polling client times out,
+   *                the method will return the test run ID so you can retrieve results later.
    */
   @elapsedTime()
   public async runTests(
@@ -104,8 +105,10 @@ export class AsyncTests {
     timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
+    let testRunId: string;
+
     try {
-      const testRunId = await this.getTestRunRequestAction(options)();
+      testRunId = await this.getTestRunRequestAction(options)();
 
       if (exitOnTestRunId) {
         return { testRunId };
@@ -161,10 +164,7 @@ export class AsyncTests {
           }
 
           const summary = testRunSummary.records[0];
-          const isCompleted =
-            summary.Status === ApexTestRunResultStatus.Completed ||
-            summary.Status === ApexTestRunResultStatus.Failed ||
-            summary.Status === ApexTestRunResultStatus.Aborted;
+          const isCompleted = finishedStatuses.includes(summary.Status);
 
           // Query queue items to get detailed status
           const queryResult =
@@ -195,7 +195,7 @@ export class AsyncTests {
           };
         },
         frequency: Duration.milliseconds(100),
-        timeout
+        timeout: timeout || Duration.minutes(10)
       });
 
       const queueItem = (await pollingClient.subscribe()) as ApexTestQueueItem;
@@ -212,6 +212,20 @@ export class AsyncTests {
       await this.writeResultsToFile(formattedResults, testRunId);
       return formattedResults;
     } catch (e) {
+      // If it's a PollingClientTimeout, return the test run ID so results can be retrieved later
+      if (e.name === 'PollingClientTimeout') {
+        this.logger.debug(
+          `Polling client timed out for test run ${testRunId}. Returning test run ID for later result retrieval.`
+        );
+
+        // Log the proper 'apex get test' command for the user to run later
+        const username = this.connection.getUsername();
+        this.logger.info(
+          nls.localize('runTestReportCommand', [testRunId, username])
+        );
+
+        return { testRunId };
+      }
       throw formatTestErrors(e);
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');

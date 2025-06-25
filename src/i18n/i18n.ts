@@ -98,5 +98,7 @@ export const messages = {
   startHandshake: 'Attempting StreamingClient handshake',
   finishHandshake: 'Finished StreamingClient handshake',
   subscribeStarted: 'Subscribing to ApexLog events',
-  authForAnonymousApexFailed: 'The authentication for execute anonymous failed'
+  authForAnonymousApexFailed: 'The authentication for execute anonymous failed',
+  runTestReportCommand:
+    'Run "sf apex get test -i %s -o %s" to retrieve test results.'
 };

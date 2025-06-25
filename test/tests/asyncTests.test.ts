@@ -1527,6 +1527,165 @@ describe('Run Apex tests asynchronously', () => {
       );
     });
   });
+
+  describe('Polling Client Timeout', () => {
+    it('should return test run ID when polling client times out', async () => {
+      const requestOptions: AsyncTestConfiguration = {
+        classNames: 'TestSample',
+        testLevel: TestLevel.RunSpecifiedTests
+      };
+      const testAsyncRequest = {
+        method: 'POST',
+        url: `${mockConnection.tooling._baseUrl()}/runTestsAsynchronous`,
+        body: JSON.stringify(requestOptions),
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+      toolingRequestStub.withArgs(testAsyncRequest).returns(testRunId);
+
+      // Mock the tooling query to return a status that will keep polling
+      const mockToolingQuery = sandboxStub.stub(
+        mockConnection.tooling,
+        'query'
+      );
+      mockToolingQuery.onFirstCall().resolves({
+        done: true,
+        totalSize: 1,
+        records: [
+          {
+            AsyncApexJobId: testRunId,
+            Status: ApexTestRunResultStatus.Queued,
+            StartTime: testStartTime,
+            TestTime: null,
+            UserId: '005xx000000abcDAAU'
+          }
+        ]
+      });
+      mockToolingQuery.onSecondCall().resolves({
+        done: true,
+        totalSize: 1,
+        records: [
+          {
+            Id: '7092M000000Vt94QAC',
+            Status: ApexTestQueueItemStatus.Processing,
+            ApexClassId: '01p2M00000O6tXZQAZ',
+            TestRunResultId: '05m2M000000TgYuQAK'
+          }
+        ]
+      });
+
+      // Mock the logger to capture the info message
+      const loggerStub = sandboxStub.stub(Logger.prototype, 'info');
+      const debugStub = sandboxStub.stub(Logger.prototype, 'debug');
+
+      const testSrv = new TestService(mockConnection);
+      const result = await testSrv.runTestAsynchronous(
+        requestOptions,
+        false,
+        false,
+        undefined,
+        undefined,
+        Duration.milliseconds(10) // Very short timeout to trigger timeout quickly
+      );
+
+      // Verify that the result contains the test run ID
+      expect(result).to.have.property('testRunId');
+      expect((result as TestRunIdResult).testRunId).to.equal(testRunId);
+
+      // Verify that the debug message was logged
+      sinonAssert.calledWith(
+        debugStub,
+        sinon.match.string.and(sinon.match(testRunId))
+      );
+
+      // Verify that the info message with the command was logged
+      const username = mockConnection.getUsername();
+      sinonAssert.calledWith(
+        loggerStub,
+        nls.localize('runTestReportCommand', [testRunId, username])
+      );
+    });
+
+    it('should handle PollingClientTimeout error gracefully', async () => {
+      const requestOptions: AsyncTestConfiguration = {
+        classNames: 'TestSample',
+        testLevel: TestLevel.RunSpecifiedTests
+      };
+      const testAsyncRequest = {
+        method: 'POST',
+        url: `${mockConnection.tooling._baseUrl()}/runTestsAsynchronous`,
+        body: JSON.stringify(requestOptions),
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+      toolingRequestStub.withArgs(testAsyncRequest).returns(testRunId);
+
+      // Mock the tooling query to return a status that will keep polling
+      const mockToolingQuery = sandboxStub.stub(
+        mockConnection.tooling,
+        'query'
+      );
+      mockToolingQuery.onFirstCall().resolves({
+        done: true,
+        totalSize: 1,
+        records: [
+          {
+            AsyncApexJobId: testRunId,
+            Status: ApexTestRunResultStatus.Queued,
+            StartTime: testStartTime,
+            TestTime: null,
+            UserId: '005xx000000abcDAAU'
+          }
+        ]
+      });
+      mockToolingQuery.onSecondCall().resolves({
+        done: true,
+        totalSize: 1,
+        records: [
+          {
+            Id: '7092M000000Vt94QAC',
+            Status: ApexTestQueueItemStatus.Processing,
+            ApexClassId: '01p2M00000O6tXZQAZ',
+            TestRunResultId: '05m2M000000TgYuQAK'
+          }
+        ]
+      });
+
+      // Mock the logger to capture the info message
+      const loggerStub = sandboxStub.stub(Logger.prototype, 'info');
+      const debugStub = sandboxStub.stub(Logger.prototype, 'debug');
+
+      const testSrv = new TestService(mockConnection);
+
+      // This should not throw an error, even though the polling client times out
+      const result = await testSrv.runTestAsynchronous(
+        requestOptions,
+        false,
+        false,
+        undefined,
+        undefined,
+        Duration.milliseconds(10) // Very short timeout to trigger timeout quickly
+      );
+
+      // Verify that the result is a TestRunIdResult
+      expect(result).to.have.property('testRunId');
+      expect((result as TestRunIdResult).testRunId).to.equal(testRunId);
+
+      // Verify that the appropriate messages were logged
+      sinonAssert.calledWith(
+        debugStub,
+        sinon.match.string.and(sinon.match(testRunId))
+      );
+
+      const username = mockConnection.getUsername();
+      sinonAssert.calledWith(
+        loggerStub,
+        nls.localize('runTestReportCommand', [testRunId, username])
+      );
+    });
+  });
 });
 
 describe('elapsedTime', () => {
