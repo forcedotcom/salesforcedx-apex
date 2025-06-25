@@ -78,8 +78,6 @@ export class AsyncTests {
   public readonly connection: Connection;
   private readonly codecoverage: CodeCoverage;
   private readonly logger: Logger;
-  private readonly MAX_RETRIES = 3;
-  private readonly RETRY_DELAY_MS = 1000;
 
   constructor(connection: Connection) {
     this.connection = connection;
