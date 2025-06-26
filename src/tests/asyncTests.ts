@@ -195,7 +195,7 @@ export class AsyncTests {
           };
         },
         frequency: POLLING_FREQUENCY,
-        timeout: timeout || POLLING_TIMEOUT
+        timeout: timeout ?? POLLING_TIMEOUT
       });
 
       const queueItem = (await pollingClient.subscribe()) as ApexTestQueueItem;
