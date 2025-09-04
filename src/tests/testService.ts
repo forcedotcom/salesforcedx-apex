@@ -38,12 +38,7 @@ import { Transform } from 'stream';
 import { pipeline } from 'node:stream/promises';
 import { createWriteStream } from 'node:fs';
 
-/**
- * The library jsonpath that bfj depends on cannot be bundled through esbuild.
- * Please pay attention whenever you deal with bfj
- */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const bfj = require('bfj');
+import { JsonStreamStringify } from 'json-stream-stringify';
 
 export class TestService {
   private readonly connection: Connection;
@@ -356,11 +351,7 @@ export class TestService {
           .filter((pcc) => pcc?.length);
         filesWritten.push(
           await this.runPipeline(
-            bfj.stringify(c, {
-              bufferLength: getBufferSize(),
-              iterables: 'ignore',
-              space: getJsonIndent()
-            }),
+            new JsonStreamStringify(c, null, getJsonIndent()),
             filePath
           )
         );
@@ -372,11 +363,11 @@ export class TestService {
           const readable =
             typeof fileInfo.content === 'string'
               ? Readable.from([fileInfo.content])
-              : bfj.stringify(fileInfo.content, {
-                  bufferLength: getBufferSize(),
-                  iterables: 'ignore',
-                  space: getJsonIndent()
-                });
+              : new JsonStreamStringify(
+                  fileInfo.content,
+                  null,
+                  getJsonIndent()
+                );
           filesWritten.push(await this.runPipeline(readable, filePath));
         }
       }
