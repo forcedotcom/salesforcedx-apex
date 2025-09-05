@@ -60,6 +60,25 @@ import fs from 'node:fs/promises';
 
 import { JsonStreamStringify } from 'json-stream-stringify';
 
+/**
+ * Standalone function for writing async test results to file - easier to test
+ */
+export const writeAsyncResultsToFile = async (
+  formattedResults: unknown,
+  runId: string,
+  tempDir: string = os.tmpdir()
+): Promise<void> => {
+  const rawResultsPath = path.join(tempDir, runId, 'rawResults.json');
+  await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
+  const writeStream = createWriteStream(rawResultsPath);
+  const stringifyStream = new JsonStreamStringify(
+    formattedResults,
+    null,
+    getJsonIndent()
+  );
+  return await pipeline(stringifyStream, writeStream);
+};
+
 const finishedStatuses = [
   ApexTestRunResultStatus.Aborted,
   ApexTestRunResultStatus.Failed,
