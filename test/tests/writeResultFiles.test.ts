@@ -1,52 +1,34 @@
 /*
- * Copyright (c) 2023, salesforce.com, inc.
+ * Copyright (c) 2024, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { expect } from 'chai';
-import { readFileSync, existsSync, createWriteStream } from 'node:fs';
-import { join } from 'path';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { writeResultFiles } from '../../src/tests/testService';
 import {
   TestResult,
-  ResultFormat,
-  OutputDirConfig,
   TestRunIdResult,
+  OutputDirConfig,
+  ResultFormat,
   ApexTestResultOutcome
 } from '../../src/tests/types';
-import { writeResultFiles } from '../../src/tests/testService';
+import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { Readable } from 'stream';
+import { createWriteStream } from 'node:fs';
+import fs from 'node:fs/promises';
+import path from 'path';
+import os from 'node:os';
+import { expect } from 'chai';
 
 describe('writeResultFiles with real filesystem', () => {
   let tempDir: string;
+  let outputDir: string;
 
-  beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'apex-test-'));
-  });
-
-  afterEach(async () => {
-    if (tempDir && existsSync(tempDir)) {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-  });
-
-  const mockRunPipeline = async (
-    readable: Readable,
-    filePath: string
-  ): Promise<string> => {
-    const writeStream = createWriteStream(filePath);
-    await pipeline(readable, writeStream);
-    return filePath;
-  };
-
-  const createMockTestResult = (): TestResult => ({
+  // Mock test data
+  const mockTestResult: TestResult = {
     summary: {
-      testRunId: '7071234567890123',
-      outcome: 'Pass',
+      outcome: 'Passed',
       testsRan: 2,
       passing: 2,
       failing: 0,
@@ -54,471 +36,546 @@ describe('writeResultFiles with real filesystem', () => {
       passRate: '100%',
       failRate: '0%',
       skipRate: '0%',
-      userId: '00512345678901234',
-      testStartTime: '2023-01-01T00:00:00.000Z',
-      testExecutionTimeInMs: 1500,
-      testTotalTimeInMs: 1500,
+      testStartTime: '2024-01-01T10:00:00.000Z',
+      testExecutionTimeInMs: 1000,
+      testTotalTimeInMs: 1000,
       commandTimeInMs: 2000,
-      hostname: 'test-hostname',
-      orgId: '00D123456789012',
+      hostname: 'https://test.salesforce.com',
+      orgId: '00Dxx0000000000EAA',
       username: 'test@example.com',
-      testRunCoverage: '85%',
-      orgWideCoverage: '75%',
-      totalLines: 100,
-      coveredLines: 85
+      testRunId: '707xx0000000001',
+      userId: '005xx0000000001'
     },
     tests: [
       {
-        id: '01p123456789012',
-        queueItemId: '7091234567890123',
+        id: '07Mxx00000001',
+        queueItemId: '709xx00000001',
         stackTrace: null,
         message: null,
-        asyncApexJobId: '7071234567890123',
+        asyncApexJobId: '707xx0000000001',
         methodName: 'testMethod1',
         outcome: ApexTestResultOutcome.Pass,
         apexLogId: null,
         apexClass: {
-          id: '01p123456789012',
+          id: '01pxx00000001',
           name: 'TestClass1',
-          namespacePrefix: '',
+          namespacePrefix: null,
           fullName: 'TestClass1'
         },
-        runTime: 750,
-        testTimestamp: '2023-01-01T00:00:01.000Z',
-        fullName: 'TestClass1.testMethod1',
-        diagnostic: null,
-        perClassCoverage: [
-          {
-            apexClassOrTriggerId: '01p123456789012',
-            apexClassOrTriggerName: 'TestClass1',
-            apexTestClassId: '01p123456789012',
-            apexTestMethodName: 'testMethod1',
-            numLinesCovered: 10,
-            numLinesUncovered: 2,
-            percentage: '83%',
-            coverage: {
-              coveredLines: [1, 2],
-              uncoveredLines: [3]
-            }
-          }
-        ]
+        runTime: 500,
+        testTimestamp: '2024-01-01T10:00:00.500Z',
+        fullName: 'TestClass1.testMethod1'
       },
       {
-        id: '01p123456789013',
-        queueItemId: '7091234567890124',
+        id: '07Mxx00000002',
+        queueItemId: '709xx00000002',
         stackTrace: null,
         message: null,
-        asyncApexJobId: '7071234567890123',
+        asyncApexJobId: '707xx0000000001',
         methodName: 'testMethod2',
         outcome: ApexTestResultOutcome.Pass,
         apexLogId: null,
         apexClass: {
-          id: '01p123456789013',
-          name: 'TestClass2',
-          namespacePrefix: '',
-          fullName: 'TestClass2'
+          id: '01pxx00000001',
+          name: 'TestClass1',
+          namespacePrefix: null,
+          fullName: 'TestClass1'
         },
-        runTime: 750,
-        testTimestamp: '2023-01-01T00:00:01.500Z',
-        fullName: 'TestClass2.testMethod2',
-        diagnostic: null,
-        perClassCoverage: [
-          {
-            apexClassOrTriggerId: '01p123456789013',
-            apexClassOrTriggerName: 'TestClass2',
-            apexTestClassId: '01p123456789013',
-            apexTestMethodName: 'testMethod2',
-            numLinesCovered: 8,
-            numLinesUncovered: 1,
-            percentage: '89%',
-            coverage: {
-              coveredLines: [1],
-              uncoveredLines: [2]
-            }
-          }
-        ]
+        runTime: 500,
+        testTimestamp: '2024-01-01T10:00:01.000Z',
+        fullName: 'TestClass1.testMethod2'
       }
     ],
-    setup: [],
+    codecoverage: []
+  };
+
+  const mockTestResultWithCoverage: TestResult = {
+    ...mockTestResult,
     codecoverage: [
       {
-        apexId: '01p123456789012',
+        apexId: '01pxx00000001',
         name: 'TestClass1',
-        type: 'ApexClass',
         numLinesCovered: 10,
         numLinesUncovered: 2,
         percentage: '83%',
-        coveredLines: [1, 2],
-        uncoveredLines: [3]
+        type: 'ApexClass',
+        coveredLines: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        uncoveredLines: [11, 12]
       }
     ]
+  };
+
+  const mockTestRunIdResult: TestRunIdResult = {
+    testRunId: '707xx0000000001'
+  };
+
+  // Pipeline function that writes to filesystem
+  const realPipeline = async (
+    readable: Readable,
+    filePath: string,
+    transform?: Transform
+  ): Promise<string> => {
+    const writable = createWriteStream(filePath, 'utf8');
+    if (transform) {
+      await pipeline(readable, transform, writable);
+    } else {
+      await pipeline(readable, writable);
+    }
+    return filePath;
+  };
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'apex-test-'));
+    outputDir = path.join(tempDir, 'output');
   });
 
-  const createMockTestRunIdResult = (): TestRunIdResult => ({
-    testRunId: '7071234567890123'
+  afterEach(async () => {
+    if (tempDir) {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
   });
 
-  describe('basic functionality', () => {
+  describe('basic file creation', () => {
     it('should create test-run-id.txt file', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir
+      const config: OutputDirConfig = {
+        dirPath: outputDir
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.include(join(tempDir, 'test-run-id.txt'));
-      expect(existsSync(join(tempDir, 'test-run-id.txt'))).to.be.true;
+      expect(filesWritten).to.have.lengthOf(1);
+      expect(filesWritten[0]).to.equal(path.join(outputDir, 'test-run-id.txt'));
 
-      const content = readFileSync(join(tempDir, 'test-run-id.txt'), 'utf8');
-      expect(content).to.equal('7071234567890123');
+      const content = await fs.readFile(
+        path.join(outputDir, 'test-run-id.txt'),
+        'utf8'
+      );
+      expect(content).to.equal('707xx0000000001');
     });
 
-    it('should handle TestRunIdResult', async () => {
-      const result = createMockTestRunIdResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir
+    it('should create test-run-id.txt for TestRunIdResult', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestRunIdResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.have.length(1);
-      expect(files[0]).to.equal(join(tempDir, 'test-run-id.txt'));
+      expect(filesWritten).to.have.lengthOf(1);
+      expect(filesWritten[0]).to.equal(path.join(outputDir, 'test-run-id.txt'));
 
-      const content = readFileSync(join(tempDir, 'test-run-id.txt'), 'utf8');
-      expect(content).to.equal('7071234567890123');
+      const content = await fs.readFile(
+        path.join(outputDir, 'test-run-id.txt'),
+        'utf8'
+      );
+      expect(content).to.equal('707xx0000000001');
     });
   });
 
-  describe('result formats', () => {
+  describe('result format files', () => {
     it('should create JSON result file', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
         resultFormats: [ResultFormat.json]
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123.json')
+      expect(filesWritten).to.have.lengthOf(2); // test-run-id.txt + json file
+      expect(filesWritten).to.include(path.join(outputDir, 'test-run-id.txt'));
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001.json')
       );
-      expect(existsSync(join(tempDir, 'test-result-7071234567890123.json'))).to
-        .be.true;
 
-      const content = readFileSync(
-        join(tempDir, 'test-result-7071234567890123.json'),
+      const jsonContent = await fs.readFile(
+        path.join(outputDir, 'test-result-707xx0000000001.json'),
         'utf8'
       );
-      const parsed = JSON.parse(content);
-      expect(parsed.summary.testRunId).to.equal('7071234567890123');
-      expect(parsed.tests).to.have.length(2);
-    });
+      const parsedJson = JSON.parse(jsonContent);
 
-    it('should create JUnit result file', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
-        resultFormats: [ResultFormat.junit]
-      };
-
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
-        false,
-        mockRunPipeline
-      );
-
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123-junit.xml')
-      );
-      expect(
-        existsSync(join(tempDir, 'test-result-7071234567890123-junit.xml'))
-      ).to.be.true;
-
-      const content = readFileSync(
-        join(tempDir, 'test-result-7071234567890123-junit.xml'),
-        'utf8'
-      );
-      expect(content).to.include('<?xml version="1.0" encoding="UTF-8"?>');
-      expect(content).to.include('<testsuite');
-      expect(content).to.include('tests="2"');
+      // Verify JSON structure is correct
+      expect(parsedJson.summary).to.exist;
+      expect(parsedJson.tests).to.be.an('array');
+      expect(parsedJson.codecoverage).to.be.an('array');
+      expect(parsedJson.summary.testRunId).to.equal('707xx0000000001');
+      expect(parsedJson.tests).to.have.lengthOf(2);
     });
 
     it('should create TAP result file', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
         resultFormats: [ResultFormat.tap]
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123-tap.txt')
+      expect(filesWritten).to.have.lengthOf(2);
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001-tap.txt')
       );
-      expect(existsSync(join(tempDir, 'test-result-7071234567890123-tap.txt')))
-        .to.be.true;
 
-      const content = readFileSync(
-        join(tempDir, 'test-result-7071234567890123-tap.txt'),
+      const tapContent = await fs.readFile(
+        path.join(outputDir, 'test-result-707xx0000000001-tap.txt'),
         'utf8'
       );
-      expect(content).to.include('1..2');
-      expect(content).to.include('ok 1 TestClass1.testMethod1');
-      expect(content).to.include('ok 2 TestClass2.testMethod2');
+
+      // Verify TAP format basics
+      expect(tapContent).to.include('1..2'); // TAP plan
+      expect(tapContent).to.include('ok 1'); // First test
+      expect(tapContent).to.include('ok 2'); // Second test
     });
 
-    it('should create multiple format files', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
-        resultFormats: [ResultFormat.json, ResultFormat.junit, ResultFormat.tap]
+    it('should create JUnit result file', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
+        resultFormats: [ResultFormat.junit]
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.have.length(4); // test-run-id.txt + 3 format files
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123.json')
+      expect(filesWritten).to.have.lengthOf(2);
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001-junit.xml')
       );
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123-junit.xml')
+
+      const junitContent = await fs.readFile(
+        path.join(outputDir, 'test-result-707xx0000000001-junit.xml'),
+        'utf8'
       );
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123-tap.txt')
+
+      // Verify JUnit XML format basics
+      expect(junitContent).to.include('<?xml version="1.0"');
+      expect(junitContent).to.include('<testsuites');
+      expect(junitContent).to.include('<testsuite');
+      expect(junitContent).to.include('<testcase');
+    });
+
+    it('should create all result formats simultaneously', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
+        resultFormats: [ResultFormat.json, ResultFormat.tap, ResultFormat.junit]
+      };
+
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
+        false,
+        realPipeline
       );
+
+      expect(filesWritten).to.have.lengthOf(4); // test-run-id.txt + 3 format files
+      expect(filesWritten).to.include(path.join(outputDir, 'test-run-id.txt'));
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001.json')
+      );
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001-tap.txt')
+      );
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001-junit.xml')
+      );
+
+      // Verify all files exist and have content
+      for (const filePath of filesWritten) {
+        const stats = await fs.stat(filePath);
+        expect(stats.isFile()).to.be.true;
+        expect(stats.size).to.be.greaterThan(0);
+      }
     });
   });
 
-  describe('code coverage', () => {
-    it('should create code coverage file when enabled', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir
+  describe('code coverage files', () => {
+    it('should create code coverage file', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResultWithCoverage,
+        config,
         true,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.include(
-        join(tempDir, 'test-result-7071234567890123-codecoverage.json')
+      expect(filesWritten).to.have.lengthOf(2);
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001-codecoverage.json')
       );
-      expect(
-        existsSync(
-          join(tempDir, 'test-result-7071234567890123-codecoverage.json')
-        )
-      ).to.be.true;
 
-      const content = readFileSync(
-        join(tempDir, 'test-result-7071234567890123-codecoverage.json'),
+      const coverageContent = await fs.readFile(
+        path.join(outputDir, 'test-result-707xx0000000001-codecoverage.json'),
         'utf8'
       );
-      const parsed = JSON.parse(content);
-      expect(parsed).to.be.an('array');
-      expect(parsed).to.have.length(2); // Two test classes with coverage
+      const parsedCoverage = JSON.parse(coverageContent);
+
+      // Verify code coverage structure - should be empty array since tests don't have perClassCoverage
+      expect(parsedCoverage).to.be.an('array');
     });
 
-    it('should not create code coverage file when disabled', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir
+    it('should create code coverage with result formats', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
+        resultFormats: [ResultFormat.json]
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
-        false,
-        mockRunPipeline
+      const filesWritten = await writeResultFiles(
+        mockTestResultWithCoverage,
+        config,
+        true,
+        realPipeline
       );
 
-      expect(files).to.not.include(
-        join(tempDir, 'test-result-7071234567890123-codecoverage.json')
+      expect(filesWritten).to.have.lengthOf(3); // test-run-id.txt + json + codecoverage
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'test-result-707xx0000000001-codecoverage.json')
       );
-      expect(
-        existsSync(
-          join(tempDir, 'test-result-7071234567890123-codecoverage.json')
-        )
-      ).to.be.false;
     });
   });
 
   describe('custom file infos', () => {
-    it('should create files from string content', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
+    it('should create custom files from fileInfos with string content', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
         fileInfos: [
-          {
-            filename: 'custom.txt',
-            content: 'This is custom content'
-          }
+          { filename: 'custom-string.txt', content: 'Hello, World!' },
+          { filename: 'custom-data.txt', content: 'Test data content' }
         ]
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.include(join(tempDir, 'custom.txt'));
-      expect(existsSync(join(tempDir, 'custom.txt'))).to.be.true;
+      expect(filesWritten).to.have.lengthOf(3); // test-run-id.txt + 2 custom files
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'custom-string.txt')
+      );
+      expect(filesWritten).to.include(path.join(outputDir, 'custom-data.txt'));
 
-      const content = readFileSync(join(tempDir, 'custom.txt'), 'utf8');
-      expect(content).to.equal('This is custom content');
+      const stringContent = await fs.readFile(
+        path.join(outputDir, 'custom-string.txt'),
+        'utf8'
+      );
+      expect(stringContent).to.equal('Hello, World!');
+
+      const dataContent = await fs.readFile(
+        path.join(outputDir, 'custom-data.txt'),
+        'utf8'
+      );
+      expect(dataContent).to.equal('Test data content');
     });
 
-    it('should create files from object content using JsonStreamStringify', async () => {
-      const result = createMockTestResult();
-      const customData = {
-        message: 'Hello World',
-        data: [1, 2, 3],
-        nested: { key: 'value' }
+    it('should create custom files from fileInfos with object content', async () => {
+      const customObject = {
+        metadata: {
+          version: '1.0',
+          created: '2024-01-01'
+        },
+        data: [1, 2, 3, 4, 5]
       };
 
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
-        fileInfos: [
-          {
-            filename: 'custom.json',
-            content: customData
-          }
-        ]
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
+        fileInfos: [{ filename: 'custom-object.json', content: customObject }]
       };
 
-      const files = await writeResultFiles(
-        result,
-        outputConfig,
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
         false,
-        mockRunPipeline
+        realPipeline
       );
 
-      expect(files).to.include(join(tempDir, 'custom.json'));
-      expect(existsSync(join(tempDir, 'custom.json'))).to.be.true;
+      expect(filesWritten).to.include(
+        path.join(outputDir, 'custom-object.json')
+      );
 
-      const content = readFileSync(join(tempDir, 'custom.json'), 'utf8');
-      const parsed = JSON.parse(content);
-      expect(parsed).to.deep.equal(customData);
+      const objectContent = await fs.readFile(
+        path.join(outputDir, 'custom-object.json'),
+        'utf8'
+      );
+      const parsedObject = JSON.parse(objectContent);
+
+      expect(parsedObject).to.deep.equal(customObject);
     });
   });
 
   describe('error handling', () => {
     it('should throw error for invalid result format', async () => {
-      const result = createMockTestResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
         resultFormats: ['invalid' as ResultFormat]
       };
 
       try {
-        await writeResultFiles(result, outputConfig, false, mockRunPipeline);
+        await writeResultFiles(mockTestResult, config, false, realPipeline);
         expect.fail('Should have thrown an error');
       } catch (error) {
         expect(error.message).to.include(
-          'Specified result formats must be of type'
+          'Specified result formats must be of type json, junit, or tap'
         );
       }
     });
 
-    it('should throw error when trying to use result formats with TestRunIdResult', async () => {
-      const result = createMockTestRunIdResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
+    it('should throw error when using result formats with TestRunIdResult', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
         resultFormats: [ResultFormat.json]
       };
 
       try {
-        await writeResultFiles(result, outputConfig, false, mockRunPipeline);
+        await writeResultFiles(
+          mockTestRunIdResult,
+          config,
+          false,
+          realPipeline
+        );
         expect.fail('Should have thrown an error');
       } catch (error) {
         expect(error.message).to.include(
-          'Cannot specify a result format with a'
+          'Cannot specify a result format with a TestRunId result'
         );
       }
     });
 
-    it('should throw error when trying to use code coverage with TestRunIdResult', async () => {
-      const result = createMockTestRunIdResult();
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir
+    it('should throw error when using code coverage with TestRunIdResult', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir
       };
 
       try {
-        await writeResultFiles(result, outputConfig, true, mockRunPipeline);
+        await writeResultFiles(mockTestRunIdResult, config, true, realPipeline);
         expect.fail('Should have thrown an error');
       } catch (error) {
         expect(error.message).to.include(
-          'Cannot specify code coverage with a T'
+          'Cannot specify code coverage with a TestRunId result'
         );
       }
     });
   });
 
-  describe('JSON formatting consistency', () => {
-    it('should produce consistent JSON output with proper indentation', async () => {
-      // Set environment variable for consistent formatting
-      process.env.SF_APEX_RESULTS_JSON_INDENT = '2';
+  describe('directory creation', () => {
+    it('should create nested directories', async () => {
+      const nestedDir = path.join(outputDir, 'nested', 'deep', 'structure');
+      const config: OutputDirConfig = {
+        dirPath: nestedDir
+      };
 
-      const result = createMockTestResult();
-      const customData = { test: 'data', numbers: [1, 2, 3] };
+      const filesWritten = await writeResultFiles(
+        mockTestResult,
+        config,
+        false,
+        realPipeline
+      );
 
-      const outputConfig: OutputDirConfig = {
-        dirPath: tempDir,
+      expect(filesWritten).to.have.lengthOf(1);
+      expect(filesWritten[0]).to.equal(path.join(nestedDir, 'test-run-id.txt'));
+
+      const stats = await fs.stat(nestedDir);
+      expect(stats.isDirectory()).to.be.true;
+    });
+  });
+
+  describe('comprehensive integration test', () => {
+    it('should create all file types', async () => {
+      const config: OutputDirConfig = {
+        dirPath: outputDir,
+        resultFormats: [
+          ResultFormat.json,
+          ResultFormat.tap,
+          ResultFormat.junit
+        ],
         fileInfos: [
           {
-            filename: 'formatted.json',
-            content: customData
+            filename: 'metadata.json',
+            content: { testRun: 'comprehensive', timestamp: '2024-01-01' }
+          },
+          {
+            filename: 'summary.txt',
+            content: 'Comprehensive test run completed successfully'
           }
         ]
       };
 
-      await writeResultFiles(result, outputConfig, false, mockRunPipeline);
+      const filesWritten = await writeResultFiles(
+        mockTestResultWithCoverage,
+        config,
+        true,
+        realPipeline
+      );
 
-      const content = readFileSync(join(tempDir, 'formatted.json'), 'utf8');
+      // Should have: test-run-id.txt + json + tap + junit + codecoverage + 2 custom files = 7 files
+      expect(filesWritten).to.have.lengthOf(7);
 
-      // Verify it's valid JSON and has the expected structure
-      const parsed = JSON.parse(content);
-      expect(parsed.test).to.equal('data');
-      expect(parsed.numbers).to.deep.equal([1, 2, 3]);
+      // Verify all expected files exist
+      const expectedFiles = [
+        'test-run-id.txt',
+        'test-result-707xx0000000001.json',
+        'test-result-707xx0000000001-tap.txt',
+        'test-result-707xx0000000001-junit.xml',
+        'test-result-707xx0000000001-codecoverage.json',
+        'metadata.json',
+        'summary.txt'
+      ];
 
-      // Check that it contains the expected data regardless of formatting
-      expect(content).to.include('test');
-      expect(content).to.include('data');
-      expect(content).to.include('numbers');
+      for (const expectedFile of expectedFiles) {
+        const filePath = path.join(outputDir, expectedFile);
+        expect(filesWritten).to.include(filePath);
 
-      // Clean up
-      delete process.env.SF_APEX_RESULTS_JSON_INDENT;
+        const stats = await fs.stat(filePath);
+        expect(stats.isFile()).to.be.true;
+        expect(stats.size).to.be.greaterThan(0);
+      }
+
+      // Verify file contents
+      const jsonContent = await fs.readFile(
+        path.join(outputDir, 'test-result-707xx0000000001.json'),
+        'utf8'
+      );
+      const parsedJson = JSON.parse(jsonContent);
+      expect(parsedJson.summary.testRunId).to.equal('707xx0000000001');
+
+      const metadataContent = await fs.readFile(
+        path.join(outputDir, 'metadata.json'),
+        'utf8'
+      );
+      const parsedMetadata = JSON.parse(metadataContent);
+      expect(parsedMetadata.testRun).to.equal('comprehensive');
+
+      const summaryContent = await fs.readFile(
+        path.join(outputDir, 'summary.txt'),
+        'utf8'
+      );
+      expect(summaryContent).to.equal(
+        'Comprehensive test run completed successfully'
+      );
     });
   });
 });

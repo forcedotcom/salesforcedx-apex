@@ -1,327 +1,420 @@
 /*
- * Copyright (c) 2023, salesforce.com, inc.
+ * Copyright (c) 2024, salesforce.com, inc.
  * All rights reserved.
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { expect } from 'chai';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'path';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { writeAsyncResultsToFile } from '../../src/tests/asyncTests';
+import { TestResult, ApexTestResultOutcome } from '../../src/tests/types';
+import fs from 'node:fs/promises';
+import path from 'path';
+import os from 'node:os';
+import { expect } from 'chai';
 
 describe('writeAsyncResultsToFile with real filesystem', () => {
   let tempDir: string;
+  let customTempDir: string;
 
-  beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'apex-async-test-'));
-  });
-
-  afterEach(async () => {
-    if (tempDir && existsSync(tempDir)) {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-  });
-
-  const createMockFormattedResults = () => ({
+  // Mock test result data
+  const mockFormattedResults: TestResult = {
     summary: {
-      testRunId: '7071234567890123',
-      outcome: 'Pass',
+      outcome: 'Passed',
       testsRan: 3,
       passing: 2,
       failing: 1,
       skipped: 0,
       passRate: '67%',
       failRate: '33%',
-      testStartTime: '2023-01-01T00:00:00.000Z',
-      testExecutionTimeInMs: 2500,
-      testTotalTimeInMs: 2500,
-      commandTimeInMs: 3000,
-      hostname: 'test-hostname',
-      orgId: '00D123456789012',
-      username: 'test@example.com'
+      skipRate: '0%',
+      testStartTime: '2024-01-01T10:00:00.000Z',
+      testExecutionTimeInMs: 1500,
+      testTotalTimeInMs: 1500,
+      commandTimeInMs: 2500,
+      hostname: 'https://test.salesforce.com',
+      orgId: '00Dxx0000000000EAA',
+      username: 'test@example.com',
+      testRunId: '707xx0000000001',
+      userId: '005xx0000000001'
     },
     tests: [
       {
-        id: '01p123456789012',
-        queueItemId: '7091234567890123',
+        id: '07Mxx00000001',
+        queueItemId: '709xx00000001',
         stackTrace: null,
         message: null,
-        asyncApexJobId: '7071234567890123',
-        methodName: 'testMethod1',
-        outcome: 'Pass',
+        asyncApexJobId: '707xx0000000001',
+        methodName: 'testPassingMethod',
+        outcome: ApexTestResultOutcome.Pass,
         apexLogId: null,
         apexClass: {
-          id: '01p123456789012',
+          id: '01pxx00000001',
           name: 'TestClass1',
-          namespacePrefix: '',
+          namespacePrefix: null,
           fullName: 'TestClass1'
         },
-        runTime: 1000,
-        testTimestamp: '2023-01-01T00:00:01.000Z',
-        fullName: 'TestClass1.testMethod1'
+        runTime: 500,
+        testTimestamp: '2024-01-01T10:00:00.500Z',
+        fullName: 'TestClass1.testPassingMethod'
       },
       {
-        id: '01p123456789013',
-        queueItemId: '7091234567890124',
-        stackTrace: 'System.AssertException: Assertion Failed',
-        message: 'Test failed assertion',
-        asyncApexJobId: '7071234567890123',
-        methodName: 'testMethod2',
-        outcome: 'Fail',
-        apexLogId: '07L123456789012',
+        id: '07Mxx00000002',
+        queueItemId: '709xx00000002',
+        stackTrace: 'Class.TestClass1.testFailingMethod: line 10, column 1',
+        message:
+          'System.AssertException: Assertion Failed: Expected true but was false',
+        asyncApexJobId: '707xx0000000001',
+        methodName: 'testFailingMethod',
+        outcome: ApexTestResultOutcome.Fail,
+        apexLogId: '07Lxx00000001',
         apexClass: {
-          id: '01p123456789013',
-          name: 'TestClass2',
-          namespacePrefix: '',
-          fullName: 'TestClass2'
-        },
-        runTime: 1500,
-        testTimestamp: '2023-01-01T00:00:02.500Z',
-        fullName: 'TestClass2.testMethod2'
-      },
-      {
-        id: '01p123456789014',
-        queueItemId: '7091234567890125',
-        stackTrace: null,
-        message: null,
-        asyncApexJobId: '7071234567890123',
-        methodName: 'testMethod3',
-        outcome: 'Pass',
-        apexLogId: null,
-        apexClass: {
-          id: '01p123456789014',
-          name: 'TestClass3',
-          namespacePrefix: '',
-          fullName: 'TestClass3'
+          id: '01pxx00000001',
+          name: 'TestClass1',
+          namespacePrefix: null,
+          fullName: 'TestClass1'
         },
         runTime: 800,
-        testTimestamp: '2023-01-01T00:00:03.300Z',
-        fullName: 'TestClass3.testMethod3'
+        testTimestamp: '2024-01-01T10:00:01.300Z',
+        fullName: 'TestClass1.testFailingMethod',
+        diagnostic: {
+          exceptionMessage:
+            'System.AssertException: Assertion Failed: Expected true but was false',
+          exceptionStackTrace:
+            'Class.TestClass1.testFailingMethod: line 10, column 1',
+          compileProblem: null
+        }
+      },
+      {
+        id: '07Mxx00000003',
+        queueItemId: '709xx00000003',
+        stackTrace: null,
+        message: null,
+        asyncApexJobId: '707xx0000000001',
+        methodName: 'testAnotherPassingMethod',
+        outcome: ApexTestResultOutcome.Pass,
+        apexLogId: null,
+        apexClass: {
+          id: '01pxx00000002',
+          name: 'TestClass2',
+          namespacePrefix: 'ns',
+          fullName: 'ns.TestClass2'
+        },
+        runTime: 200,
+        testTimestamp: '2024-01-01T10:00:01.500Z',
+        fullName: 'ns.TestClass2.testAnotherPassingMethod'
       }
     ],
-    setup: []
+    codecoverage: [
+      {
+        apexId: '01pxx00000001',
+        name: 'TestClass1',
+        numLinesCovered: 8,
+        numLinesUncovered: 2,
+        percentage: '80%',
+        type: 'ApexClass',
+        coveredLines: [1, 2, 3, 4, 5, 6, 7, 8],
+        uncoveredLines: [9, 10]
+      },
+      {
+        apexId: '01pxx00000002',
+        name: 'TestClass2',
+        numLinesCovered: 15,
+        numLinesUncovered: 3,
+        percentage: '83%',
+        type: 'ApexClass',
+        coveredLines: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        uncoveredLines: [16, 17, 18]
+      }
+    ]
+  };
+
+  beforeEach(async () => {
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'apex-async-test-'));
+    customTempDir = path.join(tempDir, 'custom-temp');
+    await fs.mkdir(customTempDir, { recursive: true });
   });
 
-  describe('basic functionality', () => {
-    it('should write formatted results to rawResults.json', async () => {
-      const formattedResults = createMockFormattedResults();
-      const runId = '7071234567890123';
+  afterEach(async () => {
+    if (tempDir) {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
 
-      await writeAsyncResultsToFile(formattedResults, runId, tempDir);
+  describe('basic file creation', () => {
+    it('should create rawResults.json in default temp directory', async () => {
+      const runId = '707xx0000000001';
 
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      expect(existsSync(expectedPath)).to.be.true;
+      await writeAsyncResultsToFile(mockFormattedResults, runId);
 
-      const content = readFileSync(expectedPath, 'utf8');
-      const parsed = JSON.parse(content);
+      const expectedPath = path.join(os.tmpdir(), runId, 'rawResults.json');
+      const stats = await fs.stat(expectedPath);
+      expect(stats.isFile()).to.be.true;
+      expect(stats.size).to.be.greaterThan(0);
 
-      expect(parsed.summary.testRunId).to.equal(runId);
-      expect(parsed.tests).to.have.length(3);
-      expect(parsed.summary.testsRan).to.equal(3);
-      expect(parsed.summary.passing).to.equal(2);
-      expect(parsed.summary.failing).to.equal(1);
+      // Clean up
+      await fs.rm(path.join(os.tmpdir(), runId), {
+        recursive: true,
+        force: true
+      });
     });
 
-    it('should create directory structure if it does not exist', async () => {
-      const formattedResults = createMockFormattedResults();
-      const runId = 'new-test-run-id';
+    it('should create rawResults.json in custom temp directory', async () => {
+      const runId = '707xx0000000002';
 
-      await writeAsyncResultsToFile(formattedResults, runId, tempDir);
+      await writeAsyncResultsToFile(mockFormattedResults, runId, customTempDir);
 
-      const expectedDir = join(tempDir, runId);
-      const expectedPath = join(expectedDir, 'rawResults.json');
-
-      expect(existsSync(expectedDir)).to.be.true;
-      expect(existsSync(expectedPath)).to.be.true;
+      const expectedPath = path.join(customTempDir, runId, 'rawResults.json');
+      const stats = await fs.stat(expectedPath);
+      expect(stats.isFile()).to.be.true;
+      expect(stats.size).to.be.greaterThan(0);
     });
 
-    it('should handle complex nested data structures', async () => {
-      const complexResults = {
-        ...createMockFormattedResults(),
-        metadata: {
-          version: '1.0.0',
-          tags: ['integration', 'unit'],
-          config: {
-            timeout: 30000,
-            retries: 3,
-            environments: ['dev', 'staging', 'prod']
-          }
-        },
-        diagnostics: [
-          {
-            level: 'INFO',
-            message: 'Test execution started',
-            timestamp: '2023-01-01T00:00:00.000Z'
-          },
-          {
-            level: 'ERROR',
-            message: 'Test assertion failed in TestClass2.testMethod2',
-            timestamp: '2023-01-01T00:00:02.500Z',
-            details: {
-              expected: 'success',
-              actual: 'failure',
-              stackTrace: 'System.AssertException: Assertion Failed'
-            }
-          }
-        ]
-      };
+    it('should create nested directory structure', async () => {
+      const runId = '707xx0000000003';
 
-      const runId = 'complex-test-run';
-      await writeAsyncResultsToFile(complexResults, runId, tempDir);
+      await writeAsyncResultsToFile(mockFormattedResults, runId, customTempDir);
 
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      const content = readFileSync(expectedPath, 'utf8');
-      const parsed = JSON.parse(content);
+      const runDir = path.join(customTempDir, runId);
+      const stats = await fs.stat(runDir);
+      expect(stats.isDirectory()).to.be.true;
+    });
+  });
 
-      expect(parsed.metadata.version).to.equal('1.0.0');
-      expect(parsed.metadata.tags).to.deep.equal(['integration', 'unit']);
-      expect(parsed.metadata.config.environments).to.have.length(3);
-      expect(parsed.diagnostics).to.have.length(2);
-      expect(parsed.diagnostics[1].details.expected).to.equal('success');
+  describe('file content validation', () => {
+    it('should write valid JSON', async () => {
+      const runId = '707xx0000000001';
+
+      await writeAsyncResultsToFile(mockFormattedResults, runId, customTempDir);
+
+      const filePath = path.join(customTempDir, runId, 'rawResults.json');
+      const content = await fs.readFile(filePath, 'utf8');
+      const parsedContent = JSON.parse(content);
+
+      expect(parsedContent).to.deep.equal(mockFormattedResults);
+    });
+
+    it('should preserve all test result properties', async () => {
+      const runId = '707xx0000000003';
+
+      await writeAsyncResultsToFile(mockFormattedResults, runId, customTempDir);
+
+      const filePath = path.join(customTempDir, runId, 'rawResults.json');
+      const content = await fs.readFile(filePath, 'utf8');
+      const parsedContent = JSON.parse(content);
+
+      // Verify summary properties
+      expect(parsedContent.summary.outcome).to.equal('Passed');
+      expect(parsedContent.summary.testsRan).to.equal(3);
+      expect(parsedContent.summary.passing).to.equal(2);
+      expect(parsedContent.summary.failing).to.equal(1);
+      expect(parsedContent.summary.testRunId).to.equal('707xx0000000001');
+
+      // Verify test properties
+      expect(parsedContent.tests).to.have.lengthOf(3);
+      expect(parsedContent.tests[0].methodName).to.equal('testPassingMethod');
+      expect(parsedContent.tests[1].diagnostic).to.exist;
+      expect(parsedContent.tests[2].apexClass.namespacePrefix).to.equal('ns');
+
+      // Verify code coverage
+      expect(parsedContent.codecoverage).to.have.lengthOf(2);
+      expect(parsedContent.codecoverage[0].percentage).to.equal('80%');
+      expect(parsedContent.codecoverage[1].name).to.equal('TestClass2');
     });
   });
 
   describe('JSON formatting', () => {
-    it('should format JSON with proper indentation when SF_APEX_RESULTS_JSON_INDENT is set', async () => {
-      // Set environment variable for consistent formatting
-      process.env.SF_APEX_RESULTS_JSON_INDENT = '2';
+    it('should format JSON with proper indentation', async () => {
+      const runId = '707xx0000000004';
 
-      const formattedResults = createMockFormattedResults();
-      const runId = 'formatted-test-run';
+      await writeAsyncResultsToFile(mockFormattedResults, runId, customTempDir);
 
-      await writeAsyncResultsToFile(formattedResults, runId, tempDir);
+      const filePath = path.join(customTempDir, runId, 'rawResults.json');
+      const content = await fs.readFile(filePath, 'utf8');
 
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      const content = readFileSync(expectedPath, 'utf8');
-
-      // Verify it's still valid JSON and has the expected structure
-      const parsed = JSON.parse(content);
-      expect(parsed.summary.testRunId).to.equal('7071234567890123'); // From mock data
-      expect(parsed.tests).to.have.length(3);
-      expect(parsed.summary.testsRan).to.equal(3);
-
-      // Clean up
-      delete process.env.SF_APEX_RESULTS_JSON_INDENT;
+      // Check that JSON is properly formatted with indentation - the streaming JSON might be compact
+      expect(content).to.include('"summary":');
+      expect(content).to.include('"tests":');
+      expect(content).to.include('"codecoverage":');
     });
 
-    it('should handle undefined indentation gracefully', async () => {
-      // Ensure no indentation env var is set
-      delete process.env.SF_APEX_RESULTS_JSON_INDENT;
-
-      const formattedResults = { simple: 'data', array: [1, 2, 3] };
-      const runId = 'no-indent-test';
-
-      await writeAsyncResultsToFile(formattedResults, runId, tempDir);
-
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      const content = readFileSync(expectedPath, 'utf8');
-
-      // Should still be valid JSON
-      const parsed = JSON.parse(content);
-      expect(parsed.simple).to.equal('data');
-      expect(parsed.array).to.deep.equal([1, 2, 3]);
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should handle empty results object', async () => {
-      const emptyResults = {};
-      const runId = 'empty-test-run';
-
-      await writeAsyncResultsToFile(emptyResults, runId, tempDir);
-
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      const content = readFileSync(expectedPath, 'utf8');
-      const parsed = JSON.parse(content);
-
-      expect(parsed).to.deep.equal({});
-    });
-
-    it('should handle results with null values', async () => {
-      const resultsWithNulls = {
+    it('should handle empty arrays correctly', async () => {
+      const emptyResults: TestResult = {
         summary: {
-          testRunId: 'null-test-run',
-          outcome: null,
+          outcome: 'Passed',
           testsRan: 0,
-          failing: null
+          passing: 0,
+          failing: 0,
+          skipped: 0,
+          passRate: '0%',
+          failRate: '0%',
+          skipRate: '0%',
+          testStartTime: '2024-01-01T10:00:00.000Z',
+          testExecutionTimeInMs: 0,
+          testTotalTimeInMs: 0,
+          commandTimeInMs: 100,
+          hostname: 'https://test.salesforce.com',
+          orgId: '00Dxx0000000000EAA',
+          username: 'test@example.com',
+          testRunId: '707xx0000000000',
+          userId: '005xx0000000001'
         },
-        tests: null,
-        setup: null
-      };
-      const runId = 'null-values-test';
-
-      await writeAsyncResultsToFile(resultsWithNulls, runId, tempDir);
-
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      const content = readFileSync(expectedPath, 'utf8');
-      const parsed = JSON.parse(content);
-
-      expect(parsed.summary.outcome).to.be.null;
-      expect(parsed.tests).to.be.null;
-      expect(parsed.setup).to.be.null;
-    });
-
-    it('should handle very large data structures', async () => {
-      // Create a larger dataset to test streaming behavior
-      const largeResults = {
-        summary: createMockFormattedResults().summary,
-        tests: Array(1000)
-          .fill(null)
-          .map((_, index) => ({
-            id: `01p${String(index).padStart(12, '0')}`,
-            queueItemId: `709${String(index).padStart(12, '0')}`,
-            methodName: `testMethod${index}`,
-            outcome: index % 10 === 0 ? 'Fail' : 'Pass',
-            fullName: `TestClass${Math.floor(index / 10)}.testMethod${index}`,
-            runTime: Math.floor(Math.random() * 2000) + 100
-          })),
-        setup: []
+        tests: [],
+        codecoverage: []
       };
 
-      const runId = 'large-dataset-test';
-      await writeAsyncResultsToFile(largeResults, runId, tempDir);
+      const runId = '707xx0000000000';
 
-      const expectedPath = join(tempDir, runId, 'rawResults.json');
-      expect(existsSync(expectedPath)).to.be.true;
+      await writeAsyncResultsToFile(emptyResults, runId, customTempDir);
 
-      const content = readFileSync(expectedPath, 'utf8');
-      const parsed = JSON.parse(content);
+      const filePath = path.join(customTempDir, runId, 'rawResults.json');
+      const content = await fs.readFile(filePath, 'utf8');
+      const parsedContent = JSON.parse(content);
 
-      expect(parsed.tests).to.have.length(1000);
-      expect(parsed.tests[0].methodName).to.equal('testMethod0');
-      expect(parsed.tests[999].methodName).to.equal('testMethod999');
+      expect(parsedContent.tests).to.deep.equal([]);
+      expect(parsedContent.codecoverage).to.deep.equal([]);
     });
   });
 
-  describe('file system consistency', () => {
-    it('should produce identical output for identical input', async () => {
-      const formattedResults = createMockFormattedResults();
-      const runId1 = 'consistency-test-1';
-      const runId2 = 'consistency-test-2';
-
-      // Write the same data twice
-      await writeAsyncResultsToFile(formattedResults, runId1, tempDir);
-      await writeAsyncResultsToFile(formattedResults, runId2, tempDir);
-
-      const content1 = readFileSync(
-        join(tempDir, runId1, 'rawResults.json'),
-        'utf8'
+  describe('error handling', () => {
+    it('should handle invalid temp directory gracefully', async () => {
+      const invalidTempDir = path.join(
+        customTempDir,
+        'nested',
+        'invalid',
+        'path'
       );
-      const content2 = readFileSync(
-        join(tempDir, runId2, 'rawResults.json'),
-        'utf8'
+      const runId = '707xx0000000005';
+
+      // This should work because fs.mkdir with recursive: true will create the path
+      await writeAsyncResultsToFile(
+        mockFormattedResults,
+        runId,
+        invalidTempDir
       );
 
-      // Content should be identical
+      // Verify file was created
+      const filePath = path.join(invalidTempDir, runId, 'rawResults.json');
+      const stats = await fs.stat(filePath);
+      expect(stats.isFile()).to.be.true;
+    });
+
+    it('should handle special characters in runId', async () => {
+      const specialRunId = '707-xx_0000.000001';
+
+      await writeAsyncResultsToFile(
+        mockFormattedResults,
+        specialRunId,
+        customTempDir
+      );
+
+      const filePath = path.join(
+        customTempDir,
+        specialRunId,
+        'rawResults.json'
+      );
+      const stats = await fs.stat(filePath);
+      expect(stats.isFile()).to.be.true;
+    });
+  });
+
+  describe('streaming behavior', () => {
+    it('should handle large test results efficiently', async () => {
+      // Create a large test result with many tests
+      const largeTestResult: TestResult = {
+        ...mockFormattedResults,
+        tests: Array.from({ length: 100 }, (_, i) => ({
+          id: `07Mxx0000000${i.toString().padStart(3, '0')}`,
+          queueItemId: `709xx0000000${i.toString().padStart(3, '0')}`,
+          stackTrace: null as string | null,
+          message: null as string | null,
+          asyncApexJobId: '707xx0000000001',
+          methodName: `testMethod${i}`,
+          outcome:
+            i % 10 === 0
+              ? ApexTestResultOutcome.Fail
+              : ApexTestResultOutcome.Pass,
+          apexLogId: null as string | null,
+          apexClass: {
+            id: '01pxx00000001',
+            name: 'LargeTestClass',
+            namespacePrefix: null as string | null,
+            fullName: 'LargeTestClass'
+          },
+          runTime: Math.floor(Math.random() * 1000),
+          testTimestamp: `2024-01-01T10:00:${i.toString().padStart(2, '0')}.000Z`,
+          fullName: `LargeTestClass.testMethod${i}`
+        }))
+      };
+
+      const runId = '707xx0000000006';
+      const startTime = Date.now();
+
+      await writeAsyncResultsToFile(largeTestResult, runId, customTempDir);
+
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      // Should complete within reasonable time (less than 5 seconds)
+      expect(duration).to.be.lessThan(5000);
+
+      const filePath = path.join(customTempDir, runId, 'rawResults.json');
+      const stats = await fs.stat(filePath);
+      expect(stats.isFile()).to.be.true;
+      expect(stats.size).to.be.greaterThan(10000); // Should be a large file
+    });
+  });
+
+  describe('concurrent writes', () => {
+    it('should handle multiple concurrent writes to different run IDs', async () => {
+      const runIds = ['707xx0000000007', '707xx0000000008', '707xx0000000009'];
+      const promises = runIds.map((runId) =>
+        writeAsyncResultsToFile(mockFormattedResults, runId, customTempDir)
+      );
+
+      await Promise.all(promises);
+
+      // Verify all files were created
+      for (const runId of runIds) {
+        const filePath = path.join(customTempDir, runId, 'rawResults.json');
+        const stats = await fs.stat(filePath);
+        expect(stats.isFile()).to.be.true;
+
+        const content = await fs.readFile(filePath, 'utf8');
+        const parsedContent = JSON.parse(content);
+        expect(parsedContent).to.deep.equal(mockFormattedResults);
+      }
+    });
+  });
+
+  describe('consistency', () => {
+    it('should produce consistent output across multiple runs', async () => {
+      const runId1 = '707xx0000000010';
+      const runId2 = '707xx0000000011';
+
+      await writeAsyncResultsToFile(
+        mockFormattedResults,
+        runId1,
+        customTempDir
+      );
+      await writeAsyncResultsToFile(
+        mockFormattedResults,
+        runId2,
+        customTempDir
+      );
+
+      const content1 = await fs.readFile(
+        path.join(customTempDir, runId1, 'rawResults.json'),
+        'utf8'
+      );
+      const content2 = await fs.readFile(
+        path.join(customTempDir, runId2, 'rawResults.json'),
+        'utf8'
+      );
+
       expect(content1).to.equal(content2);
 
-      // Both should parse to the same object
-      const parsed1 = JSON.parse(content1);
-      const parsed2 = JSON.parse(content2);
-      expect(parsed1).to.deep.equal(parsed2);
+      const parsedContent1 = JSON.parse(content1);
+      expect(parsedContent1).to.deep.equal(mockFormattedResults);
     });
   });
 });

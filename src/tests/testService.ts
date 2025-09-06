@@ -386,103 +386,12 @@ export class TestService {
     HeapMonitor.getInstance().startMonitoring();
     HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
     try {
-      const filesWritten: string[] = [];
-      const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-
-      if (
-        resultFormats &&
-        !resultFormats.every((format) => format in ResultFormat)
-      ) {
-        throw new Error(nls.localize('resultFormatErr'));
-      }
-
-      await mkdir(dirPath, { recursive: true });
-
-      const testRunId = isTestResult(result)
-        ? result.summary.testRunId
-        : result.testRunId;
-
-      try {
-        await writeFile(join(dirPath, 'test-run-id.txt'), testRunId);
-        filesWritten.push(join(dirPath, 'test-run-id.txt'));
-      } catch (err) {
-        console.error(`Error writing file: ${err}`);
-      }
-
-      if (resultFormats) {
-        if (!isTestResult(result)) {
-          throw new Error(nls.localize('runIdFormatErr'));
-        }
-        for (const format of resultFormats) {
-          let filePath;
-          let readable;
-          switch (format) {
-            case ResultFormat.json:
-              filePath = join(
-                dirPath,
-                `test-result-${testRunId || 'default'}.json`
-              );
-              readable = TestResultStringifyStream.fromTestResult(result, {
-                bufferSize: getBufferSize()
-              });
-              break;
-            case ResultFormat.tap:
-              filePath = join(dirPath, `test-result-${testRunId}-tap.txt`);
-              readable = new TapFormatTransformer(result, undefined, {
-                bufferSize: getBufferSize()
-              });
-              break;
-            case ResultFormat.junit:
-              filePath = join(
-                dirPath,
-                `test-result-${testRunId || 'default'}-junit.xml`
-              );
-              readable = new JUnitFormatTransformer(result, {
-                bufferSize: getBufferSize()
-              });
-              break;
-          }
-          if (filePath && readable) {
-            filesWritten.push(await this.runPipeline(readable, filePath));
-          }
-        }
-      }
-
-      if (codeCoverage) {
-        if (!isTestResult(result)) {
-          throw new Error(nls.localize('covIdFormatErr'));
-        }
-        const filePath = join(
-          dirPath,
-          `test-result-${testRunId}-codecoverage.json`
-        );
-        const c = result.tests
-          .map((record) => record.perClassCoverage)
-          .filter((pcc) => pcc?.length);
-        filesWritten.push(
-          await this.runPipeline(
-            new JsonStreamStringify(c, null, getJsonIndent()),
-            filePath
-          )
-        );
-      }
-
-      if (fileInfos) {
-        for (const fileInfo of fileInfos) {
-          const filePath = join(dirPath, fileInfo.filename);
-          const readable =
-            typeof fileInfo.content === 'string'
-              ? Readable.from([fileInfo.content])
-              : new JsonStreamStringify(
-                  fileInfo.content,
-                  null,
-                  getJsonIndent()
-                );
-          filesWritten.push(await this.runPipeline(readable, filePath));
-        }
-      }
-
-      return filesWritten;
+      return await writeResultFiles(
+        result,
+        outputDirConfig,
+        codeCoverage,
+        this.runPipeline.bind(this)
+      );
     } finally {
       HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
       HeapMonitor.getInstance().stopMonitoring();

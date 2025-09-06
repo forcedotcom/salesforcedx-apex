@@ -256,18 +256,10 @@ export class AsyncTests {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
     try {
       if (this.logger.shouldLog(LoggerLevel.DEBUG)) {
-        const rawResultsPath = path.join(os.tmpdir(), runId, 'rawResults.json');
-        await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
-        const writeStream = createWriteStream(
-          path.join(os.tmpdir(), runId, 'rawResults.json')
+        await writeAsyncResultsToFile(formattedResults, runId);
+        this.logger.debug(
+          `Raw results written to: ${path.join(os.tmpdir(), runId, 'rawResults.json')}`
         );
-        this.logger.debug(`Raw results written to: ${writeStream.path}`);
-        const stringifyStream = new JsonStreamStringify(
-          formattedResults,
-          null,
-          getJsonIndent()
-        );
-        return await pipeline(stringifyStream, writeStream);
       }
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
