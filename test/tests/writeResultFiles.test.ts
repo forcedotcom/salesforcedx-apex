@@ -257,6 +257,43 @@ describe('writeResultFiles', () => {
     expect(parsedContent[0][0].apexClassOrTriggerName).to.equal('TestClass1');
   });
 
+  it('should create custom files when fileInfos is provided', async () => {
+    const outputConfig: OutputDirConfig = {
+      dirPath: tempDir,
+      fileInfos: [
+        {
+          filename: 'custom.txt',
+          content: 'Custom content'
+        },
+        {
+          filename: 'custom.json',
+          content: { key: 'value', number: 42 }
+        }
+      ]
+    };
+
+    const result = await writeResultFiles(
+      mockTestResult,
+      outputConfig,
+      false,
+      mockRunPipeline
+    );
+
+    const textFilePath = join(tempDir, 'custom.txt');
+    const jsonFilePath = join(tempDir, 'custom.json');
+
+    expect(result).to.include(textFilePath);
+    expect(result).to.include(jsonFilePath);
+
+    const textContent = await readFile(textFilePath, 'utf8');
+    expect(textContent).to.equal('Custom content');
+
+    const jsonContent = await readFile(jsonFilePath, 'utf8');
+    const parsedJson = JSON.parse(jsonContent);
+    expect(parsedJson.key).to.equal('value');
+    expect(parsedJson.number).to.equal(42);
+  });
+
   it('should handle TestRunIdResult type', async () => {
     const testRunIdResult: TestRunIdResult = {
       testRunId: 'run-id-456'
@@ -397,7 +434,17 @@ describe('writeResultFiles', () => {
 
     const outputConfig: OutputDirConfig = {
       dirPath: tempDir,
-      resultFormats: [ResultFormat.json, ResultFormat.tap, ResultFormat.junit]
+      resultFormats: [ResultFormat.json, ResultFormat.tap, ResultFormat.junit],
+      fileInfos: [
+        {
+          filename: 'custom.txt',
+          content: 'Custom content'
+        },
+        {
+          filename: 'metadata.json',
+          content: { timestamp: '2023-01-01', version: '1.0' }
+        }
+      ]
     };
 
     const result = await writeResultFiles(
@@ -407,8 +454,8 @@ describe('writeResultFiles', () => {
       mockRunPipeline
     );
 
-    // Should have: test-run-id.txt + 3 formats + 1 coverage = 5 files
-    expect(result).to.have.length(5);
+    // Should have: test-run-id.txt + 3 formats + 1 coverage + 2 custom files = 7 files
+    expect(result).to.have.length(7);
 
     // Verify all files exist
     for (const filePath of result) {
@@ -427,5 +474,7 @@ describe('writeResultFiles', () => {
     expect(result).to.include(
       join(tempDir, 'test-result-test-run-123-codecoverage.json')
     );
+    expect(result).to.include(join(tempDir, 'custom.txt'));
+    expect(result).to.include(join(tempDir, 'metadata.json'));
   });
 });

@@ -73,6 +73,7 @@ export enum ResultFormat {
 export type OutputDirConfig = {
   dirPath: string;
   resultFormats?: ResultFormat[];
+  fileInfos?: { filename: string; content: string | object }[];
 };
 
 /**

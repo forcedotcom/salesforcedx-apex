@@ -59,7 +59,7 @@ export const writeResultFiles = async (
   ) => Promise<string>
 ): Promise<string[]> => {
   const filesWritten: string[] = [];
-  const { dirPath, resultFormats } = outputDirConfig;
+  const { dirPath, resultFormats, fileInfos } = outputDirConfig;
 
   if (
     resultFormats &&
@@ -141,6 +141,21 @@ export const writeResultFiles = async (
         filePath
       )
     );
+  }
+
+  if (fileInfos) {
+    for (const fileInfo of fileInfos) {
+      const filePath = join(dirPath, fileInfo.filename);
+      const readable =
+        typeof fileInfo.content === 'string'
+          ? Readable.from([fileInfo.content])
+          : bfj.stringify(fileInfo.content, {
+              bufferLength: getBufferSize(),
+              iterables: 'ignore',
+              space: getJsonIndent()
+            });
+      filesWritten.push(await runPipeline(readable, filePath));
+    }
   }
 
   return filesWritten;

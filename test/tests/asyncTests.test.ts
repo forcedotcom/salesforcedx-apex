@@ -1774,7 +1774,7 @@ describe('Create Result Files', () => {
     sandboxStub1.restore();
   });
 
-  it('should only create test-run-id.txt if no result format is specified', async () => {
+  it('should only create test-run-id.txt if no result format nor fileInfos are specified', async () => {
     const config = {
       dirPath: 'path/to/directory'
     } as OutputDirConfig;
@@ -1904,6 +1904,22 @@ describe('Create Result Files', () => {
       testServiceSpy.calledWith(
         join(config.dirPath, `test-result-${testRunId}-codecoverage.json`)
       )
+    ).to.be.true;
+    expect(testServiceSpy.callCount).to.eql(1);
+  });
+
+  it('should create any files provided in fileInfos', async () => {
+    const config = {
+      dirPath: 'path/to/directory',
+      fileInfos: [
+        { filename: `test-result-myFile.json`, content: { summary: {} } }
+      ]
+    } as OutputDirConfig;
+    const testSrv = new TestService(mockConnection);
+    await testSrv.writeResultFiles(testResultData, config);
+
+    expect(
+      testServiceSpy.calledWith(join(config.dirPath, `test-result-myFile.json`))
     ).to.be.true;
     expect(testServiceSpy.callCount).to.eql(1);
   });
