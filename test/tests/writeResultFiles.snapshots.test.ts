@@ -12,6 +12,7 @@ import { createWriteStream, existsSync } from 'node:fs';
 import { tmpdir } from 'os';
 import { Readable } from 'stream';
 import { pipeline } from 'node:stream/promises';
+// @ts-ignore - no type definitions available
 import chaiJestSnapshot from 'chai-jest-snapshot';
 import {
   writeResultFiles,
@@ -22,6 +23,13 @@ import {
   CodeCoverageResult,
   PerClassCoverage
 } from '../../src';
+
+// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/no-unused-vars
+declare namespace Chai {
+  interface Assertion {
+    matchSnapshot(): Assertion;
+  }
+}
 
 // Configure chai to use jest snapshots
 chai.use(chaiJestSnapshot);
@@ -369,9 +377,9 @@ describe('writeResultFiles - Snapshot Tests', () => {
 
       if (fileName?.endsWith('.json')) {
         const parsedContent = JSON.parse(content);
-        expect(parsedContent).to.matchSnapshot(`${fileName} content`);
+        expect(parsedContent).to.matchSnapshot();
       } else {
-        expect(content).to.matchSnapshot(`${fileName} content`);
+        expect(content).to.matchSnapshot();
       }
     }
   });

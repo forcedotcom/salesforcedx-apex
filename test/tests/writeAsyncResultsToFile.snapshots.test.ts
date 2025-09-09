@@ -10,12 +10,20 @@ import { join } from 'path';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'os';
+// @ts-ignore - no type definitions available
 import chaiJestSnapshot from 'chai-jest-snapshot';
 import {
   writeAsyncResultsToFile,
   ApexTestResultOutcome,
   TestResult
 } from '../../src';
+
+// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/no-unused-vars
+declare namespace Chai {
+  interface Assertion {
+    matchSnapshot(): Assertion;
+  }
+}
 
 // Configure chai to use jest snapshots
 chai.use(chaiJestSnapshot);

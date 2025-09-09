@@ -19,14 +19,31 @@ try {
     cwd: path.resolve(__dirname, '..')
   });
 
-  // Copy snapshots from lib to source directory so they can be tracked by git
-  const rootDir = path.resolve(__dirname, '..');
-  execSync('mkdir -p test/tests/__snapshots__', { cwd: rootDir });
-  execSync('cp lib/test/tests/__snapshots__/*.snap test/tests/__snapshots__/', { cwd: rootDir });
-
   console.log('✅ Snapshots updated successfully!');
   console.log('📝 Review the updated snapshot files and commit them if the changes are expected.');
   console.log('📁 Snapshots are located in: test/tests/__snapshots__/');
+
+  // Copy snapshots from lib/ to test/tests/__snapshots__/ since lib/ is ignored by git
+  const fs = require('fs');
+  const libSnapshotDir = path.resolve(__dirname, '..', 'lib', 'test', 'tests', '__snapshots__');
+  const srcSnapshotDir = path.resolve(__dirname, '..', 'test', 'tests', '__snapshots__');
+
+  if (fs.existsSync(libSnapshotDir)) {
+    if (!fs.existsSync(srcSnapshotDir)) {
+      fs.mkdirSync(srcSnapshotDir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(libSnapshotDir);
+    for (const file of files) {
+      if (file.endsWith('.snap')) {
+        fs.copyFileSync(
+          path.join(libSnapshotDir, file),
+          path.join(srcSnapshotDir, file)
+        );
+        console.log(`📋 Copied snapshot: ${file}`);
+      }
+    }
+  }
 
 } catch (error) {
   console.error('❌ Failed to update snapshots:', error.message);
