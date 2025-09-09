@@ -5,46 +5,21 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import chai, { expect } from 'chai';
 import { join } from 'path';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'os';
-// @ts-ignore - no type definitions available
-import chaiJestSnapshot from 'chai-jest-snapshot';
+import matchSnapshot from 'mocha-snap';
 import {
   writeAsyncResultsToFile,
   ApexTestResultOutcome,
   TestResult
 } from '../../src';
 
-// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/no-unused-vars
-declare namespace Chai {
-  interface Assertion {
-    matchSnapshot(): Assertion;
-  }
-}
-
-// Configure chai to use jest snapshots
-chai.use(chaiJestSnapshot);
-
 describe('writeAsyncResultsToFile - Snapshot Tests', () => {
   let tempDir: string;
 
-  before(() => {
-    chaiJestSnapshot.resetSnapshotRegistry();
-  });
-
   beforeEach(async function () {
-    chaiJestSnapshot.configureUsingMochaContext(this);
-    // Configure snapshots to be saved in the source directory, not lib
-    chaiJestSnapshot.setFilename(
-      join(
-        __dirname,
-        '__snapshots__',
-        'writeAsyncResultsToFile.snapshots.test.ts.snap'
-      )
-    );
     tempDir = join(
       tmpdir(),
       `apex-async-snapshot-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -171,7 +146,7 @@ describe('writeAsyncResultsToFile - Snapshot Tests', () => {
     const parsedContent = JSON.parse(content);
 
     // Snapshot the complete async results structure
-    expect(parsedContent).to.matchSnapshot();
+    matchSnapshot(parsedContent);
 
     // Cleanup
     await rm(join(tmpdir(), runId), { recursive: true, force: true });
@@ -215,7 +190,7 @@ describe('writeAsyncResultsToFile - Snapshot Tests', () => {
     const parsedContent = JSON.parse(content);
 
     // Snapshot to ensure null values are handled consistently
-    expect(parsedContent).to.matchSnapshot();
+    matchSnapshot(parsedContent);
 
     // Cleanup
     await rm(join(tmpdir(), runId), { recursive: true, force: true });
@@ -246,7 +221,7 @@ describe('writeAsyncResultsToFile - Snapshot Tests', () => {
     const parsedContent = JSON.parse(content);
 
     // Snapshot to ensure complex data structures are handled consistently
-    expect(parsedContent).to.matchSnapshot();
+    matchSnapshot(parsedContent);
 
     // Cleanup
     await rm(join(tmpdir(), runId), { recursive: true, force: true });
@@ -285,7 +260,7 @@ describe('writeAsyncResultsToFile - Snapshot Tests', () => {
     const parsedContent = JSON.parse(content);
 
     // Snapshot to ensure empty results are handled consistently
-    expect(parsedContent).to.matchSnapshot();
+    matchSnapshot(parsedContent);
 
     // Cleanup
     await rm(join(tmpdir(), runId), { recursive: true, force: true });

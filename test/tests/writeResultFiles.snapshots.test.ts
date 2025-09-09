@@ -5,15 +5,13 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import chai, { expect } from 'chai';
 import { join } from 'path';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { createWriteStream, existsSync } from 'node:fs';
 import { tmpdir } from 'os';
 import { Readable } from 'stream';
 import { pipeline } from 'node:stream/promises';
-// @ts-ignore - no type definitions available
-import chaiJestSnapshot from 'chai-jest-snapshot';
+import matchSnapshot from 'mocha-snap';
 import {
   writeResultFiles,
   ApexTestResultOutcome,
@@ -24,33 +22,10 @@ import {
   PerClassCoverage
 } from '../../src';
 
-// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/no-unused-vars
-declare namespace Chai {
-  interface Assertion {
-    matchSnapshot(): Assertion;
-  }
-}
-
-// Configure chai to use jest snapshots
-chai.use(chaiJestSnapshot);
-
 describe('writeResultFiles - Snapshot Tests', () => {
   let tempDir: string;
 
-  before(() => {
-    chaiJestSnapshot.resetSnapshotRegistry();
-  });
-
   beforeEach(async function () {
-    chaiJestSnapshot.configureUsingMochaContext(this);
-    // Configure snapshots to be saved in the source directory, not lib
-    chaiJestSnapshot.setFilename(
-      join(
-        __dirname,
-        '__snapshots__',
-        'writeResultFiles.snapshots.test.ts.snap'
-      )
-    );
     tempDir = join(
       tmpdir(),
       `apex-snapshot-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -197,7 +172,7 @@ describe('writeResultFiles - Snapshot Tests', () => {
     const parsedContent = JSON.parse(content);
 
     // Snapshot the parsed JSON structure
-    expect(parsedContent).to.matchSnapshot();
+    matchSnapshot(parsedContent);
   });
 
   it('should produce consistent TAP output', async function () {
@@ -220,7 +195,7 @@ describe('writeResultFiles - Snapshot Tests', () => {
     const content = await readFile(tapFilePath, 'utf8');
 
     // Snapshot the TAP output
-    expect(content).to.matchSnapshot();
+    matchSnapshot(content);
   });
 
   it('should produce consistent JUnit output', async function () {
@@ -243,7 +218,7 @@ describe('writeResultFiles - Snapshot Tests', () => {
     const content = await readFile(junitFilePath, 'utf8');
 
     // Snapshot the JUnit XML output
-    expect(content).to.matchSnapshot();
+    matchSnapshot(content);
   });
 
   it('should produce consistent code coverage output', async function () {
@@ -277,7 +252,7 @@ describe('writeResultFiles - Snapshot Tests', () => {
     const parsedContent = JSON.parse(content);
 
     // Snapshot the code coverage structure
-    expect(parsedContent).to.matchSnapshot();
+    matchSnapshot(parsedContent);
   });
 
   it('should produce consistent fileInfos output', async function () {
@@ -315,13 +290,13 @@ describe('writeResultFiles - Snapshot Tests', () => {
     // Test string content
     const textFilePath = join(tempDir, 'snapshot-custom.txt');
     const textContent = await readFile(textFilePath, 'utf8');
-    expect(textContent).to.matchSnapshot();
+    matchSnapshot(textContent);
 
     // Test JSON object content
     const jsonFilePath = join(tempDir, 'snapshot-metadata.json');
     const jsonContent = await readFile(jsonFilePath, 'utf8');
     const parsedJsonContent = JSON.parse(jsonContent);
-    expect(parsedJsonContent).to.matchSnapshot();
+    matchSnapshot(parsedJsonContent);
   });
 
   it('should produce consistent comprehensive output with all options', async function () {
@@ -368,7 +343,7 @@ describe('writeResultFiles - Snapshot Tests', () => {
     const sortedResult = result
       .map((path) => path.replace(tempDir, '[TEMP_DIR]'))
       .sort();
-    expect(sortedResult).to.matchSnapshot();
+    matchSnapshot(sortedResult);
 
     // Snapshot each file's content
     for (const filePath of result) {
@@ -377,9 +352,9 @@ describe('writeResultFiles - Snapshot Tests', () => {
 
       if (fileName?.endsWith('.json')) {
         const parsedContent = JSON.parse(content);
-        expect(parsedContent).to.matchSnapshot();
+        matchSnapshot(parsedContent);
       } else {
-        expect(content).to.matchSnapshot();
+        matchSnapshot(content);
       }
     }
   });
