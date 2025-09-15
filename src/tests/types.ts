@@ -22,6 +22,24 @@ export const enum TestLevel {
   RunSpecifiedTests = 'RunSpecifiedTests'
 }
 
+export const enum TestCategory {
+  /**
+   * Apex test classes and methods written in Apex code
+   */
+  Apex = 'Apex',
+  /**
+   * Flow tests that validate Salesforce Flow functionality
+   */
+  Flow = 'Flow'
+}
+
+export const enum TestCategoryPrefix {
+  /**
+   * Prefix identifier used to detect Flow tests in test names
+   */
+  FlowTest = 'FlowTesting.'
+}
+
 export type AsyncTestConfiguration = {
   /**
    * Comma-separated list of class names
@@ -56,6 +74,11 @@ export type AsyncTestConfiguration = {
    * Does not wait for test run to complete and returns the test run id immediately
    */
   exitOnTestRunId?: boolean;
+  /**
+   * Category for this run, for Flow or Apex
+   */
+
+  category?: string[];
 };
 
 export enum ResultFormat {
@@ -91,6 +114,8 @@ export type TestItem = {
    * Namespace associated with the test class or method
    */
   namespace?: string;
+
+  category?: string;
 };
 
 export type AsyncTestArrayConfiguration = {
@@ -113,6 +138,8 @@ export type AsyncTestArrayConfiguration = {
    * Allows for faster tests by skipping code coverage
    */
   skipCodeCoverage?: boolean;
+
+  category?: string[];
 };
 
 export type SyncTestConfiguration = {
@@ -134,9 +161,13 @@ export type SyncTestConfiguration = {
    * Allows for faster tests by skipping code coverage
    */
   skipCodeCoverage?: boolean;
+  /**
+   * Category for this run, for Flow or Apex
+   */
+  category?: string[];
 };
 
-export type SyncTestSuccess = {
+type SyncTestSuccess = {
   id: string;
   methodName: string;
   name: string;
@@ -166,23 +197,34 @@ export type SyncTestResult = {
   totalTime: number;
 };
 
-export type SyncTestErrorResult = {
-  message: string;
-  errorCode: string; // might change it to an enum
-};
-
-export type ApiSyncTestResult = {
-  done: boolean;
-  totalSize: number;
-  records: SyncTestResult[];
-};
-
 export const enum ApexTestResultOutcome {
   Pass = 'Pass',
   Fail = 'Fail',
   CompileFail = 'CompileFail',
   Skip = 'Skip'
 }
+
+type FlowTestResultRecord = {
+  Id: string;
+  ApexTestQueueItemId: string;
+  Result: ApexTestResultOutcome;
+  FlowTest: {
+    /**
+     * Name of the Flow Test Method (up to 255 characters)
+     */
+    DeveloperName: string;
+  };
+  FlowDefinition: {
+    DeveloperName: string;
+    NamespacePrefix: string;
+  };
+
+  /**
+   * The start time of the test method.
+   */
+  TestStartDateTime: string;
+  TestEndDateTime: string;
+};
 
 export type ApexTestResultRecord = {
   Id: string;
@@ -245,8 +287,15 @@ export type ApexTestResultRecord = {
 
 export type ApexTestResult = {
   done: boolean;
+  category?: string;
   totalSize: number;
   records: ApexTestResultRecord[];
+};
+
+export type FlowTestResult = {
+  done: boolean;
+  totalSize: number;
+  records: FlowTestResultRecord[];
 };
 
 export const enum ApexTestRunResultStatus {
@@ -318,7 +367,7 @@ export type ApexTestQueueItemRecord = {
    * The status of the job
    */
   Status: ApexTestQueueItemStatus;
-  ApexClassId: string;
+  ApexClassId: string | null;
   /**
    * The ID of the associated ApexTestRunResult object
    */
@@ -393,6 +442,10 @@ export type ApexTestResultData = {
    */
   perClassCoverage?: PerClassCoverage[];
   diagnostic?: ApexDiagnostic;
+  /**
+   * The category of the test (Apex or Flow)
+   */
+  category?: string;
 };
 
 export type ApexTestResultDataRaw = ApexTestResultData & {
@@ -529,14 +582,6 @@ export type ApexOrgWideCoverage = {
   records: { PercentCovered: string }[];
 };
 
-export type NamespaceRecord = {
-  NamespacePrefix: string;
-};
-
-export type NamespaceQueryResult = {
-  records: NamespaceRecord[];
-};
-
 export type NamespaceInfo = {
   installedNs: boolean;
   namespace: string;
@@ -551,6 +596,12 @@ export type ApexTestProgressValue =
   | {
       type: 'StreamingClientProgress';
       value: 'streamingProcessingTestRun';
+      testRunId: string;
+      message: string;
+    }
+  | {
+      type: 'PollingClientProgress';
+      value: 'pollingProcessingTestRun';
       testRunId: string;
       message: string;
     }

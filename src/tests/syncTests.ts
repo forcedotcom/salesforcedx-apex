@@ -14,7 +14,7 @@ import {
   HeapMonitor
 } from '../utils';
 import { CodeCoverage } from './codeCoverage';
-import { formatTestErrors, getSyncDiagnostic } from './diagnosticUtil';
+import { formatTestErrors, getDiagnostic } from './diagnosticUtil';
 import {
   ApexTestResultDataRaw,
   ApexTestResultOutcome,
@@ -28,6 +28,7 @@ import {
 import {
   calculateCodeCoverage,
   calculatePercentage,
+  computeTestCategory,
   transformTestResult
 } from './utils';
 import type { HttpRequest } from '@jsforce/jsforce-node';
@@ -216,13 +217,14 @@ export class SyncTests {
       },
       runTime: item.time ?? 0,
       testTimestamp: '',
-      fullName: `${nms}${item.name}.${item.methodName}`
+      fullName: `${nms}${item.name}.${item.methodName}`,
+      category: computeTestCategory(item.namespace)
     };
 
     if (outcome === ApexTestResultOutcome.Fail) {
       const diagnostic =
         item.message || item.stackTrace
-          ? getSyncDiagnostic(item as SyncTestFailure)
+          ? getDiagnostic(item as SyncTestFailure)
           : null;
       if (diagnostic) {
         testResult.diagnostic = diagnostic;

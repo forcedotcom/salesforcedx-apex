@@ -37,6 +37,7 @@ export const messages = {
   streamingTransportUp: 'Listening for streaming state changes...',
   streamingTransportDown: 'Faye client generated a transport:down event.',
   streamingProcessingTestRun: 'Processing test run %s',
+  pollingProcessingTestRun: 'Processing test run %s',
   retrievingTestRunSummary: 'Retrieving test run summary record',
   queryingForAggregateCodeCoverage:
     'Querying for aggregate code coverage results',
@@ -62,6 +63,7 @@ export const messages = {
   testNameColHeader: 'TEST NAME',
   testSetupMethodNameColHeader: 'TEST SETUP METHOD NAME',
   outcomeColHeader: 'OUTCOME',
+  categoryColHeader: 'CATEGORY',
   msgColHeader: 'MESSAGE',
   runtimeColHeader: 'RUNTIME (MS)',
   setupTimeColHeader: 'SETUP TIME',
@@ -97,5 +99,7 @@ export const messages = {
   startHandshake: 'Attempting StreamingClient handshake',
   finishHandshake: 'Finished StreamingClient handshake',
   subscribeStarted: 'Subscribing to ApexLog events',
-  authForAnonymousApexFailed: 'The authentication for execute anonymous failed'
+  authForAnonymousApexFailed: 'The authentication for execute anonymous failed',
+  runTestReportCommand:
+    'Run "sf apex get test -i %s -o %s" to retrieve test results.'
 };

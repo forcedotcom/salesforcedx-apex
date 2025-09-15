@@ -1,4 +1,4 @@
-name: Unit tests
+name: Tests
 on:
   push:
     branches-ignore: [main]
@@ -26,7 +26,7 @@ jobs:
       - name: Build the project
         run: yarn build
       - name: check if bundling runs into failures
-        run: node scripts/testEsbuild.js
+        run: node scripts/esbuild.config.mjs
   xNuts:
     needs: linux-unit-tests
     name: external NUTs

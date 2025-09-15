@@ -5,7 +5,13 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { AuthInfo, Connection, Logger, LoggerLevel } from '@salesforce/core';
+import {
+  AuthInfo,
+  Connection,
+  Logger,
+  LoggerLevel,
+  PollingClient
+} from '@salesforce/core';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { AsyncTestRun, StreamingClient } from '../streaming';
@@ -15,7 +21,7 @@ import {
   getCurrentTime,
   HeapMonitor
 } from '../utils';
-import { formatTestErrors, getAsyncDiagnostic } from './diagnosticUtil';
+import { formatTestErrors, getDiagnostic } from './diagnosticUtil';
 import {
   ApexTestProgressValue,
   ApexTestQueueItem,
@@ -30,11 +36,13 @@ import {
   AsyncTestConfiguration,
   TestResult,
   TestResultRaw,
-  TestRunIdResult
+  TestRunIdResult,
+  FlowTestResult,
+  ApexTestResultRecord,
+  TestCategory
 } from './types';
 import {
   calculatePercentage,
-  getBufferSize,
   getJsonIndent,
   transformTestResult,
   queryAll,
@@ -51,8 +59,27 @@ import * as os from 'node:os';
 import path from 'path';
 import fs from 'node:fs/promises';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const bfj = require('bfj');
+import { JsonStreamStringify } from 'json-stream-stringify';
+
+/**
+ * Standalone function for writing async test results to file - easier to test
+ */
+export const writeAsyncResultsToFile = async (
+  formattedResults: TestResult,
+  runId: string
+): Promise<void> => {
+  const rawResultsPath = path.join(os.tmpdir(), runId, 'rawResults.json');
+  await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
+  const writeStream = createWriteStream(
+    path.join(os.tmpdir(), runId, 'rawResults.json')
+  );
+  const stringifyStream = new JsonStreamStringify(
+    formattedResults,
+    null,
+    getJsonIndent()
+  );
+  return await pipeline(stringifyStream, writeStream);
+};
 
 const finishedStatuses = [
   ApexTestRunResultStatus.Aborted,
@@ -63,6 +90,8 @@ const finishedStatuses = [
 ];
 
 const MIN_VERSION_TO_SUPPORT_TEST_SETUP_METHODS = 61.0;
+const POLLING_FREQUENCY = Duration.seconds(1);
+const POLLING_TIMEOUT = Duration.hours(4);
 
 export class AsyncTests {
   public readonly connection: Connection;
@@ -82,7 +111,8 @@ export class AsyncTests {
    * @param exitOnTestRunId should not wait for test run to complete, return test run id immediately
    * @param progress progress reporter
    * @param token cancellation token
-   * @param timeout Duration to wait before returning a TestRunIdResult
+   * @param timeout Duration to wait before returning a TestRunIdResult. If the polling client times out,
+   *                the method will return the test run ID so you can retrieve results later.
    */
   @elapsedTime()
   public async runTests(
@@ -94,18 +124,10 @@ export class AsyncTests {
     timeout?: Duration
   ): Promise<TestResult | TestRunIdResult> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
+    let testRunId: string;
+
     try {
-      const sClient = new StreamingClient(this.connection, progress);
-      await sClient.init();
-      await sClient.handshake();
-
-      token?.onCancellationRequested(async () => {
-        const testRunId = await sClient.subscribedTestRunIdPromise;
-        await this.abortTestRun(testRunId, progress);
-        sClient.disconnect();
-      });
-
-      const testRunId = await this.getTestRunRequestAction(options)();
+      testRunId = await this.getTestRunRequestAction(options)();
 
       if (exitOnTestRunId) {
         return { testRunId };
@@ -114,28 +136,115 @@ export class AsyncTests {
       if (token?.isCancellationRequested) {
         return null;
       }
-      const asyncRunResult = await sClient.subscribe(
-        undefined,
-        testRunId,
-        timeout
-      );
 
-      if ('testRunId' in asyncRunResult) {
-        // timeout, return the id
-        return { testRunId };
-      }
+      const pollingClient = await PollingClient.create({
+        poll: async (): Promise<{
+          completed: boolean;
+          payload: ApexTestQueueItem;
+        }> => {
+          if (token?.isCancellationRequested) {
+            await this.abortTestRun(testRunId, progress);
+            return {
+              completed: true,
+              payload: {
+                done: true,
+                totalSize: 0,
+                records: []
+              }
+            };
+          }
 
-      const runResult = await this.checkRunStatus(asyncRunResult.runId);
+          progress?.report({
+            type: 'PollingClientProgress',
+            value: 'pollingProcessingTestRun',
+            message: nls.localize('pollingProcessingTestRun', testRunId),
+            testRunId
+          });
+
+          const hasTestSetupTimeField = await this.supportsTestSetupFeature();
+          const testRunSummaryQuery = hasTestSetupTimeField
+            ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
+            : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+
+          // Query for test run summary first to check overall status
+          const testRunSummary =
+            await this.connection.tooling.query<ApexTestRunResult>(
+              testRunSummaryQuery
+            );
+
+          if (
+            !testRunSummary ||
+            !testRunSummary.records ||
+            testRunSummary.records.length === 0
+          ) {
+            throw new Error(
+              `No test run summary found for test run ID: ${testRunId}`
+            );
+          }
+
+          const summary = testRunSummary.records[0];
+          const isCompleted = finishedStatuses.includes(summary.Status);
+
+          // Query queue items to get detailed status
+          const queryResult =
+            await this.connection.tooling.query<ApexTestQueueItemRecord>(
+              `SELECT Id, Status, ApexClassId, TestRunResultId, ParentJobId FROM ApexTestQueueItem WHERE ParentJobId = '${testRunId}'`
+            );
+
+          if (!queryResult.records || queryResult.records.length === 0) {
+            throw new Error(
+              `No test queue items found for test run ID: ${testRunId}`
+            );
+          }
+
+          const queueItem: ApexTestQueueItem = {
+            done: isCompleted,
+            totalSize: queryResult.records.length,
+            records: queryResult.records.map((record) => ({
+              Id: record.Id,
+              Status: record.Status,
+              ApexClassId: record.ApexClassId,
+              TestRunResultId: record.TestRunResultId
+            }))
+          };
+
+          return {
+            completed: isCompleted,
+            payload: queueItem
+          };
+        },
+        frequency: POLLING_FREQUENCY,
+        timeout: timeout ?? POLLING_TIMEOUT
+      });
+
+      const queueItem = (await pollingClient.subscribe()) as ApexTestQueueItem;
+      const runResult = await this.checkRunStatus(testRunId);
+
       const formattedResults = await this.formatAsyncResults(
-        asyncRunResult,
+        { runId: testRunId, queueItem },
         getCurrentTime(),
         codeCoverage,
         runResult.testRunSummary,
         progress
       );
-      await this.writeResultsToFile(formattedResults, asyncRunResult.runId);
+
+      await this.writeResultsToFile(formattedResults, testRunId);
       return formattedResults;
     } catch (e) {
+      // If it's a PollingClientTimeout, return the test run ID so results can be retrieved later
+      if (e.name === 'PollingClientTimeout') {
+        this.logger.debug(
+          `Polling client timed out for test run ${testRunId}. Returning test run ID for later result retrieval.`
+        );
+
+        // Log the proper 'apex get test' command for the user to run later
+        const username = this.connection.getUsername();
+        this.logger.info(
+          nls.localize('runTestReportCommand', [testRunId, username])
+        );
+
+        return { testRunId };
+      }
       throw formatTestErrors(e);
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.runTests');
@@ -149,18 +258,10 @@ export class AsyncTests {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
     try {
       if (this.logger.shouldLog(LoggerLevel.DEBUG)) {
-        const rawResultsPath = path.join(os.tmpdir(), runId, 'rawResults.json');
-        await fs.mkdir(path.dirname(rawResultsPath), { recursive: true });
-        const writeStream = createWriteStream(
-          path.join(os.tmpdir(), runId, 'rawResults.json')
+        await writeAsyncResultsToFile(formattedResults, runId);
+        this.logger.debug(
+          `Raw results written to: ${path.join(os.tmpdir(), runId, 'rawResults.json')}`
         );
-        this.logger.debug(`Raw results written to: ${writeStream.path}`);
-        const stringifyStream = bfj.stringify(formattedResults, {
-          bufferLength: getBufferSize(),
-          iterables: 'ignore',
-          space: getJsonIndent()
-        });
-        return await pipeline(stringifyStream, writeStream);
       }
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.writeResultsToFile');
@@ -234,9 +335,19 @@ export class AsyncTests {
     }
     const hasTestSetupTimeField = await this.supportsTestSetupFeature();
 
-    const testRunSummaryQuery = hasTestSetupTimeField
-      ? `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, TestSetupTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`
-      : `SELECT AsyncApexJobId, Status, ClassesCompleted, ClassesEnqueued, MethodsEnqueued, StartTime, EndTime, TestTime, UserId FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
+    const fields = [
+      'AsyncApexJobId',
+      'Status',
+      'ClassesCompleted',
+      'ClassesEnqueued',
+      'MethodsEnqueued',
+      'StartTime',
+      'EndTime',
+      'TestTime',
+      ...(hasTestSetupTimeField ? ['TestSetupTime'] : []),
+      'UserId'
+    ];
+    const testRunSummaryQuery = `SELECT ${fields.join(', ')} FROM ApexTestRunResult WHERE AsyncApexJobId = '${testRunId}'`;
 
     progress?.report({
       type: 'FormatTestResultProgress',
@@ -245,16 +356,47 @@ export class AsyncTests {
     });
 
     try {
-      const testRunSummaryResults = await (
-        await this.defineApiVersion()
-      ).singleRecordQuery<ApexTestRunResult>(testRunSummaryQuery, {
-        tooling: true
-      });
+      const connection = await this.defineApiVersion();
+      const testRunSummaryResults =
+        await connection.tooling.query<ApexTestRunResult>(testRunSummaryQuery);
+
+      if (!testRunSummaryResults?.records) {
+        // If test run was aborted, return a dummy summary
+        if (progress?.report) {
+          return {
+            testsComplete: true,
+            testRunSummary: {
+              AsyncApexJobId: testRunId,
+              Status: ApexTestRunResultStatus.Aborted,
+              StartTime: new Date().toISOString(),
+              TestTime: 0,
+              UserId: ''
+            } as ApexTestRunResult
+          };
+        }
+        throw new Error(
+          `No test run summary found for test run ID: ${testRunId}. The test run may have been deleted or expired.`
+        );
+      }
+
+      if (testRunSummaryResults.records.length > 1) {
+        throw new Error(
+          `Multiple test run summaries found for test run ID: ${testRunId}. This is unexpected and may indicate a data integrity issue.`
+        );
+      }
+
       return {
-        testsComplete: finishedStatuses.includes(testRunSummaryResults.Status),
-        testRunSummary: testRunSummaryResults
+        testsComplete: finishedStatuses.includes(
+          testRunSummaryResults.records[0].Status
+        ),
+        testRunSummary: testRunSummaryResults.records[0]
       };
     } catch (e) {
+      if (e.message.includes('The requested resource does not exist')) {
+        throw new Error(
+          `Test run with ID ${testRunId} does not exist. The test run may have been deleted, expired, or never created successfully.`
+        );
+      }
       throw new Error(nls.localize('noTestResultSummary', testRunId));
     }
   }
@@ -340,35 +482,69 @@ export class AsyncTests {
   ): Promise<ApexTestResult[]> {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
     const hasIsTestSetupField = await this.supportsTestSetupFeature();
-
     try {
-      const apexTestResultQuery = hasIsTestSetupField
-        ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
-        : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
+      const { apexTestIds, flowTestIds } = this.mapTestResultsByCategory(
+        testQueueResult.records
+      );
 
-      const apexResultIds = testQueueResult.records.map((record) => record.Id);
-
-      // iterate thru ids, create query with id, & compare query length to char limit
-      const queries: string[] = [];
-      for (let i = 0; i < apexResultIds.length; i += QUERY_RECORD_LIMIT) {
-        const recordSet: string[] = apexResultIds
-          .slice(i, i + QUERY_RECORD_LIMIT)
-          .map((id) => `'${id}'`);
-        const query: string = util.format(
-          apexTestResultQuery,
-          recordSet.join(',')
+      const allTestResults: ApexTestResult[] = [];
+      if (apexTestIds.length > 0) {
+        allTestResults.push(
+          ...(await this.getApexTestResults(apexTestIds, hasIsTestSetupField))
         );
-        queries.push(query);
       }
-      const connection = await this.defineApiVersion();
-      const queryPromises = queries.map(async (query) => {
-        return queryAll(connection, query, true);
-      });
-      const apexTestResults = await Promise.all(queryPromises);
-      return apexTestResults as ApexTestResult[];
+      if (flowTestIds.length > 0) {
+        allTestResults.push(...(await this.getFlowTestResults(flowTestIds)));
+      }
+
+      return allTestResults as ApexTestResult[];
     } finally {
       HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
     }
+  }
+  /**
+   * @returns Convert FlowTest result to ApexTestResult type
+   */
+
+  private convertFlowTestResult(
+    flowtestResults: FlowTestResult[]
+  ): ApexTestResult[] {
+    return flowtestResults.map((flowtestResult) => {
+      const tmpRecords: ApexTestResultRecord[] = flowtestResult.records.map(
+        (record) => ({
+          Id: record.Id,
+          QueueItemId: record.ApexTestQueueItemId,
+          StackTrace: '', // Default value
+          Message: '', // Default value
+          AsyncApexJobId: record.ApexTestQueueItemId, // Assuming this maps from ApexTestQueueItem
+          MethodName: record.FlowTest.DeveloperName,
+          Outcome: record.Result,
+          ApexLogId: '', // Default value
+          IsTestSetup: false,
+          ApexClass: {
+            Id: record.ApexTestQueueItemId,
+            Name: record.FlowDefinition.DeveloperName,
+            NamespacePrefix: record.FlowDefinition.NamespacePrefix,
+            FullName: record.FlowDefinition.NamespacePrefix
+              ? `${record.FlowDefinition.NamespacePrefix}.${record.FlowTest.DeveloperName}`
+              : record.FlowTest.DeveloperName
+          },
+          RunTime: Number.isNaN(Number(record.TestEndDateTime))
+            ? 0
+            : Number(record.TestEndDateTime) - Number(record.TestStartDateTime)
+              ? 0
+              : Number(record.TestStartDateTime), // Default value, replace with actual runtime if available
+          TestTimestamp: record.TestStartDateTime
+        })
+      );
+
+      return {
+        done: flowtestResult.done,
+        totalSize: tmpRecords.length,
+        records: tmpRecords,
+        category: TestCategory.Flow
+      };
+    });
   }
 
   @elapsedTime()
@@ -414,7 +590,7 @@ export class AsyncTests {
             : item.ApexClass.Name;
 
           const diagnostic =
-            item.Message || item.StackTrace ? getAsyncDiagnostic(item) : null;
+            item.Message || item.StackTrace ? getDiagnostic(item) : null;
 
           testResults.push({
             id: item.Id,
@@ -435,7 +611,8 @@ export class AsyncTests {
             runTime: item.RunTime ?? 0,
             testTimestamp: item.TestTimestamp, // TODO: convert timestamp
             fullName: `${item.ApexClass.FullName}.${item.MethodName}`,
-            ...(diagnostic ? { diagnostic } : {})
+            ...(diagnostic ? { diagnostic } : {}),
+            category: result.category
           });
         });
       }
@@ -524,6 +701,23 @@ export class AsyncTests {
   }
 
   /**
+   * @returns A boolean indicating if this is running FlowTest.
+   */
+  public async isJobIdForFlowTestRun(testRunId: string): Promise<boolean> {
+    try {
+      const testRunApexIdResults =
+        await this.connection.tooling.query<ApexTestQueueItemRecord>(
+          `SELECT ApexClassId FROM ApexTestQueueItem WHERE Id = '${testRunId}'`
+        );
+      return testRunApexIdResults.records.some(
+        (record) => record.ApexClassId === null
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
    * @returns A connection based on the current api version and the max api version.
    */
   public async defineApiVersion(): Promise<Connection> {
@@ -562,5 +756,96 @@ export class AsyncTests {
         `Error creating new connection with API version ${newVersion}: ${e.message}`
       );
     }
+  }
+
+  /**
+   * Maps test results by category (Apex vs Flow tests)
+   */
+  public mapTestResultsByCategory(records: ApexTestQueueItemRecord[]): {
+    apexTestIds: string[];
+    flowTestIds: string[];
+  } {
+    if (!records?.length) {
+      return { apexTestIds: [], flowTestIds: [] };
+    }
+    return {
+      apexTestIds: records
+        .filter((r) => r.ApexClassId !== null)
+        .map((r) => r.Id),
+      flowTestIds: records
+        .filter((r) => r.ApexClassId === null)
+        .map((r) => r.Id)
+    };
+  }
+
+  public async getFlowTestResults(
+    recordIds: string[]
+  ): Promise<ApexTestResult[]> {
+    const queryTemplate = `SELECT Id, ApexTestQueueItemId, Result, TestStartDateTime,TestEndDateTime, FlowTest.DeveloperName, FlowDefinition.DeveloperName, FlowDefinition.NamespacePrefix FROM FlowTestResult WHERE ApexTestQueueItemId IN (%s)`;
+    const queries = this.buildChunkedQueries(queryTemplate, recordIds);
+
+    const connection = await this.defineApiVersion();
+    const queryPromises = queries.map(async (query) =>
+      queryAll(connection, query, true)
+    );
+
+    const testResults = await Promise.all(queryPromises);
+    return this.convertFlowTestResult(testResults as FlowTestResult[]);
+  }
+
+  public async getApexTestResults(
+    recordIds: string[],
+    isTestSetup: boolean
+  ): Promise<ApexTestResult[]> {
+    const queryTemplate = isTestSetup
+      ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
+      : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
+    const queries = this.buildChunkedQueries(queryTemplate, recordIds);
+
+    const connection = await this.defineApiVersion();
+    const queryPromises = queries.map(async (query) =>
+      queryAll(connection, query, true)
+    );
+
+    const testResults = await Promise.all(queryPromises);
+    return testResults.map(
+      (result) =>
+        ({
+          ...result,
+          category: TestCategory.Apex
+        }) as ApexTestResult
+    );
+  }
+
+  /**
+   * Splits record IDs into multiple queries to respect Salesforce query limits
+   * @param queryTemplate SOQL query template with %s placeholder for IDs
+   * @param recordIds Array of record IDs to include in queries
+   * @returns Array of complete SOQL queries ready to execute
+   */
+  public buildChunkedQueries(
+    queryTemplate: string,
+    recordIds: string[]
+  ): string[] {
+    if (!queryTemplate?.includes('%s')) {
+      throw new Error(
+        'Query template must contain %s placeholder for record IDs'
+      );
+    }
+
+    if (!recordIds?.length) {
+      return [];
+    }
+
+    const queries: string[] = [];
+
+    for (let i = 0; i < recordIds.length; i += QUERY_RECORD_LIMIT) {
+      const chunk = recordIds.slice(i, i + QUERY_RECORD_LIMIT);
+      const quotedIds = chunk.map((id) => `'${id}'`).join(',');
+      const query = util.format(queryTemplate, quotedIds);
+      queries.push(query);
+    }
+
+    return queries;
   }
 }

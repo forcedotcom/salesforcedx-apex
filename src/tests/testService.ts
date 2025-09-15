@@ -23,7 +23,12 @@ import { join } from 'path';
 import { CancellationToken, Progress } from '../common';
 import { nls } from '../i18n';
 import { JUnitFormatTransformer, TapFormatTransformer } from '../reporters';
-import { getBufferSize, getJsonIndent, queryNamespaces } from './utils';
+import {
+  getBufferSize,
+  getJsonIndent,
+  isFlowTest,
+  queryNamespaces
+} from './utils';
 import { AsyncTests } from './asyncTests';
 import { SyncTests } from './syncTests';
 import { formatTestErrors } from './diagnosticUtil';
@@ -38,12 +43,117 @@ import { Transform } from 'stream';
 import { pipeline } from 'node:stream/promises';
 import { createWriteStream } from 'node:fs';
 
+import { JsonStreamStringify } from 'json-stream-stringify';
+
 /**
- * The library jsonpath that bfj depends on cannot be bundled through esbuild.
- * Please pay attention whenever you deal with bfj
+ * Standalone function for writing test result files - easier to test
  */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const bfj = require('bfj');
+export const writeResultFiles = async (
+  result: TestResult | TestRunIdResult,
+  outputDirConfig: OutputDirConfig,
+  codeCoverage = false,
+  runPipeline: (
+    readable: Readable,
+    filePath: string,
+    transform?: Transform
+  ) => Promise<string>
+): Promise<string[]> => {
+  const filesWritten: string[] = [];
+  const { dirPath, resultFormats, fileInfos } = outputDirConfig;
+
+  if (
+    resultFormats &&
+    !resultFormats.every((format) => format in ResultFormat)
+  ) {
+    throw new Error(nls.localize('resultFormatErr'));
+  }
+
+  await mkdir(dirPath, { recursive: true });
+
+  const testRunId = isTestResult(result)
+    ? result.summary.testRunId
+    : result.testRunId;
+
+  try {
+    await writeFile(join(dirPath, 'test-run-id.txt'), testRunId);
+    filesWritten.push(join(dirPath, 'test-run-id.txt'));
+  } catch (err) {
+    console.error(`Error writing file: ${err}`);
+  }
+
+  if (resultFormats) {
+    if (!isTestResult(result)) {
+      throw new Error(nls.localize('runIdFormatErr'));
+    }
+    for (const format of resultFormats) {
+      let filePath;
+      let readable;
+      switch (format) {
+        case ResultFormat.json:
+          filePath = join(
+            dirPath,
+            `test-result-${testRunId || 'default'}.json`
+          );
+          readable = TestResultStringifyStream.fromTestResult(result, {
+            bufferSize: getBufferSize()
+          });
+          break;
+        case ResultFormat.tap:
+          filePath = join(dirPath, `test-result-${testRunId}-tap.txt`);
+          readable = new TapFormatTransformer(result, undefined, {
+            bufferSize: getBufferSize()
+          });
+          break;
+        case ResultFormat.junit:
+          filePath = join(
+            dirPath,
+            `test-result-${testRunId || 'default'}-junit.xml`
+          );
+          readable = new JUnitFormatTransformer(result, {
+            bufferSize: getBufferSize()
+          });
+          break;
+        default:
+          throw new Error(nls.localize('resultFormatErr'));
+      }
+      if (filePath && readable) {
+        filesWritten.push(await runPipeline(readable, filePath));
+      }
+    }
+  }
+
+  if (codeCoverage) {
+    if (!isTestResult(result)) {
+      throw new Error(nls.localize('covIdFormatErr'));
+    }
+    const filePath = join(
+      dirPath,
+      `test-result-${testRunId}-codecoverage.json`
+    );
+    const c = result.tests
+      .map((record) => record.perClassCoverage)
+      .filter((pcc) => pcc?.length);
+    filesWritten.push(
+      await runPipeline(
+        new JsonStreamStringify(c, null, getJsonIndent()),
+        filePath
+      )
+    );
+  }
+
+  if (fileInfos) {
+    for (const fileInfo of fileInfos) {
+      const filePath = join(dirPath, fileInfo.filename);
+      const readable =
+        typeof fileInfo.content === 'string'
+          ? Readable.from([fileInfo.content])
+          : new JsonStreamStringify(fileInfo.content, null, getJsonIndent());
+      filesWritten.push(await runPipeline(readable, filePath));
+    }
+  }
+
+  return filesWritten;
+};
 
 export class TestService {
   private readonly connection: Connection;
@@ -281,107 +391,12 @@ export class TestService {
     HeapMonitor.getInstance().startMonitoring();
     HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
     try {
-      const filesWritten: string[] = [];
-      const { dirPath, resultFormats, fileInfos } = outputDirConfig;
-
-      if (
-        resultFormats &&
-        !resultFormats.every((format) => format in ResultFormat)
-      ) {
-        throw new Error(nls.localize('resultFormatErr'));
-      }
-
-      await mkdir(dirPath, { recursive: true });
-
-      const testRunId = isTestResult(result)
-        ? result.summary.testRunId
-        : result.testRunId;
-
-      try {
-        await writeFile(join(dirPath, 'test-run-id.txt'), testRunId);
-        filesWritten.push(join(dirPath, 'test-run-id.txt'));
-      } catch (err) {
-        console.error(`Error writing file: ${err}`);
-      }
-
-      if (resultFormats) {
-        if (!isTestResult(result)) {
-          throw new Error(nls.localize('runIdFormatErr'));
-        }
-        for (const format of resultFormats) {
-          let filePath;
-          let readable;
-          switch (format) {
-            case ResultFormat.json:
-              filePath = join(
-                dirPath,
-                `test-result-${testRunId || 'default'}.json`
-              );
-              readable = TestResultStringifyStream.fromTestResult(result, {
-                bufferSize: getBufferSize()
-              });
-              break;
-            case ResultFormat.tap:
-              filePath = join(dirPath, `test-result-${testRunId}-tap.txt`);
-              readable = new TapFormatTransformer(result, undefined, {
-                bufferSize: getBufferSize()
-              });
-              break;
-            case ResultFormat.junit:
-              filePath = join(
-                dirPath,
-                `test-result-${testRunId || 'default'}-junit.xml`
-              );
-              readable = new JUnitFormatTransformer(result, {
-                bufferSize: getBufferSize()
-              });
-              break;
-          }
-          if (filePath && readable) {
-            filesWritten.push(await this.runPipeline(readable, filePath));
-          }
-        }
-      }
-
-      if (codeCoverage) {
-        if (!isTestResult(result)) {
-          throw new Error(nls.localize('covIdFormatErr'));
-        }
-        const filePath = join(
-          dirPath,
-          `test-result-${testRunId}-codecoverage.json`
-        );
-        const c = result.tests
-          .map((record) => record.perClassCoverage)
-          .filter((pcc) => pcc?.length);
-        filesWritten.push(
-          await this.runPipeline(
-            bfj.stringify(c, {
-              bufferLength: getBufferSize(),
-              iterables: 'ignore',
-              space: getJsonIndent()
-            }),
-            filePath
-          )
-        );
-      }
-
-      if (fileInfos) {
-        for (const fileInfo of fileInfos) {
-          const filePath = join(dirPath, fileInfo.filename);
-          const readable =
-            typeof fileInfo.content === 'string'
-              ? Readable.from([fileInfo.content])
-              : bfj.stringify(fileInfo.content, {
-                  bufferLength: getBufferSize(),
-                  iterables: 'ignore',
-                  space: getJsonIndent()
-                });
-          filesWritten.push(await this.runPipeline(readable, filePath));
-        }
-      }
-
-      return filesWritten;
+      return await writeResultFiles(
+        result,
+        outputDirConfig,
+        codeCoverage,
+        this.runPipeline.bind(this)
+      );
     } finally {
       HeapMonitor.getInstance().checkHeapSize('testService.writeResultFiles');
       HeapMonitor.getInstance().stopMonitoring();
@@ -393,7 +408,8 @@ export class TestService {
   public async buildSyncPayload(
     testLevel: TestLevel,
     tests?: string,
-    classnames?: string
+    classnames?: string,
+    category?: string
   ): Promise<SyncTestConfiguration> {
     try {
       if (tests) {
@@ -406,10 +422,26 @@ export class TestService {
         }
         return payload;
       } else if (classnames) {
-        const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
+        if (this.hasCategory(category)) {
+          const payload = await this.buildClassPayloadForFlow(classnames);
+          const classes = (payload.tests || [])
+            .filter((testItem) => testItem.className)
+            .map((testItem) => testItem.className);
+          if (new Set(classes).size !== 1) {
+            throw new Error(nls.localize('syncClassErr'));
+          }
+          return payload;
+        } else {
+          const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
+          return {
+            tests: [{ [prop]: classnames }],
+            testLevel
+          };
+        }
+      } else if (this.hasCategory(category)) {
         return {
-          tests: [{ [prop]: classnames }],
-          testLevel
+          testLevel,
+          category: this.toArray(category)
         };
       }
       throw new Error(nls.localize('payloadErr'));
@@ -423,7 +455,8 @@ export class TestService {
     testLevel: TestLevel,
     tests?: string,
     classNames?: string,
-    suiteNames?: string
+    suiteNames?: string,
+    category?: string
   ): Promise<AsyncTestConfiguration | AsyncTestArrayConfiguration> {
     try {
       if (tests) {
@@ -431,11 +464,18 @@ export class TestService {
           tests
         )) as AsyncTestArrayConfiguration;
       } else if (classNames) {
-        return await this.buildAsyncClassPayload(classNames);
+        if (this.hasCategory(category)) {
+          return await this.buildClassPayloadForFlow(classNames);
+        } else {
+          return await this.buildAsyncClassPayload(classNames);
+        }
       } else {
         return {
           suiteNames,
-          testLevel
+          testLevel,
+          ...(this.hasCategory(category) && {
+            category: this.toArray(category)
+          })
         };
       }
     } catch (e) {
@@ -451,13 +491,22 @@ export class TestService {
     const classItems = classNameArray.map((item) => {
       const classParts = item.split('.');
       if (classParts.length > 1) {
-        return {
-          className: `${classParts[0]}.${classParts[1]}`
-        };
+        return { className: `${classParts[0]}.${classParts[1]}` };
       }
       const prop = isValidApexClassID(item) ? 'classId' : 'className';
       return { [prop]: item } as TestItem;
     });
+    return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
+  }
+
+  @elapsedTime()
+  private async buildClassPayloadForFlow(
+    classNames: string
+  ): Promise<AsyncTestArrayConfiguration> {
+    const classNameArray = classNames.split(',') as string[];
+    const classItems = classNameArray.map(
+      (item) => ({ className: item }) as TestItem
+    );
     return { tests: classItems, testLevel: TestLevel.RunSpecifiedTests };
   }
 
@@ -473,67 +522,162 @@ export class TestService {
     for (const test of testNameArray) {
       if (test.indexOf('.') > 0) {
         const testParts = test.split('.');
-        if (testParts.length === 3) {
-          if (!classes.includes(testParts[1])) {
-            testItems.push({
-              namespace: `${testParts[0]}`,
-              className: `${testParts[1]}`,
-              testMethods: [testParts[2]]
-            });
-            classes.push(testParts[1]);
-          } else {
-            testItems.forEach((element) => {
-              if (element.className === `${testParts[1]}`) {
-                element.namespace = `${testParts[0]}`;
-                element.testMethods.push(`${testParts[2]}`);
-              }
-            });
-          }
-        } else {
-          if (typeof namespaceInfos === 'undefined') {
-            namespaceInfos = await queryNamespaces(this.connection);
-          }
-          const currentNamespace = namespaceInfos.find(
-            (namespaceInfo) => namespaceInfo.namespace === testParts[0]
+        const isFlow = isFlowTest(test);
+
+        if (isFlow) {
+          namespaceInfos = await this.processFlowTest(
+            testParts,
+            testItems,
+            classes,
+            namespaceInfos
           );
-          // NOTE: Installed packages require the namespace to be specified as part of the className field
-          // The namespace field should not be used with subscriber orgs
-          if (currentNamespace) {
-            if (currentNamespace.installedNs) {
-              testItems.push({
-                className: `${testParts[0]}.${testParts[1]}`
-              });
-            } else {
-              testItems.push({
-                namespace: `${testParts[0]}`,
-                className: `${testParts[1]}`
-              });
-            }
-          } else {
-            if (!classes.includes(testParts[0])) {
-              testItems.push({
-                className: testParts[0],
-                testMethods: [testParts[1]]
-              });
-              classes.push(testParts[0]);
-            } else {
-              testItems.forEach((element) => {
-                if (element.className === testParts[0]) {
-                  element.testMethods.push(testParts[1]);
-                }
-              });
-            }
-          }
+        } else {
+          namespaceInfos = await this.processApexTest(
+            testParts,
+            testItems,
+            classes,
+            namespaceInfos
+          );
         }
       } else {
         const prop = isValidApexClassID(test) ? 'classId' : 'className';
         testItems.push({ [prop]: test });
       }
     }
+
     return {
       tests: testItems,
       testLevel: TestLevel.RunSpecifiedTests
     };
+  }
+
+  private async processFlowTest(
+    testParts: string[],
+    testItems: TestItem[],
+    classes: string[],
+    namespaceInfos: NamespaceInfo[]
+  ): Promise<NamespaceInfo[]> {
+    if (testParts.length === 4) {
+      // flowtesting.namespace.FlowName.testMethod
+      const fullClassName = `${testParts[0]}.${testParts[1]}.${testParts[2]}`;
+
+      if (!classes.includes(fullClassName)) {
+        testItems.push({
+          namespace: `${testParts[0]}.${testParts[1]}`,
+          className: fullClassName,
+          testMethods: [testParts[3]]
+        });
+        classes.push(fullClassName);
+      } else {
+        testItems.forEach((element) => {
+          if (element.className === fullClassName) {
+            element.namespace = `${testParts[0]}.${testParts[1]}`;
+            element.testMethods.push(testParts[3]);
+          }
+        });
+      }
+    } else {
+      // Handle 3-part Flow tests: flowtesting.FlowName.testMethod
+      if (typeof namespaceInfos === 'undefined') {
+        namespaceInfos = await queryNamespaces(this.connection);
+      }
+      const currentNamespace = namespaceInfos.find(
+        (namespaceInfo) => namespaceInfo.namespace === testParts[1]
+      );
+
+      if (currentNamespace) {
+        if (currentNamespace.installedNs) {
+          testItems.push({
+            className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+          });
+        } else {
+          testItems.push({
+            namespace: `${testParts[0]}.${testParts[1]}`,
+            className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+          });
+        }
+      } else {
+        const flowClassName = `${testParts[0]}.${testParts[1]}`;
+        if (!classes.includes(flowClassName)) {
+          testItems.push({
+            className: flowClassName,
+            testMethods: [testParts[2]]
+          });
+          classes.push(flowClassName);
+        } else {
+          testItems.forEach((element) => {
+            if (element.className === flowClassName) {
+              element.testMethods.push(testParts[2]);
+            }
+          });
+        }
+      }
+    }
+    return namespaceInfos;
+  }
+
+  private async processApexTest(
+    testParts: string[],
+    testItems: TestItem[],
+    classes: string[],
+    namespaceInfos: NamespaceInfo[]
+  ): Promise<NamespaceInfo[]> {
+    if (testParts.length === 3) {
+      // namespace.ClassName.testMethod
+      if (!classes.includes(testParts[1])) {
+        testItems.push({
+          namespace: `${testParts[0]}`,
+          className: `${testParts[1]}`,
+          testMethods: [testParts[2]]
+        });
+        classes.push(testParts[1]);
+      } else {
+        testItems.forEach((element) => {
+          if (element.className === `${testParts[1]}`) {
+            element.namespace = `${testParts[0]}`;
+            element.testMethods.push(`${testParts[2]}`);
+          }
+        });
+      }
+    } else {
+      // Handle 2-part Apex tests or namespace resolution
+      if (typeof namespaceInfos === 'undefined') {
+        namespaceInfos = await queryNamespaces(this.connection);
+      }
+      const currentNamespace = namespaceInfos.find(
+        (namespaceInfo) => namespaceInfo.namespace === testParts[0]
+      );
+
+      // NOTE: Installed packages require the namespace to be specified as part of the className field
+      // The namespace field should not be used with subscriber orgs
+      if (currentNamespace) {
+        if (currentNamespace.installedNs) {
+          testItems.push({
+            className: `${testParts[0]}.${testParts[1]}`
+          });
+        } else {
+          testItems.push({
+            namespace: `${testParts[0]}`,
+            className: `${testParts[1]}`
+          });
+        }
+      } else {
+        if (!classes.includes(testParts[0])) {
+          testItems.push({
+            className: testParts[0],
+            testMethods: [testParts[1]]
+          });
+          classes.push(testParts[0]);
+        } else {
+          testItems.forEach((element) => {
+            if (element.className === testParts[0]) {
+              element.testMethods.push(testParts[1]);
+            }
+          });
+        }
+      }
+    }
+    return namespaceInfos;
   }
 
   private async runPipeline(
@@ -552,5 +696,11 @@ export class TestService {
 
   public createStream(filePath: string): Writable {
     return createWriteStream(filePath, 'utf8');
+  }
+  private hasCategory(category: string): boolean {
+    return category && category.length !== 0;
+  }
+  private toArray(category: string): string[] {
+    return category.split(',');
   }
 }
