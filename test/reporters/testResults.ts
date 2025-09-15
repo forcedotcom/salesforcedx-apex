@@ -716,6 +716,7 @@ const setupProperties = `            <property name="failRate" value="0%"/>
             <property name="passing" value="2"/>
             <property name="hostname" value="https://na139.salesforce.com"/>`;
 const codeCovProperties = `${missingValProperties}\n            <property name="orgWideCoverage" value="85%"/>`;
+const detailedCodeCovProperties = `            <property name="apexClassOrTriggerName" value="ApexClass"/>\n            <property name="apexClassOrTriggerId" value="001917xACG"/>\n            <property name="apexTestClassId" value="001917xACG"/>\n            <property name="apexTestMethodName" value="testMethod"/>\n            <property name="numLinesCovered" value="8"/>\n            <property name="numLinesUncovered" value="2"/>\n            <property name="percentage" value="12.5%"/>\n            <property name="coveredLines" value="1,2,3,4,5,6,7,8"/>\n            <property name="uncoveredLines" value="9,10"/>`;
 
 const successTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
@@ -730,8 +731,29 @@ const successTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     </testsuite>
 </testsuites>\n`;
 
+const successTemplateDetailedCoverage = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="force.apex" timestamp="2020-11-09T18:02:50.000Z" hostname="https://na139.salesforce.com" tests="2" failures="0"  errors="0"  time="5.46">
+        <properties>
+%s
+        </properties>
+        <testcase name="should_create_account" classname="AccountServiceTest" time="0.09">
+        <properties>
+%s
+        </properties>
+        </testcase>
+        <testcase name="testCallout" classname="AwesomeCalculatorTest" time="0.02">
+        </testcase>
+    </testsuite>
+</testsuites>\n`;
+
 export const junitSuccess = util.format(successTemplate, successProperties);
 export const junitCodeCov = util.format(successTemplate, codeCovProperties);
+export const junitDetailedCodeCov = util.format(
+  successTemplateDetailedCoverage,
+  codeCovProperties,
+  detailedCodeCovProperties
+);
 export const junitMissingVal = util.format(
   successTemplate,
   missingValProperties
@@ -921,6 +943,7 @@ export function getTestData() {
     junitResult: junitResult.toString(),
     junitSuccess: junitSuccess.toString(),
     junitCodeCov: junitCodeCov.toString(),
+    junitDetailedCodeCov: junitDetailedCodeCov.toString(),
     junitMissingVal: junitMissingVal.toString(),
     junitSetup: junitSetup.toString(),
     setupResult: structuredClone(setupResult),
