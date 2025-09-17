@@ -24,6 +24,10 @@ export const enum TestLevel {
 
 export const enum TestCategory {
   /**
+   * Agentforce agent tests
+   */
+  Agent = 'Agent',
+  /**
    * Apex test classes and methods written in Apex code
    */
   Apex = 'Apex',
@@ -35,9 +39,18 @@ export const enum TestCategory {
 
 export const enum TestCategoryPrefix {
   /**
+   * Prefix identifier used to detect Agenforce agent tests in test names
+   */
+  AgentTest = 'AgentTesting.',
+  /**
    * Prefix identifier used to detect Flow tests in test names
    */
   FlowTest = 'FlowTesting.'
+}
+
+export const enum TestNamespace {
+  Agent = 'agenttesting',
+  Flow = 'flowtesting'
 }
 
 export type AsyncTestConfiguration = {
@@ -283,6 +296,10 @@ export type ApexTestResultRecord = {
    * The start time of the test method.
    */
   TestTimestamp: string;
+  /**
+   * Indicates the type or test. Undefines(Apex), flowTesting(Flow) or agentTesting(Agent)
+   */
+  TestNamespace?: string;
 };
 
 export type ApexTestResult = {

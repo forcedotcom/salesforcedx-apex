@@ -293,11 +293,11 @@ describe('Apex Test Suites', async () => {
         'TestClass1.method1,FlowTesting.TestFlow.TestFlowClass.method1,TestClass2.method2';
 
       const testService = new TestService(mockConnection);
-      // Mock the processFlowTest and processApexTest methods
-      const processFlowTestSpy = sandboxStub.spy(
+      // Mock the processFlowOrAgentTest and processApexTest methods
+      const processFlowOrAgentTestSpy = sandboxStub.spy(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         testService as any,
-        'processFlowTest'
+        'processFlowOrAgentTest'
       );
       const processApexTestSpy = sandboxStub.spy(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -308,9 +308,9 @@ describe('Apex Test Suites', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (testService as any).buildTestPayload(tests);
 
-      // Verify that processFlowTest was called for Flow test
-      expect(processFlowTestSpy.calledOnce).to.be.true;
-      expect(processFlowTestSpy.args[0][0]).to.deep.equal([
+      // Verify that processFlowOrAgentTest was called for Flow test
+      expect(processFlowOrAgentTestSpy.calledOnce).to.be.true;
+      expect(processFlowOrAgentTestSpy.args[0][0]).to.deep.equal([
         'FlowTesting',
         'TestFlow',
         'TestFlowClass',
@@ -334,10 +334,10 @@ describe('Apex Test Suites', async () => {
         'FlowTesting.TestFlow1.TestFlowClass1.method1,FlowTesting.TestFlow2.TestFlowClass2.method2';
 
       const testService = new TestService(mockConnection);
-      const processFlowTestSpy = sandboxStub.spy(
+      const processFlowOrAgentTestSpy = sandboxStub.spy(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         testService as any,
-        'processFlowTest'
+        'processFlowOrAgentTest'
       );
       const processApexTestSpy = sandboxStub.spy(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -348,8 +348,8 @@ describe('Apex Test Suites', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (testService as any).buildTestPayload(tests);
 
-      // Verify that only processFlowTest was called
-      expect(processFlowTestSpy.calledTwice).to.be.true;
+      // Verify that only processFlowOrAgentTest was called
+      expect(processFlowOrAgentTestSpy.calledTwice).to.be.true;
       expect(processApexTestSpy.notCalled).to.be.true;
     });
 
@@ -358,10 +358,10 @@ describe('Apex Test Suites', async () => {
         'TestClass1.method1,TestClass2.method2,namespace.TestClass3.method3';
 
       const testService = new TestService(mockConnection);
-      const processFlowTestSpy = sandboxStub.spy(
+      const processFlowOrAgentTestSpy = sandboxStub.spy(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         testService as any,
-        'processFlowTest'
+        'processFlowOrAgentTest'
       );
       const processApexTestSpy = sandboxStub.spy(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -374,7 +374,7 @@ describe('Apex Test Suites', async () => {
 
       // Verify that only processApexTest was called
       expect(processApexTestSpy.calledThrice).to.be.true;
-      expect(processFlowTestSpy.notCalled).to.be.true;
+      expect(processFlowOrAgentTestSpy.notCalled).to.be.true;
     });
   });
 

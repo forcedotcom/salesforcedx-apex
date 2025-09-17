@@ -26,6 +26,7 @@ import { JUnitFormatTransformer, TapFormatTransformer } from '../reporters';
 import {
   getBufferSize,
   getJsonIndent,
+  isAgentTest,
   isFlowTest,
   queryNamespaces
 } from './utils';
@@ -522,10 +523,10 @@ export class TestService {
     for (const test of testNameArray) {
       if (test.indexOf('.') > 0) {
         const testParts = test.split('.');
-        const isFlow = isFlowTest(test);
+        const isFlowOrAgent = isFlowTest(test) || isAgentTest(test);
 
-        if (isFlow) {
-          namespaceInfos = await this.processFlowTest(
+        if (isFlowOrAgent) {
+          namespaceInfos = await this.processFlowOrAgentTest(
             testParts,
             testItems,
             classes,
@@ -551,7 +552,7 @@ export class TestService {
     };
   }
 
-  private async processFlowTest(
+  private async processFlowOrAgentTest(
     testParts: string[],
     testItems: TestItem[],
     classes: string[],
