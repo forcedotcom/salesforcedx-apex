@@ -297,7 +297,7 @@ export type ApexTestResultRecord = {
    */
   TestTimestamp: string;
   /**
-   * Indicates the type or test. Undefines(Apex), flowTesting(Flow) or agentTesting(Agent)
+   * Indicates the type of test. Undefines(Apex), flowTesting(Flow) or agentTesting(Agent)
    */
   TestNamespace?: string;
 };

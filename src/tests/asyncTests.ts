@@ -485,7 +485,7 @@ export class AsyncTests {
     const hasIsTestSetupField = await this.supportsTestSetupFeature();
     try {
       const testRunIds = testQueueResult.records.map((r) => r.Id);
-      const runResults: ApexTestResult[] = await this.getApexTestResults(
+      const runResults = await this.getApexTestResults(
         testRunIds,
         hasIsTestSetupField
       );
@@ -553,10 +553,10 @@ export class AsyncTests {
       };
     });
   }
+
   /**
    * Format AgentTest result to ApexTestResult type
    */
-
   private formatAgentTestResult(
     agentTestResults: ApexTestResult[]
   ): ApexTestResult[] {

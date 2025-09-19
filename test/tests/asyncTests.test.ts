@@ -861,7 +861,6 @@ describe('Run Apex tests asynchronously', () => {
 
       const asyncTestSrv = new AsyncTests(mockConnection);
       await asyncTestSrv.getAsyncTestResults(testQueueItems);
-      console.log(mockToolingQuery.calledTwice);
       expect(mockToolingQuery.calledTwice).to.be.true;
       expect(mockToolingQuery.calledWith(queryOne)).to.be.true;
       expect(mockToolingQuery.calledWith(queryTwo)).to.be.true;

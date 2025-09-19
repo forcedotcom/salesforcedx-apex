@@ -523,10 +523,9 @@ export class TestService {
     for (const test of testNameArray) {
       if (test.indexOf('.') > 0) {
         const testParts = test.split('.');
-        const isFlowOrAgent = isFlowTest(test) || isAgentTest(test);
 
-        if (isFlowOrAgent) {
-          namespaceInfos = await this.processFlowOrAgentTest(
+        if (isFlowTest(test) || isAgentTest(test)) {
+          namespaceInfos = await this.processTestWithPrefix(
             testParts,
             testItems,
             classes,
@@ -552,7 +551,16 @@ export class TestService {
     };
   }
 
-  private async processFlowOrAgentTest(
+  /**
+   * Processes test identifiers with prefixes and organizes them into test items.
+   * Handles both 4-part (prefix.namespace.testName.testMethod) and 3-part
+   * (prefix.namespace.testName.testMethod) test naming conventions.
+   *
+   * For 4-part tests, creates test items with full namespace and className structure.
+   * For 3-part tests, queries namespace information to determine if the namespace
+   * is installed and structures the test item accordingly.
+   */
+  private async processTestWithPrefix(
     testParts: string[],
     testItems: TestItem[],
     classes: string[],
