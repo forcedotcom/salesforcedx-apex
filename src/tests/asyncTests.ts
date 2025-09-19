@@ -43,6 +43,7 @@ import {
 } from './types';
 import {
   calculatePercentage,
+  computeTestCategory,
   getJsonIndent,
   transformTestResult,
   queryAll,
@@ -483,15 +484,21 @@ export class AsyncTests {
     HeapMonitor.getInstance().checkHeapSize('asyncTests.getAsyncTestResults');
     const hasIsTestSetupField = await this.supportsTestSetupFeature();
     try {
-      const { apexTestIds, flowTestIds } = this.mapTestResultsByCategory(
-        testQueueResult.records
+      const testRunIds = testQueueResult.records.map((r) => r.Id);
+      const runResults = await this.getApexTestResults(
+        testRunIds,
+        hasIsTestSetupField
       );
 
+      const { agentTestResults, apexTestResults, flowTestIds } =
+        this.mapTestResultsByCategory(runResults);
+
       const allTestResults: ApexTestResult[] = [];
-      if (apexTestIds.length > 0) {
-        allTestResults.push(
-          ...(await this.getApexTestResults(apexTestIds, hasIsTestSetupField))
-        );
+      if (agentTestResults.length > 0) {
+        allTestResults.push(...this.formatAgentTestResult(agentTestResults));
+      }
+      if (apexTestResults.length > 0) {
+        allTestResults.push(...apexTestResults);
       }
       if (flowTestIds.length > 0) {
         allTestResults.push(...(await this.getFlowTestResults(flowTestIds)));
@@ -543,6 +550,44 @@ export class AsyncTests {
         totalSize: tmpRecords.length,
         records: tmpRecords,
         category: TestCategory.Flow
+      };
+    });
+  }
+
+  /**
+   * Format AgentTest result to ApexTestResult type
+   */
+  private formatAgentTestResult(
+    agentTestResults: ApexTestResult[]
+  ): ApexTestResult[] {
+    return agentTestResults.map((agentTestResult) => {
+      const tmpRecords: ApexTestResultRecord[] = agentTestResult.records.map(
+        (record) => ({
+          Id: record.Id,
+          QueueItemId: record.QueueItemId,
+          StackTrace: '', // Default value
+          Message: record.Message, // Default value
+          AsyncApexJobId: record.AsyncApexJobId,
+          MethodName: '',
+          Outcome: record.Outcome,
+          ApexLogId: '', // Default value
+          IsTestSetup: false,
+          ApexClass: {
+            Id: record.QueueItemId,
+            Name: record.MethodName,
+            NamespacePrefix: record.TestNamespace,
+            FullName: `${record.TestNamespace}.${record.MethodName}`
+          },
+          RunTime: record.RunTime, // Default value, replace with actual runtime if available
+          TestTimestamp: record.TestTimestamp
+        })
+      );
+
+      return {
+        done: agentTestResult.done,
+        totalSize: tmpRecords.length,
+        records: tmpRecords,
+        category: TestCategory.Agent
       };
     });
   }
@@ -759,22 +804,75 @@ export class AsyncTests {
   }
 
   /**
-   * Maps test results by category (Apex vs Flow tests)
+   * Separates test results into Apex, Agent, and Flow categories by examining each record's TestNamespace and category.
+   *
+   * Uses computeTestCategory utility to determine test type and separates records into:
+   * - Flow tests: Records with TestNamespace.Flow, their IDs are added to flowTestIds
+   * - Agent tests: Records with TestNamespace.Agent, added to agentTestResults
+   * - Apex tests: All other records, added to apexTestResults
+   *
+   * Each record gets a calculated 'category' property based on its TestNamespace.
+   *
+   * @param testResults Array of test results containing records to categorize
+   * @returns Object containing separated Apex, Agent test results and Flow test IDs
    */
-  public mapTestResultsByCategory(records: ApexTestQueueItemRecord[]): {
-    apexTestIds: string[];
+  public mapTestResultsByCategory(testResults: ApexTestResult[]): {
+    apexTestResults: ApexTestResult[];
+    agentTestResults: ApexTestResult[];
     flowTestIds: string[];
   } {
-    if (!records?.length) {
-      return { apexTestIds: [], flowTestIds: [] };
+    if (!testResults?.length) {
+      return { apexTestResults: [], agentTestResults: [], flowTestIds: [] };
     }
+
+    const apexTestResults: ApexTestResult[] = [];
+    const agentTestResults: ApexTestResult[] = [];
+    const flowTestIds: string[] = [];
+
+    // Iterate through all test results
+    testResults.forEach((testResult) => {
+      if (testResult.records?.length) {
+        const apexRecords: ApexTestResultRecord[] = [];
+        const agentRecords: ApexTestResultRecord[] = [];
+
+        testResult.records.forEach((record) => {
+          const category = computeTestCategory(record.TestNamespace);
+          const recordWithCategory = {
+            ...record,
+            category
+          };
+
+          if (category === TestCategory.Flow) {
+            flowTestIds.push(record.QueueItemId);
+          } else if (category === TestCategory.Agent) {
+            agentRecords.push(recordWithCategory);
+          } else {
+            apexRecords.push(recordWithCategory);
+          }
+        });
+
+        if (apexRecords.length > 0) {
+          apexTestResults.push({
+            ...testResult,
+            totalSize: apexRecords.length,
+            records: apexRecords
+          });
+        }
+
+        if (agentRecords.length > 0) {
+          agentTestResults.push({
+            ...testResult,
+            totalSize: agentRecords.length,
+            records: agentRecords
+          });
+        }
+      }
+    });
+
     return {
-      apexTestIds: records
-        .filter((r) => r.ApexClassId !== null)
-        .map((r) => r.Id),
-      flowTestIds: records
-        .filter((r) => r.ApexClassId === null)
-        .map((r) => r.Id)
+      apexTestResults,
+      agentTestResults,
+      flowTestIds
     };
   }
 
@@ -798,8 +896,8 @@ export class AsyncTests {
     isTestSetup: boolean
   ): Promise<ApexTestResult[]> {
     const queryTemplate = isTestSetup
-      ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
-      : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
+      ? `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, TestNamespace, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`
+      : `SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, TestNamespace, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN (%s)`;
     const queries = this.buildChunkedQueries(queryTemplate, recordIds);
 
     const connection = await this.defineApiVersion();
