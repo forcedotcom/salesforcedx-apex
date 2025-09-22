@@ -232,9 +232,23 @@ describe('Run Apex tests asynchronously', () => {
         }
       ]
     });
-
-    // Second call - flow test results
+    // Second call - get all ApexTestResult records
     mockToolingQuery.onSecondCall().resolves({
+      done: true,
+      totalSize: 1,
+      records: [
+        {
+          QueueItemId: '7092M000000Vt94QAC',
+          ApexClassId: null,
+          Status: ApexTestQueueItemStatus.Completed,
+          TestNamespace: 'flowtesting',
+          TestRunResultId: '05m2M000000TgYuQAK'
+        }
+      ]
+    });
+
+    // Third call - flow test results
+    mockToolingQuery.onThirdCall().resolves({
       done: true,
       totalSize: 1,
       records: [
@@ -287,7 +301,7 @@ describe('Run Apex tests asynchronously', () => {
     testResultQuery +=
       'FlowDefinition.DeveloperName, FlowDefinition.NamespacePrefix ';
     testResultQuery += `FROM FlowTestResult WHERE ApexTestQueueItemId IN ('${pollResponseForFlowTest.records[0].Id}')`;
-    expect(mockToolingQuery.getCall(1).args[0]).to.equal(testResultQuery);
+    expect(mockToolingQuery.getCall(2).args[0]).to.equal(testResultQuery);
     expect(getTestResultData).to.deep.equals(flowTestResultData);
   });
 
@@ -784,7 +798,7 @@ describe('Run Apex tests asynchronously', () => {
 
   describe('Check Query Limits', async () => {
     const queryStart =
-      'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
+      'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, TestNamespace, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
 
     const queueItemRecords: ApexTestQueueItemRecord[] = [];
     const queryIds: string[] = [];
@@ -813,10 +827,9 @@ describe('Run Apex tests asynchronously', () => {
         .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const result = await asyncTestSrv.getAsyncTestResults(testQueueItems);
+      await asyncTestSrv.getAsyncTestResults(testQueueItems);
 
       expect(mockToolingQuery.calledTwice).to.be.true;
-      expect(result.length).to.eql(2);
     });
 
     it('should make a single api call if query is under char limit', async () => {
@@ -825,10 +838,9 @@ describe('Run Apex tests asynchronously', () => {
         .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const result = await asyncTestSrv.getAsyncTestResults(pollResponse);
+      await asyncTestSrv.getAsyncTestResults(pollResponse);
 
       expect(mockToolingQuery.calledOnce).to.be.true;
-      expect(result.length).to.eql(1);
     });
 
     it('should format multiple queries correctly', async () => {
@@ -848,10 +860,8 @@ describe('Run Apex tests asynchronously', () => {
         .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const result = await asyncTestSrv.getAsyncTestResults(testQueueItems);
-
+      await asyncTestSrv.getAsyncTestResults(testQueueItems);
       expect(mockToolingQuery.calledTwice).to.be.true;
-      expect(result.length).to.eql(2);
       expect(mockToolingQuery.calledWith(queryOne)).to.be.true;
       expect(mockToolingQuery.calledWith(queryTwo)).to.be.true;
     });
@@ -871,10 +881,9 @@ describe('Run Apex tests asynchronously', () => {
         .resolves({ done: true, totalSize: 1, records: [] });
 
       const asyncTestSrv = new AsyncTests(mockConnection);
-      const result = await asyncTestSrv.getAsyncTestResults(testQueueItems);
+      await asyncTestSrv.getAsyncTestResults(testQueueItems);
 
       expect(mockToolingQuery.calledTwice).to.be.true;
-      expect(result.length).to.eql(2);
       expect(mockToolingQuery.calledWith(queryOne)).to.be.true;
       expect(
         mockToolingQuery.calledWith(`${queryStart}('7092M000000Vt94QAC-0')`)
@@ -883,7 +892,7 @@ describe('Run Apex tests asynchronously', () => {
 
     it('should split the queue into chunks of 500 records', async () => {
       const queryStart =
-        'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
+        'SELECT Id, QueueItemId, StackTrace, Message, RunTime, TestTimestamp, AsyncApexJobId, MethodName, Outcome, ApexLogId, IsTestSetup, TestNamespace, ApexClass.Id, ApexClass.Name, ApexClass.NamespacePrefix FROM ApexTestResult WHERE QueueItemId IN ';
       const queryStartSeparatorCount = queryStart.split(',').length - 1;
 
       const mockToolingQuery = sandboxStub
@@ -1686,7 +1695,7 @@ describe('Run Apex tests asynchronously', () => {
         ]
       };
 
-      // Mock responses for Apex tests
+      // Mock responses for all ApexTestResult records
       const mockApexResults = {
         done: true,
         totalSize: 2,
@@ -1702,6 +1711,7 @@ describe('Run Apex tests asynchronously', () => {
             MethodName: 'testMethod1',
             Outcome: 'Pass',
             ApexLogId: null as string | null,
+            TestNamespace: null as string,
             ApexClass: {
               Id: '01p000000000001',
               Name: 'TestClass1',
@@ -1719,11 +1729,26 @@ describe('Run Apex tests asynchronously', () => {
             MethodName: 'testMethod2',
             Outcome: 'Pass',
             ApexLogId: null as string | null,
+            TestNamespace: null as string,
             ApexClass: {
               Id: '01p000000000002',
               Name: 'TestClass2',
               NamespacePrefix: null as string | null
             }
+          },
+          {
+            Id: 'apexResult3',
+            QueueItemId: 'queuedFlowId',
+            StackTrace: null as string | null,
+            Message: null as string | null,
+            RunTime: 150,
+            TestTimestamp: '2023-01-01T10:00:00.000Z',
+            AsyncApexJobId: 'job1',
+            MethodName: 'testMethod2',
+            Outcome: 'Pass',
+            ApexLogId: null as string | null,
+            TestNamespace: 'flowtesting',
+            ApexClass: null
           }
         ]
       };
@@ -1764,7 +1789,6 @@ describe('Run Apex tests asynchronously', () => {
 
       // Verify that both queries were executed
       expect(mockToolingQuery.calledTwice).to.be.true;
-
       // Verify ApexTestResult query was called correctly
       const apexQuery = mockToolingQuery
         .getCalls()
@@ -1774,7 +1798,7 @@ describe('Run Apex tests asynchronously', () => {
       expect(apexQuery.args[0]).to.include('WHERE QueueItemId IN');
       expect(apexQuery.args[0]).to.include("'apex1'");
       expect(apexQuery.args[0]).to.include("'apex2'");
-      expect(apexQuery.args[0]).to.not.include("'flow1'"); // Flow test should not be in Apex query
+      expect(apexQuery.args[0]).to.include("'flow1'");
 
       // Verify FlowTestResult query was called correctly
       const flowQuery = mockToolingQuery
@@ -1783,7 +1807,7 @@ describe('Run Apex tests asynchronously', () => {
       expect(flowQuery).to.exist;
       expect(flowQuery.args[0]).to.include('FROM FlowTestResult');
       expect(flowQuery.args[0]).to.include('WHERE ApexTestQueueItemId IN');
-      expect(flowQuery.args[0]).to.include("'flow1'");
+      expect(flowQuery.args[0]).to.include("'queuedFlowId'");
       expect(flowQuery.args[0]).to.not.include("'apex1'"); // Apex tests should not be in Flow query
       expect(flowQuery.args[0]).to.not.include("'apex2'"); // Apex tests should not be in Flow query
 

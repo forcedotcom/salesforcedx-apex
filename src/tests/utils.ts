@@ -14,6 +14,7 @@ import {
   NamespaceInfo,
   TestCategory,
   TestCategoryPrefix,
+  TestNamespace,
   TestResult,
   TestResultRaw
 } from './types';
@@ -219,11 +220,27 @@ export const calculateCodeCoverage = async (
 
 export const computeTestCategory = (
   testNamespace: string | null
-): TestCategory =>
-  isFlowTest(testNamespace) ? TestCategory.Flow : TestCategory.Apex;
+): TestCategory => {
+  const tns: string = testNamespace?.split('.')[0]?.toLowerCase();
+  switch (tns) {
+    case TestNamespace.Flow:
+      return TestCategory.Flow;
+    case TestNamespace.Agent:
+      return TestCategory.Agent;
+    default:
+      return TestCategory.Apex;
+  }
+};
 
 export const isFlowTest = (test: string | null): boolean =>
-  test?.startsWith(TestCategoryPrefix.FlowTest) ?? false;
+  (test?.startsWith(TestCategoryPrefix.FlowTest) ||
+    test.includes(`.${TestCategoryPrefix.FlowTest}`)) ??
+  false;
+
+export const isAgentTest = (test: string | null): boolean =>
+  (test?.startsWith(TestCategoryPrefix.AgentTest) ||
+    test.includes(`.${TestCategoryPrefix.AgentTest}`)) ??
+  false;
 
 const transformToApexTestSetupData = (
   testData: Omit<ApexTestResultDataRaw, 'isTestSetup'>

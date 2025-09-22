@@ -281,6 +281,38 @@ describe('Run Apex tests synchronously', () => {
       syncTests = new SyncTests(mockConnection);
     });
 
+    it('should assign Agent category to Agent tests', async () => {
+      const mockSyncResult = {
+        numTestsRun: 1,
+        numFailures: 0,
+        totalTime: 100,
+        successes: [
+          {
+            id: '01pxx00000NWwb3AAD',
+            methodName: 'testMethod',
+            name: 'AgentTest',
+            namespace: 'agenttesting',
+            seeAllData: false,
+            time: 50
+          }
+        ],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        failures: [] as any[],
+        apexLogId: '07Lxx00000cxy6YUAQ'
+      };
+
+      const result = await syncTests.formatSyncResults(
+        mockSyncResult,
+        Date.now()
+      );
+
+      expect(result.tests).to.have.length(1);
+      expect(result.tests[0].category).to.equal(TestCategory.Agent);
+      expect(result.tests[0].apexClass.fullName).to.equal(
+        'agenttesting.AgentTest'
+      );
+    });
+
     it('should assign Apex category to regular Apex tests', async () => {
       const mockSyncResult = {
         numTestsRun: 1,
