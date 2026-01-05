@@ -19,7 +19,11 @@ export {
   CoverageReporter,
   CoverageReportFormats,
   DefaultReportOptions,
-  DefaultWatermarks
+  DefaultWatermarks,
+  MarkdownTextReporter,
+  MarkdownTextReporterOptions,
+  OutputFormat,
+  TestSortOrder
 } from './reporters';
 export {
   ApexCodeCoverageAggregate,

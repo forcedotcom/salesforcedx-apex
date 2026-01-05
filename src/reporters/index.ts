@@ -16,3 +16,9 @@ export {
   DefaultWatermarks
 } from './coverageReporter';
 export { TapFormatTransformer } from './tapFormatTransform';
+export {
+  MarkdownTextReporter,
+  MarkdownTextReporterOptions,
+  OutputFormat,
+  TestSortOrder
+} from './markdownTextReporter';
