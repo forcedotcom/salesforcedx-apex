@@ -5,11 +5,15 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
+import { TestResult, ApexTestResultData } from '../tests/types';
 import {
-  TestResult,
-  ApexTestResultData,
-  CodeCoverageResult
-} from '../tests/types';
+  ReportData,
+  renderMarkdownReport,
+  FailureTest,
+  WarningTest,
+  TestTableRow,
+  CoverageTableRow
+} from './markdownReportTemplate';
 
 export type OutputFormat = 'markdown' | 'text';
 export type TestSortOrder = 'runtime' | 'coverage' | 'severity';
@@ -207,20 +211,10 @@ export class MarkdownTextReporter {
    * Generates a markdown report from test results
    */
   private generateMarkdownReport(result: TestResult): string {
-    const summary = result.summary;
-    const passed = summary?.passing ?? 0;
-    const failed = summary?.failing ?? 0;
-    const skipped = summary?.skipped ?? 0;
-    const total = summary?.testsRan ?? 0;
-    const duration =
-      summary?.outcome === 'Passed' || summary?.outcome === 'Failed'
-        ? (summary?.testExecutionTimeInMs ?? 0)
-        : 0;
-
+    const { passed, failed, skipped, total, duration } = getSummaryInfo(
+      result.summary
+    );
     const timestampStr = formatTimestamp(this.timestamp);
-
-    let report = '# Apex Test Results\n\n';
-    report += `**Run completed:** ${timestampStr}\n\n`;
 
     // Helper function to sort tests based on sort order
     const sortTests = (tests: ApexTestResultData[]): ApexTestResultData[] => {
@@ -228,7 +222,6 @@ export class MarkdownTextReporter {
         return tests;
       }
       return [...tests].sort((a: ApexTestResultData, b: ApexTestResultData) => {
-        // Extract runtime and coverage values once
         const runtimeA = a.runTime ?? 0;
         const runtimeB = b.runTime ?? 0;
         const coverageA = this.codeCoverage
@@ -239,19 +232,14 @@ export class MarkdownTextReporter {
           : 100;
 
         if (this.sortOrder === 'runtime') {
-          // Sort by runtime (slowest first), then by coverage (lowest first) if runtime is equal
-          if (runtimeB !== runtimeA) {
-            return runtimeB - runtimeA;
-          }
-          return coverageA - coverageB;
+          return runtimeB !== runtimeA
+            ? runtimeB - runtimeA
+            : coverageA - coverageB;
         } else if (this.sortOrder === 'coverage') {
-          // Sort by coverage (lowest first), then by runtime (slowest first) if coverage is equal
-          if (coverageA !== coverageB) {
-            return coverageA - coverageB;
-          }
-          return runtimeB - runtimeA;
+          return coverageA !== coverageB
+            ? coverageA - coverageB
+            : runtimeB - runtimeA;
         } else {
-          // Sort by severity (worst first)
           const scoreA = getSeverityScore(
             a,
             this.codeCoverage,
@@ -269,286 +257,193 @@ export class MarkdownTextReporter {
       });
     };
 
-    // Summary section with cleaner formatting
-    report += '## Summary\n\n';
-    report += `- **Total Tests:** ${total}\n`;
-    report += `- ✅ **Passed:** ${passed}\n`;
-    report += `- ❌ **Failed:** ${failed}\n`;
-    if (skipped > 0) {
-      report += `- ⏭️ **Skipped:** ${skipped}\n`;
-    }
-    report += `- ⏱️ **Duration:** ${formatDuration(duration)}\n\n`;
-
-    // Failures section
+    // Build data structures using spread operators
     const failedTests =
       result.tests?.filter((test) => test.outcome?.toString() === 'Fail') ?? [];
-    if (failedTests.length > 0) {
-      report += `## ❌ Failures (${failedTests.length})\n\n`;
-      for (const test of failedTests) {
-        const { testName } = getTestNameInfo(test);
-
-        report += `### ${escapeMarkdown(testName)}\n\n`;
-        if (test.runTime !== undefined) {
-          report += `*Duration: ${formatDuration(test.runTime)}*\n\n`;
-        }
-        if (test.message) {
-          report += '**Error Message**\n\n';
-          report += `\`\`\`\n${test.message}\n\`\`\`\n\n`;
-        }
-        if (test.stackTrace) {
-          report += '**Stack Trace**\n\n';
-          report += `\`\`\`\n${test.stackTrace}\n\`\`\`\n\n`;
-        }
-        report += '---\n\n';
-      }
-    }
-
-    // Identify poorly performing and poorly covered tests
-    const poorlyPerformingTests: ApexTestResultData[] = [];
-    const poorlyCoveredTests: ApexTestResultData[] = [];
-
-    if (result.tests) {
-      for (const test of result.tests) {
-        if (isPoorlyPerforming(test.runTime, this.performanceThresholdMs)) {
-          poorlyPerformingTests.push(test);
-        }
-        if (this.codeCoverage) {
-          const coverage = test.perClassCoverage?.[0]?.percentage;
-          if (hasPoorCoverage(coverage, this.coverageThresholdPercent)) {
-            poorlyCoveredTests.push(test);
-          }
-        }
-      }
-    }
-
-    // Add warnings section for poorly performing and poorly covered tests
-    if (poorlyPerformingTests.length > 0 || poorlyCoveredTests.length > 0) {
-      report += '## ⚠️ Test Quality Warnings\n\n';
-
-      if (poorlyPerformingTests.length > 0) {
-        // Sort by runtime descending (worst first)
-        const sortedPoorlyPerforming = [...poorlyPerformingTests].sort(
-          (a: ApexTestResultData, b: ApexTestResultData) => {
-            const runtimeA = a.runTime ?? 0;
-            const runtimeB = b.runTime ?? 0;
-            return runtimeB - runtimeA; // Descending order
-          }
-        );
-
-        report += `### 🐌 Poorly Performing Tests (${poorlyPerformingTests.length})\n\n`;
-        report += `*Tests taking longer than ${formatDuration(this.performanceThresholdMs)} (sorted by runtime, slowest first)*\n\n`;
-        for (const test of sortedPoorlyPerforming) {
-          const { testName } = getTestNameInfo(test);
-          const runtime =
-            test.runTime !== undefined ? formatDuration(test.runTime) : 'N/A';
-
-          report += `- **${escapeMarkdown(testName)}** - **${runtime}**\n`;
-        }
-        report += '\n';
-      }
-
-      if (poorlyCoveredTests.length > 0) {
-        // Sort by coverage ascending (lowest/worst first)
-        const sortedPoorlyCovered = [...poorlyCoveredTests].sort(
-          (a: ApexTestResultData, b: ApexTestResultData) => {
-            const coverageA =
-              getCoveragePercentage(a.perClassCoverage?.[0]?.percentage) ?? 0;
-            const coverageB =
-              getCoveragePercentage(b.perClassCoverage?.[0]?.percentage) ?? 0;
-            return coverageA - coverageB; // Ascending order (lowest first)
-          }
-        );
-
-        report += `### 📉 Poorly Covered Tests (${poorlyCoveredTests.length})\n\n`;
-        report += `*Tests with coverage below ${this.coverageThresholdPercent}%*\n\n`;
-        for (const test of sortedPoorlyCovered) {
-          const { testName } = getTestNameInfo(test);
-          const coverage = test.perClassCoverage?.[0]?.percentage ?? 'N/A';
-          const coverageStr =
-            typeof coverage === 'string' ? coverage : String(coverage);
-
-          report += `- **${escapeMarkdown(testName)}** - ${coverageStr} coverage\n`;
-        }
-        report += '\n';
-      }
-    }
-
-    // Test results table with coverage (if available)
-    if (this.codeCoverage && result.tests && result.tests.length > 0) {
-      // Sort tests based on sort order
-      const sortedTests = sortTests(result.tests) ?? [];
-
-      report += '## Test Results with Coverage\n\n';
-      report +=
-        '*Note: Coverage shown is per-test coverage for the class being tested. Overall class coverage is shown in the "Code Coverage by Class" section below.*\n\n';
-      report += '<table style="width: 100%; border-collapse: collapse;">\n';
-      report += '<thead>\n';
-      report += '<tr style="border-bottom: 2px solid;">\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 45%;">Test Name</th>\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 20%;">Class Being Tested</th>\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 12%;">Outcome</th>\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 10%;">Per-Test Coverage</th>\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 13%;">Runtime</th>\n';
-      report += '</tr>\n';
-      report += '</thead>\n';
-      report += '<tbody>\n';
-      for (const test of sortedTests) {
-        const { fullClassName, testName } = getTestNameInfo(test);
-        const outcome = test.outcome?.toString() ?? 'Unknown';
-        const coverage = test.perClassCoverage?.[0]?.percentage ?? 'N/A';
-        const coverageStr = typeof coverage === 'string' ? coverage : 'N/A';
-        const runtime =
-          test.runTime !== undefined ? formatDuration(test.runTime) : 'N/A';
-        const outcomeEmoji =
-          outcome === 'Pass' ? '✅' : outcome === 'Fail' ? '❌' : '⏭️';
-
-        // Determine if this test needs highlighting
-        const isSlow = isPoorlyPerforming(
-          test.runTime,
-          this.performanceThresholdMs
-        );
-        const hasLowCoverage = hasPoorCoverage(
-          coverage,
-          this.coverageThresholdPercent
-        );
-
-        // Row style (no background highlighting to maintain visibility)
-        const rowStyle = 'border-bottom: 1px solid #ddd;';
-
-        report += `<tr style="${rowStyle}">\n`;
-        report += `<td style="padding: 8px;"><code>${escapeMarkdown(testName)}</code>`;
-        if (isSlow || hasLowCoverage) {
-          report += ' ⚠️';
-        }
-        report += '</td>\n';
-        report += `<td style="padding: 8px;">${escapeMarkdown(fullClassName)}</td>\n`;
-        report += `<td style="padding: 8px;">${outcomeEmoji} ${outcome}</td>\n`;
-
-        // Highlight coverage cell if poor
-        let coverageStyle = 'padding: 8px;';
-        if (hasLowCoverage) {
-          coverageStyle += ' font-weight: bold; color: #d32f2f;';
-        }
-        report += `<td style="${coverageStyle}">${coverageStr}</td>\n`;
-
-        // Highlight runtime cell if slow
-        let runtimeStyle = 'padding: 8px;';
-        if (isSlow) {
-          runtimeStyle += ' font-weight: bold; color: #d32f2f;';
-        }
-        report += `<td style="${runtimeStyle}">${runtime}</td>\n`;
-        report += '</tr>\n';
-      }
-      report += '</tbody>\n';
-      report += '</table>\n\n';
-    }
-
-    // Passed tests section
     const passedTests =
       result.tests?.filter((test) => test.outcome?.toString() === 'Pass') ?? [];
-    if (passedTests.length > 0) {
-      const sortedPassedTests = sortTests(passedTests) ?? [];
+    const skippedTests =
+      result.tests?.filter((test) => test.outcome?.toString() === 'Skip') ?? [];
 
-      report += `## ✅ Passed Tests (${passedTests.length})\n\n`;
-      for (const test of sortedPassedTests) {
-        const { testName } = getTestNameInfo(test);
+    // Build failures data
+    const failures: FailureTest[] = failedTests.map((test) => {
+      const { testName } = getTestNameInfo(test);
+      return {
+        testName: escapeMarkdown(testName),
+        ...(test.runTime !== undefined && {
+          duration: formatDuration(test.runTime)
+        }),
+        ...(test.message && { message: test.message }),
+        ...(test.stackTrace && { stackTrace: test.stackTrace })
+      };
+    });
 
-        const isSlow = isPoorlyPerforming(
-          test.runTime,
-          this.performanceThresholdMs
-        );
-        const hasLowCoverage =
-          this.codeCoverage &&
+    // Identify poorly performing and poorly covered tests
+    const poorlyPerformingTests =
+      result.tests?.filter((test) =>
+        isPoorlyPerforming(test.runTime, this.performanceThresholdMs)
+      ) ?? [];
+    const poorlyCoveredTests = this.codeCoverage
+      ? (result.tests?.filter((test) =>
           hasPoorCoverage(
             test.perClassCoverage?.[0]?.percentage,
             this.coverageThresholdPercent
-          );
+          )
+        ) ?? [])
+      : [];
 
-        report += `- ${escapeMarkdown(testName)}`;
-        if (test.runTime !== undefined) {
-          const runtimeStr = formatDuration(test.runTime);
-          report += isSlow
-            ? ` (🐌 **${runtimeStr}** - slow)`
-            : ` (${runtimeStr})`;
-        }
-        if (this.codeCoverage) {
-          const coverage = test.perClassCoverage?.[0]?.percentage;
-          if (coverage) {
-            report += hasLowCoverage
-              ? ` (📉 **${coverage}** coverage - low)`
-              : ` - ${coverage} coverage`;
-          }
-        }
-        report += '\n';
-      }
-      report += '\n';
-    }
-
-    // Skipped tests section
-    const skippedTests =
-      result.tests?.filter((test) => test.outcome?.toString() === 'Skip') ?? [];
-    if (skippedTests.length > 0) {
-      report += `## ⏭️ Skipped Tests (${skippedTests.length})\n\n`;
-      for (const test of skippedTests) {
+    // Build warnings data
+    const poorlyPerformingWarnings: WarningTest[] = [...poorlyPerformingTests]
+      .sort((a, b) => (b.runTime ?? 0) - (a.runTime ?? 0))
+      .map((test) => {
         const { testName } = getTestNameInfo(test);
+        return {
+          testName: escapeMarkdown(testName),
+          value:
+            test.runTime !== undefined ? formatDuration(test.runTime) : 'N/A',
+          type: 'performance' as const
+        };
+      });
 
-        report += `- ${escapeMarkdown(testName)}\n`;
-      }
-      report += '\n';
-    }
+    const poorlyCoveredWarnings: WarningTest[] = [...poorlyCoveredTests]
+      .sort((a, b) => {
+        const coverageA =
+          getCoveragePercentage(a.perClassCoverage?.[0]?.percentage) ?? 0;
+        const coverageB =
+          getCoveragePercentage(b.perClassCoverage?.[0]?.percentage) ?? 0;
+        return coverageA - coverageB;
+      })
+      .map((test) => {
+        const { testName } = getTestNameInfo(test);
+        const coverage = test.perClassCoverage?.[0]?.percentage ?? 'N/A';
+        return {
+          testName: escapeMarkdown(testName),
+          value: typeof coverage === 'string' ? coverage : String(coverage),
+          type: 'coverage' as const
+        };
+      });
 
-    // Code coverage by class section
-    if (
-      this.codeCoverage &&
-      result.codecoverage &&
-      result.codecoverage.length > 0
-    ) {
-      // Sort by coverage percentage ascending (lowest/worst first)
-      const sortedCoverage = [...result.codecoverage].sort(
-        (a: CodeCoverageResult, b: CodeCoverageResult) => {
-          const percentageA = getCoveragePercentage(a.percentage) ?? 0;
-          const percentageB = getCoveragePercentage(b.percentage) ?? 0;
-          return percentageA - percentageB; // Ascending order (lowest first)
-        }
+    // Build test table data
+    const testTableRows: TestTableRow[] =
+      this.codeCoverage && result.tests
+        ? sortTests(result.tests).map((test) => {
+            const { fullClassName, testName } = getTestNameInfo(test);
+            const outcome = test.outcome?.toString() ?? 'Unknown';
+            const coverage = test.perClassCoverage?.[0]?.percentage ?? 'N/A';
+            const coverageStr = typeof coverage === 'string' ? coverage : 'N/A';
+            const runtime =
+              test.runTime !== undefined ? formatDuration(test.runTime) : 'N/A';
+            const outcomeEmoji =
+              outcome === 'Pass' ? '✅' : outcome === 'Fail' ? '❌' : '⏭️';
+            const isSlow = isPoorlyPerforming(
+              test.runTime,
+              this.performanceThresholdMs
+            );
+            const hasLowCoverage = hasPoorCoverage(
+              coverage,
+              this.coverageThresholdPercent
+            );
+
+            return {
+              testName: escapeMarkdown(testName),
+              className: escapeMarkdown(fullClassName),
+              outcome,
+              outcomeEmoji,
+              coverage: coverageStr,
+              runtime,
+              hasWarning: isSlow || hasLowCoverage
+            };
+          })
+        : [];
+
+    // Build passed tests data
+    const passedTestsData = sortTests(passedTests).map((test) => {
+      const { testName } = getTestNameInfo(test);
+      const isSlow = isPoorlyPerforming(
+        test.runTime,
+        this.performanceThresholdMs
       );
+      const hasLowCoverage =
+        this.codeCoverage &&
+        hasPoorCoverage(
+          test.perClassCoverage?.[0]?.percentage,
+          this.coverageThresholdPercent
+        );
 
-      report += '## Code Coverage by Class\n\n';
-      report +=
-        '*This section shows the overall code coverage for each class after all tests have run. This may differ from per-test coverage shown in the table above.*\n\n';
-      report += '<table style="width: 100%; border-collapse: collapse;">\n';
-      report += '<thead>\n';
-      report += '<tr style="border-bottom: 2px solid;">\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 30%;">Class</th>\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 15%;">Coverage</th>\n';
-      report +=
-        '<th style="text-align: left; padding: 8px; width: 55%;">Uncovered Lines</th>\n';
-      report += '</tr>\n';
-      report += '</thead>\n';
-      report += '<tbody>\n';
-      for (const coverageItem of sortedCoverage) {
-        const className = coverageItem.name ?? 'Unknown';
-        const percentage = coverageItem.percentage ?? '0%';
-        const uncoveredLines = coverageItem.uncoveredLines ?? [];
-        const uncoveredStr =
-          uncoveredLines.length > 0 ? uncoveredLines.join(', ') : 'None';
-        report += '<tr style="border-bottom: 1px solid #ddd;">\n';
-        report += `<td style="padding: 8px;"><code>${escapeMarkdown(className)}</code></td>\n`;
-        report += `<td style="padding: 8px;">${percentage}</td>\n`;
-        report += `<td style="padding: 8px;">${uncoveredStr}</td>\n`;
-        report += '</tr>\n';
-      }
-      report += '</tbody>\n';
-      report += '</table>\n\n';
-    }
+      return {
+        testName: escapeMarkdown(testName),
+        ...(test.runTime !== undefined && {
+          runtime: formatDuration(test.runTime)
+        }),
+        ...(this.codeCoverage &&
+          test.perClassCoverage?.[0]?.percentage && {
+            coverage: String(test.perClassCoverage[0].percentage)
+          }),
+        isSlow,
+        hasLowCoverage
+      };
+    });
 
-    return report;
+    // Build skipped tests data
+    const skippedTestsData = skippedTests.map((test) => {
+      const { testName } = getTestNameInfo(test);
+      return { testName: escapeMarkdown(testName) };
+    });
+
+    // Build coverage table data
+    const coverageTableRows: CoverageTableRow[] =
+      this.codeCoverage && result.codecoverage
+        ? [...result.codecoverage]
+            .sort((a, b) => {
+              const percentageA = getCoveragePercentage(a.percentage) ?? 0;
+              const percentageB = getCoveragePercentage(b.percentage) ?? 0;
+              return percentageA - percentageB;
+            })
+            .map((coverageItem) => {
+              const className = coverageItem.name ?? 'Unknown';
+              const percentage = coverageItem.percentage ?? '0%';
+              const uncoveredLines = coverageItem.uncoveredLines ?? [];
+              return {
+                className: escapeMarkdown(className),
+                percentage,
+                uncoveredLines:
+                  uncoveredLines.length > 0 ? uncoveredLines.join(', ') : 'None'
+              };
+            })
+        : [];
+
+    // Build report data object
+    const reportData: ReportData = {
+      timestamp: timestampStr,
+      summary: {
+        total,
+        passed,
+        failed,
+        skipped,
+        duration: formatDuration(duration)
+      },
+      failures,
+      warnings: {
+        poorlyPerforming: poorlyPerformingWarnings,
+        poorlyCovered: poorlyCoveredWarnings
+      },
+      ...(testTableRows.length > 0 && {
+        testTable: {
+          rows: testTableRows,
+          note: 'Note: Coverage shown is per-test coverage for the class being tested. Overall class coverage is shown in the "Code Coverage by Class" section below.'
+        }
+      }),
+      passedTests: passedTestsData,
+      skippedTests: skippedTestsData,
+      ...(coverageTableRows.length > 0 && {
+        coverageTable: {
+          rows: coverageTableRows,
+          note: 'This section shows the overall code coverage for each class after all tests have run. This may differ from per-test coverage shown in the table above.'
+        }
+      })
+    };
+
+    return renderMarkdownReport(reportData);
   }
 
   /**
