@@ -17,8 +17,8 @@ export {
 } from './coverageReporter';
 export { TapFormatTransformer } from './tapFormatTransform';
 export {
-  MarkdownTextReporter,
   MarkdownTextReporterOptions,
   OutputFormat,
   TestSortOrder
 } from './markdownTextReporter';
+export { MarkdownTextFormatTransformer } from './markdownTextFormatTransformer';

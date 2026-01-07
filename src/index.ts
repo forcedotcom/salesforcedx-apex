@@ -20,8 +20,8 @@ export {
   CoverageReportFormats,
   DefaultReportOptions,
   DefaultWatermarks,
-  MarkdownTextReporter,
   MarkdownTextReporterOptions,
+  MarkdownTextFormatTransformer,
   OutputFormat,
   TestSortOrder
 } from './reporters';

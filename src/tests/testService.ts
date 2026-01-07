@@ -25,7 +25,7 @@ import { nls } from '../i18n';
 import {
   JUnitFormatTransformer,
   TapFormatTransformer,
-  MarkdownTextReporter
+  MarkdownTextFormatTransformer
 } from '../reporters';
 import {
   getBufferSize,
@@ -116,25 +116,19 @@ export const writeResultFiles = async (
           break;
         case ResultFormat.markdown:
           filePath = join(dirPath, `test-result-${testRunId || 'default'}.md`);
-          {
-            const reporter = new MarkdownTextReporter({
-              format: 'markdown',
-              codeCoverage
-            });
-            const reportContent = reporter.format(result);
-            readable = Readable.from([reportContent]);
-          }
+          readable = new MarkdownTextFormatTransformer(result, {
+            bufferSize: getBufferSize(),
+            format: 'markdown',
+            codeCoverage
+          });
           break;
         case ResultFormat.text:
           filePath = join(dirPath, `test-result-${testRunId || 'default'}.txt`);
-          {
-            const reporter = new MarkdownTextReporter({
-              format: 'text',
-              codeCoverage
-            });
-            const reportContent = reporter.format(result);
-            readable = Readable.from([reportContent]);
-          }
+          readable = new MarkdownTextFormatTransformer(result, {
+            bufferSize: getBufferSize(),
+            format: 'text',
+            codeCoverage
+          });
           break;
         default:
           throw new Error(nls.localize('resultFormatErr'));
