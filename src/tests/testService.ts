@@ -726,23 +726,27 @@ export class TestService {
   ): Promise<NamespaceInfo[]> {
     if (testParts.length === 3) {
       // namespace.ClassName.testMethod
-      if (!classes.includes(testParts[1])) {
+      // Use the full className format (namespace.ClassName) which works for all namespace types
+      const fullClassName = `${testParts[0]}.${testParts[1]}`;
+      if (!classes.includes(fullClassName)) {
         testItems.push({
-          namespace: `${testParts[0]}`,
-          className: `${testParts[1]}`,
+          className: fullClassName,
           testMethods: [testParts[2]]
         });
-        classes.push(testParts[1]);
+        classes.push(fullClassName);
       } else {
         testItems.forEach((element) => {
-          if (element.className === `${testParts[1]}`) {
-            element.namespace = `${testParts[0]}`;
-            element.testMethods.push(`${testParts[2]}`);
+          if (element.className === fullClassName) {
+            element.testMethods!.push(testParts[2]);
           }
         });
       }
     } else {
-      // Handle 2-part Apex tests or namespace resolution
+      // Handle 2-part Apex tests: namespace.Class or Class.method
+      // For namespace.Class, use the simple className format that works for all namespace types
+      // For Class.method, this is a test method without namespace
+
+      // First check if this could be a namespace by seeing if we have any namespace info
       if (typeof namespaceInfos === 'undefined') {
         namespaceInfos = await queryNamespaces(this.connection);
       }
@@ -750,20 +754,13 @@ export class TestService {
         (namespaceInfo) => namespaceInfo.namespace === testParts[0]
       );
 
-      // NOTE: Installed packages require the namespace to be specified as part of the className field
-      // The namespace field should not be used with subscriber orgs
       if (currentNamespace) {
-        if (currentNamespace.installedNs) {
-          testItems.push({
-            className: `${testParts[0]}.${testParts[1]}`
-          });
-        } else {
-          testItems.push({
-            namespace: `${testParts[0]}`,
-            className: `${testParts[1]}`
-          });
-        }
+        // This is namespace.Class - use full className format for all namespace types
+        testItems.push({
+          className: `${testParts[0]}.${testParts[1]}`
+        });
       } else {
+        // This is Class.method - testParts[0] is the class, testParts[1] is the method
         if (!classes.includes(testParts[0])) {
           testItems.push({
             className: testParts[0],

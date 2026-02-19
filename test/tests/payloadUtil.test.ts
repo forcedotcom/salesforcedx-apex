@@ -89,13 +89,13 @@ describe('Build async payload', async () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNamespace',
-          className: 'myClass'
+          className: 'myNamespace.myClass'
         }
       ],
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
+    // Still queries namespaces to distinguish namespace.Class from Class.method
     expect(namespaceStub.calledOnce).to.be.true;
   });
 
@@ -117,6 +117,7 @@ describe('Build async payload', async () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
+    // Still queries namespaces to distinguish namespace.Class from Class.method
     expect(namespaceStub.calledOnce).to.be.true;
   });
 
@@ -132,12 +133,10 @@ describe('Build async payload', async () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNamespace',
-          className: 'myClass'
+          className: 'myNamespace.myClass'
         },
         {
-          namespace: 'myNamespace',
-          className: 'mySecondClass'
+          className: 'myNamespace.mySecondClass'
         }
       ],
       testLevel: TestLevel.RunSpecifiedTests,
@@ -156,8 +155,7 @@ describe('Build async payload', async () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNamespace',
-          className: 'myClass',
+          className: 'myNamespace.myClass',
           testMethods: ['myTest']
         }
       ],
@@ -437,8 +435,7 @@ describe('Build sync payload', async () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNamespace',
-          className: 'myClass',
+          className: 'myNamespace.myClass',
           testMethods: ['myTest']
         }
       ],
