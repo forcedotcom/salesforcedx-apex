@@ -535,7 +535,6 @@ export class TestService {
   /**
    * Resolves namespace for a class name and returns a TestItem
    * @param className - Class name, potentially with namespace (e.g., "ns.ClassName" or "ClassName")
-   * @param namespaceInfos - Cached namespace information from org (pass null if not yet queried)
    * @returns TestItem with properly formatted namespace and className fields
    */
   private resolveClassNamespace = (className: string): TestItem => {
@@ -573,18 +572,8 @@ export class TestService {
     skipCodeCoverage: boolean
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',');
-    console.log(
-      '[apex-node] buildAsyncClassPayload called with:',
-      classNameArray
-    );
-
     const classItems = classNameArray.map((className) =>
       this.resolveClassNamespace(className)
-    );
-
-    console.log(
-      '[apex-node] Built test items:',
-      JSON.stringify(classItems, null, 2)
     );
 
     return {
