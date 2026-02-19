@@ -550,17 +550,10 @@ export class TestService {
         (namespaceInfo) => namespaceInfo.namespace === classParts[0]
       );
 
-      // NOTE: Installed packages require the namespace to be specified as part of the className field
-      // The namespace field should not be used with subscriber orgs
       if (currentNamespace) {
-        if (currentNamespace.installedNs) {
-          return { className: `${classParts[0]}.${classParts[1]}` };
-        } else {
-          return {
-            namespace: `${classParts[0]}`,
-            className: `${classParts[1]}`
-          };
-        }
+        // For class-only runs (no methods), always use className format
+        // This works for both installed packages and org namespaces
+        return { className: `${classParts[0]}.${classParts[1]}` };
       } else {
         // Namespace not found in org, treat the whole thing as a class name
         return { className: `${classParts[0]}.${classParts[1]}` };

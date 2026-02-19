@@ -70,8 +70,7 @@ describe('buildAsyncClassPayload with namespaces', () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNamespace',
-          className: 'MyTestClass'
+          className: 'myNamespace.MyTestClass'
         }
       ],
       testLevel: TestLevel.RunSpecifiedTests,
@@ -116,8 +115,7 @@ describe('buildAsyncClassPayload with namespaces', () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'orgNs',
-          className: 'TestClass1'
+          className: 'orgNs.TestClass1'
         },
         {
           className: 'installedPkg.TestClass2'
@@ -168,16 +166,13 @@ describe('buildAsyncClassPayload with namespaces', () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNs',
-          className: 'Class1'
+          className: 'myNs.Class1'
         },
         {
-          namespace: 'myNs',
-          className: 'Class2'
+          className: 'myNs.Class2'
         },
         {
-          namespace: 'myNs',
-          className: 'Class3'
+          className: 'myNs.Class3'
         }
       ],
       testLevel: TestLevel.RunSpecifiedTests,
@@ -226,8 +221,7 @@ describe('buildSyncPayload with class namespaces', () => {
     expect(payload).to.deep.equal({
       tests: [
         {
-          namespace: 'myNs',
-          className: 'MyTestClass'
+          className: 'myNs.MyTestClass'
         }
       ],
       testLevel: TestLevel.RunSpecifiedTests,

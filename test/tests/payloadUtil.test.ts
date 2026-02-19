@@ -250,12 +250,7 @@ describe('Build async payload', async () => {
       'myNamespace.myClass'
     );
     expect(payload).to.deep.equal({
-      tests: [
-        {
-          namespace: 'myNamespace',
-          className: 'myClass'
-        }
-      ],
+      tests: [{ className: 'myNamespace.myClass' }],
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
@@ -479,12 +474,7 @@ describe('Build sync payload', async () => {
     );
 
     expect(payload).to.deep.equal({
-      tests: [
-        {
-          namespace: 'myNamespace',
-          className: 'myClass'
-        }
-      ],
+      tests: [{ className: 'myNamespace.myClass' }],
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
