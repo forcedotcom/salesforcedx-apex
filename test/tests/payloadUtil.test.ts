@@ -254,7 +254,8 @@ describe('Build async payload', async () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should build async payload for suite', async () => {
@@ -478,7 +479,8 @@ describe('Build sync payload', async () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should throw an error if multiple classes are specified', async () => {

@@ -76,29 +76,31 @@ describe('buildAsyncClassPayload with namespaces', () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should build async payload for single class with installed package namespace', async () => {
     const namespaceStub = sandboxStub
       .stub(utils, 'queryNamespaces')
-      .resolves([{ installedNs: true, namespace: 'installedPkg' }]);
+      .resolves([{ installedNs: true, namespace: 'CodeBuilder' }]);
     const payload = await testService.buildAsyncPayload(
       TestLevel.RunSpecifiedTests,
       undefined,
-      'installedPkg.MyTestClass'
+      'CodeBuilder.ApplicationTest'
     );
 
     expect(payload).to.deep.equal({
       tests: [
         {
-          className: 'installedPkg.MyTestClass'
+          className: 'CodeBuilder.ApplicationTest'
         }
       ],
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should build async payload for multiple classes with mixed namespaces', async () => {
@@ -127,7 +129,8 @@ describe('buildAsyncClassPayload with namespaces', () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should build async payload for class with namespace not in org', async () => {
@@ -150,7 +153,8 @@ describe('buildAsyncClassPayload with namespaces', () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should only query namespaces once for multiple classes', async () => {
@@ -178,7 +182,8 @@ describe('buildAsyncClassPayload with namespaces', () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 });
 
@@ -227,7 +232,8 @@ describe('buildSyncPayload with class namespaces', () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 
   it('should build sync payload for class with installed package namespace', async () => {
@@ -249,6 +255,7 @@ describe('buildSyncPayload with class namespaces', () => {
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.calledOnce).to.be.true;
+    // No longer queries namespaces for class-only runs
+    expect(namespaceStub.called).to.be.false;
   });
 });

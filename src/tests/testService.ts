@@ -538,27 +538,15 @@ export class TestService {
    * @param namespaceInfos - Cached namespace information from org (pass null if not yet queried)
    * @returns TestItem with properly formatted namespace and className fields
    */
-  private resolveClassNamespace = (
-    className: string,
-    namespaceInfos: NamespaceInfo[] | null
-  ): TestItem => {
+  private resolveClassNamespace = (className: string): TestItem => {
     const classParts = className.split('.');
 
-    if (classParts.length > 1 && namespaceInfos) {
-      // Potential namespace.ClassName format
-      const currentNamespace = namespaceInfos.find(
-        (namespaceInfo) => namespaceInfo.namespace === classParts[0]
-      );
-
-      if (currentNamespace) {
-        // For class-only runs (no methods), always use className format
-        // This works for both installed packages and org namespaces
-        return { className: `${classParts[0]}.${classParts[1]}` };
-      } else {
-        // Namespace not found in org, treat the whole thing as a class name
-        return { className: `${classParts[0]}.${classParts[1]}` };
-      }
+    if (classParts.length > 1) {
+      // Has namespace - always use full className format
+      // This works for both installed packages and org namespaces
+      return { className: `${classParts[0]}.${classParts[1]}` };
     } else {
+      // No namespace - single class name
       const prop = isValidApexClassID(className) ? 'classId' : 'className';
       return { [prop]: className } as TestItem;
     }
@@ -570,11 +558,7 @@ export class TestService {
     testLevel: TestLevel,
     skipCodeCoverage: boolean
   ): Promise<SyncTestConfiguration> {
-    // Only query namespaces if className contains a dot
-    const namespaceInfos = className.includes('.')
-      ? await queryNamespaces(this.connection)
-      : null;
-    const testItem = this.resolveClassNamespace(className, namespaceInfos);
+    const testItem = this.resolveClassNamespace(className);
 
     return {
       tests: [testItem],
@@ -589,17 +573,18 @@ export class TestService {
     skipCodeCoverage: boolean
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',');
-
-    // Only query namespaces if any className contains a dot
-    const needsNamespaceQuery = classNameArray.some((name) =>
-      name.includes('.')
+    console.log(
+      '[apex-node] buildAsyncClassPayload called with:',
+      classNameArray
     );
-    const namespaceInfos = needsNamespaceQuery
-      ? await queryNamespaces(this.connection)
-      : null;
 
     const classItems = classNameArray.map((className) =>
-      this.resolveClassNamespace(className, namespaceInfos)
+      this.resolveClassNamespace(className)
+    );
+
+    console.log(
+      '[apex-node] Built test items:',
+      JSON.stringify(classItems, null, 2)
     );
 
     return {
