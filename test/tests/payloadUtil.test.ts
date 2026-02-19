@@ -250,11 +250,16 @@ describe('Build async payload', async () => {
       'myNamespace.myClass'
     );
     expect(payload).to.deep.equal({
-      tests: [{ className: 'myNamespace.myClass' }],
+      tests: [
+        {
+          namespace: 'myNamespace',
+          className: 'myClass'
+        }
+      ],
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.notCalled).to.be.true;
+    expect(namespaceStub.calledOnce).to.be.true;
   });
 
   it('should build async payload for suite', async () => {
@@ -474,11 +479,16 @@ describe('Build sync payload', async () => {
     );
 
     expect(payload).to.deep.equal({
-      tests: [{ className: 'myNamespace.myClass' }],
+      tests: [
+        {
+          namespace: 'myNamespace',
+          className: 'myClass'
+        }
+      ],
       testLevel: TestLevel.RunSpecifiedTests,
       skipCodeCoverage: false
     });
-    expect(namespaceStub.notCalled).to.be.true;
+    expect(namespaceStub.calledOnce).to.be.true;
   });
 
   it('should throw an error if multiple classes are specified', async () => {

@@ -461,12 +461,11 @@ export class TestService {
           }
           return payload;
         } else {
-          const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
-          return {
-            tests: [{ [prop]: classnames }],
+          return await this.buildSyncClassPayload(
+            classnames,
             testLevel,
             skipCodeCoverage
-          };
+          );
         }
       } else if (this.hasCategory(category)) {
         return {
@@ -533,20 +532,83 @@ export class TestService {
     }
   }
 
+  /**
+   * Resolves namespace for a class name and returns a TestItem
+   * @param className - Class name, potentially with namespace (e.g., "ns.ClassName" or "ClassName")
+   * @param namespaceInfos - Cached namespace information from org (pass null if not yet queried)
+   * @returns TestItem with properly formatted namespace and className fields
+   */
+  private resolveClassNamespace = (
+    className: string,
+    namespaceInfos: NamespaceInfo[] | null
+  ): TestItem => {
+    const classParts = className.split('.');
+
+    if (classParts.length > 1 && namespaceInfos) {
+      // Potential namespace.ClassName format
+      const currentNamespace = namespaceInfos.find(
+        (namespaceInfo) => namespaceInfo.namespace === classParts[0]
+      );
+
+      // NOTE: Installed packages require the namespace to be specified as part of the className field
+      // The namespace field should not be used with subscriber orgs
+      if (currentNamespace) {
+        if (currentNamespace.installedNs) {
+          return { className: `${classParts[0]}.${classParts[1]}` };
+        } else {
+          return {
+            namespace: `${classParts[0]}`,
+            className: `${classParts[1]}`
+          };
+        }
+      } else {
+        // Namespace not found in org, treat the whole thing as a class name
+        return { className: `${classParts[0]}.${classParts[1]}` };
+      }
+    } else {
+      const prop = isValidApexClassID(className) ? 'classId' : 'className';
+      return { [prop]: className } as TestItem;
+    }
+  };
+
+  @elapsedTime()
+  private async buildSyncClassPayload(
+    className: string,
+    testLevel: TestLevel,
+    skipCodeCoverage: boolean
+  ): Promise<SyncTestConfiguration> {
+    // Only query namespaces if className contains a dot
+    const namespaceInfos = className.includes('.')
+      ? await queryNamespaces(this.connection)
+      : null;
+    const testItem = this.resolveClassNamespace(className, namespaceInfos);
+
+    return {
+      tests: [testItem],
+      testLevel,
+      skipCodeCoverage
+    };
+  }
+
   @elapsedTime()
   private async buildAsyncClassPayload(
     classNames: string,
     skipCodeCoverage: boolean
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',');
-    const classItems = classNameArray.map((item) => {
-      const classParts = item.split('.');
-      if (classParts.length > 1) {
-        return { className: `${classParts[0]}.${classParts[1]}` };
-      }
-      const prop = isValidApexClassID(item) ? 'classId' : 'className';
-      return { [prop]: item } as TestItem;
-    });
+
+    // Only query namespaces if any className contains a dot
+    const needsNamespaceQuery = classNameArray.some((name) =>
+      name.includes('.')
+    );
+    const namespaceInfos = needsNamespaceQuery
+      ? await queryNamespaces(this.connection)
+      : null;
+
+    const classItems = classNameArray.map((className) =>
+      this.resolveClassNamespace(className, namespaceInfos)
+    );
+
     return {
       tests: classItems,
       testLevel: TestLevel.RunSpecifiedTests,
