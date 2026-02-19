@@ -461,12 +461,11 @@ export class TestService {
           }
           return payload;
         } else {
-          const prop = isValidApexClassID(classnames) ? 'classId' : 'className';
-          return {
-            tests: [{ [prop]: classnames }],
+          return await this.buildSyncClassPayload(
+            classnames,
             testLevel,
             skipCodeCoverage
-          };
+          );
         }
       } else if (this.hasCategory(category)) {
         return {
@@ -533,20 +532,50 @@ export class TestService {
     }
   }
 
+  /**
+   * Resolves namespace for a class name and returns a TestItem
+   * @param className - Class name, potentially with namespace (e.g., "ns.ClassName" or "ClassName")
+   * @returns TestItem with properly formatted namespace and className fields
+   */
+  private resolveClassNamespace = (className: string): TestItem => {
+    const classParts = className.split('.');
+
+    if (classParts.length > 1) {
+      // Has namespace - always use full className format
+      // This works for both installed packages and org namespaces
+      return { className: `${classParts[0]}.${classParts[1]}` };
+    } else {
+      // No namespace - single class name
+      const prop = isValidApexClassID(className) ? 'classId' : 'className';
+      return { [prop]: className } as TestItem;
+    }
+  };
+
+  @elapsedTime()
+  private async buildSyncClassPayload(
+    className: string,
+    testLevel: TestLevel,
+    skipCodeCoverage: boolean
+  ): Promise<SyncTestConfiguration> {
+    const testItem = this.resolveClassNamespace(className);
+
+    return {
+      tests: [testItem],
+      testLevel,
+      skipCodeCoverage
+    };
+  }
+
   @elapsedTime()
   private async buildAsyncClassPayload(
     classNames: string,
     skipCodeCoverage: boolean
   ): Promise<AsyncTestArrayConfiguration> {
     const classNameArray = classNames.split(',');
-    const classItems = classNameArray.map((item) => {
-      const classParts = item.split('.');
-      if (classParts.length > 1) {
-        return { className: `${classParts[0]}.${classParts[1]}` };
-      }
-      const prop = isValidApexClassID(item) ? 'classId' : 'className';
-      return { [prop]: item } as TestItem;
-    });
+    const classItems = classNameArray.map((className) =>
+      this.resolveClassNamespace(className)
+    );
+
     return {
       tests: classItems,
       testLevel: TestLevel.RunSpecifiedTests,
@@ -686,23 +715,27 @@ export class TestService {
   ): Promise<NamespaceInfo[]> {
     if (testParts.length === 3) {
       // namespace.ClassName.testMethod
-      if (!classes.includes(testParts[1])) {
+      // Use the full className format (namespace.ClassName) which works for all namespace types
+      const fullClassName = `${testParts[0]}.${testParts[1]}`;
+      if (!classes.includes(fullClassName)) {
         testItems.push({
-          namespace: `${testParts[0]}`,
-          className: `${testParts[1]}`,
+          className: fullClassName,
           testMethods: [testParts[2]]
         });
-        classes.push(testParts[1]);
+        classes.push(fullClassName);
       } else {
         testItems.forEach((element) => {
-          if (element.className === `${testParts[1]}`) {
-            element.namespace = `${testParts[0]}`;
-            element.testMethods.push(`${testParts[2]}`);
+          if (element.className === fullClassName) {
+            element.testMethods!.push(testParts[2]);
           }
         });
       }
     } else {
-      // Handle 2-part Apex tests or namespace resolution
+      // Handle 2-part Apex tests: namespace.Class or Class.method
+      // For namespace.Class, use the simple className format that works for all namespace types
+      // For Class.method, this is a test method without namespace
+
+      // First check if this could be a namespace by seeing if we have any namespace info
       if (typeof namespaceInfos === 'undefined') {
         namespaceInfos = await queryNamespaces(this.connection);
       }
@@ -710,20 +743,13 @@ export class TestService {
         (namespaceInfo) => namespaceInfo.namespace === testParts[0]
       );
 
-      // NOTE: Installed packages require the namespace to be specified as part of the className field
-      // The namespace field should not be used with subscriber orgs
       if (currentNamespace) {
-        if (currentNamespace.installedNs) {
-          testItems.push({
-            className: `${testParts[0]}.${testParts[1]}`
-          });
-        } else {
-          testItems.push({
-            namespace: `${testParts[0]}`,
-            className: `${testParts[1]}`
-          });
-        }
+        // This is namespace.Class - use full className format for all namespace types
+        testItems.push({
+          className: `${testParts[0]}.${testParts[1]}`
+        });
       } else {
+        // This is Class.method - testParts[0] is the class, testParts[1] is the method
         if (!classes.includes(testParts[0])) {
           testItems.push({
             className: testParts[0],
