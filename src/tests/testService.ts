@@ -169,6 +169,28 @@ export const writeResultFiles = async (
   return filesWritten;
 };
 
+/**
+ * Resolves namespace for a class name and returns a TestItem
+ * @param className - Class name, potentially with namespace (e.g., "ns.ClassName" or "ClassName")
+ * @returns TestItem with properly formatted namespace and className fields
+ */
+const resolveClassNamespace = (className: string): TestItem => {
+  const classParts = className.split('.');
+
+  if (classParts.length > 1) {
+    // Has namespace - always use full className format
+    // This works for both installed packages and org namespaces
+    const [namespace, classNamePart] = classParts;
+    return { className: `${namespace}.${classNamePart}` };
+  } else {
+    // No namespace - single class name
+    if (isValidApexClassID(className)) {
+      return { classId: className };
+    }
+    return { className };
+  }
+};
+
 export class TestService {
   private readonly connection: Connection;
   public readonly asyncService: AsyncTests;
@@ -507,15 +529,9 @@ export class TestService {
         )) as AsyncTestArrayConfiguration;
       } else if (classNames) {
         if (this.hasCategory(category)) {
-          return await this.buildClassPayloadForFlow(
-            classNames,
-            skipCodeCoverage
-          );
+          return this.buildClassPayloadForFlow(classNames, skipCodeCoverage);
         } else {
-          return await this.buildAsyncClassPayload(
-            classNames,
-            skipCodeCoverage
-          );
+          return this.buildAsyncClassPayload(classNames, skipCodeCoverage);
         }
       } else {
         return {
@@ -532,32 +548,13 @@ export class TestService {
     }
   }
 
-  /**
-   * Resolves namespace for a class name and returns a TestItem
-   * @param className - Class name, potentially with namespace (e.g., "ns.ClassName" or "ClassName")
-   * @returns TestItem with properly formatted namespace and className fields
-   */
-  private resolveClassNamespace = (className: string): TestItem => {
-    const classParts = className.split('.');
-
-    if (classParts.length > 1) {
-      // Has namespace - always use full className format
-      // This works for both installed packages and org namespaces
-      return { className: `${classParts[0]}.${classParts[1]}` };
-    } else {
-      // No namespace - single class name
-      const prop = isValidApexClassID(className) ? 'classId' : 'className';
-      return { [prop]: className } as TestItem;
-    }
-  };
-
   @elapsedTime()
-  private async buildSyncClassPayload(
+  private buildSyncClassPayload(
     className: string,
     testLevel: TestLevel,
     skipCodeCoverage: boolean
-  ): Promise<SyncTestConfiguration> {
-    const testItem = this.resolveClassNamespace(className);
+  ): SyncTestConfiguration {
+    const testItem = resolveClassNamespace(className);
 
     return {
       tests: [testItem],
@@ -567,14 +564,13 @@ export class TestService {
   }
 
   @elapsedTime()
-  private async buildAsyncClassPayload(
+  private buildAsyncClassPayload(
     classNames: string,
     skipCodeCoverage: boolean
-  ): Promise<AsyncTestArrayConfiguration> {
-    const classNameArray = classNames.split(',');
-    const classItems = classNameArray.map((className) =>
-      this.resolveClassNamespace(className)
-    );
+  ): AsyncTestArrayConfiguration {
+    const classItems = classNames
+      .split(',')
+      .map((className) => resolveClassNamespace(className));
 
     return {
       tests: classItems,
@@ -584,14 +580,13 @@ export class TestService {
   }
 
   @elapsedTime()
-  private async buildClassPayloadForFlow(
+  private buildClassPayloadForFlow(
     classNames: string,
     skipCodeCoverage: boolean
-  ): Promise<AsyncTestArrayConfiguration> {
-    const classNameArray = classNames.split(',');
-    const classItems = classNameArray.map(
-      (item): TestItem => ({ className: item })
-    );
+  ): AsyncTestArrayConfiguration {
+    const classItems = classNames
+      .split(',')
+      .map((item): TestItem => ({ className: item }));
     return {
       tests: classItems,
       testLevel: TestLevel.RunSpecifiedTests,
@@ -650,55 +645,59 @@ export class TestService {
   ): Promise<NamespaceInfo[]> {
     if (testParts.length === 4) {
       // flowtesting.namespace.FlowName.testMethod
-      const fullClassName = `${testParts[0]}.${testParts[1]}.${testParts[2]}`;
+      const [flowTestingPrefix, namespace, flowName, methodName] = testParts;
+      const fullClassName = `${flowTestingPrefix}.${namespace}.${flowName}`;
 
       if (!classes.includes(fullClassName)) {
         testItems.push({
-          namespace: `${testParts[0]}.${testParts[1]}`,
+          namespace: `${flowTestingPrefix}.${namespace}`,
           className: fullClassName,
-          testMethods: [testParts[3]]
+          testMethods: [methodName]
         });
         classes.push(fullClassName);
       } else {
         testItems.forEach((element) => {
           if (element.className === fullClassName) {
-            element.namespace = `${testParts[0]}.${testParts[1]}`;
-            element.testMethods.push(testParts[3]);
+            element.namespace = `${flowTestingPrefix}.${namespace}`;
+            element.testMethods.push(methodName);
           }
         });
       }
     } else {
       // Handle 3-part Flow tests: flowtesting.FlowName.testMethod
+      const [flowTestingPrefix, flowOrNamespace, testMethodOrFlowName] =
+        testParts;
+
       if (typeof namespaceInfos === 'undefined') {
         namespaceInfos = await queryNamespaces(this.connection);
       }
       const currentNamespace = namespaceInfos.find(
-        (namespaceInfo) => namespaceInfo.namespace === testParts[1]
+        (namespaceInfo) => namespaceInfo.namespace === flowOrNamespace
       );
 
       if (currentNamespace) {
         if (currentNamespace.installedNs) {
           testItems.push({
-            className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+            className: `${flowTestingPrefix}.${flowOrNamespace}.${testMethodOrFlowName}`
           });
         } else {
           testItems.push({
-            namespace: `${testParts[0]}.${testParts[1]}`,
-            className: `${testParts[0]}.${testParts[1]}.${testParts[2]}`
+            namespace: `${flowTestingPrefix}.${flowOrNamespace}`,
+            className: `${flowTestingPrefix}.${flowOrNamespace}.${testMethodOrFlowName}`
           });
         }
       } else {
-        const flowClassName = `${testParts[0]}.${testParts[1]}`;
+        const flowClassName = `${flowTestingPrefix}.${flowOrNamespace}`;
         if (!classes.includes(flowClassName)) {
           testItems.push({
             className: flowClassName,
-            testMethods: [testParts[2]]
+            testMethods: [testMethodOrFlowName]
           });
           classes.push(flowClassName);
         } else {
           testItems.forEach((element) => {
             if (element.className === flowClassName) {
-              element.testMethods.push(testParts[2]);
+              element.testMethods.push(testMethodOrFlowName);
             }
           });
         }
@@ -715,51 +714,51 @@ export class TestService {
   ): Promise<NamespaceInfo[]> {
     if (testParts.length === 3) {
       // namespace.ClassName.testMethod
-      // Use the full className format (namespace.ClassName) which works for all namespace types
-      const fullClassName = `${testParts[0]}.${testParts[1]}`;
+      const [namespace, className, methodName] = testParts;
+      const fullClassName = `${namespace}.${className}`;
+
       if (!classes.includes(fullClassName)) {
         testItems.push({
           className: fullClassName,
-          testMethods: [testParts[2]]
+          testMethods: [methodName]
         });
         classes.push(fullClassName);
       } else {
         testItems.forEach((element) => {
           if (element.className === fullClassName) {
-            element.testMethods!.push(testParts[2]);
+            element.testMethods!.push(methodName);
           }
         });
       }
     } else {
       // Handle 2-part Apex tests: namespace.Class or Class.method
-      // For namespace.Class, use the simple className format that works for all namespace types
-      // For Class.method, this is a test method without namespace
+      const [firstPart, secondPart] = testParts;
 
       // First check if this could be a namespace by seeing if we have any namespace info
       if (typeof namespaceInfos === 'undefined') {
         namespaceInfos = await queryNamespaces(this.connection);
       }
       const currentNamespace = namespaceInfos.find(
-        (namespaceInfo) => namespaceInfo.namespace === testParts[0]
+        (namespaceInfo) => namespaceInfo.namespace === firstPart
       );
 
       if (currentNamespace) {
         // This is namespace.Class - use full className format for all namespace types
         testItems.push({
-          className: `${testParts[0]}.${testParts[1]}`
+          className: `${firstPart}.${secondPart}`
         });
       } else {
-        // This is Class.method - testParts[0] is the class, testParts[1] is the method
-        if (!classes.includes(testParts[0])) {
+        // This is Class.method - firstPart is the class, secondPart is the method
+        if (!classes.includes(firstPart)) {
           testItems.push({
-            className: testParts[0],
-            testMethods: [testParts[1]]
+            className: firstPart,
+            testMethods: [secondPart]
           });
-          classes.push(testParts[0]);
+          classes.push(firstPart);
         } else {
           testItems.forEach((element) => {
-            if (element.className === testParts[0]) {
-              element.testMethods.push(testParts[1]);
+            if (element.className === firstPart) {
+              element.testMethods.push(secondPart);
             }
           });
         }
