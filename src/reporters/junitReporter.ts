@@ -96,6 +96,8 @@ export class JUnitReporter {
         testCase.apexClass.fullName
       }" time="${msToSecond(testCase.runTime)}">\n`;
 
+      junitTests += this.buildTestCaseProperties(testCase);
+
       if (
         testCase.outcome === ApexTestResultOutcome.Fail ||
         testCase.outcome === ApexTestResultOutcome.CompileFail
@@ -115,6 +117,36 @@ export class JUnitReporter {
   }
 
   @elapsedTime('elapsedTime', LoggerLevel.TRACE)
+  private buildTestCaseProperties(testCase: ApexTestResultData): string {
+    if (!testCase.perClassCoverage || testCase.perClassCoverage.length === 0) {
+      return '';
+    }
+
+    let junitTestProperties = `${tab}${tab}<properties>\n`;
+    Object.entries(testCase.perClassCoverage[0]).forEach(([key, value]) => {
+      if (this.isEmpty(value) || skippedProperties.includes(key)) {
+        return;
+      }
+
+      if (key === 'coverage') {
+        if (value instanceof Object) {
+          let coverageKey: keyof typeof value;
+          for (coverageKey in value) {
+            const coverageValue = value[coverageKey] as number[];
+            junitTestProperties += `${tab}${tab}${tab}<property name="${coverageKey}" value="${coverageValue.join(
+              ','
+            )}"/>\n`;
+          }
+        }
+      } else {
+        junitTestProperties += `${tab}${tab}${tab}<property name="${key}" value="${value}"/>\n`;
+      }
+    });
+    junitTestProperties += `${tab}${tab}</properties>\n`;
+
+    return junitTestProperties;
+  }
+
   private xmlEscape(value: string): string {
     return value
       .replace(/&/g, '&amp;')
@@ -122,5 +154,16 @@ export class JUnitReporter {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
+  }
+
+  private isEmpty(value: string | number | object): boolean {
+    if (
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.length === 0)
+    ) {
+      return true;
+    }
+    return false;
   }
 }
