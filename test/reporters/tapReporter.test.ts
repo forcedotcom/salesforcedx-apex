@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 import { expect } from 'chai';
+import { nls } from '../../src/i18n';
 import { TapReporter } from '../../src';
 import { testResults } from './testResults';
 
@@ -60,7 +61,9 @@ describe('TAP Reporter Tests', () => {
 
   it('should report test diagnostics', () => {
     const result = reporter.buildTapResults(testResults);
-    expect(result[1].diagnostics).to.eql(['Unknown error']);
+    expect(result[1].diagnostics).to.eql([
+      nls.localize('test_failed_no_message')
+    ]);
     expect(result[5].diagnostics).to.eql([
       'System.AssertException: Assertion Failed: Should not have found an animal: Expected: FooBar, Actual:',
       'Class.AnimalLocatorTest.testMissingAnimal: line 22, column 1'

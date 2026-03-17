@@ -4,6 +4,7 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
+import { nls } from '../i18n';
 import { ApexTestResultData, ApexTestResultOutcome } from '../tests';
 import * as os from 'node:os';
 /**
@@ -31,7 +32,7 @@ export const buildTapDiagnostics = (
           .filter((msg) => msg?.length > 0)
           .map((msg) => msg.trim())
       : [testResult.message]
-    : ['Unknown error'];
+    : [nls.localize('test_failed_no_message')];
 
   const stack = testResult.stackTrace
     ? testResult.stackTrace.split(os.EOL)

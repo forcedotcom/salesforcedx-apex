@@ -99,5 +99,15 @@ export const messages = {
   subscribeStarted: 'Subscribing to ApexLog events',
   authForAnonymousApexFailed: 'The authentication for execute anonymous failed',
   runTestReportCommand:
-    'Run "sf apex get test -i %s -o %s" to retrieve test results.'
+    'Run "sf apex get test -i %s -o %s" to retrieve test results.',
+  test_error_unknown_exception:
+    'The org could not complete the request. Check that your org is reachable, your authentication is valid, and try again. If the problem continues, re-authorize the org.',
+  test_error_auth:
+    'Authentication failed or your session may have expired. Re-authorize the org and try again.',
+  test_error_connection:
+    'Could not reach the org. Check your network connection, VPN, and that the org URL is correct. Then try again.',
+  test_error_resource_not_found:
+    'The requested resource was not found. The org may be unavailable or the test run may have expired.',
+  test_error_api: 'The org returned an error: %s',
+  test_failed_no_message: 'Test failed with no message.'
 };

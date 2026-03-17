@@ -40,4 +40,32 @@ describe('Format Test Errors', async () => {
     expect(formattedPkg.name).to.equal(invalidPkgErr.name);
     expect(formattedPkg.stack).to.equal(invalidPkgErr.stack);
   });
+
+  it('should map UNKNOWN_EXCEPTION to user-friendly message', async () => {
+    const err = formatTestErrors(new Error('UNKNOWN_EXCEPTION'));
+    expect(err.message).to.equal(nls.localize('test_error_unknown_exception'));
+  });
+
+  it('should map auth-related errors to user-friendly message', async () => {
+    const err = formatTestErrors(new Error('401 Unauthorized'));
+    expect(err.message).to.equal(nls.localize('test_error_auth'));
+  });
+
+  it('should map connection/network errors to user-friendly message', async () => {
+    const err = formatTestErrors(new Error('ECONNREFUSED'));
+    expect(err.message).to.equal(nls.localize('test_error_connection'));
+  });
+
+  it('should map resource not found to user-friendly message', async () => {
+    const err = formatTestErrors(
+      new Error('The requested resource does not exist')
+    );
+    expect(err.message).to.equal(nls.localize('test_error_resource_not_found'));
+  });
+
+  it('should accept non-Error and map UNKNOWN_EXCEPTION', async () => {
+    const err = formatTestErrors('UNKNOWN_EXCEPTION');
+    expect(err).to.be.instanceOf(Error);
+    expect(err.message).to.equal(nls.localize('test_error_unknown_exception'));
+  });
 });
