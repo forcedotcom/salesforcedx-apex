@@ -191,6 +191,21 @@ const resolveClassNamespace = (className: string): TestItem => {
   }
 };
 
+const escapeSoqlLiteral = (value: string): string =>
+  value.replaceAll("'", "''");
+
+/** Unpackaged vs {@code ns.Name} for ApexClass lookup when building test suites. */
+const apexClassIdQueryForTestSuiteMember = (testClass: string): string => {
+  const dot = testClass.indexOf('.');
+  const shortName = dot === -1 ? testClass : testClass.slice(dot + 1);
+  const nameLit = escapeSoqlLiteral(shortName);
+  if (dot === -1) {
+    return `SELECT Id FROM ApexClass WHERE Name = '${nameLit}' AND (NamespacePrefix = null OR NamespacePrefix = '') LIMIT 1`;
+  }
+  const ns = testClass.slice(0, dot);
+  return `SELECT Id FROM ApexClass WHERE Name = '${nameLit}' AND NamespacePrefix = '${escapeSoqlLiteral(ns)}' LIMIT 1`;
+};
+
 export class TestService {
   private readonly connection: Connection;
   public readonly asyncService: AsyncTests;
@@ -282,14 +297,15 @@ export class TestService {
 
   /**
    * Returns the associated Ids for each given Apex class
-   * @param testClasses list of Apex class names
+   * @param testClasses list of Apex class names (short name for unpackaged, or {@code ns.Name} for namespaced)
    * @returns the associated ids for each Apex class
    */
   @elapsedTime()
   public async getApexClassIds(testClasses: string[]): Promise<string[]> {
     const classIds = testClasses.map(async (testClass) => {
+      const soql = apexClassIdQueryForTestSuiteMember(testClass);
       const apexClass = (await this.connection.tooling.query(
-        `SELECT id, name FROM ApexClass WHERE Name = '${testClass}'`
+        soql
       )) as QueryResult;
       if (apexClass.records.length === 0) {
         throw new Error(nls.localize('missingTestClassErr', testClass));
