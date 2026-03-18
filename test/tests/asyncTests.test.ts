@@ -208,7 +208,7 @@ describe('Run Apex tests asynchronously', () => {
       );
       assert.fail('Expected an error to be thrown');
     } catch (error) {
-      assert.equal(error.message, 'No access token');
+      assert.equal(error.message, nls.localize('test_error_auth'));
     }
   });
 
