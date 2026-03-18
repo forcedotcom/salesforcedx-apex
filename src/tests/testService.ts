@@ -191,19 +191,15 @@ const resolveClassNamespace = (className: string): TestItem => {
   }
 };
 
-const escapeSoqlLiteral = (value: string): string =>
-  value.replaceAll("'", "''");
-
 /** Unpackaged vs {@code ns.Name} for ApexClass lookup when building test suites. */
 const apexClassIdQueryForTestSuiteMember = (testClass: string): string => {
   const dot = testClass.indexOf('.');
   const shortName = dot === -1 ? testClass : testClass.slice(dot + 1);
-  const nameLit = escapeSoqlLiteral(shortName);
   if (dot === -1) {
-    return `SELECT Id FROM ApexClass WHERE Name = '${nameLit}' AND (NamespacePrefix = null OR NamespacePrefix = '') LIMIT 1`;
+    return `SELECT Id FROM ApexClass WHERE Name = '${shortName}' AND (NamespacePrefix = null OR NamespacePrefix = '') LIMIT 1`;
   }
   const ns = testClass.slice(0, dot);
-  return `SELECT Id FROM ApexClass WHERE Name = '${nameLit}' AND NamespacePrefix = '${escapeSoqlLiteral(ns)}' LIMIT 1`;
+  return `SELECT Id FROM ApexClass WHERE Name = '${shortName}' AND NamespacePrefix = '${ns}' LIMIT 1`;
 };
 
 export class TestService {
