@@ -466,6 +466,7 @@ describe('MarkdownTextFormatTransformer', () => {
         expect(result).to.contain(
           '<code>lco1.LCOUtilsTest.test_LCOSDCreateController_assignDefaultPAItems</code>'
         );
+        // Ensure underscores inside <code> tags are not markdown-escaped with a backslash.
         expect(result).to.not.match(/<code>[^<]*\\_[^<]*<\/code>/);
       });
     });
