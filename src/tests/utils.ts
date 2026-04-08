@@ -49,16 +49,18 @@ const resolveInstalledNsRecords = async (
   connection: Connection
 ): Promise<NsPrefixRecord[]> => {
   try {
-    const r = await connection.query<NsPrefixRecord>(
-      'SELECT NamespacePrefix FROM PackageLicense'
-    );
-    return r.records;
+    return (
+      await connection.query<NsPrefixRecord>(
+        'SELECT NamespacePrefix FROM PackageLicense'
+      )
+    ).records;
   } catch {
     try {
-      const r = await connection.tooling.query<InstalledSubscriberRecord>(
-        'SELECT SubscriberPackage.NamespacePrefix FROM InstalledSubscriberPackage'
-      );
-      return r.records.map((rec) => ({
+      return (
+        await connection.tooling.query<InstalledSubscriberRecord>(
+          'SELECT SubscriberPackage.NamespacePrefix FROM InstalledSubscriberPackage'
+        )
+      ).records.map((rec) => ({
         NamespacePrefix: rec.SubscriberPackage.NamespacePrefix
       }));
     } catch {
