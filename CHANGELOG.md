@@ -1,3 +1,12 @@
+## [8.4.31](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.30...8.4.31) (2026-06-28)
+
+
+### Bug Fixes
+
+* **deps:** bump json-stream-stringify from 3.1.6 to 3.1.7 ([31a1e5d](https://github.com/forcedotcom/salesforcedx-apex/commit/31a1e5dbf3a92c7a5dbb9e8505e5ad82b9e494db))
+
+
+
 ## [8.4.30](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.29...8.4.30) (2026-06-21)
 
 
