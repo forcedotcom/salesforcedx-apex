@@ -1,3 +1,12 @@
+## [8.4.33](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.32...8.4.33) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** bump @babel/core from 7.26.10 to 7.29.7 ([0f222c4](https://github.com/forcedotcom/salesforcedx-apex/commit/0f222c434b37c27bb6c3ce926d61cefc4fc0896b))
+
+
+
 ## [8.4.32](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.31...8.4.32) (2026-06-28)
 
 
