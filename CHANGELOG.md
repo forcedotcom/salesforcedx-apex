@@ -1,3 +1,12 @@
+## [8.4.36](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.35...8.4.36) (2026-07-16)
+
+
+### Bug Fixes
+
+* **deps:** bump websocket-driver from 0.7.4 to 0.7.5 ([3928810](https://github.com/forcedotcom/salesforcedx-apex/commit/39288106f4c72fc006e319a22373e4a53883c55e))
+
+
+
 ## [8.4.35](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.34...8.4.35) (2026-07-12)
 
 
