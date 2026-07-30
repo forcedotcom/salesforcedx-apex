@@ -1,3 +1,15 @@
+# [9.0.0](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.39...9.0.0) (2026-07-30)
+
+
+* feat!: require Node >=22, drop EOL Node versions @W-23480655@ (#667) ([e21d507](https://github.com/forcedotcom/salesforcedx-apex/commit/e21d507f74b53e89be6b22b76244a742e1cda66d)), closes [#667](https://github.com/forcedotcom/salesforcedx-apex/issues/667)
+
+
+### BREAKING CHANGES
+
+* Drop support for Node 18 and Node 20. Node >=22.0.0 is now required.
+
+
+
 ## [8.4.39](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.38...8.4.39) (2026-07-26)
 
 
