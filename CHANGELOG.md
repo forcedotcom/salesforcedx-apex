@@ -1,3 +1,12 @@
+## [9.0.1](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.0...9.0.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **deps:** bump undici from 8.5.0 to 8.10.0 ([e0ac7e6](https://github.com/forcedotcom/salesforcedx-apex/commit/e0ac7e6604ec62eef3ab889c10a510514818c519))
+
+
+
 # [9.0.0](https://github.com/forcedotcom/salesforcedx-apex/compare/8.4.39...9.0.0) (2026-07-30)
 
 
