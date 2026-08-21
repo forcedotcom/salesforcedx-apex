@@ -1,3 +1,12 @@
+## [9.0.5](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.4...9.0.5) (2026-08-21)
+
+
+### Bug Fixes
+
+* configure automerge package manager ([#674](https://github.com/forcedotcom/salesforcedx-apex/issues/674)) ([416fa56](https://github.com/forcedotcom/salesforcedx-apex/commit/416fa560bc91217e21994048537e214a3f6a50df))
+
+
+
 ## [9.0.4](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.3...9.0.4) (2026-08-16)
 
 
