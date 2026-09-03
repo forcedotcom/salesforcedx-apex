@@ -1,3 +1,12 @@
+## [9.0.9](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.8...9.0.9) (2026-09-03)
+
+
+### Bug Fixes
+
+* **deps:** bump browserslist from 4.24.4 to 4.28.8 ([0b6f776](https://github.com/forcedotcom/salesforcedx-apex/commit/0b6f77611d6f0c939c2cd79e6b86194572a2d745))
+
+
+
 ## [9.0.8](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.7...9.0.8) (2026-09-03)
 
 
