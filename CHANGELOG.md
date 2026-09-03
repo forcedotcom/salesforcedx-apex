@@ -1,3 +1,12 @@
+## [9.0.8](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.7...9.0.8) (2026-09-03)
+
+
+### Bug Fixes
+
+* **deps:** bump fast-uri from 3.1.5 to 3.1.7 ([347f392](https://github.com/forcedotcom/salesforcedx-apex/commit/347f3929d586e43193b2a055e309682baf228e4f))
+
+
+
 ## [9.0.7](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.6...9.0.7) (2026-08-30)
 
 
