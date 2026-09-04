@@ -9,12 +9,12 @@
     "@salesforce/core": "^9.1.7",
     "@salesforce/kit": "^4.0.0",
     "@types/istanbul-reports": "^3.0.4",
-    "json-stream-stringify": "^3.1.7",
     "fast-glob": "^3.3.2",
     "faye": "1.4.1",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
-    "istanbul-reports": "^3.2.0"
+    "istanbul-reports": "^3.2.0",
+    "json-stream-stringify": "^3.1.7"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^18.6.3",
@@ -27,15 +27,16 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^18",
     "@types/sinon": "^17.0.3",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
     "chai": "^4.5.0",
     "commitlint": "^18.6.1",
     "esbuild": "^0.28.2",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.2",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-config-salesforce-typescript": "^7.0.0",
     "eslint-plugin-header": "^3.0.0",
-    "eslint-plugin-jsdoc": "^46.10.1",
+    "eslint-plugin-jsdoc": "^64.3.5",
     "eslint-plugin-prettier": "^5.5.6",
     "husky": "^8.0.0",
     "lint-staged": "^15.5.2",
@@ -48,7 +49,8 @@
     "sinon": "^17.0.1",
     "source-map-support": "^0.5.16",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6",
+    "typescript-eslint": "^8.69.0"
   },
   "resolutions": {
     "@jsforce/jsforce-node/node-fetch/whatwg-url": "^14.0.0"
@@ -69,7 +71,7 @@
     "compile": "shx rm -rf lib && tsc -b",
     "commit-init": "commitizen init cz-conventional-changelog --save-dev --save-exact --force",
     "format": "prettier --config ./.prettierrc --write './{src,test,scripts}/**/*.{ts,js,json}'",
-    "lint": "eslint -c .eslintrc.json --ext .ts ./src ./test",
+    "lint": "eslint ./src ./test",
     "test": "yarn build && nyc mocha ./lib/test/**/*.test.js",
     "package": "yarn pack",
     "prettier": "prettier ./**/*.{js,json,ts,md} --write",
@@ -78,7 +80,7 @@
   },
   "lint-staged": {
     "./{src,test}/**/*.{ts,js}": [
-      "eslint -c .eslintrc.json --fix"
+      "eslint --fix"
     ]
   },
   "license": "BSD-3-Clause",
