@@ -42,12 +42,10 @@ export class LogService {
 
   @elapsedTime()
   public async getLogIds(options: ApexLogGetOptions): Promise<string[]> {
-    if (
-      !(
-        typeof options.logId === 'string' ||
-        typeof options.numberOfLogs === 'number'
-      )
-    ) {
+    if (!(
+      typeof options.logId === 'string' ||
+      typeof options.numberOfLogs === 'number'
+    )) {
       throw new Error(nls.localize('missingInfoLogError'));
     }
 
