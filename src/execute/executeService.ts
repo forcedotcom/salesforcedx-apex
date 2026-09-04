@@ -9,7 +9,9 @@ import { existsSync, readFileSync } from 'fs';
 import {
   action,
   ApexExecuteOptions,
+  DebugCategory,
   ExecuteAnonymousResponse,
+  LogType,
   soapBody,
   soapEnv,
   soapHeader,
@@ -39,7 +41,11 @@ export class ExecuteService {
     let count = 0;
     while (count < 2) {
       try {
-        const request = this.buildExecRequest(data);
+        const request = this.buildExecRequest(
+          data,
+          options.debugLevel,
+          options.debugCategories
+        );
         const result = await this.connectionRequest(request);
         return this.jsonFormat(result);
       } catch (e) {
@@ -112,8 +118,17 @@ export class ExecuteService {
 
   // Tooling API execute anonymous apex REST endpoint was not used because
   // it requires multiple api calls to turn on trace flag, execute anonymous apex, and get the generated debug log
-  private buildExecRequest(data: string): HttpRequest {
-    const body = encodeBody(this.connection.accessToken, data);
+  private buildExecRequest(
+    data: string,
+    debugLevel?: LogType,
+    debugCategories?: DebugCategory[]
+  ): HttpRequest {
+    const body = encodeBody(
+      this.connection.accessToken,
+      data,
+      debugLevel,
+      debugCategories
+    );
     const postEndpoint = `${this.connection.instanceUrl}/services/Soap/s/${
       this.connection.version
     }/${this.connection.accessToken.split('!')[0]}`;

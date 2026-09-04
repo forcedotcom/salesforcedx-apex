@@ -9,12 +9,12 @@
     "@salesforce/core": "^9.1.7",
     "@salesforce/kit": "^4.0.0",
     "@types/istanbul-reports": "^3.0.4",
-    "json-stream-stringify": "^3.1.7",
     "fast-glob": "^3.3.2",
     "faye": "1.4.1",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
-    "istanbul-reports": "^3.2.0"
+    "istanbul-reports": "^3.2.0",
+    "json-stream-stringify": "^3.1.7"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^18.6.3",

@@ -6,11 +6,54 @@
  */
 import { ApexDiagnostic, CommonOptions } from '../utils';
 
+export const LOG_TYPES = [
+  'NONE',
+  'DEBUGONLY',
+  'DB',
+  'PROFILING',
+  'CALLOUT',
+  'DETAIL'
+] as const;
+export type LogType = (typeof LOG_TYPES)[number];
+
+export const LOG_CATEGORIES = [
+  'Db',
+  'Workflow',
+  'Validation',
+  'Callout',
+  'Apex_code',
+  'Apex_profiling',
+  'Visualforce',
+  'System',
+  'Wave',
+  'Nba'
+] as const;
+export type LogCategory = (typeof LOG_CATEGORIES)[number];
+
+export const LOG_CATEGORY_LEVELS = [
+  'NONE',
+  'ERROR',
+  'WARN',
+  'INFO',
+  'DEBUG',
+  'FINE',
+  'FINER',
+  'FINEST'
+] as const;
+export type LogCategoryLevel = (typeof LOG_CATEGORY_LEVELS)[number];
+
+export type DebugCategory = {
+  category: LogCategory;
+  level: LogCategoryLevel;
+};
+
 export type ApexExecuteOptions = CommonOptions & {
   targetUsername?: string;
   apexFilePath?: string;
   apexCode?: string | Buffer;
   userInput?: boolean;
+  debugLevel?: LogType;
+  debugCategories?: DebugCategory[];
 };
 
 export const soapEnv = 'soapenv:Envelope';
