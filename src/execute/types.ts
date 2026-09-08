@@ -26,7 +26,8 @@ export const LOG_CATEGORIES = [
   'Visualforce',
   'System',
   'Wave',
-  'Nba'
+  'Nba',
+  'All'
 ] as const;
 export type LogCategory = (typeof LOG_CATEGORIES)[number];
 
