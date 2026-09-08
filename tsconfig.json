@@ -6,9 +6,11 @@
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "NodeNext",
+    "strict": false, // TypeScript 6 enables strict by default; this project has not adopted strict mode
     "noImplicitAny": true,
     "rootDir": ".",
     "outDir": "lib",
+    "types": ["node", "mocha"],
     "preserveConstEnums": true,
     "skipLibCheck": true,
     "experimentalDecorators": true,
