@@ -1,3 +1,13 @@
+# [9.1.0](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.9...9.1.0) (2026-09-11)
+
+
+### Features
+
+* add 'All' to LOG_CATEGORIES per SOAP API docs ([48c154c](https://github.com/forcedotcom/salesforcedx-apex/commit/48c154c1771b6977d96dc997273748fb4d9c7e5d))
+* support configurable debug log levels for anonymous Apex execution @W-18404446@ ([f836bd6](https://github.com/forcedotcom/salesforcedx-apex/commit/f836bd61f1456884a1e66b51fddf473e8bc6807d))
+
+
+
 ## [9.0.9](https://github.com/forcedotcom/salesforcedx-apex/compare/9.0.8...9.0.9) (2026-09-03)
 
 
