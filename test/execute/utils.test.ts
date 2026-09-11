@@ -56,4 +56,45 @@ xmlns:apex="http://soap.sforce.com/2006/08/apex">
     const encodedBody = encodeBody(accessToken, actionBody);
     expect(encodedBody).to.eql(expectedResponse);
   });
+
+  it('should use a custom debugLevel when provided', () => {
+    const encodedBody = encodeBody(
+      accessToken,
+      'System.assert(true);',
+      'DETAIL'
+    );
+    expect(encodedBody).to.include(
+      '<apex:DebuggingHeader><apex:debugLevel>DETAIL</apex:debugLevel></apex:DebuggingHeader>'
+    );
+  });
+
+  it('should use categories when debugCategories are provided', () => {
+    const encodedBody = encodeBody(
+      accessToken,
+      'System.assert(true);',
+      undefined,
+      [
+        { category: 'Apex_code', level: 'FINEST' },
+        { category: 'Db', level: 'FINE' }
+      ]
+    );
+    expect(encodedBody).to.include(
+      '<apex:DebuggingHeader>' +
+        '<apex:categories><apex:category>Apex_code</apex:category><apex:level>FINEST</apex:level></apex:categories>' +
+        '<apex:categories><apex:category>Db</apex:category><apex:level>FINE</apex:level></apex:categories>' +
+        '</apex:DebuggingHeader>'
+    );
+    expect(encodedBody).not.to.include('<apex:debugLevel>');
+  });
+
+  it('should prefer categories over debugLevel when both are provided', () => {
+    const encodedBody = encodeBody(
+      accessToken,
+      'System.assert(true);',
+      'DETAIL',
+      [{ category: 'Apex_code', level: 'FINEST' }]
+    );
+    expect(encodedBody).to.include('<apex:category>Apex_code</apex:category>');
+    expect(encodedBody).not.to.include('<apex:debugLevel>');
+  });
 });

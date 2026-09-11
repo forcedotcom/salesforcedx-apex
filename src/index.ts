@@ -6,7 +6,17 @@
  */
 
 export { CancellationToken, CancellationTokenSource, Progress } from './common';
-export { ExecuteAnonymousResponse, ApexExecuteOptions } from './execute/types';
+export {
+  ExecuteAnonymousResponse,
+  ApexExecuteOptions,
+  DebugCategory,
+  LogType,
+  LogCategory,
+  LogCategoryLevel,
+  LOG_TYPES,
+  LOG_CATEGORIES,
+  LOG_CATEGORY_LEVELS
+} from './execute/types';
 export { ExecuteService } from './execute/executeService';
 export { LogService, ApexLogGetOptions, LogRecord, LogResult } from './logs';
 export {
