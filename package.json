@@ -10,7 +10,7 @@
     "@salesforce/kit": "^4.0.0",
     "@types/istanbul-reports": "^3.0.4",
     "fast-glob": "^3.3.2",
-    "faye": "1.4.1",
+    "faye": "1.4.2",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
