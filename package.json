@@ -7,7 +7,7 @@
   "main": "lib/src/index.js",
   "dependencies": {
     "@salesforce/core": "^9.2.0",
-    "@salesforce/kit": "^4.0.0",
+    "@salesforce/kit": "^4.0.1",
     "@types/istanbul-reports": "^3.0.4",
     "fast-glob": "^3.3.2",
     "faye": "1.4.1",
