@@ -1,3 +1,12 @@
+## [9.1.5](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.4...9.1.5) (2026-10-04)
+
+
+### Bug Fixes
+
+* **deps:** bump @salesforce/kit from 4.0.0 to 4.0.1 ([c45c510](https://github.com/forcedotcom/salesforcedx-apex/commit/c45c510cff87800c81fde6a758517a9ab7ddb317))
+
+
+
 ## [9.1.4](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.3...9.1.4) (2026-10-04)
 
 
