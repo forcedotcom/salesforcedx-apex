@@ -1,3 +1,12 @@
+## [9.1.7](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.6...9.1.7) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** bump source-map-js from 1.2.1 to 1.2.2 ([af3383f](https://github.com/forcedotcom/salesforcedx-apex/commit/af3383f592b26e46fe22481b1a8b24596d80a0d0))
+
+
+
 ## [9.1.6](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.5...9.1.6) (2026-10-05)
 
 
