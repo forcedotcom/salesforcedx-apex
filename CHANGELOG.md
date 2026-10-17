@@ -1,3 +1,12 @@
+## [9.1.8](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.7...9.1.8) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** bump @salesforce/core from 9.2.2 to 9.3.6 ([501b263](https://github.com/forcedotcom/salesforcedx-apex/commit/501b263517a2b827aaa0b0c0debbf8e2820bfc3c))
+
+
+
 ## [9.1.7](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.6...9.1.7) (2026-10-17)
 
 
