@@ -14,7 +14,7 @@ import * as libReport from 'istanbul-lib-report';
 import * as reports from 'istanbul-reports';
 import * as libCoverage from 'istanbul-lib-coverage';
 import * as path from 'path';
-import glob from 'fast-glob';
+import { globSync } from 'tinyglobby';
 import * as fs from 'fs';
 import { nls } from '../i18n';
 import { elapsedTime } from '../utils';
@@ -193,6 +193,10 @@ export class CoverageReporter {
   @elapsedTime()
   private findFullPathToClass(listOfExtensions: string[]): string[] {
     const searchPattern = `**/*.{${listOfExtensions.join(',')}}`;
-    return glob.sync(searchPattern, { cwd: this.sourceDir });
+    // Shallower paths first (matching the previous fast-glob order), since callers take the first match
+    return globSync(searchPattern, {
+      cwd: this.sourceDir,
+      expandDirectories: false
+    }).sort((a, b) => a.split('/').length - b.split('/').length);
   }
 }
