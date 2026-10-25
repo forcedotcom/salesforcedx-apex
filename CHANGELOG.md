@@ -1,3 +1,12 @@
+## [9.1.9](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.8...9.1.9) (2026-10-25)
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 4.5.4 to 4.6.7 ([7d1b32d](https://github.com/forcedotcom/salesforcedx-apex/commit/7d1b32db9fdeb0bb6610d8733e0ecb40c830029b))
+
+
+
 ## [9.1.8](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.7...9.1.8) (2026-10-17)
 
 
