@@ -1,3 +1,12 @@
+## [9.1.12](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.11...9.1.12) (2026-10-26)
+
+
+### Bug Fixes
+
+* add repository metadata for npm provenance ([#722](https://github.com/forcedotcom/salesforcedx-apex/issues/722)) ([a046f79](https://github.com/forcedotcom/salesforcedx-apex/commit/a046f79d32a1fcf695325ad5ff5e209a0258038a))
+
+
+
 ## [9.1.11](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.10...9.1.11) (2026-10-26)
 
 
