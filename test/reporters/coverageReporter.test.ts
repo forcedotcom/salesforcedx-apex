@@ -164,6 +164,48 @@ describe('coverageReports', () => {
     const dirEntries = await fs.promises.readdir(testResultsDir);
     expect(dirEntries).to.have.lengthOf(1);
   });
+  it('should prefer shallower files when matching class names', async () => {
+    const sourceDir = path.join(testResultsDir, 'source');
+    const deeperFile = path.join(sourceDir, 'a-deep', 'deeper', 'Widget.cls');
+    const shallowerFile = path.join(sourceDir, 'z-shallow', 'Widget.cls');
+    await fs.promises.mkdir(path.dirname(deeperFile), { recursive: true });
+    await fs.promises.mkdir(path.dirname(shallowerFile), { recursive: true });
+    await fs.promises.writeFile(deeperFile, 'deep');
+    await fs.promises.writeFile(shallowerFile, 'shallow');
+
+    const coverage = {
+      ...multipleCoverageAggregate,
+      records: [
+        {
+          ...multipleCoverageAggregate.records[0],
+          ApexClassOrTrigger: {
+            ...multipleCoverageAggregate.records[0].ApexClassOrTrigger,
+            Name: 'Widget'
+          },
+          Coverage: { coveredLines: [1], uncoveredLines: [] as number[] }
+        }
+      ]
+    };
+    const coverageReport = new CoverageReporter(
+      coverage,
+      testResultsDir,
+      sourceDir,
+      {
+        reportFormats: ['json'],
+        reportOptions: { json: { file: 'coverage.json' } }
+      }
+    );
+
+    coverageReport.generateReports();
+
+    const report = JSON.parse(
+      await fs.promises.readFile(
+        path.join(testResultsDir, 'coverage.json'),
+        'utf8'
+      )
+    );
+    expect(Object.keys(report)).to.deep.equal([shallowerFile]);
+  });
   it('should handle aggregate object with no coverage entries', async () => {
     const coverageAggregate = JSON.parse(
       JSON.stringify(multipleCoverageAggregate)
