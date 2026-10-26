@@ -1,3 +1,12 @@
+## [9.1.11](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.10...9.1.11) (2026-10-26)
+
+
+### Bug Fixes
+
+* replace fast-glob with tinyglobby - W-24615276 ([#721](https://github.com/forcedotcom/salesforcedx-apex/issues/721)) ([2e58103](https://github.com/forcedotcom/salesforcedx-apex/commit/2e581034f6c9d1574aec112d643406e3fa806f7c))
+
+
+
 ## [9.1.10](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.9...9.1.10) (2026-10-25)
 
 
