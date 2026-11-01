@@ -2081,10 +2081,10 @@ eslint-config-prettier@^10.1.5, eslint-config-prettier@^10.1.8:
   resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-10.1.8.tgz#15734ce4af8c2778cc32f0b01b37b0b5cd1ecb97"
   integrity sha512-82GZUjRS0p/jganf6q1rEO25VSoHH0hKPCTrgillPjdI/3bgBhAE1QzHrHTizjpRvy6pGAvKjDJtk2pF9NDq8w==
 
-eslint-config-salesforce-typescript@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/eslint-config-salesforce-typescript/-/eslint-config-salesforce-typescript-7.0.1.tgz#3cedfdbfa2330251ae3c13cc74a07e93e3b4162d"
-  integrity sha512-jfW/LWhVjPorFFznxOGaMLafB+h4/mqOD7EWQUe7dNqrgVHf95fNlg5+M/YWBkXQQVPra+Gx7SIwgTPEnLS/Bw==
+eslint-config-salesforce-typescript@^7.0.5:
+  version "7.0.5"
+  resolved "https://registry.yarnpkg.com/eslint-config-salesforce-typescript/-/eslint-config-salesforce-typescript-7.0.5.tgz#59726f9c72f641850ec079399474eb18eb5bc952"
+  integrity sha512-3/BvC3hvfjQQIyuwx0ZBE8DfahQjixqhu9dZIB+RUtPuT2bxk9MGgSXD+h90ZwBD1Lrdoq6g+mZwr8etmH1COg==
   dependencies:
     "@eslint/js" "^10.0.0"
     "@tony.ganchev/eslint-plugin-header" "^3.4.4"
@@ -2093,7 +2093,7 @@ eslint-config-salesforce-typescript@^7.0.1:
     eslint-plugin-jsdoc "^63.3.2"
     eslint-plugin-unicorn "^72.0.0"
     globals "^15.14.0"
-    typescript-eslint "^8.71.1"
+    typescript-eslint "^8.72.0"
 
 eslint-import-context@^0.1.9:
   version "0.1.9"
@@ -4959,7 +4959,7 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
-typescript-eslint@^8.71.1, typescript-eslint@^8.72.1:
+typescript-eslint@^8.72.0, typescript-eslint@^8.72.1:
   version "8.72.1"
   resolved "https://registry.yarnpkg.com/typescript-eslint/-/typescript-eslint-8.72.1.tgz#46324b99d4809e986aeb01285cfce28f74b45d14"
   integrity sha512-3Li9FfPmQp45nxEtFD1ZCrYFI3cYK5kpyNtmm1H7lMagm8u9sy6PTjy3ytwQZs7KNukOyKFHAZ6z6GjYFeaeXw==
