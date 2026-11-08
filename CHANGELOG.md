@@ -1,3 +1,12 @@
+## [9.1.14](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.13...9.1.14) (2026-11-08)
+
+
+### Bug Fixes
+
+* **deps:** bump brace-expansion from 1.1.18 to 1.1.21 ([c97d1e2](https://github.com/forcedotcom/salesforcedx-apex/commit/c97d1e21ea1297e878633ebd29563c85c0fa9719))
+
+
+
 ## [9.1.13](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.12...9.1.13) (2026-11-01)
 
 
