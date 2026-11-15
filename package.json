@@ -11,7 +11,7 @@
   "main": "lib/src/index.js",
   "dependencies": {
     "@salesforce/core": "^9.4.1",
-    "@salesforce/kit": "^4.0.1",
+    "@salesforce/kit": "^4.0.10",
     "@types/istanbul-reports": "^3.0.4",
     "faye": "1.4.3",
     "istanbul-lib-coverage": "^3.2.2",
