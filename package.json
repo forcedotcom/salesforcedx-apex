@@ -13,7 +13,7 @@
     "@salesforce/core": "^9.4.6",
     "@salesforce/kit": "^4.0.10",
     "@types/istanbul-reports": "^3.0.4",
-    "faye": "1.4.3",
+    "faye": "1.5.1",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-reports": "^3.2.0",
