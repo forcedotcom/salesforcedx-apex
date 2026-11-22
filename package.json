@@ -1,7 +1,7 @@
 {
   "name": "@salesforce/apex-node",
   "description": "Salesforce JS library for Apex",
-  "version": "9.1.16",
+  "version": "9.1.17",
   "author": "Salesforce",
   "repository": {
     "type": "git",

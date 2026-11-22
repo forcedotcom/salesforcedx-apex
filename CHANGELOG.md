@@ -1,3 +1,12 @@
+## [9.1.17](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.16...9.1.17) (2026-11-22)
+
+
+### Bug Fixes
+
+* **deps:** bump faye from 1.4.3 to 1.5.1 ([55214c0](https://github.com/forcedotcom/salesforcedx-apex/commit/55214c0e1dea902f27c7e8eb275bb68cad051169))
+
+
+
 ## [9.1.16](https://github.com/forcedotcom/salesforcedx-apex/compare/9.1.15...9.1.16) (2026-11-15)
 
 
