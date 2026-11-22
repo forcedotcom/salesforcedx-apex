@@ -2526,20 +2526,20 @@ fastq@^1.6.0:
   dependencies:
     reusify "^1.0.4"
 
-faye-websocket@>=0.9.1:
-  version "0.11.4"
-  resolved "https://registry.yarnpkg.com/faye-websocket/-/faye-websocket-0.11.4.tgz#7f0d9275cfdd86a1c963dc8b65fcc451edcbb1da"
-  integrity sha512-CzbClwlXAuiRQAlUyfqPgvPoNKTckTPGfwZV4ZdAhVcP2lh9KUxJg2b5GkE7XbjKQ3YJnQ9z6D9ntLAlB+tP8g==
+faye-websocket@>=0.12.0:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/faye-websocket/-/faye-websocket-0.12.0.tgz#d935ad27e3e0565420e44f5f6dc0bd966e221a57"
+  integrity sha512-k4SrrWTHgtilT0hPMzS/kbYx9OHs+ITVv3VGqEI45SOsveVyFSES4DA4Opi2UMrba2MZhQe9yjsVz7uwVKa1qQ==
   dependencies:
-    websocket-driver ">=0.5.1"
+    websocket-driver ">=0.8.0"
 
-faye@1.4.3, faye@^1.4.1, faye@^1.4.2:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/faye/-/faye-1.4.3.tgz#00ac170e0d45b872726f883c68333eb3c521d5d6"
-  integrity sha512-MVbPkUDW31a8tWgdGppHrkuV8+/9eq5u5T5AnrS95HU52YJyy9sx1DYGY7xRL0u/suckuctgxRMunTXIDdxRTg==
+faye@1.5.1, faye@^1.4.1, faye@^1.4.2:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/faye/-/faye-1.5.1.tgz#1096a60e4c261c505d97f66918fdf6e903dbe7e5"
+  integrity sha512-2I62UFeZDfAgwm/GgfPlNmMTc5vG39L7fwe0U2mfRTu4nuLEd7WXtvdyi+N2a6OCu6mpcX9vLIvlu9E8GrZNKA==
   dependencies:
     csprng "*"
-    faye-websocket ">=0.9.1"
+    faye-websocket ">=0.12.0"
     tough-cookie "*"
     tunnel-agent "*"
 
@@ -5200,19 +5200,19 @@ webidl-conversions@^7.0.0:
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-7.0.0.tgz#256b4e1882be7debbf01d05f0aa2039778ea080a"
   integrity sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==
 
-websocket-driver@>=0.5.1:
-  version "0.7.5"
-  resolved "https://registry.yarnpkg.com/websocket-driver/-/websocket-driver-0.7.5.tgz#569d22764ab21f2de20af0e74b411e8ae5a0fa46"
-  integrity sha512-ZL2+3c7kMBdIRCMz6l8jQMHyGVxj+UL+xVk74Ombiciboca8rHa15L86B19E5oh1pL9Ii/uj54gtsIrZGMo6zA==
+websocket-driver@>=0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/websocket-driver/-/websocket-driver-0.8.0.tgz#6701084cbf675d1d052bee12e5a7bdfa10dbb3f6"
+  integrity sha512-upjjWCo/1ZysdZ3rMvXXUDk9PmbYne+wSD1t78HAvIvjmR+avda0MsLWhtkn5PW8Ht34EXhhWF6OseWJ8nTGlg==
   dependencies:
     http-parser-js ">=0.5.1"
     safe-buffer ">=5.1.0"
-    websocket-extensions ">=0.1.1"
+    websocket-extensions ">=0.2.0"
 
-websocket-extensions@>=0.1.1:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.4.tgz#7f8473bc839dfd87608adb95d7eb075211578a42"
-  integrity sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==
+websocket-extensions@>=0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.2.0.tgz#9b0dbdfd847e9dc2755854924d1c79025b800001"
+  integrity sha512-vQaTTgDDgwlrreIJAprknlnvEtZMMxfLqoxyQYnWO8dgcz2qIzQNysCpwOekz8kqLvzrZ0dcaL9hejZ+2AszCA==
 
 whatwg-url@^14.0.0:
   version "14.2.0"
