@@ -54,7 +54,7 @@
     "source-map-support": "^0.5.16",
     "ts-node": "^10.9.2",
     "typescript": "^6",
-    "typescript-eslint": "^8.73.0"
+    "typescript-eslint": "^8.74.0"
   },
   "resolutions": {
     "@jsforce/jsforce-node/node-fetch/whatwg-url": "^14.0.0"
